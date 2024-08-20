@@ -640,21 +640,39 @@
                                         Margin="0,10,0,0"
                                         VerticalAlignment="Top"
                                         HorizontalAlignment="Center">
-                                <Ant:Button x:Name="CheckForUpdates"
-                                            Background="#3FFFFFFF"
-                                            BorderBrush="#FFD3ADF7"
-                                            Padding="0,0,0,0"
-                                            BorderThickness="0,0,0,0"
-                                            Content="Check for Update"
-                                            FontWeight="Normal"
-                                            FontSize="12"
-                                            Height="27"
-                                            materialDesign:ButtonAssist.CornerRadius="5"
-                                            Foreground="White"
-                                            Width="122"
-                                            FontFamily="{StaticResource Atkinson Hyperlegible}"
-                                            EffectBrush="#FFD3ADF7"
-                                            Click="CheckForUpdates_Click" />
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ant:Button x:Name="CheckForUpdates"
+                                                    Background="#3FFFFFFF"
+                                                    BorderBrush="#FFD3ADF7"
+                                                    Padding="0,0,0,0"
+                                                    BorderThickness="0,0,0,0"
+                                                    Content="Check for Update"
+                                                    FontWeight="Normal"
+                                                    FontSize="12"
+                                                    Height="27"
+                                                    materialDesign:ButtonAssist.CornerRadius="5"
+                                                    Foreground="White"
+                                                    Width="122"
+                                                    FontFamily="{StaticResource Atkinson Hyperlegible}"
+                                                    EffectBrush="#FFD3ADF7"
+                                                    Click="CheckForUpdates_Click" />
+                                        
+                                        <Ant:Button Background="#3FFFFFFF"
+                                                    BorderBrush="#FFD3ADF7"
+                                                    Margin="5 0 0 0"
+                                                    Padding="0,0,0,0"
+                                                    BorderThickness="0,0,0,0"
+                                                    Content="Show Known Issues"
+                                                    FontWeight="Normal"
+                                                    FontSize="12"
+                                                    Height="27"
+                                                    materialDesign:ButtonAssist.CornerRadius="5"
+                                                    Foreground="White"
+                                                    Width="122"
+                                                    FontFamily="{StaticResource Atkinson Hyperlegible}"
+                                                    EffectBrush="#FFD3ADF7"
+                                                    Click="ShowKnownIssues_Click" />
+                                </StackPanel>
                                 <Label HorizontalAlignment="Center" Foreground="White" x:Name="UpdateCheckStatusLabel" Content=""/>
                             </StackPanel>
              
@@ -670,17 +688,9 @@
                 <Button BorderBrush="Transparent" FontSize="11" Background="Transparent" Click="OpenConfig_CLick" Content="{Binding Config.Path}" Foreground="White" />
             </StatusBarItem>
             <StatusBarItem Cursor="Hand" Foreground="White" Margin="0,5,15, 5" HorizontalAlignment="Right" >
-                <Menu Cursor="Hand" HorizontalAlignment="Left" VerticalAlignment="Center" Foreground="White" Height="20">
-                    <MenuItem FontSize="11" Header="default.onnx" VerticalAlignment="Top" Height="20">
-                        <MenuItem Header="_Bold"
-                        />
-                        <MenuItem Header="_Italic" IsCheckable="True"
-                        />
-                        <Separator/>
-                        <MenuItem Header="I_ncrease Font Size"
-                        />
-                        <MenuItem Header="_Decrease Font Size"
-                        />
+                <Menu Cursor="Hand" HorizontalAlignment="Left" VerticalAlignment="Center" Height="20">
+                    <MenuItem MaxHeight="100" x:Name="ModelContextMenu" FontSize="11" Header="{Binding Config.LastLoadedModel}" Foreground="{StaticResource Foreground}" VerticalAlignment="Top" Height="20">
+                        <MenuItem Foreground="Black" Header="Bold"/>
                     </MenuItem>
                 </Menu>
             </StatusBarItem>

@@ -25,7 +25,10 @@ public class ScreenCapture : ICapture
 
     public Bitmap Capture(Rectangle detectionBox)
     {
-
+        if (detectionBox == Rectangle.Empty)
+        {
+            detectionBox = GetCaptureArea();
+        }
         if (_graphics == null || _screenCaptureBitmap == null || _screenCaptureBitmap.Width != detectionBox.Width || _screenCaptureBitmap.Height != detectionBox.Height)
         {
             _screenCaptureBitmap?.Dispose();

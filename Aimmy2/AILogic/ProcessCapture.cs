@@ -40,6 +40,11 @@ public class ProcessCapture : ICapture
         detectionBox.X += windowRect.Left;
         detectionBox.Y += windowRect.Top;
 
+        if(detectionBox.Height <= 0)
+            detectionBox.Height = windowRect.Bottom - windowRect.Top;
+        if(detectionBox.Width <= 0)
+            detectionBox.Width = windowRect.Right - windowRect.Left;
+
         Bitmap bitmap = new Bitmap(detectionBox.Width, detectionBox.Height, PixelFormat.Format32bppArgb);
         using Graphics graphics = Graphics.FromImage(bitmap);
         graphics.CopyFromScreen(detectionBox.Left, detectionBox.Top, 0, 0, detectionBox.Size, CopyPixelOperation.SourceCopy);

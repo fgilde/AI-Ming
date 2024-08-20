@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Drawing;
 using System.Windows.Forms;
 using Aimmy2.Models;
 using Nextended.Core.Extensions;
@@ -31,6 +32,17 @@ public class CaptureSource
     public static CaptureSource Process(ProcessModel process) => Process(process.Process);
 
     public static CaptureSource Process(Process process) => new(CaptureTargetType.Process, process.MainWindowTitle, process.Id);
+
+    public Bitmap Capture()
+    {
+        var capture = AIManager.CreateScreenCapture(this);
+        return capture.Capture(Rectangle.Empty);
+    }
+
+    public override string ToString()
+    {
+        return $"{TargetType} {Title} ({ProcessOrScreenId})";
+    }
 }
 
 public enum CaptureTargetType

@@ -26,8 +26,7 @@ namespace Aimmy2.UILibrary
                 DownloadButton.Content = "\xE895";
                 SetupHttpClientHeaders();
 
-                var downloadUri = new Uri($"https://github.com/{ApplicationConstants.RepoOwner}/{ApplicationConstants.RepoName}/raw/master/{Path}/{Name}");
-                var downloadResult = await DownloadFileAsync(downloadUri, Path, Name);
+                var downloadResult = await DownloadAsync(Name, Path);
 
                 if (downloadResult)
                 {
@@ -39,6 +38,13 @@ namespace Aimmy2.UILibrary
                     DownloadButton.Content = "\xE896"; // Consider resetting this in both cases for consistency
                 }
             };
+        }
+
+        internal static async Task<bool> DownloadAsync(string Name, string Path)
+        {
+            var downloadUri = new Uri($"https://github.com/{ApplicationConstants.RepoOwner}/{ApplicationConstants.RepoName}/raw/master/{Path}/{Name}");
+            var downloadResult = await DownloadFileAsync(downloadUri, Path, Name);
+            return downloadResult;
         }
 
         private static void SetupHttpClientHeaders()

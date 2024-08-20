@@ -17,6 +17,13 @@ public abstract class BaseDialog : Window, INotifyPropertyChanged
 
     protected virtual bool SaveRestorePosition => true;
     protected Func<bool> ShouldBindGradientMouse = () => AppConfig.Current.ToggleState.MouseBackgroundEffect;
+    private WindowSettings _settings;
+
+    public WindowSettings Settings
+    {
+        get => _settings;
+        protected set => SetField(ref _settings, value);
+    }
 
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
@@ -34,9 +41,10 @@ public abstract class BaseDialog : Window, INotifyPropertyChanged
     protected override void OnInitialized(EventArgs e)
     {
         base.OnInitialized(e);
+        var settingsManager = new WindowSettingsManager(GetSettingsFilePath());
+        Settings = settingsManager.LoadWindowSettings() ?? new WindowSettings();
         if (SaveRestorePosition)
         {
-            var settingsManager = new WindowSettingsManager(GetSettingsFilePath());
             settingsManager.LoadWindowSettings(this);
         }
     }
@@ -51,7 +59,13 @@ public abstract class BaseDialog : Window, INotifyPropertyChanged
         }
     }
 
-    private string GetSettingsFilePath()
+    protected WindowSettings? GetWindowSettings()
+    {
+        var settingsManager = new WindowSettingsManager(GetSettingsFilePath());
+        return settingsManager.LoadWindowSettings();
+    }
+
+    protected string GetSettingsFilePath()
     {
         var dialogType = GetType().Name;
         var folderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AI-M");

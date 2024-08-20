@@ -94,6 +94,7 @@ namespace Other
 
             CurrentlyLoadingModel = true;
             AppConfig.Current.LastLoadedModel = selectedModel;
+            AppConfig.Current.OnPropertyChanged(nameof(AppConfig.Current.LastLoadedModel));
 
             // Store original values and disable them temporarily
             var toggleKeys = new[] { "Aim Assist", "Constant AI Tracking", "Auto Trigger", "Show Detected Player", "Show AI Confidence", "Show Tracers" };

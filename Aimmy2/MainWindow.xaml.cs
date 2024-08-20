@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
@@ -17,8 +18,10 @@ using Aimmy2.MouseMovementLibraries.GHubSupport;
 using Aimmy2.Types;
 using Aimmy2.UILibrary;
 using AimmyWPF.Class;
+using AntWpf.Controls;
 using Core;
 using InputLogic;
+using MdXaml;
 using Microsoft.Xaml.Behaviors.Core;
 using MouseMovementLibraries.ddxoftSupport;
 using MouseMovementLibraries.RazerSupport;
@@ -56,7 +59,7 @@ public partial class MainWindow
 
     #region Loading Window
 
-    public AppConfig? Config { get; }
+    public AppConfig? Config { get; private set; }
 
     public MainWindow()
     {
@@ -90,6 +93,7 @@ public partial class MainWindow
         //Console.WriteLine(JsonConvert.SerializeObject(Dictionary.toggleState));
         Console.WriteLine("Init UI Complete");
     }
+
 
     private void CreateUI()
     {
@@ -149,23 +153,60 @@ public partial class MainWindow
 
         bindingManager.OnBindingPressed += BindingOnKeyPressed;
         bindingManager.OnBindingReleased += BindingOnKeyReleased;
-
-        MenuItemOpenCfg.Items.Clear();
-        foreach (var item in ConfigsListBox.Items)
-        {
-            MenuItemOpenCfg.Items.Add(new MenuItem
-            {
-                Header = item,
-                Command = new ActionCommand(() => LoadConfig(Path.Combine(Path.GetDirectoryName(AppConfig.DefaultConfigPath), item.ToString())))
-            });
-        }
+        
         _ = CheckUpdate(false);
         _uiCreated = true;
     }
 
-    private void LoadLastModel()
+    private void FillMenus()
     {
-        var lastLoaded = Path.Combine("bin/models", Config.LastLoadedModel);
+        ModelContextMenu.Items.Clear();
+        ModelContextMenu.Items.AddRange(ModelListBox.ToMenuItems(item =>
+        {
+            FileManager.AIManager?.Dispose();
+            FileManager.AIManager = null;
+            FileManager.CurrentlyLoadingModel = false;
+            LoadLastModel(item.Header.ToString());
+        }));
+        ModelContextMenu.Items.Add(new Separator());
+        var downloadableMenu = new MenuItem()
+        {
+            Header = "Downloadable Models",
+            Foreground =Brushes.Black
+        };
+        ModelContextMenu.Items.Add(downloadableMenu);
+        downloadableMenu.Items.AddRange(AvailableModels.Select(s => new MenuItem()
+        {
+            Header = s,
+            Foreground =Brushes.Black,
+            Command = new ActionCommand(() =>
+            {
+                downloadableMenu.IsEnabled = false;
+                ADownloadGateway.DownloadAsync(s, "models").ContinueWith(task =>
+                {
+                    if (task.Result)
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            FileManager.AIManager?.Dispose();
+                            FileManager.AIManager = null;
+                            FileManager.CurrentlyLoadingModel = false;
+                            LoadLastModel(s);
+                            FillMenus();
+                        });
+                    }
+                });
+            })
+        }));
+
+        MenuItemOpenCfg.Items.Clear();
+        MenuItemOpenCfg.Items.AddRange(ConfigsListBox.ToMenuItems(item => LoadConfig(Path.Combine(Path.GetDirectoryName(AppConfig.DefaultConfigPath), item.Header?.ToString()))));
+    }
+
+    private void LoadLastModel(string? modelName = null)
+    {
+        modelName ??= Config.LastLoadedModel;
+        var lastLoaded = Path.Combine("bin/models", modelName);
         var modelPath = File.Exists(lastLoaded) ? lastLoaded : Path.Combine("bin/models", ApplicationConstants.DefaultModel);
         if (File.Exists(modelPath) && !FileManager.CurrentlyLoadingModel &&
             FileManager.AIManager?.IsModelLoaded != true)
@@ -218,6 +259,7 @@ public partial class MainWindow
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
+        KnownIssuesDialog.ShowIf(this);
         AboutSpecs.Content =
             $"{GetProcessorName()} • {GetVideoControllerName()} • {GetFormattedMemorySize()}GB RAM";
     }
@@ -911,6 +953,7 @@ public partial class MainWindow
                 $"https://api.github.com/repos/{ApplicationConstants.RepoOwner}/{ApplicationConstants.RepoName}/contents/configs", "bin\\configs", AvailableConfigs);
 
             await Task.WhenAll(models, configs);
+            FillMenus();
         }
         catch (Exception e)
         {
@@ -954,7 +997,9 @@ public partial class MainWindow
 
     internal void LoadConfig(string path = AppConfig.DefaultConfigPath, bool loading_from_configlist = false)
     {
-        AppConfig.Load(path);
+        Console.WriteLine("Loading Config: " + path);
+        Config = AppConfig.Load(path);
+        OnPropertyChanged(nameof(Config));
         if (loading_from_configlist)
         {
             if (!string.IsNullOrEmpty(AppConfig.Current.SuggestedModelName) && AppConfig.Current.SuggestedModelName != "N/A")
@@ -1099,5 +1144,10 @@ public partial class MainWindow
         {
             LoadConfig(dlg.FileName);
         }
+    }
+
+    private void ShowKnownIssues_Click(object sender, RoutedEventArgs e)
+    {
+        KnownIssuesDialog.ShowIf(this, true);
     }
 }

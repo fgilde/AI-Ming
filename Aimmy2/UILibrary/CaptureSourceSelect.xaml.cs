@@ -1,12 +1,12 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Windows.Controls.Primitives;
 using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows;
 using System.Windows.Forms;
-using System.Windows.Media;
 using Accord.Math;
 using Aimmy2.AILogic;
 using Aimmy2.Config;
@@ -16,6 +16,10 @@ using Button = System.Windows.Controls.Button;
 using Aimmy2.Models;
 using Visuality;
 using System.Threading;
+using System.Windows.Media;
+using Nextended.UI;
+using Brush = System.Windows.Media.Brush;
+using Brushes = System.Windows.Media.Brushes;
 
 namespace Aimmy2.UILibrary
 {
@@ -34,6 +38,8 @@ namespace Aimmy2.UILibrary
         public static readonly DependencyProperty CaptureSourceProperty =
             DependencyProperty.Register(nameof(CaptureSource), typeof(CaptureSource), typeof(CaptureSourceSelect), new PropertyMetadata(AppConfig.Current.CaptureSource));
 
+        private ImageSource _capturePreview;
+
         public Brush ScreenForeground => CaptureSource.TargetType == CaptureTargetType.Screen ? Brushes.Green : Brushes.White;
         public Brush ProcessForeground
         {
@@ -50,11 +56,27 @@ namespace Aimmy2.UILibrary
 
         public event EventHandler<CaptureSource> Selected;
 
+        public ImageSource CapturePreview
+        {
+            get => _capturePreview;
+            private set => SetField(ref _capturePreview, value);
+        }
 
         public CaptureSourceSelect()
         {
             InitializeComponent();
             DataContext = this;
+        }
+
+        private void UpdatePreview()
+        {
+            try
+            {
+                CapturePreview = CaptureSource?.Capture()?.ToImageSource();
+            }
+            catch{
+                Console.WriteLine("Error updating preview");
+            }
         }
 
 
@@ -150,6 +172,11 @@ namespace Aimmy2.UILibrary
             field = value;
             OnPropertyChanged(propertyName);
             return true;
+        }
+
+        private void ToolTip_OnOpened(object sender, RoutedEventArgs e)
+        {
+            UpdatePreview();
         }
     }
 

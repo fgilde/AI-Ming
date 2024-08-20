@@ -31,7 +31,7 @@ public class AIManager : IDisposable
     public AIManager(string modelPath, CaptureSource target) : this(CreateScreenCapture(target), new PredictionLogic(modelPath), BaseAction.AllActions())
     { }
 
-    private static ICapture CreateScreenCapture(CaptureSource target)
+    internal static ICapture CreateScreenCapture(CaptureSource target)
     {
         try
         {
@@ -96,10 +96,10 @@ public class AIManager : IDisposable
 
                 var targetX = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.X - area.Left : area.Width / 2;
                 var targetY = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.Y - area.Top : area.Height / 2;
-
+                
                 Rectangle detectionBox = new(targetX - Aimmy2.AILogic.PredictionLogic.IMAGE_SIZE / 2, targetY - Aimmy2.AILogic.PredictionLogic.IMAGE_SIZE / 2, Aimmy2.AILogic.PredictionLogic.IMAGE_SIZE, Aimmy2.AILogic.PredictionLogic.IMAGE_SIZE);
                 var frame = ImageCapture.Capture(detectionBox);
-
+                //frame.Save("D:\\test.png");
                 var predictions = (await PredictionLogic.Predict(frame, detectionBox)).ToArray();
                 await Task.WhenAll(_actions.Select(a => a.Execute(predictions)));
             }

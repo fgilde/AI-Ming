@@ -10,11 +10,39 @@ using InputLogic;
 using Nextended.Core.Extensions;
 using Nextended.Core.Helper;
 using UILibrary;
+using Microsoft.Xaml.Behaviors.Core;
 
 namespace Aimmy2.Extensions;
 
 public static class UIElementExtensions
 {
+    public static ItemCollection AddRange(this ItemCollection collection, IEnumerable<UIElement> elements)
+    {
+        foreach (var element in elements)
+        {
+            collection.Add(element);
+        }
+
+        return collection;
+    }
+    public static ICollection<MenuItem> ToMenuItems(this ListBox listBox, Action<MenuItem> onClick)
+    {
+        var menuItems = new List<MenuItem>();
+        foreach (object item in listBox.Items)
+        {
+            var menuItem = new MenuItem
+            {
+                Header = item?.ToString(),
+                Foreground = Brushes.Black,
+                Tag = item,
+            };
+            menuItem.Command = new ActionCommand(() => onClick(menuItem));
+            menuItems.Add(menuItem);
+        }
+
+        return menuItems;
+    }
+
     public static void MoveToScreenCenter(this Window window, System.Windows.Forms.Screen screen)
     {
         if (!window.CheckAccess())
