@@ -10,7 +10,7 @@ namespace Core
 
         public Version NewVersion { get; private set; }
         public string UpdateUrl { get; private set; }
-
+        public string Description { get; set; }
         public string MainAppDir { get; private set; }
         private string ScriptPath => Path.Combine(MainAppDir, "UpdateScript.ps1");
 
@@ -28,15 +28,14 @@ namespace Core
                     File.Delete(ScriptPath);
 
                 using GithubManager githubManager = new();
-                var (latestVersion, latestZipUrl) = await githubManager.GetLatestReleaseInfo(repoOwner, repoName);
-                UpdateUrl = latestZipUrl;
-                if (string.IsNullOrEmpty(latestVersion) || string.IsNullOrEmpty(latestZipUrl))
+                var release = await githubManager.GetLatestReleaseInfoAsync(repoOwner, repoName);
+                var latest = SetRelease(release);
+
+                if (string.IsNullOrEmpty(UpdateUrl))
                 {
                     return false;
                 }
 
-                var latest = Version.Parse(latestVersion);
-                NewVersion = latest;
                 if (currentVersion != null && latest <= currentVersion)
                 {
                     return false;
@@ -49,6 +48,15 @@ namespace Core
             {
                 return false;
             }
+        }
+
+        public Version SetRelease(GitHubRelease release)
+        {
+            UpdateUrl = release.DownloadUrl;
+            Description = release.Description;
+            var latest = Version.Parse(release.TagName);
+            NewVersion = latest;
+            return latest;
         }
 
         public async Task DoUpdate(IProgress<double>? progressCallback = null, IEnumerable<string>? filesToIgnore = null)

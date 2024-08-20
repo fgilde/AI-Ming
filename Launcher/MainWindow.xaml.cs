@@ -1,12 +1,13 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-
 using System.Windows;
 using System.Windows.Input;
 using Core;
 using Vestris.ResourceLib;
+
 
 
 namespace Launcher
@@ -24,6 +25,9 @@ namespace Launcher
         private string _subTitle = "Please wait...";
         private bool _installing;
         private bool _canClose = true;
+        private string _repoOwner = "fgilde";
+        private string _repoName = "AI-Ming";
+        private GitHubRelease _selectedRelease;
         private const string _chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
         public Visibility InstallerVisibility => IsInstallerMode ? Visibility.Visible : Visibility.Collapsed;
@@ -36,6 +40,14 @@ namespace Launcher
                     OnPropertyChanged(nameof(InstallerVisibility));
                 }
             }
+        }
+
+        public ObservableCollection<GitHubRelease> Releases { get; set; } = new();
+
+        public GitHubRelease SelectedRelease
+        {
+            get => _selectedRelease;
+            set => SetField(ref _selectedRelease, value);
         }
 
         public bool CanClose
@@ -94,12 +106,35 @@ namespace Launcher
                 IsInstallerMode = true;
                 SubTitle = "Install";
                 Status = string.Empty;
+                LoadReleases();
             }
             else
             {
                  ChangeResources(exe);
                 await Task.Delay(200);
                 await RenameExe(exe);
+            }
+        }
+
+        private async void LoadReleases()
+        {
+            try
+            {
+                var manager = new GithubManager();
+                SelectedRelease = await manager.GetLatestReleaseInfoAsync(_repoOwner, _repoName);
+                var releases = (await manager.GetAvailableReleasesAsync(_repoOwner, _repoName)).ToList();
+                Dispatcher.Invoke(() =>
+                {
+                    Releases.Clear();
+                    foreach (var release in releases)
+                    {
+                        Releases.Add(release);
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+                
             }
         }
 
@@ -226,7 +261,6 @@ namespace Launcher
             FolderSelect.Visibility = Visibility.Collapsed;
             ProgressBar.IsIndeterminate = true;
             ProgressBar.Visibility = Visibility.Visible;
-           
             Status = "Installing (Check and create Directory)...";
             var dir = InstallDirectory;
             try
@@ -235,14 +269,14 @@ namespace Launcher
                     Directory.CreateDirectory(dir);
                 await Task.Delay(500);
                 Status = "Checking for latest version...";
-                var installer = new UpdateManager(dir);
-                var canInstall = await installer.CheckForUpdate(null, "fgilde", "AI-Ming");
-                ProgressBar.IsIndeterminate = false;
-                if (!canInstall)
+                if (string.IsNullOrEmpty(SelectedRelease?.DownloadUrl))
                 {
                     Status = "Can not install";
                     return;
                 }
+                var installer = new UpdateManager(dir);
+                installer.SetRelease(SelectedRelease);
+                ProgressBar.IsIndeterminate = false;
 
                 await installer.DoUpdate(new Progress<double>(p =>
                 {

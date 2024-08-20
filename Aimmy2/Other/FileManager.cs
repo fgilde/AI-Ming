@@ -16,7 +16,7 @@ using Microsoft.ML.OnnxRuntime;
 
 namespace Other
 {
-    internal class FileManager
+    internal class FileManager : IDisposable
     {
         public FileSystemWatcher? ModelFileWatcher;
         public FileSystemWatcher? ConfigFileWatcher;
@@ -152,6 +152,11 @@ namespace Other
 
             if (filter == "*.onnx")
             {
+                watcher.Changed -= LoadModelsIntoListBox;
+                watcher.Created -= LoadModelsIntoListBox;
+                watcher.Deleted -= LoadModelsIntoListBox;
+                watcher.Renamed -= LoadModelsIntoListBox;
+
                 watcher.Changed += LoadModelsIntoListBox;
                 watcher.Created += LoadModelsIntoListBox;
                 watcher.Deleted += LoadModelsIntoListBox;
@@ -159,6 +164,11 @@ namespace Other
             }
             else if (filter == "*.cfg")
             {
+                watcher.Changed -= LoadConfigsIntoListBox;
+                watcher.Created -= LoadConfigsIntoListBox;
+                watcher.Deleted -= LoadConfigsIntoListBox;
+                watcher.Renamed -= LoadConfigsIntoListBox;
+
                 watcher.Changed += LoadConfigsIntoListBox;
                 watcher.Created += LoadConfigsIntoListBox;
                 watcher.Deleted += LoadConfigsIntoListBox;
@@ -241,6 +251,31 @@ namespace Other
             {
                 throw new Exception(ex.ToString());
             }
+        }
+
+        public void Dispose()
+        {
+            InQuittingState = true;
+            if (ConfigFileWatcher != null)
+            {
+                ConfigFileWatcher.EnableRaisingEvents = false;
+                ConfigFileWatcher.Changed -= LoadModelsIntoListBox;
+                ConfigFileWatcher.Created -= LoadModelsIntoListBox;
+                ConfigFileWatcher.Deleted -= LoadModelsIntoListBox;
+                ConfigFileWatcher.Renamed -= LoadModelsIntoListBox;
+            }
+
+            if (ModelFileWatcher != null)
+            {
+                ModelFileWatcher.EnableRaisingEvents = false;
+                ModelFileWatcher.Changed -= LoadConfigsIntoListBox;
+                ModelFileWatcher.Created -= LoadConfigsIntoListBox;
+                ModelFileWatcher.Deleted -= LoadConfigsIntoListBox;
+                ModelFileWatcher.Renamed -= LoadConfigsIntoListBox;
+            }
+
+            ConfigFileWatcher?.Dispose();
+            ModelFileWatcher?.Dispose();
         }
     }
 }

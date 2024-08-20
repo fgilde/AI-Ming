@@ -97,6 +97,7 @@ public partial class MainWindow
 
     private void CreateUI()
     {
+        _uiCreated = false;
         var theme = ThemePalette.All.FirstOrDefault(x => x.Name == AppConfig.Current.ThemeName) ?? ThemePalette.PurplePalette;
         ApplicationConstants.Theme = theme;
 
@@ -104,7 +105,7 @@ public partial class MainWindow
         if (CurrentScrollViewer == null) throw new NullReferenceException("CurrentScrollViewer is null");
 
         FOV.Create();
-
+        fileManager?.Dispose();
         fileManager = new FileManager(ModelListBox, SelectedModelNotifier, ConfigsListBox, SelectedConfigNotifier);
 
         // Needed to import annotations into MakeSense
@@ -154,7 +155,6 @@ public partial class MainWindow
         bindingManager.OnBindingPressed += BindingOnKeyPressed;
         bindingManager.OnBindingReleased += BindingOnKeyReleased;
         
-        _ = CheckUpdate(false);
         _uiCreated = true;
     }
 
@@ -259,6 +259,7 @@ public partial class MainWindow
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
+        _ = CheckUpdate(false);
         KnownIssuesDialog.ShowIf(this);
         AboutSpecs.Content =
             $"{GetProcessorName()} • {GetVideoControllerName()} • {GetFormattedMemorySize()}GB RAM";
@@ -276,7 +277,7 @@ public partial class MainWindow
 
     private void Window_Closing(object sender, CancelEventArgs e)
     {
-        fileManager.InQuittingState = true;
+        fileManager.Dispose();
         FileManager.AIManager?.Dispose();
         GamepadManager.Dispose();
         
@@ -415,12 +416,12 @@ public partial class MainWindow
                 break;
 
             case nameof(AppConfig.Current.BindingSettings.Gun1Key):
-                if (AppConfig.Current.ToggleState.EnableModelSwitchKeybind)
+                if (AppConfig.Current.ToggleState.EnableGunSwitchingKeybind)
                     LoadAntiRecoilConfig(AppConfig.Current.FileLocationState.Gun1Config, true);
                 break;
 
             case nameof(AppConfig.Current.BindingSettings.Gun2Key):
-                if (AppConfig.Current.ToggleState.EnableModelSwitchKeybind)
+                if (AppConfig.Current.ToggleState.EnableGunSwitchingKeybind)
                     LoadAntiRecoilConfig(AppConfig.Current.FileLocationState.Gun2Config, true);
                 break;
         }
@@ -844,6 +845,7 @@ public partial class MainWindow
 
     private void LoadSettingsMenu()
     {
+        XYPercentageEnablerMenu.RemoveAll();
         SettingsConfig.RemoveAll();
         SettingsConfig.AddTitle("Settings Menu", true);
 
@@ -904,7 +906,6 @@ public partial class MainWindow
         SettingsConfig.AddSeparator();
 
         // X/Y Percentage Adjustment Enabler
-
         XYPercentageEnablerMenu.AddTitle("X/Y Percentage Adjustment", true);
         XYPercentageEnablerMenu.AddToggle("X Axis Percentage Adjustment").BindTo(() => AppConfig.Current.ToggleState.XAxisPercentageAdjustment);
         XYPercentageEnablerMenu.AddToggle("Y Axis Percentage Adjustment").BindTo(() => AppConfig.Current.ToggleState.YAxisPercentageAdjustment);
@@ -1014,9 +1015,11 @@ public partial class MainWindow
     private void LoadAntiRecoilConfig(string path = "bin\\anti_recoil_configs\\Default.cfg",
         bool loading_outside_startup = false)
     {
-        AppConfig.Current.AntiRecoilSettings.Load<AntiRecoilSettings>(path);
-        if (loading_outside_startup)
-            CreateUI();
+        if(true || !string.IsNullOrEmpty(path)) {
+            AppConfig.Current.AntiRecoilSettings.Load<AntiRecoilSettings>(path);
+            if (loading_outside_startup)
+                CreateUI();
+        }
     }
 
     #endregion Anti Recoil Config Loader

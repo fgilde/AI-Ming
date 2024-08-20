@@ -4,6 +4,7 @@
                       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                       xmlns:launcher="clr-namespace:Launcher"
+                      xmlns:mdXaml="https://github.com/whistyun/MdXaml"
                       mc:Ignorable="d"
                       Height="400"
                       Width="500"
@@ -107,6 +108,10 @@
                     </Grid>
 
                     <Grid Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
                         <StackPanel VerticalAlignment="Top"
                                     Margin="0,20,0,0">
                             <Grid HorizontalAlignment="Center"
@@ -161,25 +166,40 @@
                                    VerticalAlignment="Top"
                                    RenderTransformOrigin="0.602,0.353"
                                    FontSize="10" />
-                            
-                            <Grid Margin="20" Visibility="{Binding InstallerVisibility}">
-                                <Grid x:Name="FolderSelect">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"></ColumnDefinition>
-                                        <ColumnDefinition Width="Auto"></ColumnDefinition>
-                                    </Grid.ColumnDefinitions>
-                                    <Label Foreground="White" Grid.Row="0" Grid.ColumnSpan="1">Install location:</Label>
-                                    <TextBox Grid.Column="0" Grid.Row="1" Background="Transparent" BorderBrush="White" Foreground="White" Text="{Binding InstallDirectory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></TextBox>
-                                    <Button Click="SelectDir_Click" Grid.Row="1" Background="Transparent" BorderBrush="White" Foreground="White" Width="20" Grid.Column="1">...</Button>
-                                </Grid>
-                                <ProgressBar x:Name="ProgressBar" Visibility="Collapsed" Minimum="0" Maximum="100" Value="22"></ProgressBar>
-                            </Grid>
-
                         </StackPanel>
+
+                        <Grid Grid.Row="1"  VerticalAlignment="Stretch" Margin="20 , 20 ,20 , 50" Visibility="{Binding InstallerVisibility}">
+                            <Grid x:Name="FolderSelect">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"></ColumnDefinition>
+                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                </Grid.ColumnDefinitions>
+                                <Label Foreground="White" Grid.Row="0" Grid.ColumnSpan="1">Version:</Label>
+                                <ComboBox Grid.Row="1" Grid.ColumnSpan="2" Grid.Column="0" Background="Transparent" SelectedItem="{Binding SelectedRelease, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Releases}" DisplayMemberPath="TagName"></ComboBox>
+
+                                <Label Foreground="White" Grid.Row="2" Grid.ColumnSpan="2" Grid.Column="0">Install location:</Label>
+                                <TextBox Grid.Column="0" Grid.Row="3" Background="Transparent" BorderBrush="White" Foreground="White" Text="{Binding InstallDirectory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></TextBox>
+                                <Button Click="SelectDir_Click" Grid.Row="3" Background="Transparent" BorderBrush="White" Foreground="White" Width="20" Grid.Column="1">...</Button>
+
+                                <Border Margin="0 10 0 0" MinHeight="50" VerticalAlignment="Stretch" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="4">
+                                    <mdXaml:MarkdownScrollViewer 
+                                        HorizontalScrollBarVisibility="Auto"
+                                        VerticalScrollBarVisibility="Auto"
+                                        MarkdownStyle="{StaticResource MdStyle}"
+                                        Markdown="{Binding SelectedRelease.Description}"  Foreground="White" xml:space="preserve"/>
+                                </Border>
+
+                            </Grid>
+                            <ProgressBar VerticalAlignment="Top" x:Name="ProgressBar" Visibility="Collapsed" Minimum="0" Maximum="100" Value="22"></ProgressBar>
+                        </Grid>
+
                     </Grid>
 
                 </Grid>
@@ -190,8 +210,8 @@
                     </Grid.RowDefinitions>
                     <Border BorderBrush="White" BorderThickness="0 1 0 0" Grid.Row="1" Visibility="{Binding InstallerVisibility}">
                         <Grid Margin="0 5 0 0">
-                            <Button IsEnabled="{Binding CanClose}" Click="Exit_OnClick" Margin="0 0 120 0" Background="Transparent" BorderBrush="White" Foreground="White" HorizontalAlignment="Right" Width="100" Visibility="{Binding InstallVisibility}" Height="25" Grid.Row="1">Close</Button>
-                            <Button IsEnabled="{Binding CanClose}" Click="Install_Click" Background="Transparent" BorderBrush="White" Foreground="White" HorizontalAlignment="Right" Width="100" Height="25" Grid.Row="1">Install</Button>
+                            <Button IsEnabled="{Binding CanClose}" Click="Exit_OnClick" Margin="0 0 120 0" Background="Transparent" BorderBrush="White" Foreground="White" HorizontalAlignment="Right" Width="100" Visibility="{Binding InstallVisibility}" Height="25">Close</Button>
+                            <Button IsEnabled="{Binding CanClose}" Click="Install_Click" Background="Transparent" BorderBrush="White" Foreground="White" HorizontalAlignment="Right" Width="100">Install</Button>
                         </Grid>
                     </Border>
 

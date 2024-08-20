@@ -38,11 +38,14 @@ namespace Visuality
 
         public string Header => $"A new version {NewVersion} is available!";
 
+        public string Description { get; private set; }
+
         public UpdateDialog(UpdateManager updateManager)
         {
             NewVersion = updateManager?.NewVersion?.ToString() ?? new Version(0,0,0,2).ToString();
             CurrentVersion = ApplicationConstants.ApplicationVersion.ToString();
             _updateManager = updateManager;
+            Description = updateManager?.Description;
             InitializeComponent();
             DataContext = this;
             MainBorder.BindMouseGradientAngle(ShouldBindGradientMouse);
