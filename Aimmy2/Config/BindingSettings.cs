@@ -7,7 +7,7 @@ public class BindingSettings: BaseSettings
     private string _aimKeybind = "Right";
     private string _secondAimKeybind = "LMenu";
     private string _dynamicFovKeybind = "Left";
-    private string _modelSwitchKeybind = "OemPipe";
+    private string _modelSwitchKeybind = "";
     private string _antiRecoilKeybind = "Left";
     private string _disableAntiRecoilKeybind = "Oem6";
     private string _gun1Key = "D1";

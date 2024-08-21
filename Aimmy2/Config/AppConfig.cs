@@ -3,8 +3,10 @@ using System.IO;
 using System.Windows;
 using Aimmy2.AILogic;
 using Aimmy2.InputLogic.HidHide;
+using Aimmy2.MouseMovementLibraries.GHubSupport.dist;
 using Aimmy2.Types;
 using Newtonsoft.Json;
+using YamlDotNet.Serialization;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 
@@ -47,12 +49,19 @@ public class AppConfig : BaseSettings
         set => SetField(ref _captureSource, value);
     }
 
-    public static AppConfig Load(string path = DefaultConfigPath)
+    public static AppConfig Load(string? path = null)
     {
+        if (path == null)
+        {
+            path = GetLastConfigPath();
+            if(path == null || !File.Exists(path))
+                path = DefaultConfigPath;
+        }
         try
         {
             if (File.Exists(path))
             {
+                SaveLastConfigPath(path);
                 string json = File.ReadAllText(path);
                 
                 Current = JsonSerializer.Deserialize<AppConfig>(json);
@@ -89,5 +98,24 @@ public class AppConfig : BaseSettings
     }
 
     public static event EventHandler<EventArgs<AppConfig>>? ConfigLoaded;
+
+    private static void SaveLastConfigPath(string path)
+    {
+        var file = System.IO.Path.Combine(AppSettingsPath(), "LastConfigPath.cfg");
+        File.WriteAllText(file, path);
+    }
+
+    private static string AppSettingsPath()
+    {
+        var folderPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AI-M");
+        Directory.CreateDirectory(folderPath);
+        return folderPath;
+    }
+
+    private static string? GetLastConfigPath()
+    {
+        var file = System.IO.Path.Combine(AppSettingsPath(), "LastConfigPath.cfg");
+        return File.Exists(file) ? File.ReadAllText(file) : null;
+    }
 
 }

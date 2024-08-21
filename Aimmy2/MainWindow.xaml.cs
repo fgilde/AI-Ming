@@ -25,10 +25,13 @@ using MdXaml;
 using Microsoft.Xaml.Behaviors.Core;
 using MouseMovementLibraries.ddxoftSupport;
 using MouseMovementLibraries.RazerSupport;
+using Nextended.Core;
+using Nextended.UI.Helper;
 using Other;
 using Visuality;
 using Application = System.Windows.Application;
 using Button = System.Windows.Controls.Button;
+using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using MessageBox = System.Windows.MessageBox;
 using Panel = System.Windows.Controls.Panel;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
@@ -43,7 +46,6 @@ public partial class MainWindow
     public static MainWindow? Instance => Application.Current.MainWindow as MainWindow;
 
     private bool _uiCreated;
-    private InputBindingManager? bindingManager;
     private FileManager fileManager;
     private static GithubManager githubManager = new();
     public AntiRecoilManager arManager = new();
@@ -59,7 +61,10 @@ public partial class MainWindow
 
     #region Loading Window
 
-    public AppConfig? Config { get; private set; }
+    public AppConfig? Config { get; internal set; }
+
+    public InputBindingManager? BindingManager { get; private set; }
+
 
     public MainWindow()
     {
@@ -97,7 +102,16 @@ public partial class MainWindow
 
     private void CreateUI()
     {
+        string? menu = null;
+        var isRecreating = IsInitialized && _uiCreated;
+        if (isRecreating && CurrentMenu != nameof(AimMenu))
+        {
+            menu = CurrentMenu;
+            _= NavigateTo(nameof(AimMenu), false);
+        }
+
         _uiCreated = false;
+
         var theme = ThemePalette.All.FirstOrDefault(x => x.Name == AppConfig.Current.ThemeName) ?? ThemePalette.PurplePalette;
         ApplicationConstants.Theme = theme;
 
@@ -113,36 +127,38 @@ public partial class MainWindow
 
         arManager.HoldDownLoad();
 
-        if (bindingManager != null)
+        if (BindingManager != null)
         {
-            bindingManager.OnBindingPressed -= BindingOnKeyPressed;
-            bindingManager.OnBindingReleased -= BindingOnKeyReleased;
+            BindingManager.OnBindingPressed -= BindingOnKeyPressed;
+            BindingManager.OnBindingReleased -= BindingOnKeyReleased;
+            BindingManager.Dispose();
         }
 
-        bindingManager = new InputBindingManager();
-        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.AimKeybind),
+        BindingManager = new InputBindingManager();
+        OnPropertyChanged(nameof(BindingManager));
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.AimKeybind),
             AppConfig.Current.BindingSettings.AimKeybind);
-        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.TriggerKey),
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.TriggerKey),
             AppConfig.Current.BindingSettings.TriggerKey);
-        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.TriggerAdditionalCommandKey),
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.TriggerAdditionalCommandKey),
             AppConfig.Current.BindingSettings.TriggerAdditionalCommandKey);
-        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.RapidFireKey),
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.RapidFireKey),
             AppConfig.Current.BindingSettings.RapidFireKey);
 
-        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.SecondAimKeybind),
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.SecondAimKeybind),
             AppConfig.Current.BindingSettings.SecondAimKeybind);
-        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind),
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind),
             AppConfig.Current.BindingSettings.DynamicFOVKeybind);
-        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.ModelSwitchKeybind),
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.ModelSwitchKeybind),
             AppConfig.Current.BindingSettings.ModelSwitchKeybind);
 
-        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind),
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind),
             AppConfig.Current.BindingSettings.AntiRecoilKeybind);
-        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.DisableAntiRecoilKeybind),
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.DisableAntiRecoilKeybind),
             AppConfig.Current.BindingSettings.DisableAntiRecoilKeybind);
-        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.Gun1Key),
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.Gun1Key),
             AppConfig.Current.BindingSettings.Gun1Key);
-        bindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.Gun2Key),
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.Gun2Key),
             AppConfig.Current.BindingSettings.Gun2Key);
 
         LoadAimMenu();
@@ -152,10 +168,20 @@ public partial class MainWindow
         LoadStoreMenuAsync();
         LoadGlobalUI();
 
-        bindingManager.OnBindingPressed += BindingOnKeyPressed;
-        bindingManager.OnBindingReleased += BindingOnKeyReleased;
+        BindingManager.OnBindingPressed += BindingOnKeyPressed;
+        BindingManager.OnBindingReleased += BindingOnKeyReleased;
         
+        ModelListBox.EnsureRenderedAndInitialized();
+        ConfigsListBox.EnsureRenderedAndInitialized();
+        Width += 1;
+        Task.Delay(10).ContinueWith(task => Dispatcher.Invoke(() => Width -= 1));
+        // ModelMenuTabControl.SelectedIndex = 0;
         _uiCreated = true;
+
+        if (isRecreating && menu != null)
+        {
+            _ = NavigateTo(menu, false);
+        }
     }
 
     private void FillMenus()
@@ -163,11 +189,9 @@ public partial class MainWindow
         ModelContextMenu.Items.Clear();
         ModelContextMenu.Items.AddRange(ModelListBox.ToMenuItems(item =>
         {
-            FileManager.AIManager?.Dispose();
-            FileManager.AIManager = null;
-            FileManager.CurrentlyLoadingModel = false;
-            LoadLastModel(item.Header.ToString());
-        }));
+            LoadModel(item.Header.ToString());
+        },
+        (i, item) => i <= 9 ? KeyGestureConvertHelper.CreateFromString($"Ctrl + Shift + {i}") : null));
         ModelContextMenu.Items.Add(new Separator());
         var downloadableMenu = new MenuItem()
         {
@@ -188,10 +212,7 @@ public partial class MainWindow
                     {
                         Dispatcher.Invoke(() =>
                         {
-                            FileManager.AIManager?.Dispose();
-                            FileManager.AIManager = null;
-                            FileManager.CurrentlyLoadingModel = false;
-                            LoadLastModel(s);
+                            LoadModel(s);
                             FillMenus();
                         });
                     }
@@ -200,7 +221,18 @@ public partial class MainWindow
         }));
 
         MenuItemOpenCfg.Items.Clear();
-        MenuItemOpenCfg.Items.AddRange(ConfigsListBox.ToMenuItems(item => LoadConfig(Path.Combine(Path.GetDirectoryName(AppConfig.DefaultConfigPath), item.Header?.ToString()))));
+        MenuItemOpenCfg.Items.AddRange(ConfigsListBox.ToMenuItems(
+            item => LoadConfig(Path.Combine(Path.GetDirectoryName(AppConfig.DefaultConfigPath), item.Header?.ToString())),
+            (i, item) => i <= 9 ? KeyGestureConvertHelper.CreateFromString($"Ctrl + {i}") : null)
+        );
+    }
+
+    private void LoadModel(string? modelName = null)
+    {
+        FileManager.AIManager?.Dispose();
+        FileManager.AIManager = null;
+        FileManager.CurrentlyLoadingModel = false;
+        LoadLastModel(modelName);
     }
 
     private void LoadLastModel(string? modelName = null)
@@ -226,13 +258,10 @@ public partial class MainWindow
         {
             select.Selected += (sender, source) =>
             {
-                FileManager.AIManager?.Dispose();
-                FileManager.AIManager = null;
-                FileManager.CurrentlyLoadingModel = false;
-                LoadLastModel();
+                LoadModel();
             };
         });
-        TopCenterGrid.AddToggleWithKeyBind("Global Active", bindingManager, toggle =>
+        TopCenterGrid.AddToggleWithKeyBind("Global Active", BindingManager, toggle =>
         {
             toggle.BindTo(() => AppConfig.Current.ToggleState.GlobalActive);
             toggle.Changed += (s, e) => SetActive(e.Value);
@@ -302,27 +331,38 @@ public partial class MainWindow
 
     private async void MenuSwitch(object sender, RoutedEventArgs e)
     {
-        if (sender is Button clickedButton && !CurrentlySwitching && CurrentMenu != clickedButton.Tag.ToString())
+        if (sender is Button clickedButton && !CurrentlySwitching)
         {
-            CurrentlySwitching = true;
-            var buttonIndx = MenuButtons.Children.IndexOf(clickedButton);
-            var margin = buttonIndx * Menu1B.Height;
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(350), MenuHighlighter, MenuHighlighter.Margin, new Thickness(0, margin, 0, 0));
-            await SwitchScrollPanels(FindName(clickedButton.Tag.ToString()) as ScrollViewer ??
-                                     throw new NullReferenceException("Scrollpanel is null"));
-            CurrentMenu = clickedButton.Tag.ToString()!;
+            var name = clickedButton.Tag?.ToString();
+            if (name != null && CurrentMenu != name)
+            {
+                await NavigateTo(name, true, clickedButton);
+            }
         }
     }
 
-    private async Task SwitchScrollPanels(ScrollViewer movingScrollViewer)
+    private async Task NavigateTo(string name, bool animate = true, Button? clickedButton = null)
     {
+        clickedButton ??= MenuButtons.Children.OfType<Button>().FirstOrDefault(b => b.Tag?.ToString() == name);
+        CurrentlySwitching = true;
+        var buttonIndx = MenuButtons.Children.IndexOf(clickedButton);
+        var margin = buttonIndx * Menu1B.Height;
+        Animator.ObjectShift(TimeSpan.FromMilliseconds(animate ? 350 : 0), MenuHighlighter, MenuHighlighter.Margin, new Thickness(0, margin, 0, 0));
+        await SwitchScrollPanels(FindName(name) as ScrollViewer ?? throw new NullReferenceException("Scrollpanel is null"), animate);
+        CurrentMenu = name;
+    }
+
+    private async Task SwitchScrollPanels(ScrollViewer movingScrollViewer, bool animate = true)
+    {
+        var duration = animate ? 350 : 0;
         movingScrollViewer.Visibility = Visibility.Visible;
         Animator.Fade(movingScrollViewer);
-        Animator.ObjectShift(TimeSpan.FromMilliseconds(350), movingScrollViewer, movingScrollViewer.Margin,
+        
+        Animator.ObjectShift(TimeSpan.FromMilliseconds(duration), movingScrollViewer, movingScrollViewer.Margin,
             new Thickness(50, 50, 0, 0));
 
         Animator.FadeOut(CurrentScrollViewer!);
-        Animator.ObjectShift(TimeSpan.FromMilliseconds(350), CurrentScrollViewer!, CurrentScrollViewer!.Margin,
+        Animator.ObjectShift(TimeSpan.FromMilliseconds(duration), CurrentScrollViewer!, CurrentScrollViewer!.Margin,
             new Thickness(50, 450, 0, -400));
         await Task.Delay(350);
 
@@ -378,7 +418,7 @@ public partial class MainWindow
         switch (bindingId)
         {
             case nameof(AppConfig.Current.BindingSettings.ModelSwitchKeybind):
-                if (AppConfig.Current.ToggleState.EnableModelSwitchKeybind)
+                if (InputBindingManager.IsValidKey(AppConfig.Current.BindingSettings.ModelSwitchKeybind))
                     if (!FileManager.CurrentlyLoadingModel)
                     {
                         if (ModelListBox.SelectedIndex >= 0 &&
@@ -433,6 +473,8 @@ public partial class MainWindow
 
     private void LoadAimMenu()
     {
+        ConfigSettings.RemoveAll();
+        ModelSettings.RemoveAll();
         AimAssist.RemoveAll();
         RapidFire.RemoveAll();
         AimConfig.RemoveAll();
@@ -446,21 +488,38 @@ public partial class MainWindow
 
         var keybind = AppConfig.Current.BindingSettings;
         AimAssist.AddTitle("Aim Assist", true);
-        AimAssist.AddToggleWithKeyBind("Aim Assist", bindingManager).BindTo(() => AppConfig.Current.ToggleState.AimAssist).BindActiveStateColor(AimAssist);
+        AimAssist.AddToggleWithKeyBind("Aim Assist", BindingManager).BindTo(() => AppConfig.Current.ToggleState.AimAssist).BindActiveStateColor(AimAssist);
         
 
-        AimAssist.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.AimKeybind), () => keybind.AimKeybind, bindingManager);
-        AimAssist.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.SecondAimKeybind), () => keybind.SecondAimKeybind, bindingManager);
+        AimAssist.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.AimKeybind), () => keybind.AimKeybind, BindingManager);
+        AimAssist.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.SecondAimKeybind), () => keybind.SecondAimKeybind, BindingManager);
         AimAssist.AddToggle("Constant AI Tracking").BindTo(() => AppConfig.Current.ToggleState.ConstantAITracking);
 
         AimAssist.AddToggle("Predictions").BindTo(() => AppConfig.Current.ToggleState.Predictions);
         AimAssist.AddToggle("EMA Smoothening").BindTo(() => AppConfig.Current.ToggleState.EMASmoothening);
-        AimAssist.AddToggle("Enable Model Switch Keybind").BindTo(() => AppConfig.Current.ToggleState.EnableModelSwitchKeybind);
-        AimAssist.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.ModelSwitchKeybind), () => keybind.ModelSwitchKeybind, bindingManager);
         AimAssist.AddSeparator();
         AimAssist.Visibility = GetVisibilityFor(nameof(AimAssist));
 
         #endregion Aim Assist
+
+        #region Model Settings
+
+        ModelSettings.AddTitle("Model Settings");
+        ModelSettings.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.ModelSwitchKeybind), () => keybind.ModelSwitchKeybind, BindingManager);
+        ModelSettings.AddCredit("",
+            "With this Key bind you can toggle through each model\r\n" +
+            "Additionally you can set a KeyBind for each model to load a specific one");
+        ModelSettings.AddSeparator();
+
+        #endregion
+
+        #region Config Settings
+
+        ConfigSettings.AddTitle("Config Settings");
+        ConfigSettings.AddButton("Save Config").Reader.Click += (s, e) => new ConfigSaver().ShowDialog();
+        ConfigSettings.AddSeparator();
+
+        #endregion
 
         #region Config
 
@@ -499,8 +558,8 @@ public partial class MainWindow
         #region Rapid
 
         RapidFire.AddTitle("Rapid Fire", true);
-        RapidFire.AddToggleWithKeyBind("Rapid Fire", bindingManager).BindTo(() => AppConfig.Current.ToggleState.RapidFire).BindActiveStateColor(RapidFire);
-        RapidFire.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.RapidFireKey), () => keybind.RapidFireKey, bindingManager);
+        RapidFire.AddToggleWithKeyBind("Rapid Fire", BindingManager).BindTo(() => AppConfig.Current.ToggleState.RapidFire).BindActiveStateColor(RapidFire);
+        RapidFire.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.RapidFireKey), () => keybind.RapidFireKey, BindingManager);
         RapidFire.AddSeparator();
         RapidFire.Visibility = GetVisibilityFor(nameof(RapidFire));
 
@@ -510,9 +569,9 @@ public partial class MainWindow
 
         TriggerBot.AddTitle("Auto Trigger", true);
 
-        TriggerBot.AddToggleWithKeyBind("Auto Trigger", bindingManager).BindTo(() => AppConfig.Current.ToggleState.AutoTrigger).BindActiveStateColor(TriggerBot);
+        TriggerBot.AddToggleWithKeyBind("Auto Trigger", BindingManager).BindTo(() => AppConfig.Current.ToggleState.AutoTrigger).BindActiveStateColor(TriggerBot);
         
-        TriggerBot.AddToggleWithKeyBind("Charge Mode", bindingManager, null, b => b.ToolTip = "If this is on, mouse will be clicked down when enemy is detected and trigger key is hold and then released when configured area is reached")
+        TriggerBot.AddToggleWithKeyBind("Charge Mode", BindingManager, null, b => b.ToolTip = "If this is on, mouse will be clicked down when enemy is detected and trigger key is hold and then released when configured area is reached")
             .BindTo(() => AppConfig.Current.ToggleState.AutoTriggerCharged);
         
 
@@ -534,7 +593,7 @@ public partial class MainWindow
             new EditHeadArea(AppConfig.Current.DropdownState.HeadArea).Show();
 
 
-        TriggerBot.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.TriggerKey), () => keybind.TriggerKey, bindingManager);
+        TriggerBot.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.TriggerKey), () => keybind.TriggerKey, BindingManager);
         TriggerBot.AddSlider("Min Time Trigger Key", "Seconds", 0.01, 0.1, 0.0, 5).InitWith(slider =>
         {
             Config.BindingSettings.PropertyChanged += (sender, args) =>
@@ -550,11 +609,11 @@ public partial class MainWindow
         TriggerBot.AddSlider("Auto Trigger Delay", "Seconds", 0.01, 0.1, 0.00, 5).BindTo(() => AppConfig.Current.SliderSettings.AutoTriggerDelay);
 
 
-        TriggerBot.AddKeyChanger("Trigger Additional Send", () => keybind.TriggerAdditionalSend, bindingManager);
+        TriggerBot.AddKeyChanger("Trigger Additional Send", () => keybind.TriggerAdditionalSend, BindingManager);
 
         TriggerBot.AddDropdown("Trigger Additional Command Check", AppConfig.Current.DropdownState.TriggerAdditionalCommandCheck,
             check => AppConfig.Current.DropdownState.TriggerAdditionalCommandCheck = check);
-        TriggerBot.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.TriggerAdditionalCommandKey), () => keybind.TriggerAdditionalCommandKey, bindingManager);
+        TriggerBot.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.TriggerAdditionalCommandKey), () => keybind.TriggerAdditionalCommandKey, BindingManager);
 
 
         TriggerBot.AddSeparator();
@@ -565,9 +624,9 @@ public partial class MainWindow
         #region Anti Recoil
 
         AntiRecoil.AddTitle("Anti Recoil", true);
-        AntiRecoil.AddToggleWithKeyBind("Anti Recoil", bindingManager).BindTo(() => AppConfig.Current.ToggleState.AntiRecoil).BindActiveStateColor(AntiRecoil);
-        AntiRecoil.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind), "Left", bindingManager);
-        AntiRecoil.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.DisableAntiRecoilKeybind), "Oem6", bindingManager);
+        AntiRecoil.AddToggleWithKeyBind("Anti Recoil", BindingManager).BindTo(() => AppConfig.Current.ToggleState.AntiRecoil).BindActiveStateColor(AntiRecoil);
+        AntiRecoil.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind), "Left", BindingManager);
+        AntiRecoil.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.DisableAntiRecoilKeybind), "Oem6", BindingManager);
         AntiRecoil.AddSlider("Hold Time", "Milliseconds", 1, 1, 1, 1000, true).BindTo(() => AppConfig.Current.AntiRecoilSettings.HoldTime);
         AntiRecoil.AddButton("Record Fire Rate").Reader.Click += (s, e) => new SetAntiRecoil(this).Show();
         AntiRecoil.AddSlider("Fire Rate", "Milliseconds", 1, 1, 1, 5000, true).BindTo(() => AppConfig.Current.AntiRecoilSettings.FireRate);
@@ -582,7 +641,7 @@ public partial class MainWindow
 
         // Anti-Recoil Config
         ARConfig.AddTitle("Anti Recoil Config", true);
-        ARConfig.AddToggleWithKeyBind("Enable Gun Switching Keybind", bindingManager).BindTo(() => AppConfig.Current.ToggleState.EnableGunSwitchingKeybind).BindActiveStateColor(ARConfig);
+        ARConfig.AddToggleWithKeyBind("Enable Gun Switching Keybind", BindingManager).BindTo(() => AppConfig.Current.ToggleState.EnableGunSwitchingKeybind).BindActiveStateColor(ARConfig);
         ARConfig.AddButton("Save Anti Recoil Config").Reader.Click += (s, e) =>
         {
             var saveFileDialog = new SaveFileDialog
@@ -596,9 +655,9 @@ public partial class MainWindow
                 new NoticeBar($"[Anti Recoil] Config has been saved to \"{saveFileDialog.FileName}\"", 2000).Show();
             }
         };
-        ARConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.Gun1Key), "D1", bindingManager);
+        ARConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.Gun1Key), "D1", BindingManager);
         ARConfig.AddFileLocator("Gun 1 Config", "Aimmy Style Recoil Config (*.cfg)|*.cfg", "\\bin\\anti_recoil_configs");
-        ARConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.Gun2Key), "D2", bindingManager);
+        ARConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.Gun2Key), "D2", BindingManager);
         ARConfig.AddFileLocator("Gun 2 Config", "Aimmy Style Recoil Config (*.cfg)|*.cfg", "\\bin\\anti_recoil_configs");
 
         ARConfig.AddButton("Load Gun 1 Config").Reader.Click +=
@@ -613,9 +672,9 @@ public partial class MainWindow
         #region FOV Config
 
         FOVConfig.AddTitle("FOV Config", true);
-        FOVConfig.AddToggleWithKeyBind("FOV", bindingManager).BindTo(() => AppConfig.Current.ToggleState.FOV).BindActiveStateColor(FOVConfig);
-        FOVConfig.AddToggleWithKeyBind("Dynamic FOV", bindingManager).BindTo(() => AppConfig.Current.ToggleState.DynamicFOV);
-        FOVConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind), () => keybind.DynamicFOVKeybind, bindingManager);
+        FOVConfig.AddToggleWithKeyBind("FOV", BindingManager).BindTo(() => AppConfig.Current.ToggleState.FOV).BindActiveStateColor(FOVConfig);
+        FOVConfig.AddToggleWithKeyBind("Dynamic FOV", BindingManager).BindTo(() => AppConfig.Current.ToggleState.DynamicFOV);
+        FOVConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind), () => keybind.DynamicFOVKeybind, BindingManager);
         FOVConfig.AddColorChanger("FOV Color").BindTo(() => AppConfig.Current.ColorState.FOVColor);
 
         FOVConfig.AddSlider("FOV Size", "Size", 1, 1, 10, 640).BindTo(() => AppConfig.Current.SliderSettings.FOVSize);
@@ -630,10 +689,10 @@ public partial class MainWindow
         #region ESP Config
 
         ESPConfig.AddTitle("ESP Config", true);
-        ESPConfig.AddToggleWithKeyBind("Show Detected Player", bindingManager).BindTo(() => AppConfig.Current.ToggleState.ShowDetectedPlayer).BindActiveStateColor(ESPConfig);
-        ESPConfig.AddToggleWithKeyBind("Show Trigger Head Area", bindingManager).BindTo(() => AppConfig.Current.ToggleState.ShowTriggerHeadArea);
-        ESPConfig.AddToggleWithKeyBind("Show AI Confidence", bindingManager).BindTo(() => AppConfig.Current.ToggleState.ShowAIConfidence);
-        ESPConfig.AddToggleWithKeyBind("Show Tracers", bindingManager).BindTo(() => AppConfig.Current.ToggleState.ShowTracers);
+        ESPConfig.AddToggleWithKeyBind("Show Detected Player", BindingManager).BindTo(() => AppConfig.Current.ToggleState.ShowDetectedPlayer).BindActiveStateColor(ESPConfig);
+        ESPConfig.AddToggleWithKeyBind("Show Trigger Head Area", BindingManager).BindTo(() => AppConfig.Current.ToggleState.ShowTriggerHeadArea);
+        ESPConfig.AddToggleWithKeyBind("Show AI Confidence", BindingManager).BindTo(() => AppConfig.Current.ToggleState.ShowAIConfidence);
+        ESPConfig.AddToggleWithKeyBind("Show Tracers", BindingManager).BindTo(() => AppConfig.Current.ToggleState.ShowTracers);
 
         ESPConfig.AddDropdown("Drawing Method", AppConfig.Current.DropdownState.OverlayDrawingMethod, v => AppConfig.Current.DropdownState.OverlayDrawingMethod = v);
 
@@ -901,8 +960,7 @@ public partial class MainWindow
 
         SettingsConfig.AddToggle("Mouse Background Effect").BindTo(() => AppConfig.Current.ToggleState.MouseBackgroundEffect);
         SettingsConfig.AddToggle("UI TopMost").BindTo(() => AppConfig.Current.ToggleState.UITopMost);
-        SettingsConfig.AddButton("Save Config").Reader.Click += (s, e) => new ConfigSaver().ShowDialog();
-
+        
         SettingsConfig.AddSeparator();
 
         // X/Y Percentage Adjustment Enabler
@@ -949,17 +1007,22 @@ public partial class MainWindow
         try
         {
             Task models = FileManager.RetrieveAndAddFiles(
-                $"https://api.github.com/repos/{ApplicationConstants.RepoOwner}/{ApplicationConstants.RepoName}/contents/models", "bin\\models", AvailableModels);
+                $"https://api.github.com/repos/{ApplicationConstants.RepoOwner}/{ApplicationConstants.RepoName}/contents/models",
+                "bin\\models", AvailableModels);
             Task configs = FileManager.RetrieveAndAddFiles(
-                $"https://api.github.com/repos/{ApplicationConstants.RepoOwner}/{ApplicationConstants.RepoName}/contents/configs", "bin\\configs", AvailableConfigs);
+                $"https://api.github.com/repos/{ApplicationConstants.RepoOwner}/{ApplicationConstants.RepoName}/contents/configs",
+                "bin\\configs", AvailableConfigs);
 
             await Task.WhenAll(models, configs);
-            FillMenus();
         }
         catch (Exception e)
         {
             new NoticeBar(e.Message, 10000).Show();
             return;
+        }
+        finally
+        {
+            FillMenus();
         }
 
         Application.Current.Dispatcher.Invoke(() =>
@@ -996,16 +1059,18 @@ public partial class MainWindow
 
     #region Config Loader
 
-    internal void LoadConfig(string path = AppConfig.DefaultConfigPath, bool loading_from_configlist = false)
+    internal void LoadConfig(string path = AppConfig.DefaultConfigPath)
     {
+        if(path == AppConfig.Current.Path)
+            return;
+        AppConfig.Current.Save();
         Console.WriteLine("Loading Config: " + path);
         Config = AppConfig.Load(path);
         OnPropertyChanged(nameof(Config));
-        if (loading_from_configlist)
-        {
-            if (!string.IsNullOrEmpty(AppConfig.Current.SuggestedModelName) && AppConfig.Current.SuggestedModelName != "N/A")
-                MessageBox.Show("The creator of this model suggests you use this model:\n" + AppConfig.Current.SuggestedModelName, "Suggested Model - Aimmy");
-        }
+
+        if (!string.IsNullOrEmpty(AppConfig.Current.SuggestedModelName) && AppConfig.Current.SuggestedModelName != "N/A")
+            MessageBox.Show("The creator of this model suggests you use this model:\n" + AppConfig.Current.SuggestedModelName, "Suggested Model - Aimmy");
+        LoadModel();
     }
 
     #endregion Config Loader
@@ -1015,7 +1080,7 @@ public partial class MainWindow
     private void LoadAntiRecoilConfig(string path = "bin\\anti_recoil_configs\\Default.cfg",
         bool loading_outside_startup = false)
     {
-        if(true || !string.IsNullOrEmpty(path)) {
+        if(!string.IsNullOrEmpty(path)) {
             AppConfig.Current.AntiRecoilSettings.Load<AntiRecoilSettings>(path);
             if (loading_outside_startup)
                 CreateUI();
@@ -1109,7 +1174,7 @@ public partial class MainWindow
     #endregion Window Handling
 
 
-    protected override void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    internal override void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         if (propertyName == nameof(IsModelLoaded))
             OnPropertyChanged(nameof(IsNotModelLoaded));
@@ -1152,5 +1217,44 @@ public partial class MainWindow
     private void ShowKnownIssues_Click(object sender, RoutedEventArgs e)
     {
         KnownIssuesDialog.ShowIf(this, true);
+    }
+
+    private void UIElement_OnMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        e.Handled = true;
+    }
+
+    private void AKeyChanger_ModelOnGlobalKeyPressed(object? sender, EventArgs<(AKeyChanger Sender, string Key)> e)
+    {
+        var args = e.Value;
+        var modelToLoad = args.Sender.Tag?.ToString();
+        if (modelToLoad != null)
+        {
+            try
+            {
+                ModelListBox.SelectedIndex = ModelListBox.Items.IndexOf(modelToLoad);
+            }
+            catch
+            {
+                Check.TryCatch<Exception>(() => LoadModel(modelToLoad));
+            }
+        }
+    }
+
+    private void AKeyChanger_ConfigOnGlobalKeyPressed(object? sender, EventArgs<(AKeyChanger Sender, string Key)> e)
+    {
+        var args = e.Value;
+        var configToLoad = args.Sender.Tag?.ToString();
+        if (configToLoad != null)
+        {
+            try
+            {
+                ConfigsListBox.SelectedIndex = ConfigsListBox.Items.IndexOf(configToLoad);
+            }
+            catch
+            {
+                Check.TryCatch<Exception>(() => LoadConfig(Path.Combine(Path.GetDirectoryName(AppConfig.DefaultConfigPath), configToLoad)));
+            }
+        }
     }
 }

@@ -2,6 +2,7 @@
 using Class;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Markup;
 using System.Windows.Media;
 using Aimmy2.Class;
@@ -11,11 +12,24 @@ using Nextended.Core.Extensions;
 using Nextended.Core.Helper;
 using UILibrary;
 using Microsoft.Xaml.Behaviors.Core;
+using Nextended.UI.Helper;
+using Nextended.UI.WPF.Converters;
 
 namespace Aimmy2.Extensions;
 
 public static class UIElementExtensions
 {
+    public static void EnsureRenderedAndInitialized(this UIElement uiElement)
+    {
+        uiElement.Measure(new Size(Double.PositiveInfinity, Double.PositiveInfinity));
+        uiElement.Arrange(new Rect(uiElement.DesiredSize));
+        uiElement.UpdateLayout();
+
+        // Force WPF to recalculate the layout and sizes
+        uiElement.InvalidateMeasure();
+        uiElement.InvalidateArrange();
+    }
+
     public static ItemCollection AddRange(this ItemCollection collection, IEnumerable<UIElement> elements)
     {
         foreach (var element in elements)
@@ -25,9 +39,10 @@ public static class UIElementExtensions
 
         return collection;
     }
-    public static ICollection<MenuItem> ToMenuItems(this ListBox listBox, Action<MenuItem> onClick)
+    public static ICollection<MenuItem> ToMenuItems(this ListBox listBox, Action<MenuItem> onClick, Func<int, MenuItem, KeyGesture?> keyBindFn = null)
     {
         var menuItems = new List<MenuItem>();
+        var index = 0;
         foreach (object item in listBox.Items)
         {
             var menuItem = new MenuItem
@@ -37,7 +52,17 @@ public static class UIElementExtensions
                 Tag = item,
             };
             menuItem.Command = new ActionCommand(() => onClick(menuItem));
+            if(keyBindFn != null)
+            {
+                var gesture = keyBindFn(index, menuItem);
+                if (gesture != null)
+                {
+                    MainWindow.Instance.InputBindings.Add(new InputBinding(menuItem.Command, gesture));
+                    menuItem.InputGestureText = gesture.ConvertToString();
+                }
+            }
             menuItems.Add(menuItem);
+            index++;
         }
 
         return menuItems;
@@ -274,29 +299,16 @@ public static class UIElementExtensions
         toggle.Background = toggle.BorderBrush = Brushes.Transparent;
         var code = AKeyChanger.CodeFor(title);
         var keyCodeValue = AppConfig.Current.BindingSettings[code]?.ToString();
-        bool updating = false;
-        panel.AddKeyChanger(
-            code,
-            () => keyCodeValue ?? "None", bindingManager, changer =>
-            {
-                changer.Background = changer.BorderBrush = Brushes.Transparent;
-
-                if (keyCodeValue != null)
-                {
-                    bindingManager.SetupDefault(code, keyCodeValue);
-                }
-
-                changer.ShowTitle = false;
-                bindingManager.OnBindingPressed += (key) =>
-                {
-                    if (changer.HasKeySet && key == code && !updating)
-                    {
-                        updating = true;
-                        toggle.ToggleState();
-                        Task.Delay(300).ContinueWith(_ => updating = false);
-                    }
-                };
-            } );
+        var changer = panel.AddKeyChanger(code, () => keyCodeValue ?? "None", bindingManager);
+        changer.WithBorder = false;
+        changer.KeyConfigName = code;
+        changer.KeyBind = keyCodeValue ?? "None";
+        changer.ShowTitle = false;
+        changer.BindingManager = bindingManager;
+        changer.GlobalKeyPressed += (sender, args) =>
+        {
+            toggle.ToggleState();
+        };
         panel.Add(toggle, cfg);
         return toggle;
     }
@@ -330,44 +342,10 @@ public static class UIElementExtensions
         var keyChanger = panel.Add(new AKeyChanger(title, keybind), keyChanger =>
         {
             cfg?.Invoke(keyChanger);
+            keyChanger.BindingManager = bindingManager;
+            keyChanger.KeyConfigName = title;
         });
 
-        if (bindingManager == null)
-        {
-            return keyChanger;
-        }
-
-        keyChanger.KeyDeleted += (sender, e) =>
-        {
-            AppConfig.Current.BindingSettings[title] = "";
-            keyChanger.SetContent("");
-        };
-
-        keyChanger.Reader.Click += (sender, e) =>
-        {
-            if(keyChanger.InUpdateMode)
-                return;
-            keyChanger.InUpdateMode = true;
-            keyChanger.SetContent("...");
-            keyChanger.ToolTip = "Press any key to set the binding";
-            bindingManager.StartListeningForBinding(title);
-
-            // Event handler for setting the binding
-            Action<string, string>? bindingSetHandler = null;
-            bindingSetHandler = (bindingId, key) =>
-            {
-                if (bindingId == title)
-                {
-                    keyChanger.SetContent(key);
-                    keyChanger.ToolTip = string.Empty;
-                    AppConfig.Current.BindingSettings[bindingId] = key;
-                    bindingManager.OnBindingSet -= bindingSetHandler; // Unsubscribe after setting
-                    Task.Delay(300).ContinueWith(_ => keyChanger.InUpdateMode = false);
-                }
-            };
-
-            bindingManager.OnBindingSet += bindingSetHandler;
-        };
         return keyChanger;
     }
 

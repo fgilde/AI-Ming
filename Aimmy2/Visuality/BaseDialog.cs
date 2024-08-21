@@ -25,7 +25,7 @@ public abstract class BaseDialog : Window, INotifyPropertyChanged
         protected set => SetField(ref _settings, value);
     }
 
-    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    internal virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }

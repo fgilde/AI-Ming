@@ -6,7 +6,7 @@ using Aimmy2.InputLogic.Gamepad.Interaction;
 
 namespace InputLogic
 {
-    internal class InputBindingManager
+    public class InputBindingManager : IDisposable
     {
         private IKeyboardMouseEvents? _mEvents;
         private bool _gamepadListen;
@@ -198,6 +198,12 @@ namespace InputLogic
         public static void SendKey(dynamic key)
         {
             InputSender.SendKey(key);
+        }
+
+        public void Dispose()
+        {
+            StopListening();
+            bindings.Clear();
         }
     }
 }

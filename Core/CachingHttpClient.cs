@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Headers;
+using Nextended.Core.Encode;
 
 namespace Core;
 
@@ -48,20 +49,16 @@ public class CachingHttpClient : IDisposable
         return content;
     }
 
-    static string GetStringSha256Hash(string text)
+    static string GetHash(string text)
     {
         if (string.IsNullOrEmpty(text))
             return string.Empty;
-
-        using var sha = new System.Security.Cryptography.SHA256Managed();
-        var textData = System.Text.Encoding.UTF8.GetBytes(text);
-        var hash = sha.ComputeHash(textData);
-        return BitConverter.ToString(hash).Replace("-", string.Empty);
+        return text.EncodeDecode().Base64.Encode();
     }
 
     private string GetCacheFilePath(string url)
     {
-        string fileName = GetStringSha256Hash(url);
+        string fileName = GetHash(url);
         return Path.Combine(_cacheDirectory, fileName);
     }
 

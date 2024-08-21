@@ -9,10 +9,14 @@ using System.Windows.Threading;
 using Aimmy2.Config;
 using Visuality;
 using System.Windows.Input;
+using Aimmy2;
 using Aimmy2.AILogic.Actions;
 using Aimmy2.AILogic.Contracts;
 using Core;
 using Microsoft.ML.OnnxRuntime;
+using Nextended.UI;
+using System.Xml.Linq;
+using Aimmy2.Extensions;
 
 namespace Other
 {
@@ -129,9 +133,8 @@ namespace Other
             if (ConfigListBox.SelectedItem == null) return;
             string selectedConfig = ConfigListBox.SelectedItem.ToString()!;
 
-            string configPath = Path.Combine("bin/configs", selectedConfig);
-
-            AppConfig.Load(configPath);
+            string configPath = Path.Combine(Path.GetDirectoryName(AppConfig.DefaultConfigPath), selectedConfig);
+            MainWindow.Instance.LoadConfig(configPath);
             SelectedConfigNotifier.Content = "Loaded Config: " + selectedConfig;
         }
 
@@ -196,6 +199,7 @@ namespace Other
                         if (lastLoadedModel != "N/A" && !ModelListBox.Items.Contains(lastLoadedModel)) { ModelListBox.SelectedItem = lastLoadedModel; }
                         SelectedModelNotifier.Content = $"Loaded Model: {lastLoadedModel}";
                     }
+                    ModelListBox.EnsureRenderedAndInitialized();
                 });
             }
         }
@@ -221,6 +225,7 @@ namespace Other
 
                         SelectedConfigNotifier.Content = "Loaded Config: " + lastLoadedConfig;
                     }
+                    ConfigListBox.EnsureRenderedAndInitialized();
                 });
             }
         }

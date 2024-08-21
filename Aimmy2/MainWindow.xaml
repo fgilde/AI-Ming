@@ -8,6 +8,7 @@
         xmlns:uiLibrary="clr-namespace:Aimmy2.UILibrary"
         xmlns:aimmy2="clr-namespace:Aimmy2"
         xmlns:visuality="clr-namespace:Visuality"
+        xmlns:system="clr-namespace:System;assembly=System.Runtime"
         mc:Ignorable="d"
         Title="{x:Static aimmy2:ApplicationConstants.ApplicationName}"
         Height="444"
@@ -286,6 +287,7 @@
                               Visibility="Collapsed">
                     <Grid>
                         <TabControl HorizontalContentAlignment="Left"
+                                    x:Name="ModelMenuTabControl"
                                     Margin="10,0,10,0">
                             <TabItem BorderThickness="0"
                                      Padding="0"
@@ -297,7 +299,15 @@
                                                FontFamily="{StaticResource Atkinson Hyperlegible}" />
                                 </TabItem.Header>
                                 <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <StackPanel x:Name="ModelSettings">
+
+                                    </StackPanel>
                                     <Border Background="#3F3C3C3C"
+                                            Grid.Row="1"
                                             BorderBrush="#3FFFFFFF"
                                             BorderThickness="1"
                                             CornerRadius="5,5,0,0"
@@ -306,10 +316,37 @@
                                                  Foreground="#DDFFFFFF"
                                                  FontFamily="{StaticResource Atkinson Hyperlegible}"
                                                  Margin="0"
-                                                 Padding="2">
+                                                 Padding="2"
+                                                 HorizontalContentAlignment="Stretch">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock
+                                                                   Text="{Binding}" 
+                                                                   VerticalAlignment="Center" 
+                                                                   Margin="0,0,5,0"/>
+                                                        <uiLibrary:AKeyChanger KeyConfigName="{Binding}"
+                                                                               Tag="{Binding}"
+                                                                               KeyConfigPrefix="MODEL"
+                                                                               BindingManager="{Binding DataContext.BindingManager, RelativeSource={RelativeSource AncestorType=aimmy2:MainWindow}}" 
+                                                                               MouseDown="UIElement_OnMouseDown" 
+                                                                               Grid.Column="1" 
+                                                                               GlobalKeyPressed="AKeyChanger_ModelOnGlobalKeyPressed"
+                                                                               WithBorder="False"
+                                                                               Text="" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
                                         </ListBox>
+
+
                                     </Border>
                                     <Border Background="#3F3C3C3C"
+                                            Grid.Row="1"
                                             BorderBrush="#3FFFFFFF"
                                             BorderThickness="1"
                                             CornerRadius="0,0,0,5"
@@ -323,6 +360,7 @@
                                                Padding="10"></Label>
                                     </Border>
                                     <Button x:Name="OpenFolderB_ModelWindow"
+                                            Grid.Row="1"
                                             Background="#3F3C3C3C"
                                             BorderBrush="#3FFFFFFF"
                                             Content="&#xE838;"
@@ -352,7 +390,15 @@
                                                FontFamily="{StaticResource Atkinson Hyperlegible}" />
                                 </TabItem.Header>
                                 <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <StackPanel x:Name="ConfigSettings">
+
+                                    </StackPanel>
                                     <Border Background="#3F3C3C3C"
+                                            Grid.Row="1"
                                             BorderBrush="#3FFFFFFF"
                                             BorderThickness="1"
                                             CornerRadius="5,5,0,0"
@@ -360,10 +406,36 @@
                                         <ListBox x:Name="ConfigsListBox"
                                                  Foreground="#DDFFFFFF"
                                                  FontFamily="{StaticResource Atkinson Hyperlegible}"
+                                                 HorizontalContentAlignment="Stretch"
                                                  Margin="0"
-                                                 Padding="2" />
+                                                 Padding="2" >
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock
+                                                                   Text="{Binding}" 
+                                                                   VerticalAlignment="Center" 
+                                                                   Margin="0,0,5,0"/>
+                                                        <uiLibrary:AKeyChanger KeyConfigName="{Binding}"
+                                                                               Tag="{Binding}"
+                                                                               KeyConfigPrefix="CONFIG"
+                                                                               BindingManager="{Binding DataContext.BindingManager, RelativeSource={RelativeSource AncestorType=aimmy2:MainWindow}}" 
+                                                                               MouseDown="UIElement_OnMouseDown" 
+                                                                               Grid.Column="1" 
+                                                                               GlobalKeyPressed="AKeyChanger_ConfigOnGlobalKeyPressed"
+                                                                               WithBorder="False"
+                                                                               Text="" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
                                     </Border>
                                     <Border Background="#3F3C3C3C"
+                                            Grid.Row="1"
                                             BorderBrush="#3FFFFFFF"
                                             BorderThickness="1"
                                             CornerRadius="0,0,0,5"
@@ -377,6 +449,7 @@
                                                Padding="10"></Label>
                                     </Border>
                                     <Button x:Name="OpenFolderB_ConfigWindow"
+                                            Grid.Row="1"
                                             Background="#3F3C3C3C"
                                             BorderBrush="#3FFFFFFF"
                                             Content="&#xE838;"

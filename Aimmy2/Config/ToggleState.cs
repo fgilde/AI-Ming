@@ -7,7 +7,6 @@ public class ToggleState : BaseSettings
     private bool _constantAiTracking = false;
     private bool _predictions = false;
     private bool _emaSmoothening = false;
-    private bool _enableModelSwitchKeybind = true;
     private bool _enableGunSwitchingKeybind = false;
     private bool _autoTrigger = true;
     private bool _antiRecoil = false;
@@ -71,13 +70,7 @@ public class ToggleState : BaseSettings
         get => _emaSmoothening;
         set => SetField(ref _emaSmoothening, value);
     }
-
-    public bool EnableModelSwitchKeybind
-    {
-        get => _enableModelSwitchKeybind;
-        set => SetField(ref _enableModelSwitchKeybind, value);
-    }
-
+    
     public bool EnableGunSwitchingKeybind
     {
         get => _enableGunSwitchingKeybind;

@@ -6,6 +6,7 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:Ant="clr-namespace:AntWpf.Controls;assembly=AntWpf"
              xmlns:local="clr-namespace:Aimmy2.UILibrary"
+             Loaded="AKeyChanger_OnLoaded"
              mc:Ignorable="d"
              d:DesignWidth="282.5"
              d:DesignHeight="40">
@@ -16,10 +17,11 @@
             </ContextMenu>
         </Grid.ContextMenu>
         <Border Height="40"
+                x:Name="MainBorder"
                 Background="Transparent"
                 CornerRadius="00"
                 BorderThickness="1,0,1,0"
-                BorderBrush="{Binding BorderBrush}">
+                BorderBrush="#3FFFFFFF">
             <Grid>
                 <Label x:Name="KeyChangerTitle"
                        Padding="10,10,10,10"
@@ -59,6 +61,7 @@
                 </Border>
 
                 <Button x:Name="Reader"
+                        Click="Reader_OnClick"
                         Background="{x:Null}"
                         BorderBrush="{x:Null}"
                         Padding="0,0,0,0"

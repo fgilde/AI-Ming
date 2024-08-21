@@ -72,7 +72,8 @@ namespace Aimmy2.UILibrary
         {
             try
             {
-                CapturePreview = CaptureSource?.Capture()?.ToImageSource();
+                var capture = CaptureSource?.Capture();
+                CapturePreview = capture.ToImageSource();
             }
             catch{
                 Console.WriteLine("Error updating preview");
