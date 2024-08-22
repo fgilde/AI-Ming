@@ -17,6 +17,7 @@ using Aimmy2.Models;
 using Visuality;
 using System.Threading;
 using System.Windows.Media;
+using Aimmy2.Extensions;
 using Nextended.UI;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
@@ -117,7 +118,7 @@ namespace Aimmy2.UILibrary
             btn.ContextMenu.Items.Add(new Separator());
             foreach (var monitor in Screen.AllScreens)
             {
-                var menuItem = new MenuItem() { Header = monitor.DeviceName };
+                var menuItem = new MenuItem { Header = monitor.DeviceFriendlyName() };
                 menuItem.IsCheckable = true;
                 menuItem.IsChecked = CaptureSource.TargetType == CaptureTargetType.Screen && ((CaptureSource.ProcessOrScreenId == null && Equals(monitor, Screen.PrimaryScreen)) || CaptureSource.ProcessOrScreenId == Screen.AllScreens.IndexOf(monitor));
                 menuItem.Click += (o, args) => OnSelect(monitor);

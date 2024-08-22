@@ -22,10 +22,10 @@ public class CaptureSource
         Title = title;
     }
 
-    public static CaptureSource MainScreen() => new(CaptureTargetType.Screen, System.Windows.Forms.Screen.PrimaryScreen.DeviceName);
+    public static CaptureSource MainScreen() => new(CaptureTargetType.Screen, System.Windows.Forms.Screen.PrimaryScreen.DeviceFriendlyName());
 
-    public static CaptureSource Screen(Screen screen) => new(CaptureTargetType.Screen, screen.DeviceName, System.Windows.Forms.Screen.AllScreens.IndexOf(screen));
-    public static CaptureSource Screen(int index) => new(CaptureTargetType.Screen, System.Windows.Forms.Screen.AllScreens[index].DeviceName, index);
+    public static CaptureSource Screen(Screen screen) => new(CaptureTargetType.Screen, screen.DeviceFriendlyName(), System.Windows.Forms.Screen.AllScreens.IndexOf(screen));
+    public static CaptureSource Screen(int index) => new(CaptureTargetType.Screen, System.Windows.Forms.Screen.AllScreens[index].DeviceFriendlyName(), index);
 
     public static CaptureSource Process(int processId) => new(CaptureTargetType.Process, System.Diagnostics.Process.GetProcessById(processId).MainWindowTitle, processId);
 
