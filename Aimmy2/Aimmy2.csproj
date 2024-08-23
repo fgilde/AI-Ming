@@ -72,7 +72,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="SharpDX" Version="4.2.0" />
-    <!--<PackageReference Include="SharpDX.DirectInput" Version="4.2.0" />-->
+    <PackageReference Include="SharpDX.DirectInput" Version="4.2.0" />
+    <PackageReference Include="H.InputSimulator" Version="1.4.2" />
     <PackageReference Include="SharpDX.XInput" Version="4.2.0" />
     <PackageReference Include="Accord.Statistics" Version="3.8.0" />
     <PackageReference Include="AntWpf" Version="1.0.3" />

@@ -6,7 +6,7 @@ public class DropdownState: BaseSettings
     private string _headArea = "";
     private TriggerCheck _triggerCheck = TriggerCheck.HeadIntersectingCenter;
     private PredictionMethod _predictionMethod = PredictionMethod.KalmanFilter;
-    private DetectionAreaType _detectionAreaType = DetectionAreaType.ClosestToCenterScreen;
+    private DetectionAreaType _detectionAreaType = DetectionAreaType.ClosestToCenter;
     private AimingBoundariesAlignment _aimingBoundariesAlignment = AimingBoundariesAlignment.Center;
     private MouseMovementMethod _mouseMovementMethod = MouseMovementMethod.MouseEvent;
     private OverlayDrawingMethod _overlayDrawingMethod;

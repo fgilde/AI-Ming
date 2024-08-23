@@ -132,7 +132,7 @@ namespace Aimmy2.Other
                 float headAreaTop = rect.Y + rect.Height * headRelativeRect.TopMarginPercentage;
 
                 var headAreaRect = new RectangleF(headAreaLeft, headAreaTop, headAreaWidth, headAreaHeight);
-                Draw(graphics, headAreaRect, Color.Green, 2);
+                Draw(graphics, headAreaRect, Color.Green, (float)borderThickness);
             }
 
             font.Dispose();

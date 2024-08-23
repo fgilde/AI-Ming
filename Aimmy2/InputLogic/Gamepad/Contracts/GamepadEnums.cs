@@ -1,4 +1,5 @@
-﻿using Nefarius.ViGEm.Client.Targets.Xbox360;
+﻿using System.ComponentModel;
+using Nefarius.ViGEm.Client.Targets.Xbox360;
 using SharpDX.XInput;
 using static CoreDX.vJoy.Wrapper.VJoyControllerManager;
 
@@ -7,22 +8,67 @@ namespace Aimmy2.InputLogic.Contracts;
 
 public enum GamepadButton
 {
-    A, B, X, Y,
-    LeftShoulder, RightShoulder,
-    Back, Start,
-    LeftThumb, RightThumb,
-    Up, Down, Left, Right
+    [Description("A")]
+    A,
+
+    [Description("B")]
+    B,
+
+    [Description("X")]
+    X,
+
+    [Description("Y")]
+    Y,
+
+    [Description("LB")]
+    LeftShoulder,
+
+    [Description("RB")]
+    RightShoulder,
+
+    [Description("BACK")]
+    Back,
+
+    [Description("START")]
+    Start,
+
+    [Description("LS")]
+    LeftThumb,
+
+    [Description("RS")]
+    RightThumb,
+
+    [Description("UP")]
+    Up,
+
+    [Description("DOWN")]
+    Down,
+
+    [Description("LEFT")]
+    Left,
+
+    [Description("RIGHT")]
+    Right
 }
 
 public enum GamepadSlider
 {
-    LeftTrigger, RightTrigger
+    [Description("LT")]
+    LeftTrigger,
+    [Description("RT")]
+    RightTrigger
 }
 
 public enum GamepadAxis
 {
-    LeftThumbX, LeftThumbY,
-    RightThumbX, RightThumbY
+    [Description("LSX")]
+    LeftThumbX, 
+    [Description("LSY")]
+    LeftThumbY,
+    [Description("RSX")]
+    RightThumbX, 
+    [Description("RSY")]
+    RightThumbY
 }
 
 public static class GamepadEnumExtensions

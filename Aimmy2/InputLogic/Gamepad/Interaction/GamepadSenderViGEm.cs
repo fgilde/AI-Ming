@@ -45,6 +45,7 @@ public class GamepadSenderViGEm : IGamepadSender
         return this;
     }
 
+
     public IGamepadSender PauseSync(GamepadButton button)
     {
         _actions.Add(() => _pausedButtons.Add(button.ToXbox360Button()));
@@ -60,6 +61,17 @@ public class GamepadSenderViGEm : IGamepadSender
     public IGamepadSender PauseSync(GamepadAxis axis)
     {
         _actions.Add(() => _pausedAxes.Add(axis.ToXbox360Axis()));
+        return this;
+    }
+
+    public IGamepadSender ResumeSync()
+    {
+        _actions.Add(() =>
+        {
+            _pausedSliders.Clear();
+            _pausedButtons.Clear();
+            _pausedAxes.Clear();
+        });
         return this;
     }
 

@@ -48,6 +48,13 @@ public class GamepadReader : IGamepadReader
     public short LSX => State.Gamepad.LeftThumbX;
     public short LSY => State.Gamepad.LeftThumbY;
 
+    public bool IsDLeftPressed => IsConnected && State.Gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadLeft);
+    public bool IsDRightPressed => IsConnected && State.Gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadRight);
+    public bool IsDDownPressed => IsConnected && State.Gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadDown);
+    public bool IsDUpPressed => IsConnected && State.Gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadUp);
+    public bool IsStartPressed => IsConnected && State.Gamepad.Buttons.HasFlag(GamepadButtonFlags.Start);
+    public bool IsBackPressed => IsConnected && State.Gamepad.Buttons.HasFlag(GamepadButtonFlags.Back);
+
     public bool IsPressed(string button)
     {
         return button switch
@@ -62,6 +69,12 @@ public class GamepadReader : IGamepadReader
             "LT" => IsLTPressed,
             "RS" => IsRS,
             "LS" => IsLS,
+            "LEFT" => IsDLeftPressed,
+            "RIGHT" => IsDRightPressed,
+            "DOWN" => IsDDownPressed,
+            "UP" => IsDUpPressed,
+            "START" => IsStartPressed,
+            "BACK" => IsBackPressed,
             _ => false
         };
     }
@@ -115,6 +128,14 @@ public class GamepadReader : IGamepadReader
         CheckButtonState(newState.Gamepad.Buttons.HasFlag(GamepadButtonFlags.RightShoulder), State.Gamepad.Buttons.HasFlag(GamepadButtonFlags.RightShoulder), "RB");
         CheckButtonState(newState.Gamepad.Buttons.HasFlag(GamepadButtonFlags.RightThumb), State.Gamepad.Buttons.HasFlag(GamepadButtonFlags.RightThumb), "RS");
         CheckButtonState(newState.Gamepad.Buttons.HasFlag(GamepadButtonFlags.LeftThumb), State.Gamepad.Buttons.HasFlag(GamepadButtonFlags.LeftThumb), "LS");
+
+        CheckButtonState(newState.Gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadLeft), State.Gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadLeft), "LEFT");
+        CheckButtonState(newState.Gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadRight), State.Gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadRight), "RIGHT");
+        CheckButtonState(newState.Gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadDown), State.Gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadDown), "DOWN");
+        CheckButtonState(newState.Gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadUp), State.Gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadUp), "UP");
+        CheckButtonState(newState.Gamepad.Buttons.HasFlag(GamepadButtonFlags.Start), State.Gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadDown), "START");
+        CheckButtonState(newState.Gamepad.Buttons.HasFlag(GamepadButtonFlags.Back), State.Gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadUp), "BACK");
+        
 
         CheckTriggerState(newState.Gamepad.RightTrigger, State.Gamepad.RightTrigger, "RT");
         CheckTriggerState(newState.Gamepad.LeftTrigger, State.Gamepad.LeftTrigger, "LT");

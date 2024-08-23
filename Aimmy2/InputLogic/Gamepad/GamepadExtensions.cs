@@ -1,13 +1,37 @@
 ﻿using System.Collections.Concurrent;
 using SharpDX.XInput;
 using System.Runtime.InteropServices;
+using Aimmy2.InputLogic.Contracts;
+using InputLogic;
 
 namespace Aimmy2.InputLogic
 {
     public static class GamepadExtensions
     {
         private static ConcurrentDictionary<Controller, string> _cache = new();
-      
+
+        public static void Send(this IGamepadSender sender, GamepadEventArgs args)
+        {
+            if(args.GamepadButton is not null)
+            {
+                sender.SetButtonState(args.GamepadButton.Value, args.IsPressed ?? false, GamepadSyncState.Paused);
+            }
+            else if(args.GamepadSlider is not null)
+            {
+                var argsValue = args.Value * 255f ?? 0;
+                sender.SetSliderValue(args.GamepadSlider.Value, (byte)argsValue, GamepadSyncState.Paused);
+            }
+            else if(args.GamepadAxis is not null)
+            {
+                sender.SetAxisValue(args.GamepadAxis.Value, (short)(args.Value ?? 0), GamepadSyncState.Paused);
+            }
+
+            Task.Delay(MouseManager.GetRandomDelay()).ContinueWith(task =>
+            {
+                sender.ResumeSync();
+            });
+        }
+
         public static string GetControllerId(this Controller controller)
         {
             if (_cache.TryGetValue(controller, out var res))

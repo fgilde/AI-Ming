@@ -55,6 +55,11 @@ public class GamepadSenderXInputEmu : IGamepadSender
         return this;
     }
 
+    public IGamepadSender ResumeSync()
+    {
+        return this;
+    }
+
     public IGamepadSender ResumeSync(GamepadButton button)
     {
         // No-op for XInputEmu as it directly interacts with the buttons and axes

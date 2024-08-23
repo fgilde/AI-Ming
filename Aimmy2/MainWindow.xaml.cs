@@ -1,12 +1,13 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
-using System.Windows.Media;
+using System.Windows.Interop;
 using Aimmy2.Class;
 using Aimmy2.Config;
 using Aimmy2.Extensions;
@@ -28,7 +29,9 @@ using Nextended.Core;
 using Nextended.UI.Helper;
 using Other;
 using Visuality;
+using WindowsInput;
 using Application = System.Windows.Application;
+using Brushes = System.Windows.Media.Brushes;
 using Button = System.Windows.Controls.Button;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using MessageBox = System.Windows.MessageBox;
@@ -97,8 +100,7 @@ public partial class MainWindow
         //Console.WriteLine(JsonConvert.SerializeObject(Dictionary.toggleState));
         Console.WriteLine("Init UI Complete");
     }
-
-
+    
     private void CreateUI()
     {
         string? menu = null;
@@ -305,6 +307,7 @@ public partial class MainWindow
 
     private void Window_Closing(object sender, CancelEventArgs e)
     {
+        magnifier?.Dispose();
         fileManager.Dispose();
         FileManager.AIManager?.Dispose();
         GamepadManager.Dispose();
@@ -476,6 +479,7 @@ public partial class MainWindow
         ModelSettings.RemoveAll();
         AimAssist.RemoveAll();
         RapidFire.RemoveAll();
+        PredictionConfig.RemoveAll();
         AimConfig.RemoveAll();
         TriggerBot.RemoveAll();
         AntiRecoil.RemoveAll();
@@ -522,19 +526,25 @@ public partial class MainWindow
 
         #region Config
 
-        AimConfig.AddTitle("Aim Config", true);
-        AimConfig.AddDropdown("Prediction Method", AppConfig.Current.DropdownState.PredictionMethod, v => AppConfig.Current.DropdownState.PredictionMethod = v);
-        AimConfig.AddDropdown("Detection Area Type",
+
+        PredictionConfig.AddTitle("Prediction Config", true);
+        PredictionConfig.AddDropdown("Prediction Method", AppConfig.Current.DropdownState.PredictionMethod, v => AppConfig.Current.DropdownState.PredictionMethod = v);
+        PredictionConfig.AddDropdown("Detection Area Type",
             AppConfig.Current.DropdownState.DetectionAreaType, async v =>
             {
                 AppConfig.Current.DropdownState.DetectionAreaType = v;
-                if (v == DetectionAreaType.ClosestToCenterScreen)
+                if (v == DetectionAreaType.ClosestToCenter)
                 {
                     await Task.Delay(100);
                     await FOV.Instance.UpdateStrictEnclosure();
                 }
             });
+        PredictionConfig.AddSeparator();
+        PredictionConfig.Visibility = GetVisibilityFor(nameof(AimConfig));
 
+
+        AimConfig.AddTitle("Aim Config", true);
+ 
 
         AimConfig.AddDropdown("Aiming Boundaries Alignment", AppConfig.Current.DropdownState.AimingBoundariesAlignment, v => AppConfig.Current.DropdownState.AimingBoundariesAlignment = v);
         AimConfig.AddSlider("Mouse Sensitivity (+/-)", "Sensitivity", 0.01, 0.01, 0.01, 1).BindTo(() => AppConfig.Current.SliderSettings.MouseSensitivity);
@@ -968,15 +978,12 @@ public partial class MainWindow
         XYPercentageEnablerMenu.AddToggle("Y Axis Percentage Adjustment").BindTo(() => AppConfig.Current.ToggleState.YAxisPercentageAdjustment);
         XYPercentageEnablerMenu.AddSeparator();
 
-        // ddxoft Menu
-        //AddTitle(SSP2, "ddxoft Configurator");
-        //uiManager.AFL_ddxoftDLLLocator = AddFileLocator(SSP2, "ddxoft DLL Location", "ddxoft dll (*.dll)|*.dll");
-        //AddSeparator(SSP2);
     }
 
     private void LoadCreditsMenu()
     {
         CreditsPanel.RemoveAll();
+        return; // TODO: Fix size problems
         CreditsPanel.AddTitle("Developers");
         CreditsPanel.AddCredit("Babyhamsta", "AI Logic");
         CreditsPanel.AddCredit("MarsQQ", "Design");
@@ -1255,5 +1262,19 @@ public partial class MainWindow
                 Check.TryCatch<Exception>(() => LoadConfig(Path.Combine(Path.GetDirectoryName(AppConfig.DefaultConfigPath), configToLoad)));
             }
         }
+    }
+
+    private Magnifier magnifier;
+    private async void ButtonBase_OnClick(object sender, RoutedEventArgs e)
+    {
+        var dlg = new Window();
+        dlg.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        dlg.Height = dlg.Width = 500;
+        dlg.Loaded += (s, e) =>
+        {
+            magnifier = new Magnifier(dlg);
+            magnifier.UpdateMagnifier();
+        };
+        dlg.Show();
     }
 }

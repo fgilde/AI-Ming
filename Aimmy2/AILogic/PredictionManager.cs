@@ -111,13 +111,13 @@ namespace AILogic
         public static int GetSPX()
         {
             //Debug.WriteLine((((int)Queryable.Average(xValues.AsQueryable()) * AmountCount) + WinAPICaller.GetCursorPosition().X) * (1 - Dictionary.sliderSettings["Mouse Sensitivity (+/-)"]));
-            return (int)(((Queryable.Average(xValues.AsQueryable()) * AmountCount) + WinAPICaller.GetCursorPosition().X));
+            return (int)(xValues.AsQueryable().Average() * AmountCount + WinAPICaller.GetCursorPosition().X);
         }
 
         public static int GetSPY()
         {
             //Debug.WriteLine((int)Queryable.Average(yValues.AsQueryable()));
-            return (int)(((Queryable.Average(yValues.AsQueryable()) * AmountCount) + WinAPICaller.GetCursorPosition().Y));
+            return (int)(yValues.AsQueryable().Average() * AmountCount + WinAPICaller.GetCursorPosition().Y);
         }
     }
 

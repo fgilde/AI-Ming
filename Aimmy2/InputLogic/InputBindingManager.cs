@@ -1,8 +1,11 @@
-﻿using Gma.System.MouseKeyHook;
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
+using Gma.System.MouseKeyHook;
+using System.Windows.Input;
 using Aimmy2.InputLogic;
 using Aimmy2.InputLogic.Contracts;
 using Aimmy2.InputLogic.Gamepad.Interaction;
+using KeyEventArgs = System.Windows.Forms.KeyEventArgs;
+using MouseEventArgs = System.Windows.Forms.MouseEventArgs;
 
 namespace InputLogic
 {
@@ -93,7 +96,7 @@ namespace InputLogic
                 {
                     foreach (var binding in bindings)
                     {
-                        if (binding.Value == e.Code)
+                        if (binding.Value == e.Code || binding.Value == e.CodeWithoutValue || GamepadEventArgs.TryParse(binding.Value, out var x) && x?.CodeWithoutValue == e.CodeWithoutValue)
                         {
                             if (pressed)
                             {
@@ -195,7 +198,7 @@ namespace InputLogic
             }
         }
 
-        public static void SendKey(dynamic key)
+        public static void SendKey(string key)
         {
             InputSender.SendKey(key);
         }

@@ -10,6 +10,7 @@ public interface IGamepadSender: IDisposable
     IGamepadSender PauseSync(GamepadButton button);
     IGamepadSender PauseSync(GamepadSlider slider);
     IGamepadSender PauseSync(GamepadAxis axis);
+    IGamepadSender ResumeSync();
     IGamepadSender ResumeSync(GamepadButton button);
     IGamepadSender ResumeSync(GamepadSlider slider);
     IGamepadSender ResumeSync(GamepadAxis axis);

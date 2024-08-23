@@ -1,4 +1,8 @@
-﻿using System.Runtime.InteropServices;
+﻿using Aimmy2.InputLogic.Contracts;
+using System.Runtime.InteropServices;
+using SharpDX.DirectInput;
+using WindowsInput;
+using KeyboardState = Gma.System.MouseKeyHook.Implementation.KeyboardState;
 
 namespace Aimmy2.InputLogic;
 
@@ -53,14 +57,21 @@ public class InputSender
     private const uint MOUSEEVENTF_MIDDLEDOWN = 0x0020;
     private const uint MOUSEEVENTF_MIDDLEUP = 0x0040;
 
-    public static void SendKey(dynamic key)
+    public static void SendKey(string key)
     {
         if (key == "Middle" || key == "Left" || key == "Right")
         {
+            Console.WriteLine($"Sending mouse click: {key}");
             SendMouseClick(key);
+        }
+        else if (GamepadEventArgs.TryParse(key, out var args) && GamepadManager.CanSend)
+        {
+            Console.WriteLine($"Sending gamepad key: {key}");
+            GamepadManager.GamepadSender?.Send(args);
         }
         else
         {
+            Console.WriteLine($"Sending keyboard key: {key}");
             SendKeyboardKey(key);
         }
     }
@@ -90,15 +101,15 @@ public class InputSender
         SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
     }
 
+    private const uint KEYEVENTF_KEYUP = 0x0002;
+    private const uint KEYEVENTF_SCANCODE = 0x0008;
+
     private static void SendKeyboardKey(string key)
     {
-        INPUT[] inputs = new INPUT[2];
-        inputs[0].type = INPUT_KEYBOARD;
-        inputs[0].u.ki.wVk = (ushort)key[0]; // Assuming the key is a single character string
-        inputs[1].type = INPUT_KEYBOARD;
-        inputs[1].u.ki.wVk = (ushort)key[0];
-        inputs[1].u.ki.dwFlags = 0x0002; // KEYEVENTF_KEYUP
-
-        SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
+        new InputSimulator().Keyboard.KeyDown(VirtualKeyCode.VK_Z);
     }
+
+    [DllImport("user32.dll")]
+    private static extern short VkKeyScan(char ch);
+
 }

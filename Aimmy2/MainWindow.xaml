@@ -274,6 +274,7 @@
                                     Grid.Column="1"
                                     Visibility="{Binding Path=IsModelLoaded, Converter={StaticResource boolToVis }}"
                                     Margin="5,0,10,0">
+                            <StackPanel x:Name="PredictionConfig" />
                             <StackPanel x:Name="AimConfig" />
                             <StackPanel x:Name="ARConfig" />
                             <StackPanel x:Name="FOVConfig" />
@@ -757,6 +758,7 @@
             </Grid>
         </Border>
         <StatusBar Background="{StaticResource Background}" Grid.Row="1">
+            <Button Visibility="{x:Static aimmy2:ApplicationConstants.DebugVisibility}" Click="ButtonBase_OnClick" >TEST Button to test magnification</Button>
             <StatusBarItem Cursor="Hand" Foreground="White" Margin="15,5,0, 5" HorizontalAlignment="Left" >
                 <Button BorderBrush="Transparent" FontSize="11" Background="Transparent" Click="OpenConfig_CLick" Content="{Binding Config.Path}" Foreground="White" />
             </StatusBarItem>

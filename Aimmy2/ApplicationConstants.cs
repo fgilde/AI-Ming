@@ -1,8 +1,10 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Media;
 using Aimmy2.Types;
+using Nextended.UI.Helper;
 
 namespace Aimmy2;
 
@@ -62,6 +64,8 @@ public static class ApplicationConstants
     //public const string ApplicationInfo = "Aimmy is free, and will never be for sale.";
     //public const string ApplicationSlogan = "Aimmy - Universal Second Eye";
 
+    public static bool IsDebug => Assembly.GetEntryAssembly()?.GetCustomAttribute<DebuggableAttribute>()?.IsJITTrackingEnabled ?? false;
+    public static Visibility DebugVisibility => IsDebug ? Visibility.Visible : Visibility.Collapsed;
     public static string ApplicationVersionStr => $"v{ApplicationVersion.ToString()}";
 
     public static Version? ApplicationVersion => typeof(ApplicationConstants).Assembly.GetName().Version;

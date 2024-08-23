@@ -76,6 +76,16 @@ public class GamepadSenderVJoy : IGamepadSender
         return this;
     }
 
+    public IGamepadSender ResumeSync()
+    {
+        _actions.Add(() =>
+        {
+            _pausedButtons.Clear();
+            _pausedAxes.Clear();
+        });
+        return this;
+    }
+
     public IGamepadSender SetButtonState(GamepadButton button, bool pressed, GamepadSyncState gamepadSyncState = GamepadSyncState.None)
     {
         if (gamepadSyncState == GamepadSyncState.Paused)
