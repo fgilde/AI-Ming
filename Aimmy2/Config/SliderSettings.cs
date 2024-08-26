@@ -24,6 +24,7 @@ public class SliderSettings: BaseSettings
     private double _fovOpacity = 1;
     private double _triggerKeyMin = 0.39;
     private double _firePressDelay = 0.02;
+    private float _magnificationFactor = 2;
 
     public string SuggestedModel
     {
@@ -105,6 +106,12 @@ public class SliderSettings: BaseSettings
     {
         get => _aiMinimumConfidence;
         set => SetField(ref _aiMinimumConfidence, value);
+    }
+
+    public float MagnificationFactor
+    {
+        get => _magnificationFactor;
+        set => SetField(ref _magnificationFactor, value);
     }
 
     public double GamepadMinimumLT

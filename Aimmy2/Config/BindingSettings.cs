@@ -18,7 +18,8 @@ public class BindingSettings : BaseSettings<StoredInputBinding>
     public StoredInputBinding TriggerAdditionalSend { get => Get(MouseButtons.Middle); set => Set(value); }
 
     public StoredInputBinding AimKeybind { get => Get(MouseButtons.Right); set => Set(value); }
-
+    public StoredInputBinding MagnifierKeybind { get => Get(); set => Set(value); }
+    
     public StoredInputBinding SecondAimKeybind { get => Get(Keys.LMenu); set => Set(value); }
     
     public StoredInputBinding ModelSwitchKeybind { get => Get(); set => Set(value); }

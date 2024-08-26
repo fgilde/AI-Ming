@@ -131,6 +131,8 @@ public partial class MainWindow
 
         BindingManager = new InputBindingManager();
         OnPropertyChanged(nameof(BindingManager));
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.MagnifierKeybind),
+            AppConfig.Current.BindingSettings.MagnifierKeybind);
         BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.AimKeybind),
             AppConfig.Current.BindingSettings.AimKeybind);
         BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.TriggerKey),
@@ -156,6 +158,7 @@ public partial class MainWindow
             AppConfig.Current.BindingSettings.Gun2Key);
 
         LoadAimMenu();
+        LoadTools();
         LoadSettingsMenu();
         LoadGamepadSettingsMenu();
         LoadCreditsMenu();
@@ -300,7 +303,7 @@ public partial class MainWindow
 
     private void Window_Closing(object sender, CancelEventArgs e)
     {
-        magnifier?.Dispose();
+        _magnifier?.Dispose();
         fileManager.Dispose();
         FileManager.AIManager?.Dispose();
         GamepadManager.Dispose();
@@ -412,6 +415,9 @@ public partial class MainWindow
     {
         switch (bindingId)
         {
+            case nameof(AppConfig.Current.BindingSettings.MagnifierKeybind):
+                ToggleMagnifier();
+                break;
             case nameof(AppConfig.Current.BindingSettings.ModelSwitchKeybind):
                 if (AppConfig.Current.BindingSettings.ModelSwitchKeybind.IsValid)
                     if (!FileManager.CurrentlyLoadingModel)
@@ -904,6 +910,20 @@ public partial class MainWindow
 
     }
 
+    private void LoadTools()
+    {
+        ToolsConfig.RemoveAll();
+        ToolsConfig.AddTitle("Magnifier", true);
+        ToolsConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.MagnifierKeybind), () => AppConfig.Current.BindingSettings.MagnifierKeybind, BindingManager);
+
+        ToolsConfig.AddButton("Show Hide Magnifier").Reader.Click += (s, e) => ToggleMagnifier();
+
+        ToolsConfig.AddSlider("Magnification value", "Zoom Factor", 0.1, 0.1, 1, 8).BindTo(() => AppConfig.Current.SliderSettings.MagnificationFactor);
+
+
+        ToolsConfig.AddSeparator();
+    }
+
     private void LoadSettingsMenu()
     {
         XYPercentageEnablerMenu.RemoveAll();
@@ -1253,20 +1273,20 @@ public partial class MainWindow
         }
     }
 
-    private Magnifier magnifier;
-    private async void ButtonBase_OnClick(object sender, RoutedEventArgs e)
+    private MagnifierDialog? _magnifier;
+    private void ToggleMagnifier(bool? show = null)
     {
-        var dlg = new Window
+        Console.WriteLine("toggle " + show);
+        if (_magnifier == null && show is null or true)
         {
-            WindowStartupLocation = WindowStartupLocation.CenterScreen
-        };
-        dlg.Height = dlg.Width = 500;
-        dlg.Loaded += (s, e) =>
+            _magnifier = new MagnifierDialog();
+            _magnifier.Show();
+        }
+        else if (_magnifier != null && show is null or false)
         {
-            magnifier = new Magnifier(dlg);
-            magnifier.UpdateMagnifier();
-        };
-        dlg.Show();
+            _magnifier.Close();
+            _magnifier = null;
+        }
     }
 
     private void DeleteModel_Click(object sender, RoutedEventArgs e)

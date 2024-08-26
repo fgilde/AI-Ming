@@ -211,6 +211,23 @@
                                     HorizontalAlignment="Center"
                                     Width="50"
                                     Click="MenuSwitch" />
+                        <Ant:Button 
+                            x:Name="ButtonTools"
+                            Tag="Tools"
+                            VerticalAlignment="Top"
+                            Height="50"
+                            BorderThickness="0"
+                            EffectBrush="{StaticResource ButtonBackground}"
+                            Foreground="#ffffff"
+                            BorderBrush="#00D9D9D9"
+                            Background="Transparent"
+                            FontFamily="Segoe MDL2 Assets"
+                            Content="&#xE90F;"
+                            Padding="0,0,0,0"
+                            FontSize="20"
+                            HorizontalAlignment="Center"
+                            Width="50"
+                            Click="MenuSwitch" />
                         <Ant:Button x:Name="Menu5B"
                                     Tag="Logs"
                                     VerticalAlignment="Top"
@@ -627,6 +644,21 @@
                     </Grid>
                 </ScrollViewer>
 
+
+                <ScrollViewer x:Name="Tools"
+                              Visibility="Collapsed"
+                              Margin="50,450,0,-400"
+                              VerticalScrollBarVisibility="Auto"
+                              PanningMode="VerticalOnly">
+                    <Grid>
+                        <StackPanel
+                            Grid.Column="0"
+                            Margin="10,0,5,0">
+                            <StackPanel x:Name="ToolsConfig" />
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
+
                 <ScrollViewer x:Name="Logs"
                               Visibility="Collapsed"
                               Margin="50, 450, 0, -400"
@@ -792,7 +824,7 @@
             </Grid>
         </Border>
         <StatusBar Background="{StaticResource Background}" Grid.Row="1">
-            <Button Visibility="{x:Static aimmy2:ApplicationConstants.DebugVisibility}" Click="ButtonBase_OnClick" >TEST Button to test magnification</Button>
+            
             <StatusBarItem Cursor="Hand" Foreground="White" Margin="15,5,0, 5" HorizontalAlignment="Left" >
                 <Button BorderBrush="Transparent" FontSize="11" Background="Transparent" Click="OpenConfig_CLick" Content="{Binding Config.Path}" Foreground="White" />
             </StatusBarItem>

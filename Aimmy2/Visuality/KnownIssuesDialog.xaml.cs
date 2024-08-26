@@ -77,7 +77,6 @@ namespace Visuality
             var isChecked = (sender as CheckBox)?.IsChecked ?? false;
             var settingsManager = new WindowSettingsManager(GetSettingsFilePath());
             settingsManager.SaveWindowSettings(this, isChecked);
-            Console.WriteLine("Checked " + isChecked);
         }
     }
 

@@ -45,7 +45,8 @@ public class Magnifier : IDisposable
 
     void form_FormClosing(object? sender, CancelEventArgs cancelEventArgs)
     {
-        timer.Enabled = false;
+        if(timer != null)
+            timer.Enabled = false;
     }
 
     void timer_Tick(object sender, EventArgs e)
@@ -156,7 +157,7 @@ public class Magnifier : IDisposable
         hInst = NativeMethods.GetModuleHandle(null);
 
         // Make the window opaque.
-        form.Background = System.Windows.Media.Brushes.Transparent;
+        //form.Background = System.Windows.Media.Brushes.Transparent;
         form.Opacity = 255;
 
         // Create a magnifier control that fills the client area.
@@ -184,9 +185,13 @@ public class Magnifier : IDisposable
 
     protected virtual void Dispose(bool disposing)
     {
-        timer.Enabled = false;
-        if (disposing)
-            timer.Dispose();
+        if (timer != null)
+        {
+            timer.Enabled = false;
+            if (disposing)
+                timer.Dispose();
+        }
+
         timer = null;
         form.SizeChanged -= form_Resize;
         RemoveMagnifier();
