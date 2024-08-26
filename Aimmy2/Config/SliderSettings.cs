@@ -7,10 +7,10 @@ public class SliderSettings: BaseSettings
     private string _suggestedModel = "";
     private double _fovSize = 640;
     private double _dynamicFovSize = 200;
-    private double _mouseSensitivity = 0.80;
-    private double _mouseJitter = 4;
+    private double _mouseSensitivity = 0.90;
+    private double _mouseJitter = 6;
     private double _yOffset = 0;
-    private double _yOffsetPercentage = 50;
+    private double _yOffsetPercentage = 90;
     private double _xOffsetPercentage = 50;
     private double _emaSmoothening = 0.5;
     private double _autoTriggerDelay = 0.0;

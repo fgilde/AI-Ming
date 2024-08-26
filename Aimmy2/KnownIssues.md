@@ -3,12 +3,13 @@
 
 ## 1. Monitor Capture Limitations
 
-- **Primary Monitor Capture Only**: Currently, the application is only capable of capturing the Primary Monitor. Any attempts to capture screens other than the Primary Monitor will not function as expected.
-- **Process Capture on Primary Monitor**: Similarly, capturing processes is only effective when the processes are displayed on the Primary Monitor. Processes running on other monitors might not be captured correctly.
+- **Primary Monitor Capture**: Currently, FOV and ESP only working on the Primary Monitor or Processes on the Primary Monitor. Aiming or triggers will work on other screens as well.
 
 ## 2. Gempad Functionality
 
-- **Gempad Sending Not Working**: The feature for sending data via Gempad is currently not operational and is still under active development.
+- **Gempad Sending**: The feature for sending data via Gempad is currently not completly done and still under active development.
+    This feature is only implemented in the Additional Trigger (TriggerAdditionalSend)
+    Later on, this feature will be implemented for Aiming and Main trigger as well.
 - **Controller Mapping**: Despite the issues with Gempad sending, the controller mapping feature is fully functional and works as intended.
 
 ---

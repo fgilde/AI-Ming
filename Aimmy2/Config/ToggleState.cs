@@ -23,7 +23,7 @@ public class ToggleState : BaseSettings
     private bool _mouseBackgroundEffect = true;
     private bool _uiTopMost = true;
     private bool _xAxisPercentageAdjustment = false;
-    private bool _yAxisPercentageAdjustment = false;
+    private bool _yAxisPercentageAdjustment = true;
     private bool _autoTriggerCharged;
     private bool _rapidFire;
     private bool _autoHideController;

@@ -354,10 +354,7 @@ public static class UIElementExtensions
 
     public static AColorChanger AddColorChanger(this IAddChild panel, string title)
     {
-        return panel.Add<AColorChanger>(new AColorChanger(title), colorChanger =>
-        {
-            colorChanger.ColorChangingBorder.Background = (Brush)new BrushConverter().ConvertFromString(AppConfig.Current.ColorState[title].ToString());
-        });
+        return panel.Add(new AColorChanger(title));
     }
 
     public static ASlider AddSlider(this IAddChild panel, string title, string label, double frequency, double buttonsteps, double min, double max, bool forAntiRecoil = false)

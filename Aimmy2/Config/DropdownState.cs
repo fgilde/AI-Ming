@@ -7,7 +7,7 @@ public class DropdownState: BaseSettings
     private TriggerCheck _triggerCheck = TriggerCheck.HeadIntersectingCenter;
     private PredictionMethod _predictionMethod = PredictionMethod.KalmanFilter;
     private DetectionAreaType _detectionAreaType = DetectionAreaType.ClosestToCenter;
-    private AimingBoundariesAlignment _aimingBoundariesAlignment = AimingBoundariesAlignment.Center;
+    private AimingBoundariesAlignment _aimingBoundariesAlignment = AimingBoundariesAlignment.Top;
     private MouseMovementMethod _mouseMovementMethod = MouseMovementMethod.MouseEvent;
     private OverlayDrawingMethod _overlayDrawingMethod;
     private GamepadSendMode _gamepadSendMode = GamepadSendMode.ViGEm;

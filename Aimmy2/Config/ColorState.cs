@@ -5,7 +5,7 @@ namespace Aimmy2.Config;
 public class ColorState : BaseSettings<Color>
 {
 
-    public Color FOVColor { get => Get(); set => Set(value); }
+    public Color FOVColor { get => Get(Colors.Aqua); set => Set(value); }
 
-    public Color DetectedPlayerColor { get => Get(); set => Set(value); }
+    public Color DetectedPlayerColor { get => Get(Colors.Red); set => Set(value); }
 }
