@@ -13,7 +13,7 @@ public class SliderSettings: BaseSettings
     private double _yOffsetPercentage = 50;
     private double _xOffsetPercentage = 50;
     private double _emaSmoothening = 0.5;
-    private double _autoTriggerDelay = 0.1;
+    private double _autoTriggerDelay = 0.0;
     private double _aiMinimumConfidence = 45;
     private double _gamepadMinimumLt = 0.7;
     private double _gamepadMinimumRt = 0.7;
@@ -22,7 +22,7 @@ public class SliderSettings: BaseSettings
     private double _borderThickness = 1;
     private double _opacity = 1;
     private double _fovOpacity = 1;
-    private double _triggerKeyMin = 0.0;
+    private double _triggerKeyMin = 0.39;
     private double _firePressDelay = 0.02;
 
     public string SuggestedModel

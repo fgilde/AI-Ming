@@ -241,10 +241,6 @@ public static class ScreenExtensions
         public string monitorDevicePath;
     }
 
-    #endregion
-
-    #region DLL-Imports
-
     [DllImport("user32.dll")]
     public static extern int GetDisplayConfigBufferSizes(
         QUERY_DEVICE_CONFIG_FLAGS flags, out uint numPathArrayElements, out uint numModeInfoArrayElements);
@@ -255,24 +251,99 @@ public static class ScreenExtensions
         ref uint numPathArrayElements, [Out] DISPLAYCONFIG_PATH_INFO[] PathInfoArray,
         ref uint numModeInfoArrayElements, [Out] DISPLAYCONFIG_MODE_INFO[] ModeInfoArray,
         IntPtr currentTopologyId
-        );
+    );
 
     [DllImport("user32.dll")]
     public static extern int DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_TARGET_DEVICE_NAME deviceName);
 
+    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    private static extern bool EnumDisplayDevices(string lpDevice, uint iDevNum, ref DISPLAY_DEVICE lpDisplayDevice, uint dwFlags);
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+    private struct DISPLAY_DEVICE
+    {
+        public int cb;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+        public string DeviceName;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+        public string DeviceString;
+        public DisplayDeviceStateFlags StateFlags;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+        public string DeviceID;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+        public string DeviceKey;
+    }
+
+    [Flags]
+    private enum DisplayDeviceStateFlags : int
+    {
+        AttachedToDesktop = 0x00000001,
+        MultiDriver = 0x00000002,
+        PrimaryDevice = 0x00000004,
+        MirroringDriver = 0x00000008,
+        VGACompatible = 0x00000010,
+        Removable = 0x00000020,
+        ModesPruned = 0x08000000,
+        Remote = 0x04000000,
+        Disconnect = 0x02000000
+    }
+
     #endregion
+    
+
+
+    public static string GetHardwareId(this Screen screen)
+    {
+        string deviceName = screen.DeviceName;
+
+        // We use EnumDisplayDevices to retrieve the real monitor name.
+        DISPLAY_DEVICE d = new DISPLAY_DEVICE();
+        d.cb = Marshal.SizeOf(d);
+
+        for (uint id = 0; EnumDisplayDevices(deviceName, id, ref d, 0); id++)
+        {
+            if ((d.StateFlags & DisplayDeviceStateFlags.AttachedToDesktop) != 0)
+            {
+                return d.DeviceID.Split("\\")[1];
+            }
+            d.cb = Marshal.SizeOf(d);
+        }
+
+        return "Unknown Monitor";
+    }
+
+    private static string GetMonitorDevicePath(LUID adapterId, uint targetId)
+    {
+        var deviceName = new DISPLAYCONFIG_TARGET_DEVICE_NAME
+        {
+            header =
+            {
+                size = (uint)Marshal.SizeOf(typeof(DISPLAYCONFIG_TARGET_DEVICE_NAME)),
+                adapterId = adapterId,
+                id = targetId,
+                type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME
+            }
+        };
+        var error = DisplayConfigGetDeviceInfo(ref deviceName);
+        if (error != ERROR_SUCCESS)
+            throw new Win32Exception(error);
+
+        return deviceName.monitorDevicePath;
+    }
+    
+
 
     private static string MonitorFriendlyName(LUID adapterId, uint targetId)
     {
         var deviceName = new DISPLAYCONFIG_TARGET_DEVICE_NAME
         {
             header =
-                {
-                    size = (uint)Marshal.SizeOf(typeof (DISPLAYCONFIG_TARGET_DEVICE_NAME)),
-                    adapterId = adapterId,
-                    id = targetId,
-                    type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME
-                }
+            {
+                size = (uint)Marshal.SizeOf(typeof(DISPLAYCONFIG_TARGET_DEVICE_NAME)),
+                adapterId = adapterId,
+                id = targetId,
+                type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME
+            }
         };
         var error = DisplayConfigGetDeviceInfo(ref deviceName);
         if (error != ERROR_SUCCESS)
@@ -280,7 +351,9 @@ public static class ScreenExtensions
         return deviceName.monitorFriendlyDeviceName;
     }
 
-    private static IEnumerable<string> GetAllMonitorsFriendlyNames()
+
+
+    private static Dictionary<string, string> GetAllMonitorsFriendlyNames()
     {
         uint pathCount, modeCount;
         var error = GetDisplayConfigBufferSizes(QUERY_DEVICE_CONFIG_FLAGS.QDC_ONLY_ACTIVE_PATHS, out pathCount, out modeCount);
@@ -294,18 +367,55 @@ public static class ScreenExtensions
         if (error != ERROR_SUCCESS)
             throw new Win32Exception(error);
 
-        for (var i = 0; i < modeCount; i++)
-            if (displayModes[i].infoType == DISPLAYCONFIG_MODE_INFO_TYPE.DISPLAYCONFIG_MODE_INFO_TYPE_TARGET)
-                yield return MonitorFriendlyName(displayModes[i].adapterId, displayModes[i].id);
+        var monitorNames = new Dictionary<string, string>();
+
+        foreach (var path in displayPaths)
+        {
+            var adapterId = path.targetInfo.adapterId;
+            var targetId = path.targetInfo.id;
+            var friendlyName = MonitorFriendlyName(adapterId, targetId);
+            var pnpDeviceId = GetPnpDeviceId(adapterId, targetId);
+
+            if (!string.IsNullOrEmpty(pnpDeviceId))
+            {
+                monitorNames[pnpDeviceId] = friendlyName;
+            }
+        }
+
+        return monitorNames;
     }
+
+    private static string GetPnpDeviceId(LUID adapterId, uint targetId)
+    {
+        var deviceName = new DISPLAYCONFIG_TARGET_DEVICE_NAME
+        {
+            header =
+            {
+                size = (uint)Marshal.SizeOf(typeof(DISPLAYCONFIG_TARGET_DEVICE_NAME)),
+                adapterId = adapterId,
+                id = targetId,
+                type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME
+            }
+        };
+        var error = DisplayConfigGetDeviceInfo(ref deviceName);
+        if (error != ERROR_SUCCESS)
+            throw new Win32Exception(error);
+
+        // Extract PNPDeviceID (which is part of the device name path)
+        return deviceName.monitorDevicePath?.Split('#')[1];
+    }
+
 
     public static string DeviceFriendlyName(this Screen screen)
     {
         var allFriendlyNames = GetAllMonitorsFriendlyNames();
-        for (var index = 0; index < Screen.AllScreens.Length; index++)
-            if (Equals(screen, Screen.AllScreens[index]))
-                return allFriendlyNames.ToArray()[index];
-        return screen.DeviceName;
+        var hardwareId = screen.GetHardwareId();
+
+        if (hardwareId != null && allFriendlyNames.TryGetValue(hardwareId, out var friendlyName))
+        {
+            return $"{friendlyName} ({screen.Bounds.Width} * {screen.Bounds.Height})";
+        }
+        return $"{screen.DeviceName} ({screen.Bounds.Width} * {screen.Bounds.Height})";
     }
 
 }

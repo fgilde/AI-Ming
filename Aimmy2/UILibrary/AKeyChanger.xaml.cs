@@ -2,12 +2,20 @@
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using Aimmy2.Config;
+using Aimmy2.InputLogic;
 using Aimmy2.InputLogic.Contracts;
 using Aimmy2.Types;
 using InputLogic;
 using Other;
+using Brush = System.Windows.Media.Brush;
+using Brushes = System.Windows.Media.Brushes;
+using Color = System.Windows.Media.Color;
+using ColorConverter = System.Windows.Media.ColorConverter;
+using KeyEventArgs = System.Windows.Forms.KeyEventArgs;
+using MouseEventArgs = System.Windows.Forms.MouseEventArgs;
 
 namespace Aimmy2.UILibrary
 {
@@ -16,7 +24,7 @@ namespace Aimmy2.UILibrary
     /// </summary>
     public partial class AKeyChanger : INotifyPropertyChanged, IDisposable
     {
-        private string _keyBind;
+        private StoredInputBinding _keyBind;
         private string _text;
         private string _keyConfigPrefix;
 
@@ -80,7 +88,7 @@ namespace Aimmy2.UILibrary
 
 
 
-        public string KeyBind
+        public StoredInputBinding KeyBind
         {
             get => _keyBind;
             set
@@ -106,7 +114,7 @@ namespace Aimmy2.UILibrary
             InitializeComponent();
         }
 
-        public AKeyChanger(string text, string keybind) : this()
+        public AKeyChanger(string text, StoredInputBinding keybind) : this()
         {
             _text = text;
             _keyBind = keybind;
@@ -115,13 +123,14 @@ namespace Aimmy2.UILibrary
 
         private void AKeyChanger_OnLoaded(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrEmpty(KeyBind))
+            if (!KeyBind.IsValid)
             {
-                KeyBind = AppConfig.Current.BindingSettings[KeyConfigName]?.ToString();
-                SetContent(KeyBind ?? string.Empty);
+                KeyBind = AppConfig.Current.BindingSettings[KeyConfigName];
+                if(KeyBind.IsValid)
+                    SetContent(KeyBind);
             }
 
-            if (BindingManager != null && !string.IsNullOrEmpty(KeyBind))
+            if (BindingManager != null)
             {
                 BindingManager.SetupDefault(KeyConfigName, KeyBind);
                 BindingManager.OnBindingPressed += OnGlobalKeyHandler;
@@ -132,6 +141,8 @@ namespace Aimmy2.UILibrary
         {
             if (HasKeySet && key == KeyConfigName && !InUpdateMode)
             {
+                if(KeyBind.Is<MouseEventArgs>() && (IsMouseOver || ContextMenu.IsOpen))
+                    return;
                 var args = new EventArgs<(AKeyChanger Sender, string Key)>((this, key));
                 GlobalKeyPressed?.Invoke(this, args);
             }
@@ -139,9 +150,9 @@ namespace Aimmy2.UILibrary
 
         public event EventHandler<EventArgs> KeyDeleted;
 
-        public bool InUpdateMode { get; set; }
+        public bool InUpdateMode { get; private set; }
 
-        public void SetContent(string text, string keybind)
+        public void SetContent(string text, StoredInputBinding keybind)
         {
             KeyChangerTitle.Content = text;
             SetContent(keybind);
@@ -156,31 +167,44 @@ namespace Aimmy2.UILibrary
                 KeyChangerTitle.Visibility = value ? Visibility.Visible : Visibility.Collapsed);
         }
 
-        public void SetContent(string keybind)
+        private void SetContent(string text)
         {
-            HasKeySet = !string.IsNullOrWhiteSpace(keybind);
-            if (GamepadEventArgs.IsGamepadKey(keybind))
+            KeyNotifierLabel.Content = text;
+        }
+
+        public void SetContent(StoredInputBinding keybind)
+        {
+            ToolTip = "Click to set a new binding";
+            HasKeySet = keybind.IsValid;
+            SetDeviceIcon();
+            if (!HasKeySet)
             {
-                KeyNotifierLabel.Content = GamepadEventArgs.GetButtonName(keybind);
-                GamepadInfo.Visibility = System.Windows.Visibility.Visible;
+                KeyNotifierLabel.Content = "None";
+                return;
             }
-            else
+            if (keybind.Is<GamepadEventArgs>())
             {
-                KeyNotifierLabel.Content = KeybindNameManager.ConvertToRegularKey(keybind);
-                GamepadInfo.Visibility = System.Windows.Visibility.Collapsed;
+                SetDeviceIcon("\uE7FC");
             }
+            else if (keybind.Is<MouseEventArgs>())
+            {
+                SetDeviceIcon("\uF8AF");
+            }
+            else if (keybind.Is<KeyEventArgs>())
+            {
+                SetDeviceIcon("\uE765");
+            }
+
+            var keyName = KeybindNameManager.ConvertToRegularKey(keybind.Key);
+            ToolTip = $"Currently set to {keybind.DeviceName} {keyName}. Click to change the binding";
+            KeyNotifierLabel.Content = keyName;
         }
 
         private void DeleteBinding_Click(object sender, RoutedEventArgs e)
         {
-            AppConfig.Current.BindingSettings[KeyConfigName] = "";
-            SetContent("");
+            AppConfig.Current.BindingSettings[KeyConfigName] = StoredInputBinding.Empty;
+            SetContent(StoredInputBinding.Empty);
             KeyDeleted?.Invoke(this, EventArgs.Empty);
-        }
-
-        private void ContextMenu_OnContextMenuOpening(object sender, ContextMenuEventArgs e)
-        {
-            e.Handled = InUpdateMode;
         }
 
         private string GetCode(string keyConfigName)
@@ -211,25 +235,41 @@ namespace Aimmy2.UILibrary
             if (InUpdateMode || BindingManager == null)
                 return;
             InUpdateMode = true;
+            MainGrid.ContextMenu = null;
+            SetDeviceIcon("\uEA3B", Brushes.Red);
             SetContent("...");
             ToolTip = "Press any key to set the binding";
             BindingManager.StartListeningForBinding(KeyConfigName);
 
             // Event handler for setting the binding
-            Action<string, string>? bindingSetHandler = null;
+            Action<string, StoredInputBinding>? bindingSetHandler = null;
             bindingSetHandler = (bindingId, key) =>
             {
                 if (bindingId == KeyConfigName)
                 {
                     SetContent(key);
-                    ToolTip = string.Empty;
                     AppConfig.Current.BindingSettings[bindingId] = key;
                     BindingManager.OnBindingSet -= bindingSetHandler; // Unsubscribe after setting
-                    Task.Delay(300).ContinueWith(_ => InUpdateMode = false);
+                    Task.Delay(700).ContinueWith(_ =>
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            InUpdateMode = false;
+                            MainGrid.ContextMenu = ContextMenu;
+                        });
+                    });
                 }
             };
 
             BindingManager.OnBindingSet += bindingSetHandler;
+        }
+
+        private void SetDeviceIcon(string icon = "", Brush? fg = null)
+        {
+            KeyDeviceInfo.Text = icon;
+            KeyDeviceInfo.FontSize = icon == "\uF8AF" ? 14 : 18;
+            KeyDeviceInfo.Foreground = fg ?? Brushes.White;
+            KeyDeviceInfo.Visibility = string.IsNullOrEmpty(icon) ? Visibility.Collapsed : Visibility.Visible;
         }
 
         public void Dispose()
@@ -239,5 +279,7 @@ namespace Aimmy2.UILibrary
                 BindingManager.OnBindingPressed -= OnGlobalKeyHandler;
             }
         }
+
+  
     }
 }

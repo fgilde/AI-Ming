@@ -325,6 +325,7 @@
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition Width="*"/>
                                                             <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="Auto"/>
                                                         </Grid.ColumnDefinitions>
                                                         <TextBlock
                                                                    Text="{Binding}" 
@@ -339,6 +340,19 @@
                                                                                GlobalKeyPressed="AKeyChanger_ModelOnGlobalKeyPressed"
                                                                                WithBorder="False"
                                                                                Text="" />
+                                                        <Ant:Button 
+                                                            Grid.Column="2"
+                                                            ToolTip="Delete Model"
+                                                            BorderThickness="0"
+                                                            EffectBrush="{StaticResource ButtonBackground}"
+                                                            Foreground="#ffffff"
+                                                            BorderBrush="#00D9D9D9"
+                                                            Background="Transparent"
+                                                            FontFamily="Segoe MDL2 Assets"
+                                                            Content="&#xE74D;"
+                                                            Padding="0,0,0,0"
+                                                            FontSize="20"
+                                                            Width="50"/>
                                                     </Grid>
                                                 </DataTemplate>
                                             </ListBox.ItemTemplate>

@@ -1,89 +1,33 @@
-﻿namespace Aimmy2.Config;
+﻿using System.Runtime.CompilerServices;
+using System.Windows.Forms;
+using Aimmy2.InputLogic;
+using Aimmy2.InputLogic.Contracts;
 
-public class BindingSettings: BaseSettings
+namespace Aimmy2.Config;
+
+public class BindingSettings : BaseSettings<StoredInputBinding>
 {
-    private string _triggerKey = "";
-    private string _triggerAdditionalSend = "";
-    private string _aimKeybind = "Right";
-    private string _secondAimKeybind = "LMenu";
-    private string _dynamicFovKeybind = "Left";
-    private string _modelSwitchKeybind = "";
-    private string _antiRecoilKeybind = "Left";
-    private string _disableAntiRecoilKeybind = "Oem6";
-    private string _gun1Key = "D1";
-    private string _gun2Key = "D2";
-    private string _rapidFireKey;
-    private string _triggerAdditionalCommandKey;
+    public StoredInputBinding DynamicFOVKeybind { get => Get(MouseButtons.Left); set => Set(value); }
 
-    public string RapidFireKey
-    {
-        get => _rapidFireKey;
-        set => SetField(ref _rapidFireKey, value);
-    }
+    public StoredInputBinding RapidFireKey { get => Get(); set => Set(value); }
 
-    public string TriggerAdditionalCommandKey
-    {
-        get => _triggerAdditionalCommandKey;
-        set => SetField(ref _triggerAdditionalCommandKey, value);
-    }
+    public StoredInputBinding TriggerAdditionalCommandKey { get => Get(GamepadSlider.LeftTrigger); set => Set(value); }
 
-    public string TriggerKey
-    {
-        get => _triggerKey;
-        set => SetField(ref _triggerKey, value);
-    }
+    public StoredInputBinding TriggerKey { get => Get(GamepadSlider.LeftTrigger); set => Set(value); }
 
-    public string TriggerAdditionalSend
-    {
-        get => _triggerAdditionalSend;
-        set => SetField(ref _triggerAdditionalSend, value);
-    }
+    public StoredInputBinding TriggerAdditionalSend { get => Get(MouseButtons.Middle); set => Set(value); }
 
-    public string AimKeybind
-    {
-        get => _aimKeybind;
-        set => SetField(ref _aimKeybind, value);
-    }
+    public StoredInputBinding AimKeybind { get => Get(MouseButtons.Right); set => Set(value); }
 
-    public string SecondAimKeybind
-    {
-        get => _secondAimKeybind;
-        set => SetField(ref _secondAimKeybind, value);
-    }
+    public StoredInputBinding SecondAimKeybind { get => Get(Keys.LMenu); set => Set(value); }
+    
+    public StoredInputBinding ModelSwitchKeybind { get => Get(); set => Set(value); }
 
-    public string DynamicFOVKeybind
-    {
-        get => _dynamicFovKeybind;
-        set => SetField(ref _dynamicFovKeybind, value);
-    }
+    public StoredInputBinding AntiRecoilKeybind { get => Get(MouseButtons.Left); set => Set(value); }
 
-    public string ModelSwitchKeybind
-    {
-        get => _modelSwitchKeybind;
-        set => SetField(ref _modelSwitchKeybind, value);
-    }
+    public StoredInputBinding DisableAntiRecoilKeybind { get => Get(Keys.Oem6); set => Set(value); }
 
-    public string AntiRecoilKeybind
-    {
-        get => _antiRecoilKeybind;
-        set => SetField(ref _antiRecoilKeybind, value);
-    }
+    public StoredInputBinding Gun1Key { get => Get(Keys.D1); set => Set(value); }
 
-    public string DisableAntiRecoilKeybind
-    {
-        get => _disableAntiRecoilKeybind;
-        set => SetField(ref _disableAntiRecoilKeybind, value);
-    }
-
-    public string Gun1Key
-    {
-        get => _gun1Key;
-        set => SetField(ref _gun1Key, value);
-    }
-
-    public string Gun2Key
-    {
-        get => _gun2Key;
-        set => SetField(ref _gun2Key, value);
-    }
+    public StoredInputBinding Gun2Key { get => Get(Keys.D2); set => Set(value); }
 }

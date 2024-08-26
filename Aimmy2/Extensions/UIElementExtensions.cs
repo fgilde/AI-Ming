@@ -7,6 +7,7 @@ using System.Windows.Markup;
 using System.Windows.Media;
 using Aimmy2.Class;
 using Aimmy2.Config;
+using Aimmy2.InputLogic;
 using InputLogic;
 using Nextended.Core.Extensions;
 using Nextended.Core.Helper;
@@ -298,11 +299,13 @@ public static class UIElementExtensions
         var toggle = new AToggle("");
         toggle.Background = toggle.BorderBrush = Brushes.Transparent;
         var code = AKeyChanger.CodeFor(title);
-        var keyCodeValue = AppConfig.Current.BindingSettings[code]?.ToString();
-        var changer = panel.AddKeyChanger(code, () => keyCodeValue ?? "None", bindingManager);
+
+        var keyCodeValue = AppConfig.Current.BindingSettings[code];
+ 
+        var changer = panel.AddKeyChanger(code, () => keyCodeValue, bindingManager);
         changer.WithBorder = false;
         changer.KeyConfigName = code;
-        changer.KeyBind = keyCodeValue ?? "None";
+        changer.KeyBind = keyCodeValue;
         changer.ShowTitle = false;
         changer.BindingManager = bindingManager;
         changer.GlobalKeyPressed += (sender, args) =>
@@ -332,12 +335,12 @@ public static class UIElementExtensions
     }
 
     // Similarly, add methods for other UI elements...
-    internal static AKeyChanger AddKeyChanger(this IAddChild panel, string title, Func<string> keybind,
+    internal static AKeyChanger AddKeyChanger(this IAddChild panel, string title, Func<StoredInputBinding> keybind,
         InputBindingManager? bindingManager = null, Action<AKeyChanger>? cfg = null)
     {
         return panel.AddKeyChanger(title, keybind(), bindingManager, cfg);
     }
-    internal static AKeyChanger AddKeyChanger(this IAddChild panel, string title, string keybind, InputBindingManager? bindingManager = null, Action<AKeyChanger>? cfg = null)
+    internal static AKeyChanger AddKeyChanger(this IAddChild panel, string title, StoredInputBinding keybind, InputBindingManager? bindingManager = null, Action<AKeyChanger>? cfg = null)
     {
         var keyChanger = panel.Add(new AKeyChanger(title, keybind), keyChanger =>
         {

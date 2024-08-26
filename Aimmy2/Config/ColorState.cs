@@ -2,20 +2,10 @@
 
 namespace Aimmy2.Config;
 
-public class ColorState : BaseSettings
+public class ColorState : BaseSettings<Color>
 {
-    private Color _fovColor = Colors.LightBlue;
-    private Color _detectedPlayerColor = Colors.IndianRed;
 
-    public Color FOVColor
-    {
-        get => _fovColor;
-        set => SetField(ref _fovColor, value);
-    }
+    public Color FOVColor { get => Get(); set => Set(value); }
 
-    public Color DetectedPlayerColor
-    {
-        get => _detectedPlayerColor;
-        set => SetField(ref _detectedPlayerColor, value);
-    }
+    public Color DetectedPlayerColor { get => Get(); set => Set(value); }
 }

@@ -77,9 +77,9 @@ public class AutoTriggerAction: BaseAction
                 return;
             }
 
-            if (InputBindingManager.IsValidKey(AppConfig.Current.BindingSettings.TriggerAdditionalSend) && TriggerCommandKeyUnsetOrHold() && PredictionIsIntersecting(AppConfig.Current.DropdownState.TriggerAdditionalCommandCheck, prediction))
+            if (AppConfig.Current.BindingSettings.TriggerAdditionalSend.IsValid && TriggerCommandKeyUnsetOrHold() && PredictionIsIntersecting(AppConfig.Current.DropdownState.TriggerAdditionalCommandCheck, prediction))
             {
-                InputBindingManager.SendKey(AppConfig.Current.BindingSettings.TriggerAdditionalSend);
+                await InputSender.SendKeyAsync(AppConfig.Current.BindingSettings.TriggerAdditionalSend);
             }
 
             if (TriggerKeyUnsetOrHold())
@@ -96,13 +96,13 @@ public class AutoTriggerAction: BaseAction
     private bool TriggerKeyUnsetOrHold()
     {
         var triggerKey = AppConfig.Current.BindingSettings.TriggerKey;
-        return string.IsNullOrEmpty(triggerKey) || triggerKey == "None" || InputBindingManager.IsHoldingBindingFor(nameof(AppConfig.Current.BindingSettings.TriggerKey), TimeSpan.FromSeconds(AppConfig.Current.SliderSettings.TriggerKeyMin));
+        return !triggerKey.IsValid || InputBindingManager.IsHoldingBindingFor(nameof(AppConfig.Current.BindingSettings.TriggerKey), TimeSpan.FromSeconds(AppConfig.Current.SliderSettings.TriggerKeyMin));
     }
 
     private bool TriggerCommandKeyUnsetOrHold()
     {
         var triggerKey = AppConfig.Current.BindingSettings.TriggerAdditionalCommandKey;
-        return string.IsNullOrEmpty(triggerKey) || triggerKey == "None" || InputBindingManager.IsHoldingBinding(nameof(AppConfig.Current.BindingSettings.TriggerAdditionalCommandKey));
+        return !triggerKey.IsValid || InputBindingManager.IsHoldingBinding(nameof(AppConfig.Current.BindingSettings.TriggerAdditionalCommandKey));
     }
 
     private bool PredictionIsIntersecting(TriggerCheck check, Prediction? prediction = null)

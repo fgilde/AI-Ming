@@ -4,73 +4,49 @@ namespace Aimmy2.InputLogic.Contracts;
 
 public class GamepadEventArgs : EventArgs
 {
-    private const string Prefix = "GP | ";
-
-    public static bool TryParse(string code, out GamepadEventArgs? args)
+    public GamepadEventArgs(GamepadAxis button, float? value = null)
     {
-        args = null;
-        if(IsGamepadKey(code)) 
-        {
-            args = new GamepadEventArgs
-            {
-                Button = GetButtonName(code),
-            };
-            if (code.Contains("|"))
-            {
-                var value = code.Split("|").Last();
-                if (float.TryParse(value, out var floatValue))
-                {
-                    args.Value = floatValue;
-                    args.IsPressed = floatValue > 0;
-                }
-            }
-            return true;
-        }
-        return false;
+        Button = button.ToDescriptionString();
+        IsStickEvent = true;
+        Value = value;
     }
 
-    public static bool IsGamepadKey(string key)
+    public GamepadEventArgs(GamepadSlider button, float? value = null)
     {
-        if (string.IsNullOrEmpty(key) || !key.StartsWith(Prefix))
-            return false;
-        key = GetButtonName(key);
-        return ExistsInEnum<GamepadButton>(key) || ExistsInEnum<GamepadSlider>(key) || ExistsInEnum<GamepadAxis>(key);
+        Button = button.ToDescriptionString();
+        IsStickEvent = false;
+        Value = value;
+        if(value != null)
+            IsPressed = value > 0;
     }
 
-    public static string GetButtonName(string key)
+    public GamepadEventArgs(GamepadButton button, bool? pressed = null)
     {
-        if (string.IsNullOrEmpty(key) || !key.StartsWith(Prefix))
-            return string.Empty;
-        var keyAndMaybeValue = key[Prefix.Length..];
-        return keyAndMaybeValue.Contains("|") ? keyAndMaybeValue.Split("|")[0] : keyAndMaybeValue;
+        Button = button.ToDescriptionString();
+        IsStickEvent = false;
+        IsPressed = pressed;
+        if (pressed == true)
+            Value = 1f;
+        else if (pressed == false)
+            Value = 0f;
     }
 
+    public GamepadEventArgs()
+    {}
+    
     public bool IsStickEvent { get; set; }
     public string Button { get; set; }
     public bool? IsPressed { get; set; }
     public float? Value { get; set; }
-    public string CodeWithoutValue => $"{Prefix}{Button}";
     public string Code => ToString();
 
     public GamepadButton? GamepadButton => Enum.GetValues<GamepadButton>().FirstOrDefault(b => b.ToDescriptionString() == Button) is var match && match.ToDescriptionString() == Button ? match : null;
     public GamepadSlider? GamepadSlider => Enum.GetValues<GamepadSlider>().FirstOrDefault(b => b.ToDescriptionString() == Button) is var match && match.ToDescriptionString() == Button ? match : null;
     public GamepadAxis? GamepadAxis => Enum.GetValues<GamepadAxis>().FirstOrDefault(b => b.ToDescriptionString() == Button) is var match && match.ToDescriptionString() == Button ? match : null;
-
-    private static bool ExistsInEnum<T>(string s) where T : struct, Enum
-    {
-        return Enum.GetValues<T>().FirstOrDefault(b => b.ToDescriptionString() == s) is var match && match.ToDescriptionString() == s;
-    }
-
+    
     public override string ToString()
     {
-        return $"{Prefix}{Button}|{GetValue()}";
+        return Button;
     }
 
-    private string GetValue()
-    {
-        if (Value == null && IsPressed == null)
-            return string.Empty;
-        var fl = Value ?? (IsPressed == true ? 1f : 0f);
-        return fl.ToString();
-    }
 }

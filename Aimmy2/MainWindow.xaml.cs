@@ -76,14 +76,7 @@ public partial class MainWindow
         AppConfig.ConfigLoaded += (s, e) => CreateUI();
         Console.WriteLine("Init UI");
         Config = AppConfig.Load();
-
-        try
-        {
-            GamepadManager.Init();
-        }
-        catch
-        {}
-        
+   
 
         DataContext = this;
 
@@ -112,7 +105,8 @@ public partial class MainWindow
         }
 
         _uiCreated = false;
-
+        Check.TryCatch<Exception>(GamepadManager.Init);
+        
         var theme = ThemePalette.All.FirstOrDefault(x => x.Name == AppConfig.Current.ThemeName) ?? ThemePalette.PurplePalette;
         ApplicationConstants.Theme = theme;
 
@@ -148,8 +142,7 @@ public partial class MainWindow
 
         BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.SecondAimKeybind),
             AppConfig.Current.BindingSettings.SecondAimKeybind);
-        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind),
-            AppConfig.Current.BindingSettings.DynamicFOVKeybind);
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind), AppConfig.Current.BindingSettings.DynamicFOVKeybind);
         BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.ModelSwitchKeybind),
             AppConfig.Current.BindingSettings.ModelSwitchKeybind);
 
@@ -420,7 +413,7 @@ public partial class MainWindow
         switch (bindingId)
         {
             case nameof(AppConfig.Current.BindingSettings.ModelSwitchKeybind):
-                if (InputBindingManager.IsValidKey(AppConfig.Current.BindingSettings.ModelSwitchKeybind))
+                if (AppConfig.Current.BindingSettings.ModelSwitchKeybind.IsValid)
                     if (!FileManager.CurrentlyLoadingModel)
                     {
                         if (ModelListBox.SelectedIndex >= 0 &&
@@ -510,7 +503,7 @@ public partial class MainWindow
         ModelSettings.AddTitle("Model Settings");
         ModelSettings.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.ModelSwitchKeybind), () => keybind.ModelSwitchKeybind, BindingManager);
         ModelSettings.AddCredit("",
-            "With this Key bind you can toggle through each model\r\n" +
+            "With this Keybind you can toggle through each model\r\n" +
             "Additionally you can set a KeyBind for each model to load a specific one");
         ModelSettings.AddSeparator();
 
@@ -609,16 +602,16 @@ public partial class MainWindow
             {
                 if (args.PropertyName == nameof(Config.BindingSettings.TriggerKey))
                 {
-                    slider.IsEnabled = InputBindingManager.IsValidKey(Config.BindingSettings.TriggerKey);
+                    slider.IsEnabled = Config.BindingSettings.TriggerKey.IsValid;
                 }
             };
-            slider.IsEnabled = InputBindingManager.IsValidKey(Config.BindingSettings.TriggerKey);
+            slider.IsEnabled = Config.BindingSettings.TriggerKey.IsValid;
             slider.ToolTip = "The minimum time the trigger key must be held down before the trigger is executed";
         }).BindTo(() => AppConfig.Current.SliderSettings.TriggerKeyMin);
         TriggerBot.AddSlider("Auto Trigger Delay", "Seconds", 0.01, 0.1, 0.00, 5).BindTo(() => AppConfig.Current.SliderSettings.AutoTriggerDelay);
 
 
-        TriggerBot.AddKeyChanger("Trigger Additional Send", () => keybind.TriggerAdditionalSend, BindingManager);
+        TriggerBot.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.TriggerAdditionalSend), () => keybind.TriggerAdditionalSend, BindingManager);
 
         TriggerBot.AddDropdown("Trigger Additional Command Check", AppConfig.Current.DropdownState.TriggerAdditionalCommandCheck,
             check => AppConfig.Current.DropdownState.TriggerAdditionalCommandCheck = check);
@@ -634,8 +627,8 @@ public partial class MainWindow
 
         AntiRecoil.AddTitle("Anti Recoil", true);
         AntiRecoil.AddToggleWithKeyBind("Anti Recoil", BindingManager).BindTo(() => AppConfig.Current.ToggleState.AntiRecoil).BindActiveStateColor(AntiRecoil);
-        AntiRecoil.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind), "Left", BindingManager);
-        AntiRecoil.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.DisableAntiRecoilKeybind), "Oem6", BindingManager);
+        AntiRecoil.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind), () => keybind.AntiRecoilKeybind, BindingManager);
+        AntiRecoil.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.DisableAntiRecoilKeybind), () => keybind.DisableAntiRecoilKeybind, BindingManager);
         AntiRecoil.AddSlider("Hold Time", "Milliseconds", 1, 1, 1, 1000, true).BindTo(() => AppConfig.Current.AntiRecoilSettings.HoldTime);
         AntiRecoil.AddButton("Record Fire Rate").Reader.Click += (s, e) => new SetAntiRecoil(this).Show();
         AntiRecoil.AddSlider("Fire Rate", "Milliseconds", 1, 1, 1, 5000, true).BindTo(() => AppConfig.Current.AntiRecoilSettings.FireRate);
@@ -664,9 +657,9 @@ public partial class MainWindow
                 new NoticeBar($"[Anti Recoil] Config has been saved to \"{saveFileDialog.FileName}\"", 2000).Show();
             }
         };
-        ARConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.Gun1Key), "D1", BindingManager);
+        ARConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.Gun1Key), () => keybind.Gun1Key, BindingManager);
         ARConfig.AddFileLocator("Gun 1 Config", "Aimmy Style Recoil Config (*.cfg)|*.cfg", "\\bin\\anti_recoil_configs");
-        ARConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.Gun2Key), "D2", BindingManager);
+        ARConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.Gun2Key), () => keybind.Gun2Key, BindingManager);
         ARConfig.AddFileLocator("Gun 2 Config", "Aimmy Style Recoil Config (*.cfg)|*.cfg", "\\bin\\anti_recoil_configs");
 
         ARConfig.AddButton("Load Gun 1 Config").Reader.Click +=

@@ -1,9 +1,6 @@
-﻿using System.Windows.Forms;
-using Gma.System.MouseKeyHook;
-using System.Windows.Input;
+﻿using Gma.System.MouseKeyHook;
 using Aimmy2.InputLogic;
 using Aimmy2.InputLogic.Contracts;
-using Aimmy2.InputLogic.Gamepad.Interaction;
 using KeyEventArgs = System.Windows.Forms.KeyEventArgs;
 using MouseEventArgs = System.Windows.Forms.MouseEventArgs;
 
@@ -13,20 +10,16 @@ namespace InputLogic
     {
         private IKeyboardMouseEvents? _mEvents;
         private bool _gamepadListen;
-        private readonly Dictionary<string, string> bindings = new();
+        private readonly Dictionary<string, StoredInputBinding> bindings = new();
         private static readonly Dictionary<string, (bool IsHolding, DateTime StartTime)> isHolding = new();
         private string? settingBindingId = null;
 
-        public event Action<string, string>? OnBindingSet;
+        public event Action<string, StoredInputBinding>? OnBindingSet;
 
         public event Action<string>? OnBindingPressed;
 
         public event Action<string>? OnBindingReleased;
 
-        public static bool IsValidKey(string key)
-        {
-            return !string.IsNullOrWhiteSpace(key) && key.ToLower() != "none";
-        }
 
         public static bool IsHoldingBinding(string bindingId)
         {
@@ -49,11 +42,13 @@ namespace InputLogic
             return GetHoldingTime(bindingId) >= duration;
         }
 
-        public void SetupDefault(string bindingId, string keyCode)
+        public void SetupDefault(string bindingId, StoredInputBinding bindingValue)
         {
-            bindings[bindingId] = keyCode;
+            if (!bindingValue.IsValid)
+                return;
+            bindings[bindingId] = bindingValue;
             isHolding[bindingId] = (false, DateTime.MinValue);
-            OnBindingSet?.Invoke(bindingId, keyCode);
+            OnBindingSet?.Invoke(bindingId, bindingValue);
             EnsureHookEvents();
         }
 
@@ -88,15 +83,15 @@ namespace InputLogic
                 var pressed = e.IsPressed == true;
                 if (settingBindingId != null)
                 {
-                    bindings[settingBindingId] = e.Code;
-                    OnBindingSet?.Invoke(settingBindingId, e.Code);
+                    bindings[settingBindingId] = new StoredInputBinding(e);
+                    OnBindingSet?.Invoke(settingBindingId, bindings[settingBindingId]);
                     settingBindingId = null;
                 }
                 else
                 {
                     foreach (var binding in bindings)
                     {
-                        if (binding.Value == e.Code || binding.Value == e.CodeWithoutValue || GamepadEventArgs.TryParse(binding.Value, out var x) && x?.CodeWithoutValue == e.CodeWithoutValue)
+                        if (binding.Value.Matches(e))
                         {
                             if (pressed)
                             {
@@ -118,15 +113,15 @@ namespace InputLogic
         {
             if (settingBindingId != null)
             {
-                bindings[settingBindingId] = e.KeyCode.ToString();
-                OnBindingSet?.Invoke(settingBindingId, e.KeyCode.ToString());
+                bindings[settingBindingId] = new StoredInputBinding(e);
+                OnBindingSet?.Invoke(settingBindingId, bindings[settingBindingId]);
                 settingBindingId = null;
             }
             else
             {
                 foreach (var binding in bindings)
                 {
-                    if (binding.Value == e.KeyCode.ToString())
+                    if (binding.Value.Matches(e))
                     {
                         isHolding[binding.Key] = (true, DateTime.Now);
                         OnBindingPressed?.Invoke(binding.Key);
@@ -139,15 +134,15 @@ namespace InputLogic
         {
             if (settingBindingId != null)
             {
-                bindings[settingBindingId] = e.Button.ToString();
-                OnBindingSet?.Invoke(settingBindingId, e.Button.ToString());
+                bindings[settingBindingId] = new StoredInputBinding(e);
+                OnBindingSet?.Invoke(settingBindingId, bindings[settingBindingId]);
                 settingBindingId = null;
             }
             else
             {
                 foreach (var binding in bindings)
                 {
-                    if (binding.Value == e.Button.ToString())
+                    if (binding.Value.Matches(e))
                     {
                         isHolding[binding.Key] = (true, DateTime.Now);
                         OnBindingPressed?.Invoke(binding.Key);
@@ -160,7 +155,7 @@ namespace InputLogic
         {
             foreach (var binding in bindings)
             {
-                if (binding.Value == e.KeyCode.ToString())
+                if (binding.Value.Matches(e))
                 {
                     isHolding[binding.Key] = (false, DateTime.MinValue);
                     OnBindingReleased?.Invoke(binding.Key);
@@ -172,7 +167,7 @@ namespace InputLogic
         {
             foreach (var binding in bindings)
             {
-                if (binding.Value == e.Button.ToString())
+                if (binding.Value.Matches(e))
                 {
                     isHolding[binding.Key] = (false, DateTime.MinValue);
                     OnBindingReleased?.Invoke(binding.Key);
@@ -196,11 +191,6 @@ namespace InputLogic
                 _mEvents.Dispose();
                 _mEvents = null;
             }
-        }
-
-        public static void SendKey(string key)
-        {
-            InputSender.SendKey(key);
         }
 
         public void Dispose()

@@ -10,7 +10,7 @@ namespace Aimmy2.AILogic.Actions;
 
 public class RapidFireAction: BaseAction
 {
-    protected override bool Active => base.Active && AppConfig.Current.ToggleState.RapidFire && (string.IsNullOrWhiteSpace(AppConfig.Current.BindingSettings.RapidFireKey) || InputBindingManager.IsHoldingBinding(nameof(AppConfig.Current.BindingSettings.RapidFireKey)));
+    protected override bool Active => base.Active && AppConfig.Current.ToggleState.RapidFire && (!AppConfig.Current.BindingSettings.RapidFireKey.IsValid || InputBindingManager.IsHoldingBinding(nameof(AppConfig.Current.BindingSettings.RapidFireKey)));
 
     public override async Task ExecuteAsync(Prediction[] predictions)
     {

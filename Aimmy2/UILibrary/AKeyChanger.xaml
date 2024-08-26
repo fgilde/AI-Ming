@@ -10,9 +10,9 @@
              mc:Ignorable="d"
              d:DesignWidth="282.5"
              d:DesignHeight="40">
-    <Grid>
+    <Grid x:Name="MainGrid">
         <Grid.ContextMenu>
-            <ContextMenu Name="ContextMenu" ContextMenuOpening="ContextMenu_OnContextMenuOpening">
+            <ContextMenu Name="ContextMenu">
                 <MenuItem Header="Delete Binding" Click="DeleteBinding_Click"/>
             </ContextMenu>
         </Grid.ContextMenu>
@@ -38,14 +38,14 @@
                         BorderThickness="1"
                         CornerRadius="5">
                     <Grid>
-                        <TextBlock x:Name="GamepadInfo"
+                        <TextBlock x:Name="KeyDeviceInfo"
                                    Visibility="Collapsed"
                                    Text="&#xE7FC;"
                                    Background="{x:Null}"
                                    Foreground="White"
                                    FontFamily="Segoe MDL2 Assets"
-                                   Margin="-10 -10 0 0"
-                                   FontSize="20"
+                                   Margin="-10 -8 0 0"
+                                   FontSize="18"
                                    VerticalAlignment="Top"
                         />
                         <Label x:Name="KeyNotifierLabel"

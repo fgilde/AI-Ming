@@ -63,7 +63,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
-    <None Include="bin\configs\Default.cfg">
+    <None Include="bin\configs\_Default.cfg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="bin\models\default.onnx">

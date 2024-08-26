@@ -5,7 +5,6 @@ using Aimmy2.AILogic;
 using Aimmy2.AILogic.Actions;
 using Aimmy2.AILogic.Contracts;
 using Aimmy2.Config;
-using Aimmy2.InputLogic;
 using Aimmy2.Models;
 using Class;
 using Nextended.Core.Extensions;
@@ -99,6 +98,7 @@ public class AIManager : IDisposable
                 
                 Rectangle detectionBox = new(targetX - Aimmy2.AILogic.PredictionLogic.IMAGE_SIZE / 2, targetY - Aimmy2.AILogic.PredictionLogic.IMAGE_SIZE / 2, Aimmy2.AILogic.PredictionLogic.IMAGE_SIZE, Aimmy2.AILogic.PredictionLogic.IMAGE_SIZE);
                 var frame = ImageCapture.Capture(detectionBox);
+                frame.Save("D:\\test.png");
                 var predictions = (await PredictionLogic.Predict(frame, detectionBox)).ToArray();
                 await Task.WhenAll(_actions.Select(a => a.Execute(predictions)));
             }
