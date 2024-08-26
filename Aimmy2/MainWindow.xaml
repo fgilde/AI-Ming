@@ -344,6 +344,9 @@
                                                             Grid.Column="2"
                                                             ToolTip="Delete Model"
                                                             BorderThickness="0"
+                                                            MouseDown="UIElement_OnMouseDown" 
+                                                            Click="DeleteModel_Click"
+                                                            Tag="{Binding}"
                                                             EffectBrush="{StaticResource ButtonBackground}"
                                                             Foreground="#ffffff"
                                                             BorderBrush="#00D9D9D9"
@@ -430,6 +433,7 @@
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition Width="*"/>
                                                             <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="Auto"/>
                                                         </Grid.ColumnDefinitions>
                                                         <TextBlock
                                                                    Text="{Binding}" 
@@ -444,6 +448,22 @@
                                                                                GlobalKeyPressed="AKeyChanger_ConfigOnGlobalKeyPressed"
                                                                                WithBorder="False"
                                                                                Text="" />
+                                                        <Ant:Button 
+                                                            Grid.Column="2"
+                                                            ToolTip="Delete Config"
+                                                            BorderThickness="0"
+                                                            MouseDown="UIElement_OnMouseDown" 
+                                                            Click="DeleteConfig_Click"
+                                                            Tag="{Binding}"
+                                                            EffectBrush="{StaticResource ButtonBackground}"
+                                                            Foreground="#ffffff"
+                                                            BorderBrush="#00D9D9D9"
+                                                            Background="Transparent"
+                                                            FontFamily="Segoe MDL2 Assets"
+                                                            Content="&#xE74D;"
+                                                            Padding="0,0,0,0"
+                                                            FontSize="20"
+                                                            Width="50"/>
                                                     </Grid>
                                                 </DataTemplate>
                                             </ListBox.ItemTemplate>

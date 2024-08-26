@@ -200,6 +200,7 @@ namespace Other
                         SelectedModelNotifier.Content = $"Loaded Model: {lastLoadedModel}";
                     }
                     ModelListBox.EnsureRenderedAndInitialized();
+                    MainWindow.Instance.FillMenus();
                 });
             }
         }
@@ -226,6 +227,7 @@ namespace Other
                         SelectedConfigNotifier.Content = "Loaded Config: " + lastLoadedConfig;
                     }
                     ConfigListBox.EnsureRenderedAndInitialized();
+                    MainWindow.Instance.FillMenus();
                 });
             }
         }

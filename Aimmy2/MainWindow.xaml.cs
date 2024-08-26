@@ -178,7 +178,7 @@ public partial class MainWindow
         }
     }
 
-    private void FillMenus()
+    internal void FillMenus()
     {
         ModelContextMenu.Items.Clear();
         ModelContextMenu.Items.AddRange(ModelListBox.ToMenuItems(item =>
@@ -1019,10 +1019,6 @@ public partial class MainWindow
             new NoticeBar(e.Message, 10000).Show();
             return;
         }
-        finally
-        {
-            FillMenus();
-        }
 
         Application.Current.Dispatcher.Invoke(() =>
         {
@@ -1271,5 +1267,51 @@ public partial class MainWindow
             magnifier.UpdateMagnifier();
         };
         dlg.Show();
+    }
+
+    private void DeleteModel_Click(object sender, RoutedEventArgs e)
+    {
+        var model = (sender as FrameworkElement)?.Tag?.ToString();
+        if (!string.IsNullOrEmpty(model))
+            DeleteModel(model);
+    }
+
+    private void DeleteModel(string model, bool confirmed = false)
+    {
+        var path = Path.Combine("bin/models", model);
+        if (File.Exists(path))
+        {
+            if (!confirmed)
+            {
+                var res = MessageBox.Show($"Are you sure you want to delete the model {model}?", "Delete Model",
+                    MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
+                if (res == MessageBoxResult.No)
+                    return;
+            }
+            File.Delete(path);
+        }
+    }
+
+    private void DeleteConfig_Click(object sender, RoutedEventArgs e)
+    {
+        var cfg = (sender as FrameworkElement)?.Tag?.ToString();
+        if (!string.IsNullOrEmpty(cfg))
+            DeleteConfig(cfg);
+    }
+
+    private void DeleteConfig(string cfg, bool confirmed = false)
+    {
+        var path = Path.Combine(Path.GetDirectoryName(AppConfig.DefaultConfigPath), cfg);
+        if (File.Exists(path))
+        {
+            if (!confirmed)
+            {
+                var res = MessageBox.Show($"Are you sure you want to delete the config {cfg}?", "Delete Config",
+                    MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
+                if (res == MessageBoxResult.No)
+                    return;
+            }
+            File.Delete(path);
+        }
     }
 }
