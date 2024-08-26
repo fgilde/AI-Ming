@@ -125,7 +125,7 @@ public class GamepadSenderViGEm : IGamepadSender
 
     private void SyncLoop()
     {
-        while (_isRunning)
+        while (_isRunning && _physicalController.IsConnected)
         {
             var state = _physicalController.GetState();
 
