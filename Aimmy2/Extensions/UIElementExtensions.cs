@@ -68,7 +68,6 @@ public static class UIElementExtensions
 
         return menuItems;
     }
-
     public static void MoveToScreenCenter(this Window window, System.Windows.Forms.Screen screen)
     {
         if (!window.CheckAccess())
@@ -102,6 +101,27 @@ public static class UIElementExtensions
         window.Left = newLeft;
         window.Top = newTop;
     }
+
+    public static void MoveToScreenAndFullscreen(this Window window, System.Windows.Forms.Screen screen)
+    {
+        if (!window.CheckAccess())
+        {
+            window.Dispatcher.Invoke(() => window.MoveToScreenAndFullscreen(screen));
+            return;
+        }
+
+        // Move the window to the desired screen
+        window.WindowState = WindowState.Normal; // Reset any current fullscreen state
+        window.Left = screen.WorkingArea.Left;
+        window.Top = screen.WorkingArea.Top;
+
+        // Set the window to fullscreen
+        window.WindowState = WindowState.Maximized;
+        window.WindowStyle = WindowStyle.None;
+        window.ResizeMode = ResizeMode.NoResize;
+    }
+
+
 
     public static T InitWith<T>(this T component, Action<T>? cfg) where T : UIElement
     {

@@ -14,9 +14,9 @@ public class ToggleState : BaseSettings
     private bool _dynamicFov = false;
     private bool _masking = false;
     private bool _showDetectedPlayer = false;
-    private bool _showTriggerHeadArea = false;
-    private bool _showAiConfidence = false;
-    private bool _showTracers = false;
+    private bool _showTriggerHeadArea = true;
+    private bool _showAiConfidence = true;
+    private bool _showTracers = true;
     private bool _collectDataWhilePlaying = false;
     private bool _autoLabelData = false;
     private bool _lgHubMouseMovement = false;

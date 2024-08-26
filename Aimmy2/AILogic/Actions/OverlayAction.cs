@@ -39,8 +39,8 @@ public class OverlayAction : BaseAction
 
     public override Task OnResume()
     {
-        FOV.Instance?.MoveToScreenCenter(ImageCapture.Screen);
-        _playerOverlay?.MoveToScreenCenter(ImageCapture.Screen);
+        FOV.Instance?.MoveToScreenAndFullscreen(ImageCapture.Screen);
+        _playerOverlay?.MoveToScreenAndFullscreen(ImageCapture.Screen);
         return base.OnResume();
     }
 

@@ -1260,8 +1260,10 @@ public partial class MainWindow
     private Magnifier magnifier;
     private async void ButtonBase_OnClick(object sender, RoutedEventArgs e)
     {
-        var dlg = new Window();
-        dlg.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        var dlg = new Window
+        {
+            WindowStartupLocation = WindowStartupLocation.CenterScreen
+        };
         dlg.Height = dlg.Width = 500;
         dlg.Loaded += (s, e) =>
         {

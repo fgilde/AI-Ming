@@ -34,7 +34,6 @@ namespace Visuality
         {
             await Application.Current.Dispatcher.BeginInvoke(() =>
             {
-                var targetScreen = AIManager.Instance?.ImageCapture?.Screen ?? Screen.PrimaryScreen;
                 var area = AIManager.Instance?.ImageCapture?.GetCaptureArea() ?? Screen.PrimaryScreen.Bounds;
                 
                 var cursorPosition = WinAPICaller.GetCursorPosition();
