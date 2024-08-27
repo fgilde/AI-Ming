@@ -25,6 +25,9 @@ public class SliderSettings: BaseSettings
     private double _triggerKeyMin = 0.39;
     private double _firePressDelay = 0.02;
     private float _magnificationFactor = 2;
+    private double _magnifierWindowHeight = 250;
+    private double _magnifierWindowWidth = 350;
+    private float _magnificationStepFactor = 0.5f;
 
     public string SuggestedModel
     {
@@ -108,10 +111,28 @@ public class SliderSettings: BaseSettings
         set => SetField(ref _aiMinimumConfidence, value);
     }
 
+    public float MagnificationStepFactor    
+    {
+        get => _magnificationStepFactor;
+        set => SetField(ref _magnificationStepFactor, value);
+    }
+
     public float MagnificationFactor
     {
         get => _magnificationFactor;
         set => SetField(ref _magnificationFactor, value);
+    }
+
+    public double MagnifierWindowHeight
+    {
+        get => _magnifierWindowHeight;
+        set => SetField(ref _magnifierWindowHeight, value);
+    }
+
+    public double MagnifierWindowWidth
+    {
+        get => _magnifierWindowWidth;
+        set => SetField(ref _magnifierWindowWidth, value);
     }
 
     public double GamepadMinimumLT

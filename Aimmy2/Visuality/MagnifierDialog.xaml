@@ -5,20 +5,24 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Visuality"
         mc:Ignorable="d"
-        Height="500"
-        Width="600"
+        MinHeight="50"
+        MinWidth="50"
+        Height="{Binding MagnifierWindowHeight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+        Width="{Binding MagnifierWindowWidth, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
         WindowStyle="None"
         Topmost="True"
+        GotFocus="MagnifierDialog_OnGotFocus"
         ResizeMode="CanResizeWithGrip"
         WindowStartupLocation="CenterScreen"
         AllowsTransparency="True"
         ForceCursor="False"
+        SizeChanged="MagnifierDialog_OnSizeChanged"
+        IsTabStop="False"
         Cursor="None"
         PreviewMouseLeftButtonDown="Border_MouseLeftButtonDown"
         Background="Green">
 
-    <Grid>
-        <Button  x:Name="Exit" Content="&#xE8BB;" HorizontalAlignment="Right" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White" FontFamily="Segoe MDL2 Assets" Padding="15,0,15,0" BorderThickness="0,0,0,0" FontSize="10" VerticalAlignment="Top" Click="Exit_Click" />
+    <Grid MinHeight="50" MinWidth="50">
 
         <Border x:Name="MainBorder"
                 CornerRadius="5"

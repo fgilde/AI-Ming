@@ -15,6 +15,7 @@ using UILibrary;
 using Microsoft.Xaml.Behaviors.Core;
 using Nextended.UI.Helper;
 using Nextended.UI.WPF.Converters;
+using System.Runtime.InteropServices;
 
 namespace Aimmy2.Extensions;
 
@@ -68,36 +69,53 @@ public static class UIElementExtensions
 
         return menuItems;
     }
-    public static void MoveToScreenCenter(this Window window, System.Windows.Forms.Screen screen)
+
+    //public static void MoveToScreenCenter(this Window window, System.Windows.Forms.Screen screen)
+    //{
+    //    if (!window.CheckAccess())
+    //    {
+    //        window.Dispatcher.Invoke(() => window.MoveToScreenCenter(screen));
+    //        return;
+    //    }
+    //    // Convert the window size to pixels, because WPF uses device-independent units
+    //    double dpiX, dpiY;
+    //    var source = PresentationSource.FromVisual(window);
+    //    if (source?.CompositionTarget != null)
+    //    {
+    //        dpiX = 96.0 * source.CompositionTarget.TransformToDevice.M11;
+    //        dpiY = 96.0 * source.CompositionTarget.TransformToDevice.M22;
+    //    }
+    //    else
+    //    {
+    //        dpiX = 96.0;
+    //        dpiY = 96.0;
+    //    }
+
+    //    // Get the size of the window in pixels
+    //    double windowWidth = window.Width * dpiX / 96.0;
+    //    double windowHeight = window.Height * dpiY / 96.0;
+
+    //    // Calculate the new top-left position to center the window on the given screen
+    //    double newLeft = screen.WorkingArea.Left + (screen.WorkingArea.Width - windowWidth) / 2;
+    //    double newTop = screen.WorkingArea.Top + (screen.WorkingArea.Height - windowHeight) / 2;
+
+    //    // Move the window
+    //    window.Left = newLeft;
+    //    window.Top = newTop;
+    //}
+
+    public static void Center(this Window window, System.Windows.Forms.Screen? screen = null)
     {
         if (!window.CheckAccess())
         {
-            window.Dispatcher.Invoke(() => window.MoveToScreenCenter(screen));
+            window.Dispatcher.Invoke(() => window.Center(screen));
             return;
         }
-        // Convert the window size to pixels, because WPF uses device-independent units
-        double dpiX, dpiY;
-        var source = PresentationSource.FromVisual(window);
-        if (source?.CompositionTarget != null)
-        {
-            dpiX = 96.0 * source.CompositionTarget.TransformToDevice.M11;
-            dpiY = 96.0 * source.CompositionTarget.TransformToDevice.M22;
-        }
-        else
-        {
-            dpiX = 96.0;
-            dpiY = 96.0;
-        }
+        screen ??= System.Windows.Forms.Screen.FromHandle(new System.Windows.Interop.WindowInteropHelper(window).Handle);
 
-        // Get the size of the window in pixels
-        double windowWidth = window.Width * dpiX / 96.0;
-        double windowHeight = window.Height * dpiY / 96.0;
+        double newLeft = screen.WorkingArea.Left + (screen.WorkingArea.Width - window.ActualWidth) / 2;
+        double newTop = screen.WorkingArea.Top + (screen.WorkingArea.Height - window.ActualHeight) / 2;
 
-        // Calculate the new top-left position to center the window on the given screen
-        double newLeft = screen.WorkingArea.Left + (screen.WorkingArea.Width - windowWidth) / 2;
-        double newTop = screen.WorkingArea.Top + (screen.WorkingArea.Height - windowHeight) / 2;
-
-        // Move the window
         window.Left = newLeft;
         window.Top = newTop;
     }
@@ -379,12 +397,16 @@ public static class UIElementExtensions
 
     public static ASlider AddSlider(this IAddChild panel, string title, string label, double frequency, double buttonsteps, double min, double max, bool forAntiRecoil = false)
     {
-        return panel.Add<ASlider>(new ASlider(title, label, frequency), slider =>
+        var slider = new ASlider(title, label, frequency)
         {
-            slider.Slider.Minimum = min;
-            slider.Slider.Maximum = max;
-            slider.Slider.TickFrequency = frequency;
-        });
+            Slider =
+            {
+                Minimum = min,
+                Maximum = max,
+                TickFrequency = frequency
+            }
+        };
+        return panel.Add(slider);
     }
 
     public static ADropdown AddDropdown<T>(this IAddChild panel, string title, T value, IEnumerable<T> items, Action<T> onSelect, Action<ADropdown>? cfg = null)
@@ -476,6 +498,22 @@ public static class UIElementExtensions
         {
             cfg?.Invoke(credit);
         });
+    }
+
+
+    const uint WDA_NONE = 0x00000000;
+    const uint WDA_MONITOR = 0x00000001;
+
+    [DllImport("user32.dll")]
+    static extern bool SetWindowDisplayAffinity(IntPtr hwnd, uint affinity);
+    
+ 
+    public static T HideForCapture<T>(this T window) where T : Window
+    {
+        var hwnd = new System.Windows.Interop.WindowInteropHelper(window).Handle;
+        SetWindowDisplayAffinity(hwnd, WDA_MONITOR);
+        
+        return window;
     }
 
 }

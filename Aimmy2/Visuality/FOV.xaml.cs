@@ -5,7 +5,6 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Interop;
 using Aimmy2.Config;
-using Aimmy2.Extensions;
 using Application = System.Windows.Application;
 
 namespace Visuality

@@ -15,19 +15,19 @@ namespace Aimmy2.UILibrary
     /// </summary>
     public partial class ASlider : UserControl
     {
-        public ASlider(string Text, string NotifierText, double ButtonSteps)
+        public ASlider(string label, string text, double steps)
         {
             InitializeComponent();
 
-            SliderTitle.Content = Text;
-
+            SliderTitle.Content = label;
+            AdjustNotifier.Content = $"{Slider.Value:F2} {text}";
             Slider.ValueChanged += (s, e) =>
             {
-                AdjustNotifier.Content = $"{Slider.Value:F2} {NotifierText}";
+                AdjustNotifier.Content = $"{Slider.Value:F2} {text}";
             };
 
-            SubtractOne.Click += (s, e) => UpdateSliderValue(-ButtonSteps);
-            AddOne.Click += (s, e) => UpdateSliderValue(ButtonSteps);
+            SubtractOne.Click += (s, e) => UpdateSliderValue(-steps);
+            AddOne.Click += (s, e) => UpdateSliderValue(steps);
         }
 
         public ASlider BindTo<T>(Expression<Func<T>> fn) where T : struct, INumber<T>
@@ -35,7 +35,7 @@ namespace Aimmy2.UILibrary
             var memberExpression = fn.GetMemberExpression();
             var propertyInfo = (PropertyInfo)memberExpression.Member;
             var owner = memberExpression.GetOwnerAs<INotifyPropertyChanged>();
-
+   
             Slider.Value = Convert.ToDouble(fn.Compile()());
 
             owner.PropertyChanged += (s, e) =>

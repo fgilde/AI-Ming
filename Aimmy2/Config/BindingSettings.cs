@@ -19,6 +19,8 @@ public class BindingSettings : BaseSettings<StoredInputBinding>
 
     public StoredInputBinding AimKeybind { get => Get(MouseButtons.Right); set => Set(value); }
     public StoredInputBinding MagnifierKeybind { get => Get(); set => Set(value); }
+    public StoredInputBinding MagnifierZoomInKeybind { get => Get(Keys.Add); set => Set(value); }
+    public StoredInputBinding MagnifierZoomOutKeybind { get => Get(Keys.Subtract); set => Set(value); }
     
     public StoredInputBinding SecondAimKeybind { get => Get(Keys.LMenu); set => Set(value); }
     

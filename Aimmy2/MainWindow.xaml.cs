@@ -131,31 +131,22 @@ public partial class MainWindow
 
         BindingManager = new InputBindingManager();
         OnPropertyChanged(nameof(BindingManager));
-        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.MagnifierKeybind),
-            AppConfig.Current.BindingSettings.MagnifierKeybind);
-        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.AimKeybind),
-            AppConfig.Current.BindingSettings.AimKeybind);
-        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.TriggerKey),
-            AppConfig.Current.BindingSettings.TriggerKey);
-        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.TriggerAdditionalCommandKey),
-            AppConfig.Current.BindingSettings.TriggerAdditionalCommandKey);
-        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.RapidFireKey),
-            AppConfig.Current.BindingSettings.RapidFireKey);
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.MagnifierKeybind), AppConfig.Current.BindingSettings.MagnifierKeybind);
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.MagnifierZoomInKeybind), AppConfig.Current.BindingSettings.MagnifierZoomInKeybind);
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.MagnifierZoomOutKeybind), AppConfig.Current.BindingSettings.MagnifierZoomOutKeybind);
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.AimKeybind), AppConfig.Current.BindingSettings.AimKeybind);
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.TriggerKey), AppConfig.Current.BindingSettings.TriggerKey);
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.TriggerAdditionalCommandKey), AppConfig.Current.BindingSettings.TriggerAdditionalCommandKey);
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.RapidFireKey), AppConfig.Current.BindingSettings.RapidFireKey);
 
-        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.SecondAimKeybind),
-            AppConfig.Current.BindingSettings.SecondAimKeybind);
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.SecondAimKeybind), AppConfig.Current.BindingSettings.SecondAimKeybind);
         BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind), AppConfig.Current.BindingSettings.DynamicFOVKeybind);
-        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.ModelSwitchKeybind),
-            AppConfig.Current.BindingSettings.ModelSwitchKeybind);
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.ModelSwitchKeybind), AppConfig.Current.BindingSettings.ModelSwitchKeybind);
 
-        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind),
-            AppConfig.Current.BindingSettings.AntiRecoilKeybind);
-        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.DisableAntiRecoilKeybind),
-            AppConfig.Current.BindingSettings.DisableAntiRecoilKeybind);
-        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.Gun1Key),
-            AppConfig.Current.BindingSettings.Gun1Key);
-        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.Gun2Key),
-            AppConfig.Current.BindingSettings.Gun2Key);
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind), AppConfig.Current.BindingSettings.AntiRecoilKeybind);
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.DisableAntiRecoilKeybind), AppConfig.Current.BindingSettings.DisableAntiRecoilKeybind);
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.Gun1Key), AppConfig.Current.BindingSettings.Gun1Key);
+        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.Gun2Key), AppConfig.Current.BindingSettings.Gun2Key);
 
         LoadAimMenu();
         LoadTools();
@@ -415,6 +406,14 @@ public partial class MainWindow
     {
         switch (bindingId)
         {
+            case nameof(AppConfig.Current.BindingSettings.MagnifierZoomInKeybind):
+                AppConfig.Current.SliderSettings.MagnificationFactor += AppConfig.Current.SliderSettings.MagnificationStepFactor;
+                ValidateMagnificationFactor();
+                break;
+            case nameof(AppConfig.Current.BindingSettings.MagnifierZoomOutKeybind):
+                AppConfig.Current.SliderSettings.MagnificationFactor -= AppConfig.Current.SliderSettings.MagnificationStepFactor;
+                ValidateMagnificationFactor();
+                break;
             case nameof(AppConfig.Current.BindingSettings.MagnifierKeybind):
                 ToggleMagnifier();
                 break;
@@ -917,11 +916,29 @@ public partial class MainWindow
         ToolsConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.MagnifierKeybind), () => AppConfig.Current.BindingSettings.MagnifierKeybind, BindingManager);
 
         ToolsConfig.AddButton("Show Hide Magnifier").Reader.Click += (s, e) => ToggleMagnifier();
+        
+        ToolsConfig.AddSlider("Magnification value", "Zoom Factor", 0.1, 0.1, ApplicationConstants.MinMagnificationFactor, ApplicationConstants.MaxMagnificationFactor).BindTo(() => AppConfig.Current.SliderSettings.MagnificationFactor);
+        ToolsConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.MagnifierZoomInKeybind), () => AppConfig.Current.BindingSettings.MagnifierZoomInKeybind, BindingManager);
+        ToolsConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.MagnifierZoomOutKeybind), () => AppConfig.Current.BindingSettings.MagnifierZoomOutKeybind, BindingManager);
 
-        ToolsConfig.AddSlider("Magnification value", "Zoom Factor", 0.1, 0.1, 1, 8).BindTo(() => AppConfig.Current.SliderSettings.MagnificationFactor);
+        ToolsConfig.AddSlider("Step ZoomIn/ZoomOut", "Step", 0.1, 0.1, 0.1, 4).BindTo(() => AppConfig.Current.SliderSettings.MagnificationStepFactor);
+
+        ToolsConfig.AddSlider("Window Size (Width)", "Width", 1, 10, 50, 1500).BindTo(() => AppConfig.Current.SliderSettings.MagnifierWindowWidth);
+        ToolsConfig.AddSlider("Window Size (Height)", "Height", 1, 10, 50, 1500).BindTo(() => AppConfig.Current.SliderSettings.MagnifierWindowHeight);
 
 
         ToolsConfig.AddSeparator();
+    }
+
+    private void ValidateMagnificationFactor()
+    {
+        AppConfig.Current.SliderSettings.MagnificationFactor =
+            AppConfig.Current.SliderSettings.MagnificationFactor switch
+            {
+                < ApplicationConstants.MinMagnificationFactor => ApplicationConstants.MinMagnificationFactor,
+                > ApplicationConstants.MaxMagnificationFactor => ApplicationConstants.MaxMagnificationFactor,
+                _ => AppConfig.Current.SliderSettings.MagnificationFactor
+            };
     }
 
     private void LoadSettingsMenu()

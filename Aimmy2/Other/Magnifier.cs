@@ -119,8 +119,6 @@ public class Magnifier : IDisposable
             return;
         }
 
-
-
         // Set the source rectangle for the magnifier control.
         NativeMethods.MagSetWindowSource(hwndMag, sourceRect);
 
@@ -152,19 +150,20 @@ public class Magnifier : IDisposable
         if (!initialized)
             return;
 
-        IntPtr hInst;
+        var hInst = NativeMethods.GetModuleHandle(null);
 
-        hInst = NativeMethods.GetModuleHandle(null);
-
-        // Make the window opaque.
-        //form.Background = System.Windows.Media.Brushes.Transparent;
+       
         form.Opacity = 255;
 
         // Create a magnifier control that fills the client area.
         NativeMethods.GetClientRect(GetHandle(), ref magWindowRect);
-        hwndMag = NativeMethods.CreateWindow((int)ExtendedWindowStyles.WS_EX_CLIENTEDGE, NativeMethods.WC_MAGNIFIER,
-            "MagnifierWindow", (int)WindowStyles.WS_CHILD | (int)MagnifierStyle.MS_SHOWMAGNIFIEDCURSOR |
-            (int)WindowStyles.WS_VISIBLE,
+        hwndMag = NativeMethods.CreateWindow(
+             (int)(ExtendedWindowStyles.WS_EX_CLIENTEDGE | ExtendedWindowStyles.WS_EX_TRANSPARENT | ExtendedWindowStyles.WS_EX_TOPMOST), 
+            NativeMethods.WC_MAGNIFIER,
+            "MagnifierWindow", (int)WindowStyles.WS_CHILD 
+                               //| (int)MagnifierStyle.MS_SHOWMAGNIFIEDCURSOR
+                               | (int)WindowStyles.WS_VISIBLE
+                               ,  
             magWindowRect.left, magWindowRect.top, magWindowRect.right, magWindowRect.bottom, GetHandle(), IntPtr.Zero, hInst, IntPtr.Zero);
 
         if (hwndMag == IntPtr.Zero)

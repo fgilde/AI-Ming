@@ -10,6 +10,9 @@ namespace Aimmy2;
 
 public static class ApplicationConstants
 {
+    public const float MinMagnificationFactor = 0.1f;
+    public const float MaxMagnificationFactor = 100;
+
     public const string RepoOwner = "fgilde";
     public const string RepoName = "AI-Ming";
     private static ThemePalette _theme = ThemePalette.DarkPalette;

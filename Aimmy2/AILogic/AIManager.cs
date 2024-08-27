@@ -98,7 +98,7 @@ public class AIManager : IDisposable
                 
                 Rectangle detectionBox = new(targetX - Aimmy2.AILogic.PredictionLogic.IMAGE_SIZE / 2, targetY - Aimmy2.AILogic.PredictionLogic.IMAGE_SIZE / 2, Aimmy2.AILogic.PredictionLogic.IMAGE_SIZE, Aimmy2.AILogic.PredictionLogic.IMAGE_SIZE);
                 var frame = ImageCapture.Capture(detectionBox);
-                
+                frame.Save("D:\\test.png");
                 var predictions = (await PredictionLogic.Predict(frame, detectionBox)).ToArray();
                 await Task.WhenAll(_actions.Select(a => a.Execute(predictions)));
             }
