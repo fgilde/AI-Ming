@@ -377,6 +377,11 @@ internal enum ExtendedWindowStyles : int
     /// window receives click messages. 
     /// </summary>
     WS_EX_TRANSPARENT = 0x00000020,
+
+    WDA_NONE = 0x00000000,
+    WDA_MONITOR = 0x00000001,
+    WDA_EXCLUDEFROMCAPTURE = 0x00000011,
+
     /// <summary>
     /// Creates an MDI child window. 
     /// </summary>

@@ -5,6 +5,7 @@ using System.Windows.Input;
 using Aimmy2.Extensions;
 using Aimmy2.Class;
 using System.Windows.Interop;
+using Aimmy2.AILogic.Contracts;
 
 namespace Visuality
 {
@@ -39,8 +40,24 @@ namespace Visuality
 
         private void DlgLoaded(object sender, RoutedEventArgs e)
         {
+            Center();
+            if(AIManager.Instance?.ImageCapture != null)
+                AIManager.Instance.ImageCapture.PropertyChanged += ImageCaptureOnPropertyChanged;
             StartMagnification();
+        }
 
+        private void Center()
+        {
+            this.Center(AIManager.Instance.ImageCapture.CaptureArea);
+        }
+
+
+        private void ImageCaptureOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ICapture.CaptureArea))
+            {
+                Center();
+            }
         }
 
         private void StartMagnification()
@@ -68,7 +85,7 @@ namespace Visuality
 
         private void MagnifierDialog_OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
-            this.Center();
+            this.Center(AIManager.Instance.ImageCapture.CaptureArea);
         }
     }
 

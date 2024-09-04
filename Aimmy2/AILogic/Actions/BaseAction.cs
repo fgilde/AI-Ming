@@ -7,7 +7,7 @@ namespace Aimmy2.AILogic.Actions;
 public abstract class BaseAction: IAction
 {
     public AIManager AIManager { get; set; }
-    public Task Execute(IEnumerable<Prediction> predictions) => Task.Run(() => ExecuteAsync(predictions.ToArray()));
+    public Task Execute(Prediction[] predictions) => Task.Run(() => ExecuteAsync(predictions.ToArray()));
     public virtual Task OnPause() => Task.CompletedTask;
 
     public virtual Task OnResume() => Task.CompletedTask;
@@ -23,5 +23,10 @@ public abstract class BaseAction: IAction
         return typeof(BaseAction).Assembly.GetTypes()
             .Where(t => t.ImplementsInterface(typeof(IAction)) && !t.IsAbstract)
             .Select(t => (IAction)Activator.CreateInstance(t)).ToList();
+    }
+
+    public virtual void Dispose()
+    {
+
     }
 }

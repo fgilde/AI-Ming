@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Windows;
 using System.Windows.Forms;
+using System.Windows.Interop;
 using Aimmy2.AILogic;
 using Aimmy2.Config;
 using Aimmy2.Extensions;
@@ -25,12 +27,30 @@ namespace Aimmy2.Other
             IntPtr desktopDC = GetDC(IntPtr.Zero);
             using (Graphics graphics = Graphics.FromHdc(desktopDC))
             {
-                foreach (var prediction in predictions)
-                {
-                    DrawPrediction(graphics, prediction, targetArea);
-                }
+                DrawPredictions(graphics, predictions, targetArea);
             }
             ReleaseDC(IntPtr.Zero, desktopDC);
+        }
+
+        public static void DrawPredictions(Window window, IEnumerable<Prediction> predictions, Rectangle? targetArea = null)
+        {
+            var hwnd = window.Dispatcher.Invoke(() => new WindowInteropHelper(window).Handle);
+            IntPtr hdc = GetDC(hwnd);
+
+            using (Graphics graphics = Graphics.FromHdc(hdc))
+            {
+                DrawPredictions(graphics, predictions, targetArea);
+            }
+
+            ReleaseDC(hwnd, hdc);
+        }
+
+        public static void DrawPredictions(Graphics graphics, IEnumerable<Prediction> predictions, Rectangle? targetArea = null)
+        {
+            foreach (var prediction in predictions)
+            {
+                DrawPrediction(graphics, prediction, targetArea);
+            }
         }
 
         private static void Draw(Graphics graphics, RectangleF rect, float cornerRadius, MediaColor color, float opacity, float borderThickness) => Draw(graphics, rect, cornerRadius, color.ToDrawingColor(), opacity, borderThickness);
@@ -88,8 +108,76 @@ namespace Aimmy2.Other
             return Color.FromArgb(color.A, color.R, color.G, color.B);
         }
 
-
         private static void DrawPrediction(Graphics graphics, Prediction prediction, Rectangle? targetArea)
+        {
+            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            var rect = prediction.TranslatedRectangle;
+            var config = AppConfig.Current;
+            var color = config.ColorState.DetectedPlayerColor;
+            var opacity = config.SliderSettings.Opacity;
+            var borderThickness = config.SliderSettings.BorderThickness;
+            var font = new Font("Consolas", config.SliderSettings.AIConfidenceFontSize);
+
+            if (targetArea.HasValue)
+            {
+                rect.X += targetArea.Value.Left;
+                rect.Y += targetArea.Value.Top;
+            }
+
+            Draw(graphics, rect, (float)config.SliderSettings.CornerRadius, color, (float)opacity, (float)borderThickness);
+
+            if (config.ToggleState.ShowAIConfidence)
+            {
+                var confidenceText = $"{Math.Round((prediction.Confidence * 100), 2)}%";
+                DrawText(graphics, confidenceText, rect, font, color, (float)opacity);
+            }
+
+            if (config.ToggleState.ShowTracers)
+            {
+                var centerX = rect.X + rect.Width / 2;
+                var bottomY = rect.Y + rect.Height;
+
+                PointF tracerStart = targetArea?.GetBottomCenter() ?? Screen.PrimaryScreen!.Bounds.GetBottomCenter();
+
+                Draw(graphics, tracerStart, new PointF(centerX, bottomY), color, 2);
+            }
+
+            if (config.ToggleState.ShowTriggerHeadArea)
+            {
+                var headRelativeRect = prediction.HeadRelativeRect;
+                float headAreaWidth = rect.Width * headRelativeRect.WidthPercentage;
+                float headAreaHeight = rect.Height * headRelativeRect.HeightPercentage;
+                float headAreaLeft = rect.X + rect.Width * headRelativeRect.LeftMarginPercentage;
+                float headAreaTop = rect.Y + rect.Height * headRelativeRect.TopMarginPercentage;
+
+                var headAreaRect = new RectangleF(headAreaLeft, headAreaTop, headAreaWidth, headAreaHeight);
+                Draw(graphics, headAreaRect, Color.Green, (float)borderThickness);
+            }
+
+            if (config.ToggleState.ShowSizes)
+            {
+                string widthText = $"{rect.Width:F1}";
+                var widthRect = new Rectangle((int)rect.X, (int)(rect.Y + rect.Height + 2), (int)rect.Width, font.Height);
+                var font2 = new Font("Consolas", 10);
+                DrawText(graphics, widthText, widthRect, font2, color, (float)opacity);
+
+
+                string heightText = $"{rect.Height:F1}";
+                var heightRect = new Rectangle((int)(rect.X + rect.Width + 2), (int)rect.Y, font.Height, (int)rect.Height);
+
+                graphics.TranslateTransform(heightRect.X, heightRect.Y + heightRect.Height);
+                graphics.RotateTransform(-90);
+                DrawText(graphics, heightText, new Rectangle(0, 0, heightRect.Height, heightRect.Width), font2, color, (float)opacity);
+
+                graphics.ResetTransform();
+            }
+
+            font.Dispose();
+        }
+
+
+
+        private static void cDrawPrediction(Graphics graphics, Prediction prediction, Rectangle? targetArea)
         {
             graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             var rect = prediction.TranslatedRectangle;

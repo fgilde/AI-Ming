@@ -28,6 +28,8 @@ namespace Aimmy2.UILibrary
         public event EventHandler<EventArgs> Deactivated;
         public event EventHandler<EventArgs<bool>> Changed;
 
+        public double EnabledOpacity => IsEnabled ? 1 : 0.35;
+
         public bool Checked
         {
             get => _checked;
@@ -46,6 +48,12 @@ namespace Aimmy2.UILibrary
                     }
                 }
             }
+        }
+
+        public void SetEnabled(bool enabled)
+        {
+            IsEnabled = enabled;
+            OnPropertyChanged(nameof(EnabledOpacity));
         }
 
         public string Text
@@ -129,6 +137,8 @@ namespace Aimmy2.UILibrary
 
         public void EnableSwitch()
         {
+            if (!IsEnabled)
+                return;
             _checked = true;
             Color currentColor = (Color)SwitchMoving.Background.GetValue(SolidColorBrush.ColorProperty);
             SetColorAnimation(currentColor, EnableColor, AnimationDuration);
@@ -140,6 +150,8 @@ namespace Aimmy2.UILibrary
 
         public void DisableSwitch()
         {
+            if (!IsEnabled)
+                return;
             _checked = false;
             Color currentColor = (Color)SwitchMoving.Background.GetValue(SolidColorBrush.ColorProperty);
             SetColorAnimation(currentColor, DisableColor, AnimationDuration);

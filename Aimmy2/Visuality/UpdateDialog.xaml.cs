@@ -13,7 +13,7 @@ namespace Visuality
 {
     public partial class UpdateDialog
     {
-        private string[] IgnoreOnUpdate => [AppConfig.DefaultConfigPath];
+        private string[] IgnoreOnUpdate => [AppConfig.DefaultConfigPath, "bin\\configs\\Default Gamepad.cfg", "bin\\configs\\Default Keyboard.cfg"];
 
         private readonly UpdateManager _updateManager;
         private bool _canClose = true;

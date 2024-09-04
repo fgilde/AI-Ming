@@ -1,11 +1,11 @@
-﻿using Aimmy2.UILibrary;
+﻿using System.Drawing;
+using Aimmy2.UILibrary;
 using Class;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Markup;
 using System.Windows.Media;
-using Aimmy2.Class;
 using Aimmy2.Config;
 using Aimmy2.InputLogic;
 using InputLogic;
@@ -14,8 +14,13 @@ using Nextended.Core.Helper;
 using UILibrary;
 using Microsoft.Xaml.Behaviors.Core;
 using Nextended.UI.Helper;
-using Nextended.UI.WPF.Converters;
 using System.Runtime.InteropServices;
+using Accord.Diagnostics;
+using Brushes = System.Windows.Media.Brushes;
+using Color = System.Windows.Media.Color;
+using FontFamily = System.Windows.Media.FontFamily;
+using Point = System.Windows.Point;
+using Size = System.Windows.Size;
 
 namespace Aimmy2.Extensions;
 
@@ -70,73 +75,48 @@ public static class UIElementExtensions
         return menuItems;
     }
 
-    //public static void MoveToScreenCenter(this Window window, System.Windows.Forms.Screen screen)
-    //{
-    //    if (!window.CheckAccess())
-    //    {
-    //        window.Dispatcher.Invoke(() => window.MoveToScreenCenter(screen));
-    //        return;
-    //    }
-    //    // Convert the window size to pixels, because WPF uses device-independent units
-    //    double dpiX, dpiY;
-    //    var source = PresentationSource.FromVisual(window);
-    //    if (source?.CompositionTarget != null)
-    //    {
-    //        dpiX = 96.0 * source.CompositionTarget.TransformToDevice.M11;
-    //        dpiY = 96.0 * source.CompositionTarget.TransformToDevice.M22;
-    //    }
-    //    else
-    //    {
-    //        dpiX = 96.0;
-    //        dpiY = 96.0;
-    //    }
-
-    //    // Get the size of the window in pixels
-    //    double windowWidth = window.Width * dpiX / 96.0;
-    //    double windowHeight = window.Height * dpiY / 96.0;
-
-    //    // Calculate the new top-left position to center the window on the given screen
-    //    double newLeft = screen.WorkingArea.Left + (screen.WorkingArea.Width - windowWidth) / 2;
-    //    double newTop = screen.WorkingArea.Top + (screen.WorkingArea.Height - windowHeight) / 2;
-
-    //    // Move the window
-    //    window.Left = newLeft;
-    //    window.Top = newTop;
-    //}
-
     public static void Center(this Window window, System.Windows.Forms.Screen? screen = null)
     {
-        if (!window.CheckAccess())
-        {
-            window.Dispatcher.Invoke(() => window.Center(screen));
-            return;
-        }
-        screen ??= System.Windows.Forms.Screen.FromHandle(new System.Windows.Interop.WindowInteropHelper(window).Handle);
-
-        double newLeft = screen.WorkingArea.Left + (screen.WorkingArea.Width - window.ActualWidth) / 2;
-        double newTop = screen.WorkingArea.Top + (screen.WorkingArea.Height - window.ActualHeight) / 2;
-
-        window.Left = newLeft;
-        window.Top = newTop;
+        window.Center(screen?.Bounds ?? System.Windows.Forms.Screen.PrimaryScreen.Bounds);
     }
 
-    public static void MoveToScreenAndFullscreen(this Window window, System.Windows.Forms.Screen screen)
+    public static void Center(this Window window, System.Drawing.Rectangle r)
     {
         if (!window.CheckAccess())
         {
-            window.Dispatcher.Invoke(() => window.MoveToScreenAndFullscreen(screen));
+            window.Dispatcher.Invoke(() => window.Center(r));
+            return;
+        }
+        var center = r.GetCenter();
+        var rect = new RectangleF((float)(center.X - window.Width / 2), (float)(center.Y - window.Height / 2), (float)window.Width, (float)window.Height);
+        MoveTo(window, rect);
+    }
+
+    public static void MoveTo(this Window window, System.Drawing.RectangleF r, Thickness? padding = null)
+    {
+        if (!window.CheckAccess())
+        {
+            window.Dispatcher.Invoke(() => window.MoveTo(r));
             return;
         }
 
-        // Move the window to the desired screen
-        window.WindowState = WindowState.Normal; // Reset any current fullscreen state
-        window.Left = screen.WorkingArea.Left;
-        window.Top = screen.WorkingArea.Top;
+        window.WindowState = WindowState.Normal;
+        window.Left = r.Left;
+        window.Top = r.Top;
+        window.Width = r.Width;
+        window.Height = r.Height;
+        if(padding != null)
+        {
+            window.Left += padding.Value.Left;
+            window.Top += padding.Value.Top;
+            window.Width = Math.Max(window.Width - (padding.Value.Right + padding.Value.Right), 10);
+            window.Height = Math.Max(window.Height - (padding.Value.Top + padding.Value.Bottom), 10);
+        }
+    }
 
-        // Set the window to fullscreen
-        window.WindowState = WindowState.Maximized;
-        window.WindowStyle = WindowStyle.None;
-        window.ResizeMode = ResizeMode.NoResize;
+    public static void MoveToScreen(this Window window, System.Windows.Forms.Screen screen)
+    {
+        window.MoveTo(screen.Bounds);
     }
 
 
@@ -339,7 +319,7 @@ public static class UIElementExtensions
         var code = AKeyChanger.CodeFor(title);
 
         var keyCodeValue = AppConfig.Current.BindingSettings[code];
- 
+        bool updating = false;
         var changer = panel.AddKeyChanger(code, () => keyCodeValue, bindingManager);
         changer.WithBorder = false;
         changer.KeyConfigName = code;
@@ -348,9 +328,15 @@ public static class UIElementExtensions
         changer.BindingManager = bindingManager;
         changer.GlobalKeyPressed += (sender, args) =>
         {
-            toggle.ToggleState();
+            if (!updating && toggle.IsEnabled)
+            {
+                updating = true;
+                toggle.ToggleState();
+                Task.Delay(300).ContinueWith(_ => updating = false);
+            }
         };
         panel.Add(toggle, cfg);
+        
         return toggle;
     }
 
@@ -503,6 +489,7 @@ public static class UIElementExtensions
 
     const uint WDA_NONE = 0x00000000;
     const uint WDA_MONITOR = 0x00000001;
+    const uint WDA_EXCLUDEFROMCAPTURE = 0x00000011;
 
     [DllImport("user32.dll")]
     static extern bool SetWindowDisplayAffinity(IntPtr hwnd, uint affinity);
@@ -511,9 +498,13 @@ public static class UIElementExtensions
     public static T HideForCapture<T>(this T window) where T : Window
     {
         var hwnd = new System.Windows.Interop.WindowInteropHelper(window).Handle;
-        SetWindowDisplayAffinity(hwnd, WDA_MONITOR);
+        HideForCapture(hwnd);
         
         return window;
     }
 
+    public static void HideForCapture(IntPtr hwnd)
+    {
+        SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
+    }
 }

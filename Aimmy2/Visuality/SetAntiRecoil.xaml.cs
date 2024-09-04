@@ -5,6 +5,7 @@ using InputLogic;
 using System.Windows;
 using System.Windows.Threading;
 using Aimmy2.Config;
+using Aimmy2.Extensions;
 
 namespace Visuality
 {
@@ -33,8 +34,13 @@ namespace Visuality
             HoldDownTimer.Tick += HoldDownTimerTicker;
             HoldDownTimer.Interval = TimeSpan.FromMilliseconds(1);
             HoldDownTimer.Start();
-
+            Loaded += OnLoaded;
             ChangingFireRate = AppConfig.Current.AntiRecoilSettings.FireRate;
+        }
+
+        private void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            this.HideForCapture();
         }
 
         private void HoldDownTimerTicker(object? sender, EventArgs e)

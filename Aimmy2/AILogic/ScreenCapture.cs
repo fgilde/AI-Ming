@@ -1,8 +1,11 @@
-﻿using Aimmy2.AILogic.Contracts;
+﻿using System.ComponentModel;
+using Aimmy2.AILogic.Contracts;
 using Class;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using Visuality;
+using Nextended.Core;
 
 namespace Aimmy2.AILogic;
 
@@ -18,6 +21,8 @@ public class ScreenCapture : ICapture
     public ScreenCapture(Screen screen)
     {
         Screen = screen;
+        OnPropertyChanged(nameof(Screen));
+        OnPropertyChanged(nameof(CaptureArea));
     }
 
     public ScreenCapture(int screenIndex): this(Screen.AllScreens[screenIndex])
@@ -27,7 +32,7 @@ public class ScreenCapture : ICapture
     {
         if (detectionBox == Rectangle.Empty)
         {
-            detectionBox = GetCaptureArea();
+            detectionBox = CaptureArea;
         }
         if (_graphics == null || _screenCaptureBitmap == null || _screenCaptureBitmap.Width != detectionBox.Width || _screenCaptureBitmap.Height != detectionBox.Height)
         {
@@ -43,8 +48,22 @@ public class ScreenCapture : ICapture
         return _screenCaptureBitmap;
     }
 
-    public Rectangle GetCaptureArea()
+    public Task OnPause() => Task.CompletedTask;
+
+    public Task OnResume() => Task.CompletedTask;
+
+    public Rectangle CaptureArea => Screen.Bounds;
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
-        return Screen.Bounds;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    public void Dispose()
+    {
+        _screenCaptureBitmap?.Dispose();
+        _graphics?.Dispose();
     }
 }

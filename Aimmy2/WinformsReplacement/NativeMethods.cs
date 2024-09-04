@@ -1,4 +1,6 @@
 ﻿using System.Runtime.InteropServices;
+using System.Windows;
+using System.Windows.Interop;
 using Aimmy2.WinformsReplacement;
 
 namespace WinformsReplacement
@@ -9,11 +11,55 @@ namespace WinformsReplacement
     /// </summary>
     internal static class NativeMethods
     {
+
+        public const int GW_HWNDPREV = 3;
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern IntPtr GetWindow(IntPtr hWnd, uint uCmd);
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+        public static bool IsWindowTopMost(IntPtr hWnd)
+        {
+            int exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
+            return (exStyle & WS_EX_TOPMOST) == WS_EX_TOPMOST;
+        }
+
+        public static Window SetTopMost(this Window window, bool isTopMost = true)
+        {
+            if(!window.Dispatcher.CheckAccess())
+            {
+                return window.Dispatcher.Invoke(() => SetTopMost(window, isTopMost));
+            }
+            SetTopMost(new WindowInteropHelper(window).Handle, isTopMost);
+            return window;
+        }
+
+        public static void SetTopMost(IntPtr handle, bool isTopMost = true)
+        {
+            SetWindowPos(handle, isTopMost ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0,
+                (int)(SetWindowPosFlags.SWP_NOMOVE | SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOACTIVATE | SetWindowPosFlags.SWP_SHOWWINDOW));
+        }
+
+        public static void RemoveTopMost(IntPtr handle)
+        {
+            SetTopMost(handle, false);
+        }
+
+        public static IntPtr GetWindowInsertAfter(IntPtr hWnd)
+        {
+            // Ermittelt das Fenster, das in der Z-Order direkt unter dem angegebenen Fenster liegt
+            return GetWindow(hWnd, GW_HWNDPREV);
+        }
+
         public const int MONITOR_DEFAULTTOPRIMARY = 0x00000001;
         public const int MONITOR_DEFAULTTONEAREST = 0x00000002;
 
+        public static IntPtr HWND_TOP = new IntPtr(0);
         public static IntPtr HWND_TOPMOST = new IntPtr(-1);
-
+        public static IntPtr HWND_NOTOPMOST = new IntPtr(-2);
+        public const int GWL_EXSTYLE = -20;
+        public const int WS_EX_TOPMOST = 0x00000008;
         public const int USER_TIMER_MINIMUM = 0x0000000A;
         public const int SM_ARRANGE = 0x38;
         public const int SM_CLEANBOOT = 0x43;

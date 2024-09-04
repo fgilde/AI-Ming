@@ -8,6 +8,7 @@ using Aimmy2.Config;
 using System.IO;
 using Accord.Math;
 using Aimmy2;
+using Aimmy2.Extensions;
 
 namespace Visuality;
 
@@ -41,6 +42,7 @@ public abstract class BaseDialog : Window, INotifyPropertyChanged
     protected override void OnInitialized(EventArgs e)
     {
         base.OnInitialized(e);
+        Loaded += OnLoaded;
         var settingsManager = new WindowSettingsManager(GetSettingsFilePath());
         Settings = settingsManager.LoadWindowSettings() ?? new WindowSettings();
         if (SaveRestorePosition)
@@ -48,7 +50,12 @@ public abstract class BaseDialog : Window, INotifyPropertyChanged
             settingsManager.LoadWindowSettings(this);
         }
     }
-    
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        this.HideForCapture();
+    }
+
     protected override void OnClosed(EventArgs e)
     {
         base.OnClosed(e);

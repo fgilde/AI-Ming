@@ -3,6 +3,7 @@ using Microsoft.ML.OnnxRuntime.Tensors;
 using System.Drawing;
 using System.IO;
 using System.Windows;
+using Accord.Diagnostics;
 using Aimmy2.AILogic.Contracts;
 using Aimmy2.Extensions;
 using Visuality;
@@ -10,6 +11,7 @@ using Other;
 using Aimmy2.Config;
 using Supercluster.KDTree;
 using Aimmy2.Types;
+using Debug = System.Diagnostics.Debug;
 
 namespace Aimmy2.AILogic;
 
@@ -96,7 +98,7 @@ public class PredictionLogic : IPredictionLogic
     }
 
 
-    public async Task<IEnumerable<Prediction>> Predict(Bitmap frame, Rectangle detectionBox)
+    public async Task<Prediction[]> Predict(Bitmap frame, Rectangle detectionBox)
     {
         int maxResultCount = 1;
 
@@ -140,6 +142,7 @@ public class PredictionLogic : IPredictionLogic
             await SaveFrameAsync(frame, prediction);
         }
 
+        Debug.WriteLine($"FOUND {allNearest.Length} Predictions");
         return allNearest;
     }
 

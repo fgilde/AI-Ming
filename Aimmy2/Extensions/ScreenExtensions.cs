@@ -5,12 +5,55 @@ using System.Windows.Forms;
 using System.Linq;
 using System.Management;
 using System.Text;
+using System.Drawing;
 
 public static class ScreenExtensions
 {
     public const int ERROR_SUCCESS = 0;
+    private static Graphics GraphicsThing = Graphics.FromHwnd(IntPtr.Zero);
+
+    private static float scalingFactorX = GraphicsThing.DpiX / (float)96;
+    private static float scalingFactorY = GraphicsThing.DpiY / (float)96;
 
     #region enums
+
+    [DllImport("Shcore.dll")]
+    private static extern int GetDpiForMonitor(IntPtr hmonitor, int dpiType, out uint dpiX, out uint dpiY);
+
+    private const int MDT_EFFECTIVE_DPI = 0;
+
+    public static (float FactorX, float FactorY) GetScalingFactor(this Screen? screen)
+    {
+        if (screen == null)
+        {
+            return (scalingFactorX, scalingFactorY);
+        }
+        IntPtr hMonitor = GetScreenHandle(screen);
+
+        int result = GetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, out uint dpiX, out uint dpiY);
+
+        if (result != 0) // 0 ist S_OK, was auf Erfolg hinweist
+        {
+            throw new System.ComponentModel.Win32Exception(result);
+        }
+
+        float factorX = dpiX / 96f;
+        float factorY = dpiY / 96f;
+
+        return (factorX, factorY);
+    }
+
+    [DllImport("User32.dll")]
+    private static extern IntPtr MonitorFromPoint([In] System.Drawing.Point pt, uint dwFlags);
+
+    public static IntPtr GetScreenHandle(this Screen screen)
+    {
+        var point = new System.Drawing.Point(screen.Bounds.Left, screen.Bounds.Top);
+
+        IntPtr hMonitor = MonitorFromPoint(point, 2); // 2 = MONITOR_DEFAULTTONEAREST
+
+        return hMonitor;
+    }
 
     public enum QUERY_DEVICE_CONFIG_FLAGS : uint
     {

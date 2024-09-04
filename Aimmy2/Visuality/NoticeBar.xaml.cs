@@ -2,6 +2,7 @@
 using AimmyWPF.Class;
 using System.Windows;
 using System.Windows.Interop;
+using Aimmy2.Extensions;
 
 namespace Visuality
 {
@@ -19,6 +20,7 @@ namespace Visuality
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
+            this.HideForCapture();
             ClickThroughOverlay.MakeClickThrough(new WindowInteropHelper(this).Handle);
         }
 

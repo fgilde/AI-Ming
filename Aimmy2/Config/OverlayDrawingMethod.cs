@@ -7,5 +7,7 @@ public enum OverlayDrawingMethod
     [Description("WPF Overlay Window")]
     WpfWindow,
     [Description("Desktop Graphic Context Draw")]
-    DesktopDC
+    DesktopDC,
+    //[Description("Overlay window Context Draw")]
+    //OverlayWindowDC
 }

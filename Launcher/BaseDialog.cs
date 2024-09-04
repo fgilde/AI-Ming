@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using Aimmy2.Config;
+using Aimmy2.Extensions;
 
 namespace Launcher;
 
@@ -29,6 +30,7 @@ public abstract class BaseDialog : Window, INotifyPropertyChanged
     protected override void OnInitialized(EventArgs e)
     {
         base.OnInitialized(e);
+        this.HideForCapture();
         if (SaveRestorePosition)
         {
             var settingsManager = new WindowSettingsManager(GetSettingsFilePath());

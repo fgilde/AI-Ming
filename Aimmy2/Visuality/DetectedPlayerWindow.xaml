@@ -7,16 +7,22 @@
         mc:Ignorable="d"
         WindowStyle="None"
         AllowsTransparency="True"
+        BorderThickness="4"
         Background="Transparent"
         WindowState="Maximized"
         Topmost="True"
         Focusable="False"
         ShowInTaskbar="False"
         Closing="Window_Closing"
+        IsVisibleChanged="DetectedPlayerWindow_OnIsVisibleChanged"
+        BorderBrush="{Binding ColorState.ActiveCapturedAreaBorderBrush}"
         ResizeMode="NoResize"
-        Visibility="{Binding Path=ToggleState.ShowDetectedPlayer, Converter={StaticResource boolToVis}}"
-        IsTabStop="False">
-    <Canvas>
+        Visibility="Visible"
+        IsTabStop="False"
+        SizeChanged="Window_SizeChanged"
+        LocationChanged="Window_LocationChanged">
+    <Canvas x:Name="Canvas"
+            Visibility="{Binding Path=ToggleState.ShowDetectedPlayer, Converter={StaticResource boolToVis}}">
         <Label x:Name="DetectedPlayerConfidence"
                HorizontalAlignment="Left"
                VerticalAlignment="Top"

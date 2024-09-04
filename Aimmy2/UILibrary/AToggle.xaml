@@ -7,6 +7,7 @@
              xmlns:Ant="clr-namespace:AntWpf.Controls;assembly=AntWpf"
              xmlns:local="clr-namespace:Aimmy2.UILibrary"
              mc:Ignorable="d"
+             Opacity="{Binding EnabledOpacity}"
              d:DesignWidth="282.5"
              d:DesignHeight="40">
     <Grid>

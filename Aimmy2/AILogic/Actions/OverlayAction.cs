@@ -11,43 +11,76 @@ namespace Aimmy2.AILogic.Actions;
 
 public class OverlayAction : BaseAction
 {
-    private readonly DetectedPlayerWindow _playerOverlay = new();
-    
+    private DetectedPlayerWindow? _playerOverlay = new();
+    private FOV? _fov = new();
 
     public override Task ExecuteAsync(Prediction[] predictions)
     {
-        if (AppConfig.Current.ToggleState.FOV)
-        {
-            _ = FOV.Instance.UpdateStrictEnclosure();
-        }
         if (Active)
         {
             switch (AppConfig.Current.DropdownState.OverlayDrawingMethod)
             {
                 case OverlayDrawingMethod.DesktopDC:
-                    _= Task.Run(DisableOverlay);
-                    PredictionDrawer.DrawPredictions(predictions, ImageCapture.GetCaptureArea());
+                    _playerOverlay?.DrawPredictionOverlay(null);
+                    PredictionDrawer.DrawPredictions(predictions, ImageCapture.CaptureArea);
                     break;
                 case OverlayDrawingMethod.WpfWindow:
+                    EnsurePlayerOverlay();
                     DrawWithWpf(predictions);
                     break;
+                //case OverlayDrawingMethod.OverlayWindowDC:
+                //    PredictionDrawer.DrawPredictions(EnsurePlayerOverlay(), predictions);
+                //    break;
             }
         }
 
         return Task.CompletedTask;
     }
 
+
+    private DetectedPlayerWindow EnsurePlayerOverlay()
+    {
+        _playerOverlay ??= new DetectedPlayerWindow();
+        if(_playerOverlay.Visibility != Visibility.Visible)
+        {
+            _playerOverlay.Show();
+        }
+        return _playerOverlay;
+    }
+
     public override Task OnResume()
     {
-        FOV.Instance?.MoveToScreenAndFullscreen(ImageCapture.Screen);
-        _playerOverlay?.MoveToScreenAndFullscreen(ImageCapture.Screen);
+        SetOverlayEnabled(true);
         return base.OnResume();
     }
 
     public override Task OnPause()
     {
-        DisableOverlay();
+        SetOverlayEnabled(false);
         return base.OnPause();
+    }
+
+    public override void Dispose()
+    {
+        if(_playerOverlay != null)
+        {
+            _playerOverlay.Dispatcher.Invoke(() =>
+            {
+                _playerOverlay.Close();
+                _playerOverlay = null;
+            });
+        }
+
+        if(_fov != null)
+        {
+            _fov.Dispatcher.Invoke(() =>
+            {
+                _fov.Close();
+                _fov = null;
+            });
+        }
+
+        base.Dispose();
     }
 
     protected override bool Active => base.Active && AppConfig.Current.ToggleState.ShowDetectedPlayer;
@@ -55,61 +88,17 @@ public class OverlayAction : BaseAction
     private void DrawWithWpf(Prediction[] predictions)
     {
         var prediction = predictions.MinBy(p => p.Confidence);
-        if (prediction == null)
-        {
-            DisableOverlay();
-        }
-        else
-        {
-            var lastDetectionBox = prediction.TranslatedRectangle;
-            var captureArea = ImageCapture.GetCaptureArea();
-
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                var scalingFactorX = WinAPICaller.scalingFactorX;
-                var scalingFactorY = WinAPICaller.scalingFactorY;
-                var centerX = Convert.ToInt16((lastDetectionBox.X + captureArea.Left) / scalingFactorX) + (lastDetectionBox.Width / 2.0);
-                var centerY = Convert.ToInt16((lastDetectionBox.Y + captureArea.Top) / scalingFactorY);
-
-                if (AppConfig.Current.ToggleState.ShowAIConfidence)
-                {
-                    _playerOverlay.DetectedPlayerConfidence.Opacity = 1;
-                    _playerOverlay.DetectedPlayerConfidence.Content = $"{Math.Round((prediction.Confidence * 100), 2)}%";
-
-                    var labelEstimatedHalfWidth = _playerOverlay.DetectedPlayerConfidence.ActualWidth / 2.0;
-                    _playerOverlay.DetectedPlayerConfidence.Margin = new Thickness(centerX - labelEstimatedHalfWidth, centerY - _playerOverlay.DetectedPlayerConfidence.ActualHeight - 2, 0, 0);
-                }
-
-                var showTracers = AppConfig.Current.ToggleState.ShowTracers;
-                _playerOverlay.DetectedTracers.Opacity = showTracers ? 1 : 0;
-                if (showTracers)
-                {
-                    _playerOverlay.DetectedTracers.X1 = captureArea.GetBottomCenter().X;
-                    _playerOverlay.DetectedTracers.Y1 = captureArea.GetBottomCenter().Y;
-                    _playerOverlay.DetectedTracers.X2 = centerX;
-                    _playerOverlay.DetectedTracers.Y2 = centerY + lastDetectionBox.Height;
-                }
-
-                _playerOverlay.Opacity = AppConfig.Current.SliderSettings.Opacity;
-
-                _playerOverlay.DetectedPlayerFocus.Opacity = 1;
-                _playerOverlay.DetectedPlayerFocus.Margin = new Thickness(centerX - (lastDetectionBox.Width / 2.0), centerY, 0, 0);
-                _playerOverlay.DetectedPlayerFocus.Width = lastDetectionBox.Width;
-                _playerOverlay.DetectedPlayerFocus.Height = lastDetectionBox.Height;
-
-                _playerOverlay.SetHeadRelativeArea(AppConfig.Current.ToggleState.ShowTriggerHeadArea ? prediction.HeadRelativeRect : null);
-            });
-        }
+        _playerOverlay?.DrawPredictionOverlay(prediction);
     }
-
-
-    private void DisableOverlay()
+    
+    private void SetOverlayEnabled(bool enabled)
     {
         try
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
-                _playerOverlay.Opacity = 0;
+                if(_playerOverlay != null)
+                    _playerOverlay.Opacity = enabled ? 1 : 0;
             });
         }
         catch (Exception e)

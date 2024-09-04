@@ -27,6 +27,25 @@ public class ToggleState : BaseSettings
     private bool _autoTriggerCharged;
     private bool _rapidFire;
     private bool _autoHideController;
+    private bool _showCapturedArea = true;
+    private bool _ensureCaptureForeground;
+    private bool _showSizes;
+
+    public bool EnsureCaptureForeground
+    {
+        get => _ensureCaptureForeground;
+        set => SetField(ref _ensureCaptureForeground, value);
+    }
+
+    public bool ShowCapturedArea
+    {
+        get => _showCapturedArea;
+        set
+        {
+            if(SetField(ref _showCapturedArea, value))
+                AppConfig.Current?.ColorState?.OnPropertyChanged(nameof(ColorState.ActiveCapturedAreaBorderBrush));
+        }
+    }
 
     public bool AutoHideController
     {
@@ -123,6 +142,12 @@ public class ToggleState : BaseSettings
     {
         get => _showDetectedPlayer;
         set => SetField(ref _showDetectedPlayer, value);
+    }
+
+    public bool ShowSizes
+    {
+        get => _showSizes;
+        set => SetField(ref _showSizes, value);
     }
 
     public bool ShowTriggerHeadArea

@@ -1,12 +1,13 @@
-﻿using Aimmy2.Class;
-using Class;
+﻿using System.ComponentModel;
+using Aimmy2.Class;
 using System.Windows;
 using System.Windows.Interop;
-using System.Windows.Media;
 using Aimmy2.Types;
-using Color = System.Windows.Media.Color;
 using System.Windows.Controls;
+using Aimmy2.AILogic;
+using Aimmy2.AILogic.Contracts;
 using Aimmy2.Config;
+using Aimmy2.Extensions;
 
 namespace Visuality
 {
@@ -15,19 +16,38 @@ namespace Visuality
     /// </summary>
     public partial class DetectedPlayerWindow
     {
+        public static DetectedPlayerWindow? Instance { get; private set; }
+
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
-            ClickThroughOverlay.MakeClickThrough(new WindowInteropHelper(this).Handle);
+            var handle = new WindowInteropHelper(this).Handle;
+            ClickThroughOverlay.MakeClickThrough(handle);
         }
 
         public DetectedPlayerWindow()
         {
+            Instance = this;
             InitializeComponent();
             AppConfig.BindToDataContext(this);
+            Loaded += OnLoaded;
             Title = "";
         }
-        
+
+        private void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            this.HideForCapture();
+            AIManager.Instance.ImageCapture.PropertyChanged += ImageCaptureOnPropertyChanged;
+        }
+
+        private void ImageCaptureOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ICapture.CaptureArea))
+            {
+                this.MoveTo(AIManager.Instance.ImageCapture.CaptureArea, Dispatcher.Invoke(() => BorderThickness));
+            }
+        }
+
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             e.Cancel = true;
@@ -65,5 +85,88 @@ namespace Visuality
             HeadRelativeArea = relativeRect;
             UpdateHeadArea();
         }
+
+        private void DetectedPlayerWindow_OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if ((bool)e.NewValue)
+            {
+                this.MoveTo(AIManager.Instance.ImageCapture.CaptureArea, BorderThickness);
+            }
+        }
+
+        private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            UpdateDetectedTracersPosition();
+        }
+
+        private void Window_LocationChanged(object sender, EventArgs e)
+        {
+            UpdateDetectedTracersPosition();
+        }
+
+        private void UpdateDetectedTracersPosition()
+        {
+            double centerX = this.ActualWidth / 2;
+            double bottomY = this.ActualHeight;
+
+            DetectedTracers.X1 = centerX;
+            DetectedTracers.X2 = centerX;
+            DetectedTracers.Y1 = bottomY;
+            DetectedTracers.Y2 = bottomY - 50;
+        }
+
+        public void DrawPredictionOverlay(Prediction? prediction)
+        {
+            if(!Dispatcher.CheckAccess())
+            {
+                Dispatcher.Invoke(() => DrawPredictionOverlay(prediction));
+                return;
+            }
+            if(prediction == null)             {
+                DetectedPlayerConfidence.Opacity = 0;
+                DetectedPlayerFocus.Opacity = 0;
+                DetectedTracers.Opacity = 0;
+                HeadAreaBorder.Visibility = Visibility.Collapsed;
+                return;
+            }
+            var lastDetectionBox = prediction.TranslatedRectangle;
+            //var captureArea = ImageCapture.CaptureArea;
+            var scaleFactor = AIManager.Instance.ImageCapture.Screen.GetScalingFactor();
+            var scalingFactorX = scaleFactor.FactorX;
+            var scalingFactorY = scaleFactor.FactorY;
+            //var centerX = Convert.ToInt16((lastDetectionBox.X + captureArea.Left) / scalingFactorX) + (lastDetectionBox.Width / 2.0);
+            //var centerY = Convert.ToInt16((lastDetectionBox.Y + captureArea.Top) / scalingFactorY);
+            var centerX = Convert.ToInt16((lastDetectionBox.X) / scalingFactorX) + (lastDetectionBox.Width / 2.0);
+            var centerY = Convert.ToInt16((lastDetectionBox.Y) / scalingFactorY);
+
+            if (AppConfig.Current.ToggleState.ShowAIConfidence)
+            {
+                DetectedPlayerConfidence.Opacity = 1;
+                DetectedPlayerConfidence.Content = $"{Math.Round((prediction.Confidence * 100), 2)}%";
+
+                var labelEstimatedHalfWidth = DetectedPlayerConfidence.ActualWidth / 2.0;
+                DetectedPlayerConfidence.Margin = new Thickness(centerX - labelEstimatedHalfWidth, centerY - DetectedPlayerConfidence.ActualHeight - 2, 0, 0);
+            }
+
+            var showTracers = AppConfig.Current.ToggleState.ShowTracers;
+            DetectedTracers.Opacity = showTracers ? 1 : 0;
+            if (showTracers)
+            {
+                //_playerOverlay.DetectedTracers.X1 = captureArea.GetBottomCenter().X;
+                //_playerOverlay.DetectedTracers.Y1 = captureArea.GetBottomCenter().Y;
+                DetectedTracers.X2 = centerX;
+                DetectedTracers.Y2 = centerY + lastDetectionBox.Height;
+            }
+
+            Canvas.Opacity = AppConfig.Current.SliderSettings.Opacity;
+
+            DetectedPlayerFocus.Opacity = 1;
+            DetectedPlayerFocus.Margin = new Thickness(centerX - (lastDetectionBox.Width / 2.0), centerY, 0, 0);
+            DetectedPlayerFocus.Width = lastDetectionBox.Width;
+            DetectedPlayerFocus.Height = lastDetectionBox.Height;
+
+            SetHeadRelativeArea(AppConfig.Current.ToggleState.ShowTriggerHeadArea ? prediction.HeadRelativeRect : null);
+        }
+
     }
 }

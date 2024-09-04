@@ -8,6 +8,7 @@ using Aimmy2.Config;
 using Aimmy2.Models;
 using Class;
 using Nextended.Core.Extensions;
+using Other;
 using Visuality;
 
 
@@ -26,7 +27,7 @@ public class AIManager : IDisposable
 
     public AIManager(string modelPath) : this(new ScreenCapture(), new PredictionLogic(modelPath), BaseAction.AllActions())
     { }
-    
+
     public AIManager(string modelPath, CaptureSource target) : this(CreateScreenCapture(target), new PredictionLogic(modelPath), BaseAction.AllActions())
     { }
 
@@ -61,7 +62,7 @@ public class AIManager : IDisposable
         NotifyLoaded(true);
 
         _isAiLoopRunning = true;
-        _= SetActionsState(false);
+        _ = SetActionsState(false);
         _aiLoopThread = new Thread(AiLoop);
         _aiLoopThread.Start();
     }
@@ -84,28 +85,39 @@ public class AIManager : IDisposable
         {
             if (AppConfig.Current.ToggleState.GlobalActive)
             {
-                if(_pausedNotified)
+                if (_pausedNotified)
                 {
                     _pausedNotified = false;
                     await SetActionsState(false);
+                    await ImageCapture.OnResume();
                 }
-                var area = ImageCapture.GetCaptureArea();
+                var area = ImageCapture.CaptureArea;
 
                 var cursorPosition = WinAPICaller.GetCursorPosition();
 
                 var targetX = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.X - area.Left : area.Width / 2;
                 var targetY = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.Y - area.Top : area.Height / 2;
-                
+
                 Rectangle detectionBox = new(targetX - Aimmy2.AILogic.PredictionLogic.IMAGE_SIZE / 2, targetY - Aimmy2.AILogic.PredictionLogic.IMAGE_SIZE / 2, Aimmy2.AILogic.PredictionLogic.IMAGE_SIZE, Aimmy2.AILogic.PredictionLogic.IMAGE_SIZE);
-                var frame = ImageCapture.Capture(detectionBox);
-                frame.Save("D:\\test.png");
-                var predictions = (await PredictionLogic.Predict(frame, detectionBox)).ToArray();
-                await Task.WhenAll(_actions.Select(a => a.Execute(predictions)));
+                try
+                {
+                    var frame = ImageCapture.Capture(detectionBox);
+                    var predictions = (await PredictionLogic.Predict(frame, detectionBox)).ToArray();
+                    await Task.WhenAll(_actions.Select(a => a.Execute(predictions)));
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    Instance?.Dispose();
+                    FileManager.AIManager = null;
+                    MainWindow.Instance?.OnPropertyChanged(nameof(IsModelLoaded));
+                }
             }
             else if (!_pausedNotified)
             {
                 _pausedNotified = true;
                 await SetActionsState(true);
+                await ImageCapture.OnPause();
 
             }
             await Task.Delay(1);
@@ -129,5 +141,12 @@ public class AIManager : IDisposable
                 _aiLoopThread.Interrupt();
             }
         }
+        foreach (var action in _actions)
+        {
+            action.Dispose();
+        }
+        _actions.Clear();
+        //PredictionLogic.Dispose();
+        ImageCapture?.Dispose();
     }
 }

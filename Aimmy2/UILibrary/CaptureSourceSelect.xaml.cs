@@ -18,6 +18,8 @@ using Visuality;
 using System.Threading;
 using System.Windows.Media;
 using Aimmy2.Extensions;
+using Nextended.Core.Helper;
+using Nextended.Core.Types;
 using Nextended.UI;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
@@ -27,9 +29,9 @@ namespace Aimmy2.UILibrary
     /// <summary>
     /// Interaction logic for ACredit.xaml
     /// </summary>
-    public partial class CaptureSourceSelect : INotifyPropertyChanged
+    public partial class CaptureSourceSelect : INotifyPropertyChanged, IDisposable
     {
-
+        private ProcessWatcher? _processWatcher;
         public CaptureSource CaptureSource
         {
             get => (CaptureSource)GetValue(CaptureSourceProperty);
@@ -37,23 +39,22 @@ namespace Aimmy2.UILibrary
         }
 
         public static readonly DependencyProperty CaptureSourceProperty =
-            DependencyProperty.Register(nameof(CaptureSource), typeof(CaptureSource), typeof(CaptureSourceSelect), new PropertyMetadata(AppConfig.Current.CaptureSource));
+            DependencyProperty.Register(nameof(CaptureSource), typeof(CaptureSource), typeof(CaptureSourceSelect), new PropertyMetadata(AppConfig.Current.CaptureSource, SourceChanged));
 
+        private static void SourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var css = d as CaptureSourceSelect;
+            css?.CheckProcess();
+        }
+        
         private ImageSource _capturePreview;
 
         public Brush ScreenForeground => CaptureSource.TargetType == CaptureTargetType.Screen ? Brushes.Green : Brushes.White;
-        public Brush ProcessForeground
-        {
-            get
-            {
-                if (CaptureSource.TargetType == CaptureTargetType.Process)
-                {
-                    var process = ProcessModel.FindProcessById(CaptureSource.ProcessOrScreenId ?? 0) ?? ProcessModel.FindProcessByTitle(CaptureSource.Title);
-                    return process != null ? Brushes.Green : Brushes.Red;
-                }
-                return Brushes.White;
-            }
-        }
+        public Brush ProcessForeground => IsProcess ? IsValidProcess ? Brushes.Green : Brushes.Red : Brushes.White;
+
+        public bool IsProcess => CaptureSource?.TargetType == CaptureTargetType.Process;
+        public bool IsScreen => CaptureSource?.TargetType == CaptureTargetType.Screen;
+        public bool IsValidProcess => IsProcess && (ProcessModel.FindProcessById(CaptureSource.ProcessOrScreenId ?? 0) ?? ProcessModel.FindProcessByTitle(CaptureSource.Title)) != null;
 
         public event EventHandler<CaptureSource> Selected;
 
@@ -67,6 +68,28 @@ namespace Aimmy2.UILibrary
         {
             InitializeComponent();
             DataContext = this;
+            Loaded += OnLoaded;
+        }
+
+        private void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            CheckProcess();
+            if (MainWindow.Instance != null)
+            {
+                MainWindow.Instance.PropertyChanged += async (sender, args) =>
+                {
+                    if (args.PropertyName == nameof(MainWindow.IsModelLoaded) && !MainWindow.Instance.IsModelLoaded)
+                    {
+                        await Task.Delay(600);
+                        Dispatcher.Invoke(() =>
+                        {
+                            OnPropertyChanged(nameof(ProcessForeground));
+                            OnPropertyChanged(nameof(ScreenForeground));
+                            CheckProcess();
+                        });
+                    }
+                };
+            }
         }
 
         private void UpdatePreview()
@@ -79,6 +102,41 @@ namespace Aimmy2.UILibrary
             catch{
                 Console.WriteLine("Error updating preview");
             }
+        }
+
+        private void CheckProcess()
+        {
+            if(IsProcess && !IsValidProcess)
+            {
+                WaitForProcess(CaptureSource.Title);
+            }
+            else
+            {
+                _processWatcher?.Stop();
+                _processWatcher = null;
+            }
+        }
+
+        private void WaitForProcess(string title)
+        {
+            if(_processWatcher == null)
+            {
+                _processWatcher = new ProcessWatcher();
+                _processWatcher.NewProcessesStarted += OnNewProcessesStarted;
+                _processWatcher.Start();
+            }
+        }
+
+        private void OnNewProcessesStarted(object? sender, List<SmallProcessInfo> e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                var pm = ProcessModel.FindProcessByTitle(CaptureSource.Title);
+                if (pm != null)
+                {
+                    OnSelect(pm);
+                }
+            });
         }
 
 
@@ -97,7 +155,7 @@ namespace Aimmy2.UILibrary
             {
                 var menuItem = new MenuItem() { Header = process.MainWindowTitle };
                 menuItem.IsCheckable = true;
-                menuItem.IsChecked = CaptureSource.TargetType == CaptureTargetType.Process && (process.MainWindowTitle == CaptureSource.Title || process.Id == CaptureSource.ProcessOrScreenId);
+                menuItem.IsChecked = CaptureSource.TargetType == CaptureTargetType.Process && (process.Id == CaptureSource.ProcessOrScreenId);
                 menuItem.Click += (o, args) => OnSelect(process);
                 btn.ContextMenu.Items.Add(menuItem);
             }
@@ -145,6 +203,8 @@ namespace Aimmy2.UILibrary
 
         private void OnSelect(Process process)
         {
+            _processWatcher?.Stop();
+            _processWatcher = null;
             CaptureSource = AILogic.CaptureSource.Process(process);
             AppConfig.Current.CaptureSource = CaptureSource;
             Selected?.Invoke(this, CaptureSource);
@@ -154,6 +214,8 @@ namespace Aimmy2.UILibrary
 
         private void OnSelect(Screen monitor)
         {
+            _processWatcher?.Stop();
+            _processWatcher = null;
             CaptureSource = AILogic.CaptureSource.Screen(monitor);
             AppConfig.Current.CaptureSource = CaptureSource;
             Selected?.Invoke(this, CaptureSource);
@@ -179,6 +241,11 @@ namespace Aimmy2.UILibrary
         private void ToolTip_OnOpened(object sender, RoutedEventArgs e)
         {
             UpdatePreview();
+        }
+
+        public void Dispose()
+        {
+            _processWatcher?.Dispose();
         }
     }
 

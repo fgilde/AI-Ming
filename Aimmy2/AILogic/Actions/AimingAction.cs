@@ -86,7 +86,7 @@ public class AimingAction : BaseAction
                                                         || AppConfig.Current.ToggleState.AimAssist && InputBindingManager.IsHoldingBinding(nameof(AppConfig.Current.BindingSettings.AimKeybind))
                                                         || AppConfig.Current.ToggleState.AimAssist && InputBindingManager.IsHoldingBinding(nameof(AppConfig.Current.BindingSettings.SecondAimKeybind))))
         {
-            var area = ImageCapture.GetCaptureArea();
+            var area = ImageCapture.CaptureArea;
             float scaleX = area.Width / 640f;
             float scaleY = area.Height / 640f;
 

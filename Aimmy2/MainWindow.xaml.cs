@@ -1,13 +1,11 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
-using System.Windows.Interop;
 using Aimmy2.Class;
 using Aimmy2.Config;
 using Aimmy2.Extensions;
@@ -18,10 +16,8 @@ using Aimmy2.MouseMovementLibraries.GHubSupport;
 using Aimmy2.Types;
 using Aimmy2.UILibrary;
 using AimmyWPF.Class;
-using AntWpf.Controls;
 using Core;
 using InputLogic;
-using MdXaml;
 using Microsoft.Xaml.Behaviors.Core;
 using MouseMovementLibraries.ddxoftSupport;
 using MouseMovementLibraries.RazerSupport;
@@ -29,11 +25,9 @@ using Nextended.Core;
 using Nextended.UI.Helper;
 using Other;
 using Visuality;
-using WindowsInput;
 using Application = System.Windows.Application;
 using Brushes = System.Windows.Media.Brushes;
 using Button = System.Windows.Controls.Button;
-using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using MessageBox = System.Windows.MessageBox;
 using Panel = System.Windows.Controls.Panel;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
@@ -45,11 +39,10 @@ public partial class MainWindow
 {
     #region Main Variables
 
-    public static MainWindow? Instance => Application.Current.MainWindow as MainWindow;
+    public static MainWindow? Instance => Application.Current.Dispatcher.Invoke(() => Application.Current.MainWindow as MainWindow);
 
     private bool _uiCreated;
     private FileManager fileManager;
-    private static GithubManager githubManager = new();
     public AntiRecoilManager arManager = new();
 
 
@@ -113,7 +106,6 @@ public partial class MainWindow
         CurrentScrollViewer = FindName("AimMenu") as ScrollViewer;
         if (CurrentScrollViewer == null) throw new NullReferenceException("CurrentScrollViewer is null");
 
-        FOV.Create();
         fileManager?.Dispose();
         fileManager = new FileManager(ModelListBox, SelectedModelNotifier, ConfigsListBox, SelectedConfigNotifier);
 
@@ -276,6 +268,7 @@ public partial class MainWindow
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
+      //  this.HideForCapture();
         _ = CheckUpdate(false);
         KnownIssuesDialog.ShowIf(this);
         AboutSpecs.Content =
@@ -387,8 +380,11 @@ public partial class MainWindow
         {
             case nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind):
                 AppConfig.Current.SliderSettings.OnPropertyChanged(nameof(AppConfig.Current.SliderSettings.ActualFovSize));
-                Animator.WidthShift(TimeSpan.FromMilliseconds(500), FOV.Instance.Circle, FOV.Instance.Circle.ActualWidth, AppConfig.Current.SliderSettings.FOVSize);
-                Animator.HeightShift(TimeSpan.FromMilliseconds(500), FOV.Instance.Circle, FOV.Instance.Circle.ActualHeight, AppConfig.Current.SliderSettings.FOVSize);
+                if (FOV.Instance != null)
+                {
+                    Animator.WidthShift(TimeSpan.FromMilliseconds(500), FOV.Instance.Circle, FOV.Instance.Circle.ActualWidth, AppConfig.Current.SliderSettings.FOVSize);
+                    Animator.HeightShift(TimeSpan.FromMilliseconds(500), FOV.Instance.Circle, FOV.Instance.Circle.ActualHeight, AppConfig.Current.SliderSettings.FOVSize);
+                }
                 break;
             // Anti Recoil
             case nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind):
@@ -432,8 +428,12 @@ public partial class MainWindow
 
             case nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind):
                 AppConfig.Current.SliderSettings.OnPropertyChanged(nameof(AppConfig.Current.SliderSettings.ActualFovSize));
-                Animator.WidthShift(TimeSpan.FromMilliseconds(500), FOV.Instance.Circle, FOV.Instance.Circle.ActualWidth, AppConfig.Current.SliderSettings.ActualFovSize);
-                Animator.HeightShift(TimeSpan.FromMilliseconds(500), FOV.Instance.Circle, FOV.Instance.Circle.ActualHeight, AppConfig.Current.SliderSettings.ActualFovSize);
+                if (FOV.Instance != null)
+                {
+                    Animator.WidthShift(TimeSpan.FromMilliseconds(500), FOV.Instance.Circle, FOV.Instance.Circle.ActualWidth, AppConfig.Current.SliderSettings.ActualFovSize);
+                    Animator.HeightShift(TimeSpan.FromMilliseconds(500), FOV.Instance.Circle, FOV.Instance.Circle.ActualHeight, AppConfig.Current.SliderSettings.ActualFovSize);
+                }
+
                 break;
 
 
@@ -527,16 +527,7 @@ public partial class MainWindow
 
         PredictionConfig.AddTitle("Prediction Config", true);
         PredictionConfig.AddDropdown("Prediction Method", AppConfig.Current.DropdownState.PredictionMethod, v => AppConfig.Current.DropdownState.PredictionMethod = v);
-        PredictionConfig.AddDropdown("Detection Area Type",
-            AppConfig.Current.DropdownState.DetectionAreaType, async v =>
-            {
-                AppConfig.Current.DropdownState.DetectionAreaType = v;
-                if (v == DetectionAreaType.ClosestToCenter)
-                {
-                    await Task.Delay(100);
-                    await FOV.Instance.UpdateStrictEnclosure();
-                }
-            });
+        PredictionConfig.AddDropdown("Detection Area Type", AppConfig.Current.DropdownState.DetectionAreaType, v => AppConfig.Current.DropdownState.DetectionAreaType = v);
         PredictionConfig.AddSeparator();
         PredictionConfig.Visibility = GetVisibilityFor(nameof(AimConfig));
 
@@ -700,8 +691,13 @@ public partial class MainWindow
         ESPConfig.AddToggleWithKeyBind("Show Trigger Head Area", BindingManager).BindTo(() => AppConfig.Current.ToggleState.ShowTriggerHeadArea);
         ESPConfig.AddToggleWithKeyBind("Show AI Confidence", BindingManager).BindTo(() => AppConfig.Current.ToggleState.ShowAIConfidence);
         ESPConfig.AddToggleWithKeyBind("Show Tracers", BindingManager).BindTo(() => AppConfig.Current.ToggleState.ShowTracers);
+        var sizeToggle = ESPConfig.AddToggleWithKeyBind("Show Sizes", BindingManager).BindTo(() => AppConfig.Current.ToggleState.ShowSizes);
 
-        ESPConfig.AddDropdown("Drawing Method", AppConfig.Current.DropdownState.OverlayDrawingMethod, v => AppConfig.Current.DropdownState.OverlayDrawingMethod = v);
+        ESPConfig.AddDropdown("Drawing Method", AppConfig.Current.DropdownState.OverlayDrawingMethod, v =>
+        {
+            AppConfig.Current.DropdownState.OverlayDrawingMethod = v;
+            sizeToggle.SetEnabled(v != OverlayDrawingMethod.WpfWindow);
+        });
 
         ESPConfig.AddColorChanger("Detected Player Color").BindTo(() => AppConfig.Current.ColorState.DetectedPlayerColor);
 
@@ -999,7 +995,12 @@ public partial class MainWindow
 
         SettingsConfig.AddToggle("Mouse Background Effect").BindTo(() => AppConfig.Current.ToggleState.MouseBackgroundEffect);
         SettingsConfig.AddToggle("UI TopMost").BindTo(() => AppConfig.Current.ToggleState.UITopMost);
-        
+
+        SettingsConfig.AddToggleWithKeyBind("Ensure captured process is in foreground", BindingManager).BindTo(() => AppConfig.Current.ToggleState.EnsureCaptureForeground);
+        SettingsConfig.AddToggleWithKeyBind("Show Captured Area", BindingManager).BindTo(() => AppConfig.Current.ToggleState.ShowCapturedArea);
+        SettingsConfig.AddColorChanger("Captured Area Border Color").BindTo(() => AppConfig.Current.ColorState.CapturedAreaBorderColor);
+
+
         SettingsConfig.AddSeparator();
 
         // X/Y Percentage Adjustment Enabler

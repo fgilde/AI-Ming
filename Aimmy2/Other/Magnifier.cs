@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Interop;
+using Aimmy2.Extensions;
 using Aimmy2.WinformsReplacement;
 
 public class Magnifier : IDisposable
@@ -72,6 +73,8 @@ public class Magnifier : IDisposable
             // Resize the control to fill the window.
             NativeMethods.SetWindowPos(hwndMag, IntPtr.Zero,
                 magWindowRect.left, magWindowRect.top, magWindowRect.right, magWindowRect.bottom, 0);
+
+            //
         }
     }
 
@@ -158,7 +161,7 @@ public class Magnifier : IDisposable
         // Create a magnifier control that fills the client area.
         NativeMethods.GetClientRect(GetHandle(), ref magWindowRect);
         hwndMag = NativeMethods.CreateWindow(
-             (int)(ExtendedWindowStyles.WS_EX_CLIENTEDGE | ExtendedWindowStyles.WS_EX_TRANSPARENT | ExtendedWindowStyles.WS_EX_TOPMOST), 
+             (int)(ExtendedWindowStyles.WS_EX_CLIENTEDGE | ExtendedWindowStyles.WS_EX_TRANSPARENT | ExtendedWindowStyles.WS_EX_TOPMOST | ExtendedWindowStyles.WDA_EXCLUDEFROMCAPTURE), 
             NativeMethods.WC_MAGNIFIER,
             "MagnifierWindow", (int)WindowStyles.WS_CHILD 
                                //| (int)MagnifierStyle.MS_SHOWMAGNIFIEDCURSOR
@@ -170,10 +173,11 @@ public class Magnifier : IDisposable
         {
             return;
         }
-
         // Set the magnification factor.
         Transformation matrix = new Transformation(magnification);
         NativeMethods.MagSetWindowTransform(hwndMag, ref matrix);
+        UIElementExtensions.HideForCapture(hwndMag);
+
     }
 
     protected void RemoveMagnifier()
