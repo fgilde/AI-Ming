@@ -4,6 +4,7 @@ using AimmyWPF.Class;
 using InputLogic;
 using System.Windows;
 using System.Windows.Threading;
+using Aimmy2.Class.Native;
 using Aimmy2.Config;
 using Aimmy2.Extensions;
 

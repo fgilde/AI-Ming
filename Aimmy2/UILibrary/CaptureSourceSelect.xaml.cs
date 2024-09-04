@@ -23,6 +23,7 @@ using Nextended.Core.Types;
 using Nextended.UI;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
+using Aimmy2.Class.Native;
 
 namespace Aimmy2.UILibrary
 {
@@ -151,7 +152,7 @@ namespace Aimmy2.UILibrary
             primary.Click += (o, args) => OnSelect();
             btn.ContextMenu.Items.Add(primary);
             btn.ContextMenu.Items.Add(new Separator());
-            foreach (var process in WinAPICaller.RecordableProcesses())
+            foreach (var process in NativeAPIMethods.RecordableProcesses())
             {
                 var menuItem = new MenuItem() { Header = process.MainWindowTitle };
                 menuItem.IsCheckable = true;

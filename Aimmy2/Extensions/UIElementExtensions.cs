@@ -15,17 +15,27 @@ using UILibrary;
 using Microsoft.Xaml.Behaviors.Core;
 using Nextended.UI.Helper;
 using System.Runtime.InteropServices;
+using System.Windows.Interop;
 using Accord.Diagnostics;
 using Brushes = System.Windows.Media.Brushes;
 using Color = System.Windows.Media.Color;
 using FontFamily = System.Windows.Media.FontFamily;
 using Point = System.Windows.Point;
 using Size = System.Windows.Size;
+using Aimmy2.Class.Native;
+using Nextended.UI.WPF.Converters;
 
 namespace Aimmy2.Extensions;
 
 public static class UIElementExtensions
 {
+    public static IntPtr GetHandleSafe(this Window window)
+    {
+        return !window.CheckAccess() 
+            ? window.Dispatcher.Invoke(() => GetHandleSafe(window)) 
+            : new WindowInteropHelper(window).Handle;
+    }
+
     public static void EnsureRenderedAndInitialized(this UIElement uiElement)
     {
         uiElement.Measure(new Size(Double.PositiveInfinity, Double.PositiveInfinity));
@@ -59,7 +69,7 @@ public static class UIElementExtensions
                 Tag = item,
             };
             menuItem.Command = new ActionCommand(() => onClick(menuItem));
-            if(keyBindFn != null)
+            if (keyBindFn != null)
             {
                 var gesture = keyBindFn(index, menuItem);
                 if (gesture != null)
@@ -105,7 +115,7 @@ public static class UIElementExtensions
         window.Top = r.Top;
         window.Width = r.Width;
         window.Height = r.Height;
-        if(padding != null)
+        if (padding != null)
         {
             window.Left += padding.Value.Left;
             window.Top += padding.Value.Top;
@@ -125,7 +135,7 @@ public static class UIElementExtensions
     {
         if (cfg != null)
         {
-            if(component.IsVisible)
+            if (component.IsVisible)
             {
                 cfg.Invoke(component);
             }
@@ -253,7 +263,7 @@ public static class UIElementExtensions
                 return;
             }
 
-            var currentMousePos = WinAPICaller.GetCursorPosition();
+            var currentMousePos = NativeAPIMethods.GetCursorPosition();
             var translatedMousePos = sender.PointFromScreen(new Point(currentMousePos.X, currentMousePos.Y));
             double targetAngle = Math.Atan2(translatedMousePos.Y - (sender.ActualHeight * 0.5), translatedMousePos.X - (sender.ActualWidth * 0.5)) * (180 / Math.PI);
 
@@ -336,7 +346,7 @@ public static class UIElementExtensions
             }
         };
         panel.Add(toggle, cfg);
-        
+
         return toggle;
     }
 
@@ -449,7 +459,7 @@ public static class UIElementExtensions
             Foreground = new SolidColorBrush(Color.FromArgb(255, 0, 0, 0)),
             FontFamily = fontFamily
         };
-        
+
         cfg?.Invoke(dropdownItem);
         dropdown.DropdownBox.Items.Add(dropdownItem);
         return dropdownItem;
@@ -486,25 +496,4 @@ public static class UIElementExtensions
         });
     }
 
-
-    const uint WDA_NONE = 0x00000000;
-    const uint WDA_MONITOR = 0x00000001;
-    const uint WDA_EXCLUDEFROMCAPTURE = 0x00000011;
-
-    [DllImport("user32.dll")]
-    static extern bool SetWindowDisplayAffinity(IntPtr hwnd, uint affinity);
-    
- 
-    public static T HideForCapture<T>(this T window) where T : Window
-    {
-        var hwnd = new System.Windows.Interop.WindowInteropHelper(window).Handle;
-        HideForCapture(hwnd);
-        
-        return window;
-    }
-
-    public static void HideForCapture(IntPtr hwnd)
-    {
-        SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
-    }
 }

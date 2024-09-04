@@ -6,6 +6,7 @@ using Aimmy2.Extensions;
 using Aimmy2.Class;
 using System.Windows.Interop;
 using Aimmy2.AILogic.Contracts;
+using Aimmy2.Class.Native;
 
 namespace Visuality
 {
@@ -17,7 +18,7 @@ namespace Visuality
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
-            ClickThroughOverlay.MakeClickThrough(new WindowInteropHelper(this).Handle);
+            this.MakeClickThrough();
         }
 
         public MagnifierDialog()
@@ -40,15 +41,19 @@ namespace Visuality
 
         private void DlgLoaded(object sender, RoutedEventArgs e)
         {
-            Center();
+            DoCenter();
             if(AIManager.Instance?.ImageCapture != null)
                 AIManager.Instance.ImageCapture.PropertyChanged += ImageCaptureOnPropertyChanged;
             StartMagnification();
+            this.HideForCapture();
         }
 
-        private void Center()
+        private void DoCenter()
         {
             this.Center(AIManager.Instance.ImageCapture.CaptureArea);
+            //if(AIManager.Instance?.ImageCapture != null && AIManager.Instance.IsRunning)
+            //    this.Center(AIManager.Instance.ImageCapture.CaptureArea);
+            //this.Center(AIManager.Instance?.ImageCapture?.Screen);
         }
 
 
@@ -56,7 +61,7 @@ namespace Visuality
         {
             if (e.PropertyName == nameof(ICapture.CaptureArea))
             {
-                Center();
+                DoCenter();
             }
         }
 

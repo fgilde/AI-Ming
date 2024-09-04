@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Aimmy2.Config;
+using Aimmy2.Class.Native;
 
 namespace Visuality
 {
@@ -44,7 +45,7 @@ namespace Visuality
         {
             if (AppConfig.Current.ToggleState.MouseBackgroundEffect)
             {
-                var CurrentMousePos = WinAPICaller.GetCursorPosition();
+                var CurrentMousePos = NativeAPIMethods.GetCursorPosition();
                 var translatedMousePos = PointFromScreen(new Point(CurrentMousePos.X, CurrentMousePos.Y));
                 double targetAngle = Math.Atan2(translatedMousePos.Y - (MainBorder.ActualHeight * 0.5), translatedMousePos.X - (MainBorder.ActualWidth * 0.5)) * (180 / Math.PI);
 

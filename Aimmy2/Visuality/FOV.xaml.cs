@@ -7,6 +7,7 @@ using Aimmy2.Config;
 using Aimmy2.Extensions;
 using Aimmy2.AILogic.Contracts;
 using System.Windows.Threading;
+using Aimmy2.Class.Native;
 
 namespace Visuality
 {
@@ -21,8 +22,8 @@ namespace Visuality
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
-            ClickThroughOverlay.MakeClickThrough(new WindowInteropHelper(this).Handle);
-            if(AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse)
+            this.MakeClickThrough();
+            if (AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse)
             {
                 _mousePositionTimer.Start();
             }
@@ -57,7 +58,7 @@ namespace Visuality
         {
             if (AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse)
             {
-                var cursorPosition = WinAPICaller.GetCursorPosition();
+                var cursorPosition = NativeAPIMethods.GetCursorPosition();
                 PositionCircle(cursorPosition.X, cursorPosition.Y);
             }
         }

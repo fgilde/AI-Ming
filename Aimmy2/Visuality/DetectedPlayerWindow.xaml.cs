@@ -8,6 +8,7 @@ using Aimmy2.AILogic;
 using Aimmy2.AILogic.Contracts;
 using Aimmy2.Config;
 using Aimmy2.Extensions;
+using Aimmy2.Class.Native;
 
 namespace Visuality
 {
@@ -21,8 +22,7 @@ namespace Visuality
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
-            var handle = new WindowInteropHelper(this).Handle;
-            ClickThroughOverlay.MakeClickThrough(handle);
+            this.MakeClickThrough();
         }
 
         public DetectedPlayerWindow()

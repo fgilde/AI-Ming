@@ -1,4 +1,5 @@
 ﻿using Accord.Statistics.Running;
+using Aimmy2.Class.Native;
 using Class;
 
 namespace AILogic
@@ -88,7 +89,7 @@ namespace AILogic
             var EnemySize = EnemyWidth * EnemyHeight;
             var EnemyDistance = 1 - (EnemySize / ScreenResolution);
 
-            return WinAPICaller.GetCursorPosition().X + (xVelocity * (EnemyDistance * BulletSpeedX));
+            return NativeAPIMethods.GetCursorPosition().X + (xVelocity * (EnemyDistance * BulletSpeedX));
         }
 
         public static int GetShalloePredictionY(int CurrentY, int PrevY, int EnemyWidth, int EnemyHeight)
@@ -97,7 +98,7 @@ namespace AILogic
             var EnemySize = EnemyWidth * EnemyHeight;
             var EnemyDistance = (1 - (EnemySize / ScreenResolution));
 
-            return WinAPICaller.GetCursorPosition().Y + (yVelocity * (EnemyDistance * BulletSpeedY));
+            return NativeAPIMethods.GetCursorPosition().Y + (yVelocity * (EnemyDistance * BulletSpeedY));
         }
     }
 
@@ -111,13 +112,13 @@ namespace AILogic
         public static int GetSPX()
         {
             //Debug.WriteLine((((int)Queryable.Average(xValues.AsQueryable()) * AmountCount) + WinAPICaller.GetCursorPosition().X) * (1 - Dictionary.sliderSettings["Mouse Sensitivity (+/-)"]));
-            return (int)(xValues.AsQueryable().Average() * AmountCount + WinAPICaller.GetCursorPosition().X);
+            return (int)(xValues.AsQueryable().Average() * AmountCount + NativeAPIMethods.GetCursorPosition().X);
         }
 
         public static int GetSPY()
         {
             //Debug.WriteLine((int)Queryable.Average(yValues.AsQueryable()));
-            return (int)(yValues.AsQueryable().Average() * AmountCount + WinAPICaller.GetCursorPosition().Y);
+            return (int)(yValues.AsQueryable().Average() * AmountCount + NativeAPIMethods.GetCursorPosition().Y);
         }
     }
 
@@ -137,7 +138,7 @@ namespace AILogic
         public static int GetSPY()
         {
             //Debug.WriteLine((int)Queryable.Average(yValues.AsQueryable()));
-            return (int)(((Queryable.Average(yValues.AsQueryable()) * AmountCount) + WinAPICaller.GetCursorPosition().Y));
+            return (int)(((Queryable.Average(yValues.AsQueryable()) * AmountCount) + NativeAPIMethods.GetCursorPosition().Y));
         }
     }
 }

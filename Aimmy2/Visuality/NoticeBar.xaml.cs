@@ -3,6 +3,7 @@ using AimmyWPF.Class;
 using System.Windows;
 using System.Windows.Interop;
 using Aimmy2.Extensions;
+using Aimmy2.Class.Native;
 
 namespace Visuality
 {
@@ -21,7 +22,7 @@ namespace Visuality
         {
             base.OnSourceInitialized(e);
             this.HideForCapture();
-            ClickThroughOverlay.MakeClickThrough(new WindowInteropHelper(this).Handle);
+            this.MakeClickThrough();
         }
 
         public NoticeBar(string text, int waitingTime)

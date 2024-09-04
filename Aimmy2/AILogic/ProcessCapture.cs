@@ -6,11 +6,11 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
+using Aimmy2.Class.Native;
 using Class;
 using Aimmy2.Config;
 using Nextended.Core;
 using Visuality;
-using WinformsReplacement;
 
 namespace Aimmy2.AILogic;
 
@@ -31,6 +31,7 @@ public class ProcessCapture : ICapture
         }
         _processId = processId;
         Screen = GetProcessTargetScreen();
+        CaptureArea = GetCaptureArea();
     }
 
     public Rectangle CaptureArea
@@ -96,10 +97,10 @@ public class ProcessCapture : ICapture
     private bool SetTopMostIf(IntPtr? handle = null)
     {
         handle ??= GetProcessWindowHandle();
-        if (!_isTopMostSet && !NativeMethods.IsWindowTopMost(handle.Value))
+        if (!_isTopMostSet && !NativeAPIMethods.IsWindowTopMost(handle.Value))
         {
             
-            NativeMethods.SetTopMost(handle.Value);
+            NativeAPIMethods.SetTopMost(handle.Value);
 
             _isTopMostSet = true;
             return true;
@@ -112,7 +113,7 @@ public class ProcessCapture : ICapture
         handle ??= GetProcessWindowHandle();
         if (_isTopMostSet)
         {
-            NativeMethods.RemoveTopMost(handle.Value);
+            NativeAPIMethods.RemoveTopMost(handle.Value);
 
             _isTopMostSet = false;
             return true;
@@ -146,8 +147,7 @@ public class ProcessCapture : ICapture
     // New helper method to avoid duplication
     private Rectangle GetWindowRectangle(IntPtr handle)
     {
-        var res = WinAPICaller.GetWindowRectangle(handle);
-        return new Rectangle(res.Left, res.Top, res.Right - res.Left, res.Bottom - res.Top);
+        return NativeAPIMethods.GetWindowRectangle(handle).ToRectangle();
     }
 
     public Screen Screen { get; private set; }

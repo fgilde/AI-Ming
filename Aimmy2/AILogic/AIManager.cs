@@ -4,6 +4,7 @@ using Aimmy2;
 using Aimmy2.AILogic;
 using Aimmy2.AILogic.Actions;
 using Aimmy2.AILogic.Contracts;
+using Aimmy2.Class.Native;
 using Aimmy2.Config;
 using Aimmy2.Models;
 using Class;
@@ -93,7 +94,7 @@ public class AIManager : IDisposable
                 }
                 var area = ImageCapture.CaptureArea;
 
-                var cursorPosition = WinAPICaller.GetCursorPosition();
+                var cursorPosition = NativeAPIMethods.GetCursorPosition();
 
                 var targetX = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.X - area.Left : area.Width / 2;
                 var targetY = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.Y - area.Top : area.Height / 2;

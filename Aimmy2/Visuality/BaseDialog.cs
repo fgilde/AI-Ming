@@ -8,6 +8,7 @@ using Aimmy2.Config;
 using System.IO;
 using Accord.Math;
 using Aimmy2;
+using Aimmy2.Class.Native;
 using Aimmy2.Extensions;
 
 namespace Visuality;

@@ -14,13 +14,15 @@
         ShowInTaskbar="False"
         WindowStyle="None"
         IsVisibleChanged="OnIsVisibleChanged"
-        Visibility="{Binding Path=ToggleState.FOV, Converter={StaticResource boolToVis}}"
+        Visibility="Visible"
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized"
         SizeChanged="OnWindowSizeChanged"
         LocationChanged="OnWindowLocationChanged">
 
-    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MouseMove="OnMouseMove">
+    <Grid 
+        Visibility="{Binding Path=ToggleState.FOV, Converter={StaticResource boolToVis}}"
+        HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MouseMove="OnMouseMove">
         <Grid x:Name="FOVStrictEnclosure"
               Visibility="{Binding Path=ToggleState.GlobalActive, Converter={StaticResource boolToVis}}"
               HorizontalAlignment="Stretch"

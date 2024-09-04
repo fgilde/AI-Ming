@@ -25,7 +25,6 @@ public class OverlayAction : BaseAction
                     PredictionDrawer.DrawPredictions(predictions, ImageCapture.CaptureArea);
                     break;
                 case OverlayDrawingMethod.WpfWindow:
-                    EnsurePlayerOverlay();
                     DrawWithWpf(predictions);
                     break;
                 //case OverlayDrawingMethod.OverlayWindowDC:
