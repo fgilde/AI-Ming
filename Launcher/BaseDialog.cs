@@ -30,7 +30,6 @@ public abstract class BaseDialog : Window, INotifyPropertyChanged
     protected override void OnInitialized(EventArgs e)
     {
         base.OnInitialized(e);
-        this.HideForCapture();
         if (SaveRestorePosition)
         {
             var settingsManager = new WindowSettingsManager(GetSettingsFilePath());
