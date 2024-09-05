@@ -3,7 +3,6 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using Aimmy2.Config;
-using Aimmy2.Extensions;
 
 namespace Launcher;
 
