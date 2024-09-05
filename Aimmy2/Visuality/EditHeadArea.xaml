@@ -36,11 +36,11 @@
                     </Grid.RowDefinitions>
                     <Grid>
                         <Label Content="&#xEE57;" HorizontalAlignment="Left" Margin="15,0,0,0" VerticalAlignment="Center" Foreground="#DDFFFFFF" Padding="0,0,0,0" FontSize="14" FontFamily="Segoe MDL2 Assets" />
-                        <Label Content="Edit Head Area" HorizontalAlignment="Left" Margin="38,0,0,0" VerticalAlignment="Center" Foreground="#DDFFFFFF" Padding="0,0,0,0" FontSize="14" FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                        <Label Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='EditHeadArea'}" HorizontalAlignment="Left" Margin="38,0,0,0" VerticalAlignment="Center" Foreground="#DDFFFFFF" Padding="0,0,0,0" FontSize="14" FontFamily="{StaticResource Atkinson Hyperlegible}" />
                         <Button x:Name="Exit" Content="&#xE8BB;" HorizontalAlignment="Right" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White" FontFamily="Segoe MDL2 Assets" Padding="15,0,15,0" BorderThickness="0,0,0,0" FontSize="10" VerticalAlignment="Center" Click="Exit_Click" />
                     </Grid>
                     <Grid Grid.Row="1">
-                        <Label Margin="10 0 0 0" Foreground="White" Content="The Red rectangle represents the detected enemy and the green rectangle represents the region for the trigger"></Label>
+                        <Label Margin="10 0 0 0" Foreground="White" Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='HeadAreaHelp'}"></Label>
                     </Grid>
                 </Grid>
                 <Grid x:Name="MainArea" Margin="10,50,10,10" MouseMove="MainArea_MouseMove" MouseUp="MainArea_MouseUp">
@@ -96,13 +96,13 @@
                     </Border>
                     <!-- Sliders to Adjust Properties -->
                     <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Vertical" Margin="20 55 20 55">
-                        <TextBlock Foreground="White" Name="WidthText" Text="Width"/>
+                        <TextBlock Foreground="White" Name="WidthText" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Width'}"/>
                         <Slider Minimum="0.01" Maximum="1.0" ValueChanged="Slider_OnValueChanged" Value="{Binding Path=RelativeRect.WidthPercentage, Mode=TwoWay}" TickFrequency="0.01" IsSnapToTickEnabled="True"/>
-                        <TextBlock Foreground="White" Name="HeightText" Text="Height"/>
+                        <TextBlock Foreground="White" Name="HeightText" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Height'}"/>
                         <Slider Minimum="0.01" Maximum="1.0" ValueChanged="Slider_OnValueChanged" Value="{Binding Path=RelativeRect.HeightPercentage, Mode=TwoWay}" TickFrequency="0.01" IsSnapToTickEnabled="True"/>
-                        <TextBlock Foreground="White" Name="LeftText" Text="Left"/>
+                        <TextBlock Foreground="White" Name="LeftText" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Left'}"/>
                         <Slider Minimum="0.0" Maximum="1.0" ValueChanged="Slider_OnValueChanged" Value="{Binding Path=RelativeRect.LeftMarginPercentage, Mode=TwoWay}" TickFrequency="0.01" IsSnapToTickEnabled="True"/>
-                        <TextBlock Foreground="White" Name="TopText" Text="Top"/>
+                        <TextBlock Foreground="White" Name="TopText" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Top'}"/>
                         <Slider Minimum="0.0" Maximum="1.0" ValueChanged="Slider_OnValueChanged" Value="{Binding Path=RelativeRect.TopMarginPercentage, Mode=TwoWay}" TickFrequency="0.01" IsSnapToTickEnabled="True"/>
                         <controls:Button x:Name="ResetButton"
                                          Grid.Row="1"
@@ -110,11 +110,11 @@
                                          BorderBrush="{StaticResource ButtonBorder}"
                                          Background="{StaticResource ButtonBackground}"
                                          EffectBrush="{StaticResource ButtonEffect}"
-                                         Content="Reset"
-                                         HorizontalAlignment="Center"
+                                         Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Reset'}"
+                                         HorizontalAlignment="Stretch"
                                          Height="24"
-                                         Width="70"
-                                         Margin="0 20 0 0"
+                                         MinWidth="70"
+                                         Margin="20 20 20 0"
                                          Padding="0,0,0,0"
                                          FontFamily="{StaticResource Atkinson Hyperlegible}"
                                          BorderThickness="0,0,0,0"
@@ -128,11 +128,11 @@
                                      BorderBrush="{StaticResource ButtonBorder}"
                                      Background="{StaticResource ButtonBackground}"
                                      EffectBrush="{StaticResource ButtonEffect}"
-                                     Content="Cancel"
+                                     Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Cancel'}"
                                      HorizontalAlignment="Right"
                                      Margin="0 0 80 0"
                                      Height="24"
-                                     Width="70"
+                                     MinWidth="70"
                                      VerticalAlignment="Bottom"
                                      Padding="0,0,0,0"
                                      FontFamily="{StaticResource Atkinson Hyperlegible}"
@@ -146,7 +146,7 @@
                                 BorderBrush="{StaticResource ButtonBorder}"
                                 Background="{StaticResource ButtonBackground}"
                                 EffectBrush="{StaticResource ButtonEffect}"
-                                Content="Save"
+                                Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Save'}"
                                 HorizontalAlignment="Right"
                                 Height="24"
                                 Width="70"

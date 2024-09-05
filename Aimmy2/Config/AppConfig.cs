@@ -30,6 +30,7 @@ public class AppConfig : BaseSettings
     public string LastLoadedConfig = "N/A";
     private CaptureSource _captureSource = AILogic.CaptureSource.MainScreen();
     private string? _path;
+    private string? _language;
     public string SuggestedModelName => SliderSettings.SuggestedModel;
     
     public string ThemeName { get; set; } = ThemePalette.PurplePalette.Name;
@@ -42,6 +43,12 @@ public class AppConfig : BaseSettings
     public ColorState ColorState { get; set; } = new ColorState();
     public AntiRecoilSettings AntiRecoilSettings { get; set; } = new AntiRecoilSettings();
     public FileLocationState FileLocationState { get; set; } = new FileLocationState();
+
+    public string? Language
+    {
+        get => _language;
+        set => SetField(ref _language, value);
+    }
 
     public CaptureSource CaptureSource
     {

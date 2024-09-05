@@ -36,7 +36,7 @@
                     </Grid.RowDefinitions>
                     <Grid>
                         <Label Content="&#xE896;" HorizontalAlignment="Left" Margin="15,0,0,0" VerticalAlignment="Center" Foreground="#DDFFFFFF" Padding="0,0,0,0" FontSize="14" FontFamily="Segoe MDL2 Assets" />
-                        <Label Content="Update Available" HorizontalAlignment="Left" Margin="38,0,0,0" VerticalAlignment="Center" Foreground="#DDFFFFFF" Padding="0,0,0,0" FontSize="14" FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                        <Label Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='UpdateAvailable'}" HorizontalAlignment="Left" Margin="38,0,0,0" VerticalAlignment="Center" Foreground="#DDFFFFFF" Padding="0,0,0,0" FontSize="14" FontFamily="{StaticResource Atkinson Hyperlegible}" />
                         <Button IsEnabled="{Binding CanClose}" x:Name="Exit" Content="&#xE8BB;" HorizontalAlignment="Right" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White" FontFamily="Segoe MDL2 Assets" Padding="15,0,15,0" BorderThickness="0,0,0,0" FontSize="10" VerticalAlignment="Center" Click="Exit_Click" />
                     </Grid>
                     <Grid Grid.Row="1">
@@ -58,11 +58,11 @@
                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <StackPanel Orientation="Horizontal">
-                            <Label Foreground="White" Content="Your version:"/>
+                            <Label Foreground="White" Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='YourVersion'}"/>
                             <Label Foreground="White" Content="{Binding CurrentVersion}"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Grid.Row="1">
-                            <Label Foreground="White" Content="New version:"/>
+                            <Label Foreground="White" Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NewVersion'}"/>
                             <Label Foreground="White" Content="{Binding NewVersion}"/>
                         </StackPanel>
 
@@ -83,11 +83,11 @@
                                      BorderBrush="{StaticResource ButtonBorder}"
                                      Background="{StaticResource ButtonBackground}"
                                      EffectBrush="{StaticResource ButtonEffect}"
-                                     Content="Cancel"
+                                     Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Cancel'}"
                                      HorizontalAlignment="Right"
                                      Margin="0 0 100 0"
                                      Height="24"
-                                     Width="70"
+                                     MinWidth="70"
                                      VerticalAlignment="Bottom"
                                      Padding="0,0,0,0"
                                      FontFamily="{StaticResource Atkinson Hyperlegible}"
@@ -103,10 +103,10 @@
                                 BorderBrush="{StaticResource ButtonBorder}"
                                 Background="{StaticResource ButtonBackground}"
                                 EffectBrush="{StaticResource ButtonEffect}"
-                                Content="Install Update"
+                                Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='InstallUpdate'}"
                                 HorizontalAlignment="Right"
                                 Height="24"
-                                Width="90"
+                                MinWidth="90"
                                 VerticalAlignment="Bottom"
                                 Padding="0,0,0,0"
                                 FontFamily="{StaticResource Atkinson Hyperlegible}"

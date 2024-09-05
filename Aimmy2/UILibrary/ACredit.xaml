@@ -10,24 +10,26 @@
              d:DesignWidth="282.5"
              d:DesignHeight="50">
     <Grid>
-        <Border Height="50"
-            Background="#3F3C3C3C"
-            CornerRadius="0"
-            BorderThickness="1,0,1,0"
-            BorderBrush="#3FFFFFFF"
-            Margin="0">
+        <Border Background="#3F3C3C3C"
+                CornerRadius="0"
+                BorderThickness="1,0,1,0"
+                BorderBrush="#3FFFFFFF"
+                Margin="0">
             <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                </Grid.RowDefinitions>
                 <Label x:Name="NameLabel"
-                       Padding="10,10,10,0"
+                       Grid.Row="0"
                        FontFamily="{StaticResource Atkinson Hyperlegible}"
                        Content="BabyHamsta"
                        Foreground="#DDFFFFFF"
                        VerticalContentAlignment="Center"
                        FontSize="13"
-                       Margin="0,0,0,25"
                        VerticalAlignment="Top" />
                 <Label x:Name="Description"
-                       Padding="10,0,10,10"
+                       Grid.Row="1"
                        FontFamily="{StaticResource Atkinson Hyperlegible}"
                        Content="Logic"
                        Foreground="#DDFFFFFF"

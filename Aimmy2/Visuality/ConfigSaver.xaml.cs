@@ -35,6 +35,7 @@ namespace Visuality
         public ConfigSaver()
         {
             InitializeComponent();
+            DataContext = this;
             MainBorder.BindMouseGradientAngle(ShouldBindGradientMouse);
         }
 

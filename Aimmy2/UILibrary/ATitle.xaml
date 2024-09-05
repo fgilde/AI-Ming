@@ -11,6 +11,7 @@
              d:DesignHeight="40">
     <Grid>
         <Border Height="40"
+                Name="Border"
                 Background="#3F3C3C3C"
                 CornerRadius="5,5,0,0"
                 BorderThickness="1,1,1,0"

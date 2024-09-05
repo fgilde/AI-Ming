@@ -6,6 +6,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:Ant="clr-namespace:AntWpf.Controls;assembly=AntWpf"
         xmlns:local="clr-namespace:Visuality"
+        xmlns:aimmy2="clr-namespace:Aimmy2"
         mc:Ignorable="d"
         Title="Set Static FOV Positioning"
         Background="{x:Null}"
@@ -24,7 +25,7 @@
                 Background="{StaticResource Background}"
                 Height="200">
             <Grid>
-                <Label Content="Aimmy"
+                <Label Content="{x:Static aimmy2:ApplicationConstants.ApplicationName}"
                        Foreground="#DDFFFFFF"
                        FontFamily="{StaticResource AKONY}"
                        HorizontalAlignment="Left"
@@ -36,11 +37,13 @@
                        VerticalAlignment="Top"
                        Foreground="#DDFFFFFF"
                        FontFamily="{StaticResource Atkinson Hyperlegible}"
-                       Content="Press and hold the mouse button the bullet is removed."
+                       Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='AntiRecoilHelp'}"
                        FontSize="20"
                        VerticalContentAlignment="Center"
                        Padding="0"
                        Margin="25,50,25,0" />
+
+                <Button x:Name="Exit" Content="&#xE8BB;" Margin="0 25 20 0" HorizontalAlignment="Right" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White" FontFamily="Segoe MDL2 Assets" Padding="15,0,15,0" BorderThickness="0,0,0,0" FontSize="14" VerticalAlignment="Top" Click="Exit_Click" />
             </Grid>
         </Border>
         <Border x:Name="BulletBorder"
@@ -55,7 +58,7 @@
                 Margin="0,0,0,100">
             
             <Grid>
-                <Label Content="How many bullets have you fired?"
+                <Label Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='QuestionBulletCount'}"
                        HorizontalAlignment="Center"
                        VerticalAlignment="Top"
                        Foreground="#DDFFFFFF"
@@ -72,7 +75,7 @@
                 <TextBox x:Name="BulletNumberTextbox"
                          BorderThickness="1"
                          TextWrapping="Wrap"
-                         Tag="Insert Number Here"
+                         Tag="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='InsertNumberHere'}"
                          VerticalAlignment="Top"
                          FontFamily="{StaticResource Atkinson Hyperlegible}"
                          Padding="5,5,5,5"
@@ -88,7 +91,7 @@
                             BorderBrush="{StaticResource ButtonBorder}"
                             Background="{StaticResource ButtonBackground}"
                             EffectBrush="{StaticResource ButtonEffect}"
-                            Content="Confirm"
+                            Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Confirm'}"
                             HorizontalAlignment="Left"
                             Height="24"
                             Width="70"
@@ -104,7 +107,7 @@
                             BorderBrush="{StaticResource ButtonBorder}"
                             Background="{StaticResource ButtonBackground}"
                             EffectBrush="{StaticResource ButtonEffect}"
-                            Content="Try Again"
+                            Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='TryAgain'}"
                             HorizontalAlignment="Left"
                             Height="24"
                             Width="70"

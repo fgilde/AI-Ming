@@ -9,6 +9,7 @@ using Aimmy2.InputLogic;
 using Aimmy2.InputLogic.Contracts;
 using Aimmy2.Types;
 using InputLogic;
+using Nextended.Core.Extensions;
 using Other;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
@@ -174,7 +175,7 @@ namespace Aimmy2.UILibrary
 
         public void SetContent(StoredInputBinding keybind)
         {
-            ToolTip = "Click to set a new binding";
+            ToolTip = Locale.KeyChangerToolTip;
             HasKeySet = keybind.IsValid;
             SetDeviceIcon();
             if (!HasKeySet)
@@ -196,7 +197,7 @@ namespace Aimmy2.UILibrary
             }
 
             var keyName = KeybindNameManager.ConvertToRegularKey(keybind.Key);
-            ToolTip = $"Currently set to {keybind.DeviceName} {keyName}. Click to change the binding";
+            ToolTip = Locale.KeyChangerToolTipWithBinding.FormatWith(Locale.GetString(keybind.DeviceName), keyName);
             KeyNotifierLabel.Content = keyName;
         }
 
@@ -238,7 +239,7 @@ namespace Aimmy2.UILibrary
             MainGrid.ContextMenu = null;
             SetDeviceIcon("\uEA3B", Brushes.Red);
             SetContent("...");
-            ToolTip = "Press any key to set the binding";
+            ToolTip = Locale.KeyChangerToolTipRecording;
             BindingManager.StartListeningForBinding(KeyConfigName);
 
             // Event handler for setting the binding

@@ -64,12 +64,12 @@
                     </Path>
                     <Menu Cursor="Hand" HorizontalAlignment="Left">
                         <MenuItem>
-                            <MenuItem Header="Save as quick config" Click="MenuItem_OnClick" />
-                            <MenuItem Header="Save config as..." Click="MenuItemSaveAs_OnClick" />
+                            <MenuItem Header="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SaveAsQuickConfig'}" Click="MenuItem_OnClick" />
+                            <MenuItem Header="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SaveConfigAs'}" Click="MenuItemSaveAs_OnClick" />
                             
                             <Separator/>
-                            <MenuItem x:Name="MenuItemOpenCfg" Header="Open quick config"></MenuItem>
-                            <MenuItem Header="Open other config..." Click="OpenConfig_CLick"/>
+                            <MenuItem x:Name="MenuItemOpenCfg" Header="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='OpenQuickConfig'}"></MenuItem>
+                            <MenuItem Header="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='OpenOtherConfig'}" Click="OpenConfig_CLick"/>
                         </MenuItem>
                     </Menu>
                     <Label Content="{x:Static aimmy2:ApplicationConstants.ApplicationName}"
@@ -275,7 +275,7 @@
                             <ColumnDefinition></ColumnDefinition>
                         </Grid.ColumnDefinitions>
                         <Grid Grid.ColumnSpan="2" HorizontalAlignment="Center" Visibility="{Binding Path=IsNotModelLoaded, Converter={StaticResource boolToVis }}">
-                            <TextBlock Foreground="Red">Please load model first and select a valid capture source</TextBlock>
+                            <TextBlock Foreground="Red" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NoModelOrNoCaptureSourceError'}" />
                         </Grid>
                         <StackPanel x:Name="ASP1"
                                     Visibility="{Binding Path=IsModelLoaded, Converter={StaticResource boolToVis }}"
@@ -311,7 +311,7 @@
                                      Padding="0"
                                      Height="33">
                                 <TabItem.Header>
-                                    <TextBlock Text="Local Models"
+                                    <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LocalModels'}"
                                                FontSize="11"
                                                Foreground="White"
                                                FontFamily="{StaticResource Atkinson Hyperlegible}" />
@@ -390,7 +390,7 @@
                                             Height="39">
                                         <Label x:Name="SelectedModelNotifier"
                                                Foreground="#DDFFFFFF"
-                                               Content="Loaded Model: N/A"
+                                               Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LoadedModel,N/A'}"
                                                FontFamily="{StaticResource Atkinson Hyperlegible}"
                                                Padding="10"></Label>
                                     </Border>
@@ -416,10 +416,9 @@
                             </TabItem>
                             <TabItem BorderThickness="0"
                                      Padding="0"
-                                     Height="33"
-                                     Width="75">
+                                     Height="33">
                                 <TabItem.Header>
-                                    <TextBlock Text="Local Configs"
+                                    <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LocalConfigs'}"
                                                FontSize="11"
                                                Foreground="White"
                                                FontFamily="{StaticResource Atkinson Hyperlegible}" />
@@ -496,7 +495,7 @@
                                             Height="39">
                                         <Label x:Name="SelectedConfigNotifier"
                                                Foreground="#DDFFFFFF"
-                                               Content="Loaded Config: N/A"
+                                               Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LoadedConfig,N/A'}"
                                                FontFamily="{StaticResource Atkinson Hyperlegible}"
                                                Padding="10"></Label>
                                     </Border>
@@ -523,10 +522,9 @@
                             <TabItem BorderThickness="0"
                                      Padding="0"
                                      Visibility="{x:Static aimmy2:ApplicationConstants.EasyModeHidden}"
-                                     Height="33"
-                                     Width="132">
+                                     Height="33">
                                 <TabItem.Header>
-                                    <TextBlock Text="Downloadable Models"
+                                    <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DownloadableModels'}"
                                                FontSize="11"
                                                Foreground="White"
                                                FontFamily="{StaticResource Atkinson Hyperlegible}" />
@@ -536,7 +534,7 @@
                                            Visibility="Collapsed"
                                            HorizontalContentAlignment="Center"
                                            VerticalContentAlignment="Center"
-                                           Content="There is no downloadable models at the moment, please check again later."
+                                           Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NoDownloadableModelAvailable'}"
                                            Foreground="#DDFFFFFF" />
                                     <ScrollViewer x:Name="ModelStoreMenu"
                                                   VerticalScrollBarVisibility="Visible"
@@ -565,10 +563,9 @@
                             <TabItem BorderThickness="0"
                                      Padding="10,0,10,0"
                                      Visibility="{x:Static aimmy2:ApplicationConstants.EasyModeHidden}"
-                                     Height="33"
-                                     Width="132">
+                                     Height="33">
                                 <TabItem.Header>
-                                    <TextBlock Text="Downloadable Configs"
+                                    <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DownloadableConfigs'}"
                                                FontSize="11"
                                                Foreground="White"
                                                FontFamily="{StaticResource Atkinson Hyperlegible}" />
@@ -578,7 +575,7 @@
                                            Visibility="Collapsed"
                                            HorizontalContentAlignment="Center"
                                            VerticalContentAlignment="Center"
-                                           Content="There is no downloadable configs at the moment, please check again later."
+                                           Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NoDownloadableConfigAvailable'}"
                                            Foreground="#DDFFFFFF" />
                                     <ScrollViewer x:Name="ConfigStoreMenu"
                                                   VerticalScrollBarVisibility="Visible"
@@ -612,22 +609,23 @@
                               Margin="50,450,0,-400"
                               VerticalScrollBarVisibility="Auto"
                               PanningMode="VerticalOnly">
+
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition></ColumnDefinition>
                             <ColumnDefinition></ColumnDefinition>
                         </Grid.ColumnDefinitions>
-                        <StackPanel x:Name="SSP1"
-                                    Grid.Column="0"
+                        <StackPanel Grid.Column="0"
                                     Margin="10,0,5,0">
-                            <StackPanel x:Name="SettingsConfig" />
+                            <StackPanel x:Name="UISettings" />
+                            <StackPanel x:Name="CaptureSettings" />
                         </StackPanel>
-                        <StackPanel x:Name="SSP2"
-                                    Grid.Column="1"
+                        <StackPanel Grid.Column="1"
                                     Margin="5,0,10,0">
-                            <StackPanel x:Name="XYPercentageEnablerMenu" />
+                            <StackPanel x:Name="InputSettings" />
                         </StackPanel>
                     </Grid>
+
                 </ScrollViewer>
 
                 <ScrollViewer x:Name="GamepadSettings"
@@ -671,7 +669,7 @@
                         </Grid.RowDefinitions>
                         <Grid Grid.Row="0">
                             <DockPanel HorizontalAlignment="Stretch" >
-                                <Label Content="Logs"
+                                <Label Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Logs'}"
                                        DockPanel.Dock="Left"
                                        Foreground="White"
                                        FontFamily="{StaticResource Atkinson Hyperlegible}"
@@ -786,13 +784,13 @@
                                                     BorderBrush="#FFD3ADF7"
                                                     Padding="0,0,0,0"
                                                     BorderThickness="0,0,0,0"
-                                                    Content="Check for Update"
+                                                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='CheckForUpdate'}"
                                                     FontWeight="Normal"
                                                     FontSize="12"
                                                     Height="27"
                                                     materialDesign:ButtonAssist.CornerRadius="5"
                                                     Foreground="White"
-                                                    Width="122"
+                                                    MinWidth="122"
                                                     FontFamily="{StaticResource Atkinson Hyperlegible}"
                                                     EffectBrush="#FFD3ADF7"
                                                     Click="CheckForUpdates_Click" />
@@ -802,13 +800,13 @@
                                                     Margin="5 0 0 0"
                                                     Padding="0,0,0,0"
                                                     BorderThickness="0,0,0,0"
-                                                    Content="Show Known Issues"
+                                                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ShowKnownIssues'}"
                                                     FontWeight="Normal"
                                                     FontSize="12"
                                                     Height="27"
                                                     materialDesign:ButtonAssist.CornerRadius="5"
                                                     Foreground="White"
-                                                    Width="122"
+                                                    MinWidth="122"
                                                     FontFamily="{StaticResource Atkinson Hyperlegible}"
                                                     EffectBrush="#FFD3ADF7"
                                                     Click="ShowKnownIssues_Click" />

@@ -19,6 +19,7 @@
             <FontFamily x:Key="Atkinson Hyperlegible">pack://application:,,,/Graphics/Fonts/#Atkinson Hyperlegible</FontFamily>
             <FontFamily x:Key="Font Awesome 6 Brands">pack://application:,,,/Graphics/Fonts/#Font Awesome 6 Brands Regular</FontFamily>
             <BooleanToVisibilityConverter x:Key="boolToVis"/>
+            <converter:LocaleConverter x:Key="localeConverter"/>
             <converter:DoubleToThicknessConverter x:Key="doubleToThickness"/>
             <converter:DoubleToCornerRadiusConverter x:Key="doubleToRadius"/>
 

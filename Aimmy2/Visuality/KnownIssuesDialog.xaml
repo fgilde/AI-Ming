@@ -35,7 +35,7 @@
                     </Grid.RowDefinitions>
                     <Grid>
                         <Label Content="&#xEA80;" HorizontalAlignment="Left" Margin="15,0,0,0" VerticalAlignment="Center" Foreground="#DDFFFFFF" Padding="0,0,0,0" FontSize="14" FontFamily="Segoe MDL2 Assets" />
-                        <Label Content="Known Issues" HorizontalAlignment="Left" Margin="38,0,0,0" VerticalAlignment="Center" Foreground="#DDFFFFFF" Padding="0,0,0,0" FontSize="14" FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                        <Label Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='KnownIssues'}" HorizontalAlignment="Left" Margin="38,0,0,0" VerticalAlignment="Center" Foreground="#DDFFFFFF" Padding="0,0,0,0" FontSize="14" FontFamily="{StaticResource Atkinson Hyperlegible}" />
                         <Button IsEnabled="{Binding CanClose}" x:Name="Exit" Content="&#xE8BB;" HorizontalAlignment="Right" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White" FontFamily="Segoe MDL2 Assets" Padding="15,0,15,0" BorderThickness="0,0,0,0" FontSize="10" VerticalAlignment="Center" Click="Exit_Click" />
                     </Grid>
                     <Grid Grid.Row="1">
@@ -58,7 +58,7 @@
                            Markdown="{Binding Markdown}"  Foreground="{StaticResource Foreground}" xml:space="preserve"/>
                     </Grid>
 
-                    <CheckBox Unchecked="ToggleButton_OnChecked" Checked="ToggleButton_OnChecked" IsChecked="{Binding Settings.ShouldShow}" BorderBrush="{StaticResource Foreground}" Grid.Row="1" Foreground="{StaticResource Foreground}">Show on Startup</CheckBox>
+                    <CheckBox Unchecked="ToggleButton_OnChecked" Checked="ToggleButton_OnChecked" Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ShowOnStartup'}" IsChecked="{Binding Settings.ShouldShow}" BorderBrush="{StaticResource Foreground}" Grid.Row="1" Foreground="{StaticResource Foreground}"></CheckBox>
                     <controls:Button x:Name="ApplyButton"
                                 Grid.Row="1"
                                 IsEnabled="{Binding CanClose}"
@@ -66,7 +66,7 @@
                                 BorderBrush="{StaticResource ButtonBorder}"
                                 Background="{StaticResource ButtonBackground}"
                                 EffectBrush="{StaticResource ButtonEffect}"
-                                Content="Close"
+                                Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Close'}"
                                 HorizontalAlignment="Right"
                                 Height="24"
                                 Width="80"

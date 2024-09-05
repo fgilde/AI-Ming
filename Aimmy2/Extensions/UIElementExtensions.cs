@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Runtime.CompilerServices;
 using Aimmy2.UILibrary;
 using Class;
 using System.Windows;
@@ -301,7 +302,7 @@ public static class UIElementExtensions
         return element;
     }
 
-    internal static AToggle AddToggleWithKeyBind<T>(this T owner, string title, InputBindingManager bindingManager, Action<AToggle>? cfg = null, Action<Border>? containerCfg = null) where T : IAddChild, new()
+    internal static AToggle AddToggleWithKeyBind<T>(this T owner, string title, string key, InputBindingManager bindingManager, Action<AToggle>? cfg = null, Action<Border>? containerCfg = null) where T : IAddChild, new()
     {
         var border = owner.Add<Border>(p =>
         {
@@ -326,7 +327,7 @@ public static class UIElementExtensions
         });
         var toggle = new AToggle("");
         toggle.Background = toggle.BorderBrush = Brushes.Transparent;
-        var code = AKeyChanger.CodeFor(title);
+        var code = AKeyChanger.CodeFor(key);
 
         var keyCodeValue = AppConfig.Current.BindingSettings[code];
         bool updating = false;
@@ -370,21 +371,27 @@ public static class UIElementExtensions
 
     // Similarly, add methods for other UI elements...
     internal static AKeyChanger AddKeyChanger(this IAddChild panel, string title, Func<StoredInputBinding> keybind,
-        InputBindingManager? bindingManager = null, Action<AKeyChanger>? cfg = null)
-    {
-        return panel.AddKeyChanger(title, keybind(), bindingManager, cfg);
-    }
-    internal static AKeyChanger AddKeyChanger(this IAddChild panel, string title, StoredInputBinding keybind, InputBindingManager? bindingManager = null, Action<AKeyChanger>? cfg = null)
+        InputBindingManager? bindingManager = null, Action<AKeyChanger>? cfg = null) =>
+        panel.AddKeyChanger(title, keybind(), bindingManager, cfg);
+
+    internal static AKeyChanger AddKeyChanger(this IAddChild panel, string title, string code, Func<StoredInputBinding> keybind,
+        InputBindingManager? bindingManager = null, Action<AKeyChanger>? cfg = null) =>
+        panel.AddKeyChanger(title, code, keybind(), bindingManager, cfg);
+
+    internal static AKeyChanger AddKeyChanger(this IAddChild panel, string title, string code, StoredInputBinding keybind, InputBindingManager? bindingManager = null, Action<AKeyChanger>? cfg = null)
     {
         var keyChanger = panel.Add(new AKeyChanger(title, keybind), keyChanger =>
         {
             cfg?.Invoke(keyChanger);
             keyChanger.BindingManager = bindingManager;
-            keyChanger.KeyConfigName = title;
+            keyChanger.KeyConfigName = code;
         });
 
         return keyChanger;
     }
+
+    internal static AKeyChanger AddKeyChanger(this IAddChild panel, string title, StoredInputBinding keybind, InputBindingManager? bindingManager = null, Action<AKeyChanger>? cfg = null) 
+        => AddKeyChanger(panel, title, title, keybind, bindingManager, cfg);
 
     public static AColorChanger AddColorChanger(this IAddChild panel, string title)
     {
@@ -405,15 +412,16 @@ public static class UIElementExtensions
         return panel.Add(slider);
     }
 
-    public static ADropdown AddDropdown<T>(this IAddChild panel, string title, T value, IEnumerable<T> items, Action<T> onSelect, Action<ADropdown>? cfg = null)
+    public static ADropdown AddDropdown<T>(this IAddChild panel, string title, T value, IEnumerable<T> items, Action<T> onSelect, Action<ADropdown>? cfg = null, Func<T, string>? toStringFn = null)
     {
+        toStringFn ??= v => v.ToString();
         var res = panel.Add<ADropdown>(new ADropdown(title), dropdown =>
         {
             cfg?.Invoke(dropdown);
         });
         foreach (var v in items)
         {
-            res.AddDropdownItem(v.ToString(), item =>
+            res.AddDropdownItem(toStringFn(v), item =>
             {
                 if (v.Equals(value))
                 {
@@ -482,9 +490,20 @@ public static class UIElementExtensions
         });
     }
 
+    public static ATitle AddSubTitle(this IAddChild panel, string title)
+    {
+        return panel.AddTitle(title, false, aTitle => aTitle.Border.CornerRadius = new CornerRadius(0));
+    }
+
     public static void AddSeparator(this IAddChild panel)
     {
         panel.Add<ARectangleBottom>();
+        panel.Add<ASpacer>();
+    }
+
+    public static void AddLine(this IAddChild panel)
+    {
+        panel.Add<Line>();
         panel.Add<ASpacer>();
     }
 

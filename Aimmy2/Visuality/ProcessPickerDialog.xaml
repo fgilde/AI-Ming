@@ -35,11 +35,11 @@
                     </Grid.RowDefinitions>
                     <Grid>
                         <Label Content="&#xEE57;" HorizontalAlignment="Left" Margin="15,0,0,0" VerticalAlignment="Center" Foreground="#DDFFFFFF" Padding="0,0,0,0" FontSize="14" FontFamily="Segoe MDL2 Assets" />
-                        <Label Content="Select Process" HorizontalAlignment="Left" Margin="38,0,0,0" VerticalAlignment="Center" Foreground="#DDFFFFFF" Padding="0,0,0,0" FontSize="14" FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                        <Label Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SelectProcess'}" HorizontalAlignment="Left" Margin="38,0,0,0" VerticalAlignment="Center" Foreground="#DDFFFFFF" Padding="0,0,0,0" FontSize="14" FontFamily="{StaticResource Atkinson Hyperlegible}" />
                         <Button x:Name="Exit" Content="&#xE8BB;" HorizontalAlignment="Right" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White" FontFamily="Segoe MDL2 Assets" Padding="15,0,15,0" BorderThickness="0,0,0,0" FontSize="10" VerticalAlignment="Center" Click="Exit_Click" />
                     </Grid>
                     <Grid Grid.Row="1">
-                        <Label Margin="10 0 0 0" Foreground="White" Content="Select the target process to use"></Label>
+                        <Label Margin="10 0 0 0" Foreground="White" Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SelectProcessHelp'}"></Label>
                     </Grid>
                 </Grid>
                 <Grid x:Name="MainArea" Margin="10,50,10,10">
@@ -68,11 +68,11 @@
                                      BorderBrush="{StaticResource ButtonBorder}"
                                      Background="{StaticResource ButtonBackground}"
                                      EffectBrush="{StaticResource ButtonEffect}"
-                                     Content="Cancel"
+                                     Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Cancel'}"
                                      HorizontalAlignment="Right"
                                      Margin="0 0 80 0"
                                      Height="24"
-                                     Width="70"
+                                     MinWidth="70"
                                      VerticalAlignment="Bottom"
                                      Padding="0,0,0,0"
                                      FontFamily="{StaticResource Atkinson Hyperlegible}"
@@ -87,11 +87,11 @@
                                 BorderBrush="{StaticResource ButtonBorder}"
                                 Background="{StaticResource ButtonBackground}"
                                 EffectBrush="{StaticResource ButtonEffect}"
-                                Content="Ok"
+                                Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Confirm'}"
                                 HorizontalAlignment="Right"
                                 IsEnabled="False"
                                 Height="24"
-                                Width="70"
+                                MinWidth="70"
                                 VerticalAlignment="Bottom"
                                 Padding="0,0,0,0"
                                 FontFamily="{StaticResource Atkinson Hyperlegible}"

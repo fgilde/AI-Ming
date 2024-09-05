@@ -13,6 +13,7 @@ namespace Visuality
         public ProcessPickerDialog()
         {
             InitializeComponent();
+            DataContext = this;
             LoadProcesses();
             MainBorder.BindMouseGradientAngle(ShouldBindGradientMouse);
         }

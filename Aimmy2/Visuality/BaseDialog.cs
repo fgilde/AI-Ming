@@ -1,22 +1,17 @@
-﻿using Class;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using System.Windows.Input;
-using Aimmy2.Class;
 using Aimmy2.Config;
 using System.IO;
-using Accord.Math;
 using Aimmy2;
 using Aimmy2.Class.Native;
-using Aimmy2.Extensions;
 
 namespace Visuality;
 
 public abstract class BaseDialog : Window, INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
-
+    public IDictionary<string, string> Texts => Locale.GetAll();
     protected virtual bool SaveRestorePosition => true;
     protected Func<bool> ShouldBindGradientMouse = () => AppConfig.Current.ToggleState.MouseBackgroundEffect;
     private WindowSettings _settings;

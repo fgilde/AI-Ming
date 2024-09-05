@@ -17,6 +17,7 @@ using Microsoft.ML.OnnxRuntime;
 using Nextended.UI;
 using System.Xml.Linq;
 using Aimmy2.Extensions;
+using Nextended.Core.Extensions;
 
 namespace Other
 {
@@ -123,7 +124,7 @@ namespace Other
                 AppConfig.Current.ToggleState[keyValuePair.Key] = keyValuePair.Value;
             }
 
-            string content = "Loaded Model: " + selectedModel;
+            string content = Locale.LoadedModel.FormatWith(selectedModel);
             SelectedModelNotifier.Content = content;
             new NoticeBar(content, 2000).Show();
         }
@@ -135,7 +136,7 @@ namespace Other
 
             string configPath = Path.Combine(Path.GetDirectoryName(AppConfig.DefaultConfigPath), selectedConfig);
             MainWindow.Instance.LoadConfig(configPath);
-            SelectedConfigNotifier.Content = "Loaded Config: " + selectedConfig;
+            SelectedConfigNotifier.Content = Locale.LoadedConfig.FormatWith(selectedConfig);
         }
 
         public void InitializeFileWatchers()
@@ -197,7 +198,7 @@ namespace Other
                     {
                         string? lastLoadedModel = AppConfig.Current.LastLoadedModel;
                         if (lastLoadedModel != "N/A" && !ModelListBox.Items.Contains(lastLoadedModel)) { ModelListBox.SelectedItem = lastLoadedModel; }
-                        SelectedModelNotifier.Content = $"Loaded Model: {lastLoadedModel}";
+                        SelectedModelNotifier.Content = Locale.LoadedModel.FormatWith(lastLoadedModel);
                     }
                     ModelListBox.EnsureRenderedAndInitialized();
                     MainWindow.Instance.FillMenus();

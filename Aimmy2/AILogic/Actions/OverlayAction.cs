@@ -1,9 +1,6 @@
 ﻿using System.Windows;
-using Aimmy2.AILogic.Contracts;
 using Aimmy2.Config;
-using Aimmy2.Extensions;
 using Aimmy2.Other;
-using Class;
 using Visuality;
 
 

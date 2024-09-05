@@ -7,6 +7,7 @@ using System.Windows.Threading;
 using Aimmy2.Class.Native;
 using Aimmy2.Config;
 using Aimmy2.Extensions;
+using Nextended.Core.Extensions;
 
 namespace Visuality
 {
@@ -20,10 +21,12 @@ namespace Visuality
         private DateTime LastClickTime;
         private int FireRate;
         private int ChangingFireRate;
+        public IDictionary<string, string> Texts => Locale.GetAll();
 
         public SetAntiRecoil(MainWindow MW)
         {
             InitializeComponent();
+            DataContext = this;
 
             MW.WindowState = WindowState.Minimized;
 
@@ -87,28 +90,36 @@ namespace Visuality
                 ChangingFireRate = FireRate;
             }
 
-            SettingLabel.Content = $"Fire Rate has been set to {ChangingFireRate}ms, please confirm to save it.";
+            SettingLabel.Content = Locale.FireRateSet.FormatWith(ChangingFireRate);
         }
 
         private void ConfirmB_Click(object sender, RoutedEventArgs e)
         {
             AppConfig.Current.AntiRecoilSettings.FireRate = ChangingFireRate;
+            new NoticeBar(Locale.FireRateSetSuccessfully, 5000).Show();
 
-            MainWin.WindowState = WindowState.Normal;
-
-            new NoticeBar("The Fire Rate is set successfully.", 5000).Show();
-
-            Close();
+            ExitAndClose();
         }
 
         private void TryAgainB_Click(object sender, RoutedEventArgs e)
         {
-            SettingLabel.Content = $"Press and hold the mouse button the bullet is removed.";
+            SettingLabel.Content = Locale.AntiRecoilHelp;
 
             Animator.FadeOut(BulletBorder);
             Animator.ObjectShift(TimeSpan.FromMilliseconds(350), BulletBorder, BulletBorder.Margin, new Thickness(0, 0, 0, -140));
 
             HoldDownTimer.Start();
+        }
+
+        private void Exit_Click(object sender, RoutedEventArgs e)
+        {
+            ExitAndClose();
+        }
+
+        private void ExitAndClose()
+        {
+            MainWin.WindowState = WindowState.Normal;
+            Close();
         }
     }
 }

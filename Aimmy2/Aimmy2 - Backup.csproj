@@ -92,13 +92,8 @@
     <PackageReference Include="Nefarius.ViGEm.Client" Version="1.21.256" />
     <PackageReference Include="CoreDX.vJoy.Wrapper" Version="1.2.3" />
     <PackageReference Include="MdXaml" Version="1.27.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="kli.Localize" Version="0.8.3" />
-    <AdditionalFiles Include="Localizations\Locale.json" NamespaceName="Aimmy2" ClassName="Locale" />
   </ItemGroup>
-
   <ItemGroup>
     <Resource Include="CH.ico" />
     <Resource Include="Graphics\Fonts\akony.otf" />
@@ -111,9 +106,6 @@
     <Resource Include="Graphics\Fonts\Font Awesome 6 Brands-Regular-400.otf" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="UILibrary\Line.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Update="UILibrary\CaptureSourceSelect.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -217,6 +209,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="NewFolder\" />
     <Folder Include="Properties\" />
     <Folder Include="Types\" />
   </ItemGroup>

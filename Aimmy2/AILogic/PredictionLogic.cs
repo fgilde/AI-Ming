@@ -11,7 +11,6 @@ using Other;
 using Aimmy2.Config;
 using Supercluster.KDTree;
 using Aimmy2.Types;
-using Debug = System.Diagnostics.Debug;
 
 namespace Aimmy2.AILogic;
 
@@ -142,7 +141,6 @@ public class PredictionLogic : IPredictionLogic
             await SaveFrameAsync(frame, prediction);
         }
 
-        Debug.WriteLine($"FOUND {allNearest.Length} Predictions");
         return allNearest;
     }
 
