@@ -44,7 +44,10 @@ namespace Visuality
         {
             if (e.PropertyName == nameof(ICapture.CaptureArea))
             {
-                this.MoveTo(AIManager.Instance.ImageCapture.CaptureArea, Dispatcher.Invoke(() => BorderThickness));
+                Dispatcher.Invoke(() =>
+                {
+                    this.MoveTo(AIManager.Instance.ImageCapture.CaptureArea, GetPadding());
+                });
             }
         }
 
@@ -90,8 +93,13 @@ namespace Visuality
         {
             if ((bool)e.NewValue)
             {
-                this.MoveTo(AIManager.Instance.ImageCapture.CaptureArea, BorderThickness);
+                this.MoveTo(AIManager.Instance.ImageCapture.CaptureArea, GetPadding());
             }
+        }
+
+        private Thickness? GetPadding()
+        {
+            return AppConfig.Current.CaptureSource.TargetType == CaptureTargetType.Process ? new Thickness(BorderThickness.Left +2, BorderThickness.Top - 2, BorderThickness.Right +2, BorderThickness.Bottom) : new Thickness(0);
         }
 
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
