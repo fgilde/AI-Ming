@@ -14,5 +14,6 @@ public static class Cultures
         new CultureInfo("tr-TR"),
         new CultureInfo("uk-UA"),
         new CultureInfo("ru-RU"),
+        new CultureInfo("zh-CN"),
     };
 }
