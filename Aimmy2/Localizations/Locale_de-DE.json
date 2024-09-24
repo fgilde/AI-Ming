@@ -44,6 +44,8 @@
   "DeleteConfigPrompt": "Sind Sie sicher, dass Sie die Konfiguration löschen möchten ",
   "DeleteModel": "Modell löschen",
   "DeleteModelPrompt": "Sind Sie sicher, dass Sie das Modell löschen möchten ",
+  "DeleteTrigger": "Automatischen Auslöser löschen?",
+  "ConfirmDeleteTrigger": "Sind Sie sicher, dass Sie den Automatischen Auslöser {0} löschen möchten?",
   "Detected Player Color": "Farbe des erkannten Spielers",
   "DetectedPlayerColor": "Farbe des erkannten Spielers",
   "DetectionAreaType": "Erkennungsbereichstyp",

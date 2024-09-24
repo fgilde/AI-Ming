@@ -13,6 +13,7 @@ namespace InputLogic
         private readonly Dictionary<string, StoredInputBinding> bindings = new();
         private static readonly Dictionary<string, (bool IsHolding, DateTime StartTime)> isHolding = new();
         private string? settingBindingId = null;
+        private static readonly List<(StoredInputBinding Binding, bool IsHolding, DateTime StartTime)> holdingBindings = new();
 
         public event Action<string, StoredInputBinding>? OnBindingSet;
 
@@ -33,6 +34,42 @@ namespace InputLogic
                 return DateTime.Now - holding.StartTime;
             }
             return TimeSpan.Zero;
+        }
+
+        public static bool IsHoldingBindingFor(StoredInputBinding binding, TimeSpan? duration)
+        {
+            var holdingEntry = holdingBindings.FirstOrDefault(h => h.Binding.Equals(binding));
+
+            if (holdingEntry.Binding.IsValid && holdingEntry.IsHolding)
+            {
+                if (duration == null || duration <= TimeSpan.Zero)
+                    return true;
+
+                return (DateTime.Now - holdingEntry.StartTime) >= duration;
+            }
+
+            return false;
+        }
+
+        private void UpdateHoldingState(StoredInputBinding binding, bool isPressed)
+        {
+            var index = holdingBindings.FindIndex(h => h.Binding.Equals(binding));
+
+            if (index != -1)
+            {
+                if (isPressed)
+                {
+                    holdingBindings[index] = (binding, true, DateTime.Now);
+                }
+                else
+                {
+                    holdingBindings[index] = (binding, false, DateTime.MinValue);
+                }
+            }
+            else if (isPressed)
+            {
+                holdingBindings.Add((binding, true, DateTime.Now));
+            }
         }
 
         public static bool IsHoldingBindingFor(string bindingId, TimeSpan? duration)
@@ -89,6 +126,7 @@ namespace InputLogic
                 }
                 else
                 {
+                    UpdateHoldingState(new StoredInputBinding(e), pressed);
                     foreach (var binding in bindings)
                     {
                         if (binding.Value.Matches(e))
@@ -119,6 +157,8 @@ namespace InputLogic
             }
             else
             {
+                UpdateHoldingState(new StoredInputBinding(e), true);
+
                 foreach (var binding in bindings)
                 {
                     if (binding.Value.Matches(e))
@@ -140,6 +180,8 @@ namespace InputLogic
             }
             else
             {
+                UpdateHoldingState(new StoredInputBinding(e), true);
+
                 foreach (var binding in bindings)
                 {
                     if (binding.Value.Matches(e))
@@ -153,6 +195,8 @@ namespace InputLogic
 
         private void GlobalHookKeyUp(object sender, KeyEventArgs e)
         {
+            UpdateHoldingState(new StoredInputBinding(e), false);
+
             foreach (var binding in bindings)
             {
                 if (binding.Value.Matches(e))
@@ -165,6 +209,7 @@ namespace InputLogic
 
         private void GlobalHookMouseUp(object sender, MouseEventArgs e)
         {
+            UpdateHoldingState(new StoredInputBinding(e), false);
             foreach (var binding in bindings)
             {
                 if (binding.Value.Matches(e))

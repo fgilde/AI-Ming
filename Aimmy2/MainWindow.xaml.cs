@@ -27,6 +27,7 @@ using Nextended.Core;
 using Nextended.Core.Extensions;
 using Nextended.UI.Helper;
 using Other;
+using UILibrary;
 using Visuality;
 using Application = System.Windows.Application;
 using Brushes = System.Windows.Media.Brushes;
@@ -574,51 +575,53 @@ public partial class MainWindow
 
         TriggerBot.AddTitle(Locale.AutoTrigger, true);
 
-        TriggerBot.AddToggleWithKeyBind(Locale.AutoTrigger, nameof(Locale.AutoTrigger), BindingManager).BindTo(() => AppConfig.Current.ToggleState.AutoTrigger).BindActiveStateColor(TriggerBot);
+        TriggerBot.Add<TriggerList>().BindTo(() => AppConfig.Current.Triggers);
+
+        //TriggerBot.AddToggleWithKeyBind(Locale.AutoTrigger, nameof(Locale.AutoTrigger), BindingManager).BindTo(() => AppConfig.Current.ToggleState.AutoTrigger).BindActiveStateColor(TriggerBot);
         
-        TriggerBot.AddToggleWithKeyBind(Locale.ChargeMode, nameof(Locale.ChargeMode), BindingManager, null, b => b.ToolTip = Locale.ChargeModeToolTip)
-            .BindTo(() => AppConfig.Current.ToggleState.AutoTriggerCharged);
+        //TriggerBot.AddToggleWithKeyBind(Locale.ChargeMode, nameof(Locale.ChargeMode), BindingManager, null, b => b.ToolTip = Locale.ChargeModeToolTip)
+        //    .BindTo(() => AppConfig.Current.ToggleState.AutoTriggerCharged);
         
 
-        TriggerBot.AddDropdown(Locale.TriggerCheck, AppConfig.Current.DropdownState.TriggerCheck,
-            check => AppConfig.Current.DropdownState.TriggerCheck = check);
+        //TriggerBot.AddDropdown(Locale.TriggerCheck, AppConfig.Current.DropdownState.TriggerCheck,
+        //    check => AppConfig.Current.DropdownState.TriggerCheck = check);
 
-        TriggerBot.AddButton(Locale.ConfigureHeadArea, b =>
-        {
-            Config.DropdownState.PropertyChanged += (sender, args) =>
-            {
-                if (args.PropertyName == nameof(Config.DropdownState.TriggerCheck))
-                {
-                    b.IsEnabled = Config.DropdownState.TriggerCheck == TriggerCheck.HeadIntersectingCenter;
-                }
-            };
-            b.IsEnabled = Config.DropdownState.TriggerCheck == TriggerCheck.HeadIntersectingCenter;
-            b.ToolTip = Locale.ConfigureHeadAreaTooltip;
-        }).Reader.Click += (s, e) =>
-            new EditHeadArea(AppConfig.Current.DropdownState.HeadArea).Show();
-
-
-        TriggerBot.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.TriggerKey), () => keybind.TriggerKey, BindingManager);
-        TriggerBot.AddSlider(Locale.MinTimeTriggerKey, Locale.Seconds, 0.01, 0.1, 0.0, 5).InitWith(slider =>
-        {
-            Config.BindingSettings.PropertyChanged += (sender, args) =>
-            {
-                if (args.PropertyName == nameof(Config.BindingSettings.TriggerKey))
-                {
-                    slider.IsEnabled = Config.BindingSettings.TriggerKey.IsValid;
-                }
-            };
-            slider.IsEnabled = Config.BindingSettings.TriggerKey.IsValid;
-            slider.ToolTip = Locale.MinTimeTriggerKeyTooltip;
-        }).BindTo(() => AppConfig.Current.SliderSettings.TriggerKeyMin);
-        TriggerBot.AddSlider(Locale.AutoTriggerDelay, Locale.Seconds, 0.01, 0.1, 0.00, 5).BindTo(() => AppConfig.Current.SliderSettings.AutoTriggerDelay);
+        //TriggerBot.AddButton(Locale.ConfigureHeadArea, b =>
+        //{
+        //    Config.DropdownState.PropertyChanged += (sender, args) =>
+        //    {
+        //        if (args.PropertyName == nameof(Config.DropdownState.TriggerCheck))
+        //        {
+        //            b.IsEnabled = Config.DropdownState.TriggerCheck == TriggerCheck.HeadIntersectingCenter;
+        //        }
+        //    };
+        //    b.IsEnabled = Config.DropdownState.TriggerCheck == TriggerCheck.HeadIntersectingCenter;
+        //    b.ToolTip = Locale.ConfigureHeadAreaTooltip;
+        //}).Reader.Click += (s, e) =>
+        //    new EditHeadArea(AppConfig.Current.DropdownState.HeadArea).Show();
 
 
-        TriggerBot.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.TriggerAdditionalSend), () => keybind.TriggerAdditionalSend, BindingManager);
+        //TriggerBot.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.TriggerKey), () => keybind.TriggerKey, BindingManager);
+        //TriggerBot.AddSlider(Locale.MinTimeTriggerKey, Locale.Seconds, 0.01, 0.1, 0.0, 5).InitWith(slider =>
+        //{
+        //    Config.BindingSettings.PropertyChanged += (sender, args) =>
+        //    {
+        //        if (args.PropertyName == nameof(Config.BindingSettings.TriggerKey))
+        //        {
+        //            slider.IsEnabled = Config.BindingSettings.TriggerKey.IsValid;
+        //        }
+        //    };
+        //    slider.IsEnabled = Config.BindingSettings.TriggerKey.IsValid;
+        //    slider.ToolTip = Locale.MinTimeTriggerKeyTooltip;
+        //}).BindTo(() => AppConfig.Current.SliderSettings.TriggerKeyMin);
+        //TriggerBot.AddSlider(Locale.AutoTriggerDelay, Locale.Seconds, 0.01, 0.1, 0.00, 5).BindTo(() => AppConfig.Current.SliderSettings.AutoTriggerDelay);
 
-        TriggerBot.AddDropdown(Locale.TriggerAdditionalCommandCheck, AppConfig.Current.DropdownState.TriggerAdditionalCommandCheck,
-            check => AppConfig.Current.DropdownState.TriggerAdditionalCommandCheck = check);
-        TriggerBot.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.TriggerAdditionalCommandKey), () => keybind.TriggerAdditionalCommandKey, BindingManager);
+
+        //TriggerBot.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.TriggerAdditionalSend), () => keybind.TriggerAdditionalSend, BindingManager);
+
+        //TriggerBot.AddDropdown(Locale.TriggerAdditionalCommandCheck, AppConfig.Current.DropdownState.TriggerAdditionalCommandCheck,
+        //    check => AppConfig.Current.DropdownState.TriggerAdditionalCommandCheck = check);
+        //TriggerBot.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.TriggerAdditionalCommandKey), () => keybind.TriggerAdditionalCommandKey, BindingManager);
 
 
         TriggerBot.AddSeparator();

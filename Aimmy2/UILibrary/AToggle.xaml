@@ -7,7 +7,7 @@
              xmlns:Ant="clr-namespace:AntWpf.Controls;assembly=AntWpf"
              xmlns:local="clr-namespace:Aimmy2.UILibrary"
              mc:Ignorable="d"
-             Opacity="{Binding EnabledOpacity}"
+             Opacity="{Binding EnabledOpacity, RelativeSource={RelativeSource AncestorType=local:AToggle}}"
              d:DesignWidth="282.5"
              d:DesignHeight="40">
     <Grid>
@@ -15,12 +15,12 @@
                 Background="Transparent"
                 CornerRadius="00"
                 BorderThickness="1,0,1,0"
-                BorderBrush="{Binding BorderBrush}">
+                BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType=local:AToggle}}">
             <Grid>
                 <Label x:Name="ToggleTitle"
                        Padding="10,10,10,10"
                        FontFamily="{StaticResource Atkinson Hyperlegible}"
-                       Content="{Binding Text}"
+                       Content="{Binding Text, RelativeSource={RelativeSource AncestorType=local:AToggle}}"
                        Foreground="#DDFFFFFF"
                        VerticalContentAlignment="Center"
                        FontSize="13"

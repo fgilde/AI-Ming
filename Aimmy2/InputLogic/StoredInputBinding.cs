@@ -5,6 +5,22 @@ namespace Aimmy2.InputLogic;
 
 public struct StoredInputBinding
 {
+    public bool Equals(StoredInputBinding other)
+    {
+        return Key == other.Key && 
+               (Is<GamepadEventArgs>() && other.Is<GamepadEventArgs>() || Is<MouseEventArgs>() && other.Is<MouseEventArgs>() || Is<KeyEventArgs>() && other.Is<KeyEventArgs>());
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is StoredInputBinding other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Key, MouseEventArgs, KeyEventArgs, GamepadEventArgs);
+    }
+
     public string Key { get; set; }
 
     public MouseEventArgs? MouseEventArgs { get; set; }

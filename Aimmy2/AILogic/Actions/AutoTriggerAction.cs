@@ -1,17 +1,30 @@
 ﻿using System.ComponentModel;
-using Aimmy2.AILogic.Contracts;
+using Aimmy2.AILogic.Actions;
+using Aimmy2.AILogic;
 using Aimmy2.Config;
 using Aimmy2.InputLogic;
+using Aimmy2.Types;
 using InputLogic;
-using Nefarius.ViGEm.Client.Targets.Xbox360;
-using Nextended.Core;
-
-namespace Aimmy2.AILogic.Actions;
-
-public class AutoTriggerAction: BaseAction
+using Aimmy2.InputLogic.Contracts;
+public class AutoTriggerAction : BaseAction
 {
     private Prediction? _lastPrediction;
-    private CancellationTokenSource? _autoTriggerCts;
+    private List<CancellationTokenSource> _autoTriggerCtsList = new();
+    private Dictionary<ActionTrigger, DateTime> _triggerCooldowns = new(); // Track cooldowns for each trigger
+
+    public List<ActionTrigger> Triggers { get; set; } = new List<ActionTrigger>()
+    {
+        new ActionTrigger()
+        {
+            Enabled = true,
+            TriggerKey = AppConfig.Current.BindingSettings.TriggerKey,
+            Delay = AppConfig.Current.SliderSettings.AutoTriggerDelay,
+            BreakTime = 5,
+            TriggerKeyMin = AppConfig.Current.SliderSettings.TriggerKeyMin,
+            IntersectionCheck = AppConfig.Current.DropdownState.TriggerCheck,
+            IntersectionArea = RelativeRect.ParseOrDefault(AppConfig.Current.DropdownState.HeadArea)
+        }
+    };
 
     public AutoTriggerAction()
     {
@@ -20,92 +33,85 @@ public class AutoTriggerAction: BaseAction
 
     private void CheckChange(object? sender, PropertyChangedEventArgs e)
     {
-        if(e.PropertyName is nameof(AppConfig.Current.ToggleState.AutoTrigger) or nameof(AppConfig.Current.ToggleState.AutoTriggerCharged))
+        if (e.PropertyName is nameof(AppConfig.Current.ToggleState.AutoTrigger))
         {
-            CancelCharge();
-        }            
+            CancelAllTriggers();
+        }
     }
 
-    private void CancelTriggerChargeIf()
+    private void CancelAllTriggers()
     {
-        if (_autoTriggerCts is { IsCancellationRequested: false })
-            _autoTriggerCts.Cancel();
+        foreach (var cts in _autoTriggerCtsList)
+        {
+            if (!cts.IsCancellationRequested)
+            {
+                cts.Cancel();
+            }
+        }
+        _autoTriggerCtsList.Clear();
     }
 
     public override Task ExecuteAsync(Prediction[] predictions)
     {
-        var closestPrediction = predictions.MinBy(p => p.Confidence);
-        if (closestPrediction != null)
+        _lastPrediction = predictions.MinBy(p => p.Confidence);
+
+        if (_lastPrediction != null && AppConfig.Current.ToggleState.AutoTrigger)
         {
-            _lastPrediction = closestPrediction;
-            return AutoTrigger(closestPrediction);
+            foreach (var trigger in Triggers)
+            {
+                if (trigger.Enabled)
+                {
+                    var triggerCts = new CancellationTokenSource();
+                    _autoTriggerCtsList.Add(triggerCts);
+                    _ = Task.Run(() => HandleTriggerAsync(trigger, _lastPrediction, triggerCts.Token), triggerCts.Token);
+                }
+            }
         }
+
         return Task.CompletedTask;
     }
 
-    public override Task OnPause()
+    private async Task HandleTriggerAsync(ActionTrigger trigger, Prediction prediction, CancellationToken cancellationToken)
     {
-        CancelCharge();
-        return base.OnPause();
-    }
-
-    private void CancelCharge()
-    {
-        CancelTriggerChargeIf();
-        _autoTriggerCts = null;
-        
-        if (MouseManager.IsLeftDown)
+        if (TriggerIsOnCooldown(trigger))
         {
-            MouseManager.LeftUp();
+            // Skip this trigger if it is still in cooldown
+            return;
         }
-    }
 
-
-    private async Task AutoTrigger(Prediction prediction)
-    {
-        if (AppConfig.Current.ToggleState.AutoTrigger)
+        if (TriggerKeyUnsetOrHold(trigger.TriggerKey, trigger.TriggerKeyMin))
         {
-            var delay = TimeSpan.FromSeconds(AppConfig.Current.SliderSettings.AutoTriggerDelay);
-            if (AppConfig.Current.ToggleState.AutoTriggerCharged && TriggerKeyUnsetOrHold())
+            var delay = TimeSpan.FromSeconds(trigger.Delay);
+            var breakTime = TimeSpan.FromSeconds(trigger.BreakTime);
+
+            if (PredictionIsIntersecting(trigger.IntersectionCheck, trigger.IntersectionArea, prediction))
             {
-                if (!MouseManager.IsLeftDown && _autoTriggerCts == null)
+                if (trigger.ChargeMode)
                 {
-                    _autoTriggerCts = new CancellationTokenSource();
-                    _autoTriggerCts.Token.Register(() => _autoTriggerCts = null);
-                    _ = MouseManager.LeftDownUntil(() => Task.FromResult(TriggerKeyUnsetOrHold() && PredictionIsIntersecting(AppConfig.Current.DropdownState.TriggerCheck)), delay, _autoTriggerCts.Token).ContinueWith(_ => CancelTriggerChargeIf());
+                    if (!MouseManager.IsLeftDown)
+                    {
+                        await MouseManager.LeftDownUntil(() => Task.FromResult(TriggerKeyUnsetOrHold(trigger.TriggerKey, trigger.TriggerKeyMin) && PredictionIsIntersecting(trigger.IntersectionCheck, trigger.IntersectionArea, prediction)), delay, cancellationToken);
+                    }
                 }
-                return;
-            }
-
-            if (AppConfig.Current.BindingSettings.TriggerAdditionalSend.IsValid && TriggerCommandKeyUnsetOrHold() && PredictionIsIntersecting(AppConfig.Current.DropdownState.TriggerAdditionalCommandCheck, prediction))
-            {
-                await InputSender.SendKeyAsync(AppConfig.Current.BindingSettings.TriggerAdditionalSend);
-            }
-
-            if (TriggerKeyUnsetOrHold())
-            {
-                if (PredictionIsIntersecting(AppConfig.Current.DropdownState.TriggerCheck, prediction))
+                else
                 {
-                    await Task.Delay(delay);
-                    await MouseManager.DoTriggerClick();
+                    await Task.Delay(delay, cancellationToken); // Delay for this specific trigger
+                    await InputSender.SendKeyAsync(trigger.Action);
+                   // await MouseManager.DoTriggerClick(); // Perform the action
+
+                    // After execution, set the cooldown
+                    SetTriggerCooldown(trigger, breakTime);
                 }
             }
         }
     }
 
-    private bool TriggerKeyUnsetOrHold()
+    private bool TriggerKeyUnsetOrHold(StoredInputBinding triggerKey, double triggerKeyMin)
     {
-        var triggerKey = AppConfig.Current.BindingSettings.TriggerKey;
-        return !triggerKey.IsValid || InputBindingManager.IsHoldingBindingFor(nameof(AppConfig.Current.BindingSettings.TriggerKey), TimeSpan.FromSeconds(AppConfig.Current.SliderSettings.TriggerKeyMin));
+        return !triggerKey.IsValid || InputBindingManager.IsHoldingBindingFor(triggerKey, TimeSpan.FromSeconds(triggerKeyMin));
     }
 
-    private bool TriggerCommandKeyUnsetOrHold()
-    {
-        var triggerKey = AppConfig.Current.BindingSettings.TriggerAdditionalCommandKey;
-        return !triggerKey.IsValid || InputBindingManager.IsHoldingBinding(nameof(AppConfig.Current.BindingSettings.TriggerAdditionalCommandKey));
-    }
-
-    private bool PredictionIsIntersecting(TriggerCheck check, Prediction? prediction = null)
+    private bool PredictionIsIntersecting(TriggerCheck check, RelativeRect area, Prediction? prediction = null)
     {
         prediction ??= _lastPrediction;
         if (prediction == null)
@@ -113,7 +119,33 @@ public class AutoTriggerAction: BaseAction
             return false;
         }
         return check == TriggerCheck.None
-               || (check == TriggerCheck.HeadIntersectingCenter && prediction.IntersectsWithCenterOfHeadRelativeRect)
-               || (check == TriggerCheck.IntersectingCenter && prediction.InteractsWithCenterOfFov);
+               || (check == TriggerCheck.HeadIntersectingCenter && prediction.IsIntersectingCenter(area))
+               || (check == TriggerCheck.IntersectingCenter && prediction.IsIntersectingCenter());
+    }
+
+    public override Task OnPause()
+    {
+        CancelAllTriggers();
+        return base.OnPause();
+    }
+
+    // Check if the trigger is on cooldown
+    private bool TriggerIsOnCooldown(ActionTrigger trigger)
+    {
+        if (_triggerCooldowns.TryGetValue(trigger, out var cooldownEnd))
+        {
+            if (DateTime.UtcNow < cooldownEnd)
+            {
+                return true; // Trigger is still on cooldown
+            }
+        }
+
+        return false;
+    }
+
+    // Set the cooldown for a trigger after it has been executed
+    private void SetTriggerCooldown(ActionTrigger trigger, TimeSpan breakTime)
+    {
+        _triggerCooldowns[trigger] = DateTime.UtcNow.Add(breakTime); // Set cooldown end time
     }
 }

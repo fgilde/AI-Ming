@@ -44,6 +44,8 @@
   "DeleteConfigPrompt": "Are you sure you want to delete the config ",
   "DeleteModel": "Delete Model",
   "DeleteModelPrompt": "Are you sure you want to delete the model ",
+  "DeleteTrigger": "Delete trigger",
+  "ConfirmDeleteTrigger": "Are you sure you want to delete the auto trigger {0}?",
   "Detected Player Color": "Detected Player Color",
   "DetectedPlayerColor": "Detected Player Color",
   "DetectionAreaType": "Detection Area Type",

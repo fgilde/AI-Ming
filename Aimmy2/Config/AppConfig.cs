@@ -1,7 +1,9 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using Aimmy2.AILogic;
+using Aimmy2.InputLogic.Contracts;
 using Aimmy2.InputLogic.HidHide;
 using Aimmy2.MouseMovementLibraries.GHubSupport.dist;
 using Aimmy2.Types;
@@ -31,6 +33,20 @@ public class AppConfig : BaseSettings
     private CaptureSource _captureSource = AILogic.CaptureSource.MainScreen();
     private string? _path;
     private string? _language;
+    private ObservableCollection<ActionTrigger> _triggers = new ()
+    {
+        new ActionTrigger()
+        {
+            Name = "Primary Fire",
+            Enabled = true,
+            TriggerKey = GamepadSlider.LeftTrigger,
+            Delay = 0,
+            BreakTime = 5,
+            TriggerKeyMin = 0.39,
+            IntersectionCheck = TriggerCheck.HeadIntersectingCenter,
+            IntersectionArea = RelativeRect.Default
+        }
+    };
     public string SuggestedModelName => SliderSettings.SuggestedModel;
     
     public string ThemeName { get; set; } = ThemePalette.PurplePalette.Name;
@@ -43,6 +59,12 @@ public class AppConfig : BaseSettings
     public ColorState ColorState { get; set; } = new ColorState();
     public AntiRecoilSettings AntiRecoilSettings { get; set; } = new AntiRecoilSettings();
     public FileLocationState FileLocationState { get; set; } = new FileLocationState();
+
+    public ObservableCollection<ActionTrigger> Triggers
+    {
+        get => _triggers;
+        set => SetField(ref _triggers, value);
+    }
 
     public string? Language
     {

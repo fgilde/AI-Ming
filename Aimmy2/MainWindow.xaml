@@ -309,6 +309,7 @@
                                     Margin="10,0,10,0">
                             <TabItem BorderThickness="0"
                                      Padding="0"
+                                     Margin="10"
                                      Height="33">
                                 <TabItem.Header>
                                     <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LocalModels'}"
@@ -359,7 +360,7 @@
                                                                                Text="" />
                                                         <Ant:Button 
                                                             Grid.Column="2"
-                                                            ToolTip="Delete Model"
+                                                            ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DeleteModel'}"
                                                             BorderThickness="0"
                                                             MouseDown="UIElement_OnMouseDown" 
                                                             Click="DeleteModel_Click"
@@ -416,6 +417,7 @@
                             </TabItem>
                             <TabItem BorderThickness="0"
                                      Padding="0"
+                                     Margin="10"
                                      Height="33">
                                 <TabItem.Header>
                                     <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LocalConfigs'}"
@@ -466,7 +468,7 @@
                                                                                Text="" />
                                                         <Ant:Button 
                                                             Grid.Column="2"
-                                                            ToolTip="Delete Config"
+                                                            ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DeleteConfig'}"
                                                             BorderThickness="0"
                                                             MouseDown="UIElement_OnMouseDown" 
                                                             Click="DeleteConfig_Click"
@@ -521,6 +523,7 @@
                             </TabItem>
                             <TabItem BorderThickness="0"
                                      Padding="0"
+                                     Margin="10"
                                      Visibility="{x:Static aimmy2:ApplicationConstants.EasyModeHidden}"
                                      Height="33">
                                 <TabItem.Header>
@@ -562,6 +565,7 @@
                             </TabItem>
                             <TabItem BorderThickness="0"
                                      Padding="10,0,10,0"
+                                     Margin="10"
                                      Visibility="{x:Static aimmy2:ApplicationConstants.EasyModeHidden}"
                                      Height="33">
                                 <TabItem.Header>
@@ -678,7 +682,7 @@
                                        Padding="10,0,0,0" />
                                 <Ant:Button 
                                             DockPanel.Dock="Right"
-                                            ToolTip="Clear logs"
+                                            ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ClearLogs'}"
                                             HorizontalAlignment="Right"
                                             BorderThickness="0"
                                             EffectBrush="{StaticResource ButtonBackground}"

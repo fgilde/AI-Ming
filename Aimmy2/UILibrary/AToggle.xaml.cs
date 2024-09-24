@@ -20,6 +20,21 @@ namespace Aimmy2.UILibrary
     /// </summary>
     public partial class AToggle : INotifyPropertyChanged
     {
+        static AToggle()
+        {
+            FrameworkPropertyMetadata backgroundMetadata = new FrameworkPropertyMetadata(
+                new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3F3C3C3C")));
+
+            FrameworkPropertyMetadata borderBrushMetadata = new FrameworkPropertyMetadata(
+                new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3FFFFFFF")));
+
+            BackgroundProperty.OverrideMetadata(typeof(AToggle), backgroundMetadata);
+            BorderBrushProperty.OverrideMetadata(typeof(AToggle), borderBrushMetadata);
+        }
+
+
+
+
         private static Color EnableColor => ApplicationConstants.AccentColor;
         private static Color DisableColor = (Color)ColorConverter.ConvertFromString("#FFFFFFFF");
         private static TimeSpan AnimationDuration = TimeSpan.FromMilliseconds(500);
@@ -30,25 +45,31 @@ namespace Aimmy2.UILibrary
 
         public double EnabledOpacity => IsEnabled ? 1 : 0.35;
 
+
+
         public bool Checked
         {
-            get => _checked;
-            set
+            get => (bool)GetValue(CheckedProperty);
+            set => SetValue(CheckedProperty, value);
+        }
+
+        // Using a DependencyProperty as the backing store for Checked.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty CheckedProperty =
+            DependencyProperty.Register(nameof(Checked), typeof(bool), typeof(AToggle), new PropertyMetadata(false, CheckedChanged));
+
+        private static void CheckedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var toggle = (AToggle)d;
+            if ((bool)e.NewValue)
             {
-                if (_checked != value)
-                {
-                    _checked = value;
-                    if (value)
-                    {
-                        EnableSwitch();
-                    }
-                    else
-                    {
-                        DisableSwitch();
-                    }
-                }
+                toggle.EnableSwitch();
+            }
+            else
+            {
+                toggle.DisableSwitch();
             }
         }
+
 
         public void SetEnabled(bool enabled)
         {
@@ -58,26 +79,22 @@ namespace Aimmy2.UILibrary
 
         public string Text
         {
-            get { return (string)GetValue(TextProperty); }
-            set { SetValue(TextProperty, value); }
+            get => (string)GetValue(TextProperty);
+            set => SetValue(TextProperty, value);
         }
 
         // Using a DependencyProperty as the backing store for Text.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty TextProperty =
-            DependencyProperty.Register("Text", typeof(string), typeof(AToggle), new PropertyMetadata("Aim only when Trigger is set"));
+            DependencyProperty.Register(nameof(Text), typeof(string), typeof(AToggle), new PropertyMetadata("Aim only when Trigger is set"));
 
-        private bool _checked;
-
+        
 
         public AToggle()
         {
-            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3F3C3C3C"));
-            BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3FFFFFFF"));
             InitializeComponent();
-            DataContext = this;
             ApplicationConstants.StaticPropertyChanged += (sender, args) =>
             {
-                if (args.PropertyName == nameof(ApplicationConstants.AccentColor) && _checked)
+                if (args.PropertyName == nameof(ApplicationConstants.AccentColor) && Checked)
                 {
                     Color currentColor = (Color)SwitchMoving.Background.GetValue(SolidColorBrush.ColorProperty);
                     SetColorAnimation(currentColor, EnableColor, AnimationDuration);
@@ -123,23 +140,14 @@ namespace Aimmy2.UILibrary
 
         public bool ToggleState()
         {
-            if (Checked)
-            {
-                DisableSwitch();
-            }
-            else
-            {
-                EnableSwitch();
-            }
-
+            Checked = !Checked;
             return Checked;
         }
 
-        public void EnableSwitch()
+        private void EnableSwitch()
         {
             if (!IsEnabled)
                 return;
-            _checked = true;
             Color currentColor = (Color)SwitchMoving.Background.GetValue(SolidColorBrush.ColorProperty);
             SetColorAnimation(currentColor, EnableColor, AnimationDuration);
             Animator.ObjectShift(AnimationDuration, SwitchMoving, SwitchMoving.Margin, new Thickness(0, 0, -1, 0));
@@ -148,11 +156,10 @@ namespace Aimmy2.UILibrary
             OnPropertyChanged(nameof(Checked));
         }
 
-        public void DisableSwitch()
+        private void DisableSwitch()
         {
             if (!IsEnabled)
                 return;
-            _checked = false;
             Color currentColor = (Color)SwitchMoving.Background.GetValue(SolidColorBrush.ColorProperty);
             SetColorAnimation(currentColor, DisableColor, AnimationDuration);
             Animator.ObjectShift(AnimationDuration, SwitchMoving, SwitchMoving.Margin, new Thickness(0, 0, 16, 0));

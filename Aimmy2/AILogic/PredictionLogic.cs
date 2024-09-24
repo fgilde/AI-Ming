@@ -135,9 +135,7 @@ public class PredictionLogic : IPredictionLogic
             float translatedYMin = prediction.Rectangle.Y + detectionBox.Top;
             prediction.TranslatedRectangle = new RectangleF(translatedXMin, translatedYMin, prediction.Rectangle.Width, prediction.Rectangle.Height);
 
-            prediction.InteractsWithCenterOfFov = IsIntersectingCenter(prediction.Rectangle);
             prediction.HeadRelativeRect = RelativeRect.ParseOrDefault(AppConfig.Current.DropdownState.HeadArea);
-            prediction.IntersectsWithCenterOfHeadRelativeRect = IsUpperMiddleIntersectingCenter(prediction.Rectangle, prediction.HeadRelativeRect);
             await SaveFrameAsync(frame, prediction);
         }
 
@@ -145,34 +143,6 @@ public class PredictionLogic : IPredictionLogic
     }
 
 
-    private bool IsUpperMiddleIntersectingCenter(RectangleF rect, RelativeRect relativeRect)
-    {
-        float centerX = IMAGE_SIZE / 2.0f;
-        float centerY = IMAGE_SIZE / 2.0f;
-
-        // Calculate the size and position of the relative rectangle
-        float relativeWidth = rect.Width * relativeRect.WidthPercentage;
-        float relativeHeight = rect.Height * relativeRect.HeightPercentage;
-        float leftMargin = rect.Width * relativeRect.LeftMarginPercentage;
-        float topMargin = rect.Height * relativeRect.TopMarginPercentage;
-
-        float relativeX = rect.X + leftMargin;
-        float relativeY = rect.Y + topMargin;
-
-        RectangleF relativeRectF = new RectangleF(relativeX, relativeY, relativeWidth, relativeHeight);
-
-        return relativeRectF.Left <= centerX && relativeRectF.Right >= centerX &&
-               relativeRectF.Top <= centerY && relativeRectF.Bottom >= centerY;
-    }
-
-    private bool IsIntersectingCenter(RectangleF rect)
-    {
-        float centerX = IMAGE_SIZE / 2.0f;
-        float centerY = IMAGE_SIZE / 2.0f;
-
-        return rect.Left <= centerX && rect.Right >= centerX &&
-               rect.Top <= centerY && rect.Bottom >= centerY;
-    }
 
     private async Task SaveFrameAsync(Bitmap frame, Prediction? DoLabel)
     {

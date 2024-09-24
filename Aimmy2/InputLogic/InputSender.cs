@@ -69,7 +69,10 @@ namespace Aimmy2.InputLogic
             if (evt.Is<MouseEventArgs>())
             {
                 MouseEventArgs mouseArgs = evt.MouseEventArgs;
-                SendMouseEvent(mouseArgs);
+                if(mouseArgs.Button == MouseButtons.Left)
+                    await MouseManager.DoTriggerClick();
+                else
+                    SendMouseEvent(mouseArgs);
             }
             else if (evt.Is<GamepadEventArgs>() && GamepadManager.CanSend)
             {
