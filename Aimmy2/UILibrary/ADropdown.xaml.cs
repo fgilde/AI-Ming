@@ -1,7 +1,10 @@
 ﻿using Aimmy2.Class;
 using Aimmy2.Config;
+using Aimmy2.UILibrary;
 using System.Collections.Generic;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace UILibrary
@@ -11,6 +14,18 @@ namespace UILibrary
     /// </summary>
     public partial class ADropdown : UserControl
     {
+        static ADropdown()
+        {
+            FrameworkPropertyMetadata backgroundMetadata = new FrameworkPropertyMetadata(
+                new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3F3C3C3C")));
+
+            FrameworkPropertyMetadata borderBrushMetadata = new FrameworkPropertyMetadata(
+                new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3FFFFFFF")));
+
+            BackgroundProperty.OverrideMetadata(typeof(ADropdown), backgroundMetadata);
+            BorderBrushProperty.OverrideMetadata(typeof(ADropdown), borderBrushMetadata);
+        }
+
         private string? main_dictionary_path { get; set; }
 
         public ADropdown(string title, string? dictionary_path = null)

@@ -7,6 +7,8 @@ public struct StoredInputBinding
 {
     public bool Equals(StoredInputBinding other)
     {
+        if(!IsValid && !other.IsValid)
+            return true;
         return Key == other.Key && 
                (Is<GamepadEventArgs>() && other.Is<GamepadEventArgs>() || Is<MouseEventArgs>() && other.Is<MouseEventArgs>() || Is<KeyEventArgs>() && other.Is<KeyEventArgs>());
     }

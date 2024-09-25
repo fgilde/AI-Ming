@@ -2,7 +2,9 @@
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
+using System.Windows.Forms;
 using Aimmy2.AILogic;
+using Aimmy2.InputLogic;
 using Aimmy2.InputLogic.Contracts;
 using Aimmy2.InputLogic.HidHide;
 using Aimmy2.MouseMovementLibraries.GHubSupport.dist;
@@ -39,13 +41,24 @@ public class AppConfig : BaseSettings
         {
             Name = "Primary Fire",
             Enabled = true,
-            TriggerKey = GamepadSlider.LeftTrigger,
+            TriggerKeys = [GamepadSlider.LeftTrigger, MouseButtons.Left],
             Delay = 0,
             BreakTime = 5,
             TriggerKeyMin = 0.39,
             IntersectionCheck = TriggerCheck.HeadIntersectingCenter,
             IntersectionArea = RelativeRect.Default
-        }
+        },
+        new ActionTrigger()
+        {
+            Name = "Second Fire",
+            Enabled = true,
+            TriggerKeys = [GamepadSlider.RightTrigger],
+            Delay = 0,
+            BreakTime = 5,
+            TriggerKeyMin = 0.39,
+            IntersectionCheck = TriggerCheck.HeadIntersectingCenter,
+            IntersectionArea = RelativeRect.Default
+        },
     };
     public string SuggestedModelName => SliderSettings.SuggestedModel;
     

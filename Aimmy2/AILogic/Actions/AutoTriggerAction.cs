@@ -1,30 +1,19 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using Aimmy2.AILogic.Actions;
 using Aimmy2.AILogic;
 using Aimmy2.Config;
 using Aimmy2.InputLogic;
 using Aimmy2.Types;
 using InputLogic;
-using Aimmy2.InputLogic.Contracts;
+
+
 public class AutoTriggerAction : BaseAction
 {
     private Prediction? _lastPrediction;
     private List<CancellationTokenSource> _autoTriggerCtsList = new();
     private Dictionary<ActionTrigger, DateTime> _triggerCooldowns = new(); // Track cooldowns for each trigger
 
-    public List<ActionTrigger> Triggers { get; set; } = new List<ActionTrigger>()
-    {
-        new ActionTrigger()
-        {
-            Enabled = true,
-            TriggerKey = AppConfig.Current.BindingSettings.TriggerKey,
-            Delay = AppConfig.Current.SliderSettings.AutoTriggerDelay,
-            BreakTime = 5,
-            TriggerKeyMin = AppConfig.Current.SliderSettings.TriggerKeyMin,
-            IntersectionCheck = AppConfig.Current.DropdownState.TriggerCheck,
-            IntersectionArea = RelativeRect.ParseOrDefault(AppConfig.Current.DropdownState.HeadArea)
-        }
-    };
 
     public AutoTriggerAction()
     {
@@ -55,11 +44,11 @@ public class AutoTriggerAction : BaseAction
     {
         _lastPrediction = predictions.MinBy(p => p.Confidence);
 
-        if (_lastPrediction != null && AppConfig.Current.ToggleState.AutoTrigger)
+        if (AppConfig.Current.ToggleState.AutoTrigger)
         {
-            foreach (var trigger in Triggers)
+            foreach (var trigger in AppConfig.Current.Triggers)
             {
-                if (trigger.Enabled)
+                if (trigger is { Enabled: true, IsValid: true } && (!trigger.NeedsDetection || _lastPrediction != null))
                 {
                     var triggerCts = new CancellationTokenSource();
                     _autoTriggerCtsList.Add(triggerCts);
@@ -71,7 +60,7 @@ public class AutoTriggerAction : BaseAction
         return Task.CompletedTask;
     }
 
-    private async Task HandleTriggerAsync(ActionTrigger trigger, Prediction prediction, CancellationToken cancellationToken)
+    private async Task HandleTriggerAsync(ActionTrigger trigger, Prediction? prediction, CancellationToken cancellationToken)
     {
         if (TriggerIsOnCooldown(trigger))
         {
@@ -79,18 +68,18 @@ public class AutoTriggerAction : BaseAction
             return;
         }
 
-        if (TriggerKeyUnsetOrHold(trigger.TriggerKey, trigger.TriggerKeyMin))
+        if (TriggerKeysStateCorrect(trigger))
         {
             var delay = TimeSpan.FromSeconds(trigger.Delay);
             var breakTime = TimeSpan.FromSeconds(trigger.BreakTime);
 
-            if (PredictionIsIntersecting(trigger.IntersectionCheck, trigger.IntersectionArea, prediction))
+            if (!trigger.NeedsDetection || PredictionIsIntersecting(trigger.IntersectionCheck, trigger.IntersectionArea, prediction))
             {
-                if (trigger.ChargeMode)
+                if (trigger.NeedsDetection && trigger.ChargeMode)
                 {
                     if (!MouseManager.IsLeftDown)
                     {
-                        await MouseManager.LeftDownUntil(() => Task.FromResult(TriggerKeyUnsetOrHold(trigger.TriggerKey, trigger.TriggerKeyMin) && PredictionIsIntersecting(trigger.IntersectionCheck, trigger.IntersectionArea, prediction)), delay, cancellationToken);
+                        await MouseManager.LeftDownUntil(() => Task.FromResult(TriggerKeysStateCorrect(trigger) && PredictionIsIntersecting(trigger.IntersectionCheck, trigger.IntersectionArea, prediction)), delay, cancellationToken);
                     }
                 }
                 else
@@ -106,9 +95,29 @@ public class AutoTriggerAction : BaseAction
         }
     }
 
+    private bool TriggerKeysStateCorrect(ActionTrigger trigger)
+    {
+        return TriggerKeysAreUnsetOrHold(trigger.TriggerKeys.ToArray(), trigger.TriggerKeyMin) && TriggerKeysAreNotHold(trigger.AntiTriggerKeys.ToArray(), trigger.TriggerKeyMin);
+    }
+
+    private bool TriggerKeysAreUnsetOrHold(StoredInputBinding[] triggerKeys, double triggerKeyMin)
+    {
+        return triggerKeys.All(triggerKey => TriggerKeyUnsetOrHold(triggerKey, triggerKeyMin));
+    }
+
     private bool TriggerKeyUnsetOrHold(StoredInputBinding triggerKey, double triggerKeyMin)
     {
         return !triggerKey.IsValid || InputBindingManager.IsHoldingBindingFor(triggerKey, TimeSpan.FromSeconds(triggerKeyMin));
+    }
+
+    private bool TriggerKeysAreNotHold(StoredInputBinding[] triggerKeys, double triggerKeyMin)
+    {
+        return triggerKeys.All(triggerKey => TriggerKeyNotHold(triggerKey, triggerKeyMin));
+    }
+
+    private bool TriggerKeyNotHold(StoredInputBinding triggerKey, double triggerKeyMin)
+    {
+        return !triggerKey.IsValid || !InputBindingManager.IsHoldingBindingFor(triggerKey, TimeSpan.FromSeconds(triggerKeyMin));
     }
 
     private bool PredictionIsIntersecting(TriggerCheck check, RelativeRect area, Prediction? prediction = null)

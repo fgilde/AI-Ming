@@ -232,5 +232,7 @@
   "vJoyInfoInfoText": "Virtual Gamepad with vJoy. {0}In order to use the Gamepad with vJoy you need to install vJoy from https://sourceforge.net/projects/vjoystick/ {0}Then a Virtual Xbox360 Controller will be created and your current controller will be synced with the virtual one. Please then ensure you use the virtual device in your game",
   "InputSettings": "Input Settings",
   "CaptureSettings": "Capture Settings",
-  "UISettings": "UI Settings"
+  "UISettings": "UI Settings",
+  "Name": "Name",
+  "EditTrigger": "Edit Trigger"
 }

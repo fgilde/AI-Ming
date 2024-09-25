@@ -11,10 +11,10 @@
              Height="80">
     <Grid>
         <Border Height="80"
-                Background="#3F3C3C3C"
+                Background="Transparent"
                 CornerRadius="00"
                 BorderThickness="1,0,1,0"
-                BorderBrush="#3FFFFFFF">
+                BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType=local:ADropdown}}">
             <Grid>
                 <Label x:Name="DropdownTitle"
                        Padding="10,10,10,10"

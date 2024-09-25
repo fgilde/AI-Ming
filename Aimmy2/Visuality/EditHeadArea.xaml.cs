@@ -81,15 +81,19 @@ namespace Visuality
             }
         }
 
-        public EditHeadArea(RelativeRect relativeRect) : this(new RelativeRectModel(relativeRect))
+        public EditHeadArea(RelativeRect relativeRect, Action<RelativeRectModel> onSave = null) : this(new RelativeRectModel(relativeRect), onSave)
         {}
         
-        public EditHeadArea(RelativeRectModel relativeRect) : this()
+        public EditHeadArea(RelativeRectModel relativeRect, Action<RelativeRectModel> onSave = null) : this()
         {
             _relativeRect = relativeRect;
+            if (onSave != null)
+            {
+                SaveButton.Click += (sender, args) => onSave(RelativeRect);
+            }
         }
 
-        public EditHeadArea(string relativeRect): this(Aimmy2.Types.RelativeRect.ParseOrDefault(relativeRect))
+        public EditHeadArea(string relativeRect, Action<RelativeRectModel> onSave = null) : this(Aimmy2.Types.RelativeRect.ParseOrDefault(relativeRect), onSave)
         {}
 
         public EditHeadArea()

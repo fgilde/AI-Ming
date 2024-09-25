@@ -10,14 +10,13 @@
              mc:Ignorable="d"
              d:DesignWidth="282.5"
              d:DesignHeight="40">
-    <Grid x:Name="MainGrid">
+    <Grid x:Name="MainGrid" PreviewMouseRightButtonUp="ContextMenu_OnOpened">
         <Grid.ContextMenu>
-            <ContextMenu Name="ContextMenu">
+            <ContextMenu  Name="ContextMenu">
                 <MenuItem Header="Delete Binding" Click="DeleteBinding_Click"/>
             </ContextMenu>
         </Grid.ContextMenu>
-        <Border Height="40"
-                x:Name="MainBorder"
+        <Border x:Name="MainBorder"
                 Background="Transparent"
                 CornerRadius="00"
                 BorderThickness="1,0,1,0"
@@ -30,7 +29,7 @@
                        Foreground="#DDFFFFFF"
                        VerticalContentAlignment="Center"
                        FontSize="13"
-                       Margin="0,0,76,0" />
+                       Margin="0,0,0,0" />
 
                 <Border HorizontalAlignment="Right"
                         Margin="5,5,10,6"
@@ -61,11 +60,10 @@
                 </Border>
 
                 <Button x:Name="Reader"
-                        Click="Reader_OnClick"
+                        PreviewMouseLeftButtonDown="Reader_OnClick"
                         Background="{x:Null}"
                         BorderBrush="{x:Null}"
                         Padding="0,0,0,0"
-                        Height="40"
                         Margin="0"></Button>
             </Grid>
         </Border>

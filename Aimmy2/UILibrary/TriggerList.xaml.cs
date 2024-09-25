@@ -11,6 +11,7 @@ using System.Windows.Input;
 using Aimmy2;
 using Aimmy2.Types;
 using Nextended.Core.Extensions;
+using Visuality;
 
 namespace UILibrary
 {
@@ -43,12 +44,28 @@ namespace UILibrary
 
         private void EditTrigger_Click(object sender, RoutedEventArgs e)
         {
-
+            if ((sender as FrameworkElement)?.Tag is ActionTrigger trigger)
+            {
+                var dlg = new TriggerEditDialog()
+                {
+                    Title = "Edit Trigger",
+                    Trigger = trigger
+                };
+                dlg.ShowDialog();
+            }
         }
 
         private void AddTrigger_Click(object sender, RoutedEventArgs e)
         {
-
+            var dlg = new TriggerEditDialog()
+            {
+                Title = "Add Trigger",
+                Trigger = new ActionTrigger()
+            };
+            if(dlg.ShowDialog() ?? false)
+            {
+                Triggers.Add(dlg.Trigger);
+            }
         }
 
         private void DeleteTrigger_Click(object sender, RoutedEventArgs e)

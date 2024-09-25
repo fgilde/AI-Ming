@@ -7,6 +7,8 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Aimmy2.Extensions;
 using System.Numerics;
+using System.Windows.Media;
+using System.Windows;
 
 namespace Aimmy2.UILibrary
 {
@@ -15,6 +17,18 @@ namespace Aimmy2.UILibrary
     /// </summary>
     public partial class ASlider : UserControl
     {
+        static ASlider()
+        {
+            FrameworkPropertyMetadata backgroundMetadata = new FrameworkPropertyMetadata(
+                new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3F3C3C3C")));
+
+            FrameworkPropertyMetadata borderBrushMetadata = new FrameworkPropertyMetadata(
+                new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3FFFFFFF")));
+
+            BackgroundProperty.OverrideMetadata(typeof(ASlider), backgroundMetadata);
+            BorderBrushProperty.OverrideMetadata(typeof(ASlider), borderBrushMetadata);
+        }
+
         public ASlider(string label, string text, double steps)
         {
             InitializeComponent();

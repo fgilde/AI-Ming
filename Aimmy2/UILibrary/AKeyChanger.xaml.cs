@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using Aimmy2.Config;
@@ -25,13 +24,35 @@ namespace Aimmy2.UILibrary
     /// </summary>
     public partial class AKeyChanger : INotifyPropertyChanged, IDisposable
     {
-        private StoredInputBinding _keyBind;
         private string _text;
         private string _keyConfigPrefix;
 
         public event EventHandler<EventArgs<(AKeyChanger Sender, string Key)>> GlobalKeyPressed;
+        public event EventHandler<EventArgs<(AKeyChanger Sender, StoredInputBinding KeyBinding)>> KeyBindChanged;
+        
+        public bool CanRemoveBinding
+        {
+            get => (bool)GetValue(CanRemoveBindingProperty);
+            set => SetValue(CanRemoveBindingProperty, value);
+        }
 
 
+
+        public string InvalidText
+        {
+            get => (string)GetValue(InvalidTextProperty);
+            set => SetValue(InvalidTextProperty, value);
+        }
+
+        // Using a DependencyProperty as the backing store for InvalidText.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty InvalidTextProperty =
+            DependencyProperty.Register(nameof(InvalidText), typeof(string), typeof(AKeyChanger), new PropertyMetadata("None"));
+
+
+
+        public static readonly DependencyProperty CanRemoveBindingProperty =
+            DependencyProperty.Register(nameof(CanRemoveBinding), typeof(bool), typeof(AKeyChanger), new PropertyMetadata(true));
+        
         public static readonly DependencyProperty BindingManagerProperty =
             DependencyProperty.Register(nameof(BindingManager), typeof(InputBindingManager), typeof(AKeyChanger),
                 new PropertyMetadata(null));
@@ -43,6 +64,24 @@ namespace Aimmy2.UILibrary
         public static readonly DependencyProperty WithBorderProperty =
             DependencyProperty.Register(nameof(WithBorder), typeof(bool), typeof(AKeyChanger),
                 new PropertyMetadata(true, WithBorderChanged));
+
+        
+        public StoredInputBinding KeyBind
+        {
+            get => (StoredInputBinding)GetValue(KeyBindProperty);
+            set => SetValue(KeyBindProperty, value);
+        }
+
+        // Using a DependencyProperty as the backing store for KeyBind.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty KeyBindProperty =
+            DependencyProperty.Register(nameof(KeyBind), typeof(StoredInputBinding), typeof(AKeyChanger), new PropertyMetadata(new StoredInputBinding(), HandleKeyBindChanged));
+
+        private static void HandleKeyBindChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((AKeyChanger)d).SetContent((StoredInputBinding)e.NewValue);
+            ((AKeyChanger)d).KeyBindChanged?.Invoke(d, new EventArgs<(AKeyChanger Sender, StoredInputBinding KeyBinding)>(((AKeyChanger)d, (StoredInputBinding)e.NewValue)));
+        }
+
 
         private static void WithBorderChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -60,8 +99,7 @@ namespace Aimmy2.UILibrary
             get => (bool)GetValue(WithBorderProperty);
             set => SetValue(WithBorderProperty, value);
         }
-
-
+        
 
         public InputBindingManager? BindingManager
         {
@@ -88,17 +126,6 @@ namespace Aimmy2.UILibrary
         }
 
 
-
-        public StoredInputBinding KeyBind
-        {
-            get => _keyBind;
-            set
-            {
-                if (SetField(ref _keyBind, value))
-                    SetContent(KeyBind);
-            }
-        }
-
         public string Text
         {
             get => _text;
@@ -118,7 +145,7 @@ namespace Aimmy2.UILibrary
         public AKeyChanger(string text, StoredInputBinding keybind) : this()
         {
             _text = text;
-            _keyBind = keybind;
+            KeyBind = keybind;
             SetContent(text, keybind);
         }
 
@@ -180,7 +207,7 @@ namespace Aimmy2.UILibrary
             SetDeviceIcon();
             if (!HasKeySet)
             {
-                KeyNotifierLabel.Content = "None";
+                KeyNotifierLabel.Content = InvalidText;
                 return;
             }
             if (keybind.Is<GamepadEventArgs>())
@@ -203,8 +230,9 @@ namespace Aimmy2.UILibrary
 
         private void DeleteBinding_Click(object sender, RoutedEventArgs e)
         {
-            AppConfig.Current.BindingSettings[KeyConfigName] = StoredInputBinding.Empty;
-            SetContent(StoredInputBinding.Empty);
+            if(!string.IsNullOrEmpty(KeyConfigName))
+                AppConfig.Current.BindingSettings[KeyConfigName] = StoredInputBinding.Empty;
+            KeyBind = StoredInputBinding.Empty;
             KeyDeleted?.Invoke(this, EventArgs.Empty);
         }
 
@@ -248,8 +276,9 @@ namespace Aimmy2.UILibrary
             {
                 if (bindingId == KeyConfigName)
                 {
-                    SetContent(key);
-                    AppConfig.Current.BindingSettings[bindingId] = key;
+                    KeyBind = key;
+                    if(!string.IsNullOrEmpty(bindingId))
+                        AppConfig.Current.BindingSettings[bindingId] = key;
                     BindingManager.OnBindingSet -= bindingSetHandler; // Unsubscribe after setting
                     Task.Delay(700).ContinueWith(_ =>
                     {
@@ -281,6 +310,15 @@ namespace Aimmy2.UILibrary
             }
         }
 
-  
+
+        private void ContextMenu_OnOpened(object sender, MouseButtonEventArgs e)
+        {
+            if (!CanRemoveBinding || !KeyBind.IsValid)
+            {
+                e.Handled = true;
+                ContextMenu.IsOpen = false;
+            }
+        }
+
     }
 }

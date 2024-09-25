@@ -574,10 +574,9 @@ public partial class MainWindow
         #region Trigger Bot
 
         TriggerBot.AddTitle(Locale.AutoTrigger, true);
-
+        TriggerBot.AddToggleWithKeyBind(Locale.AutoTrigger, nameof(Locale.AutoTrigger), BindingManager).BindTo(() => AppConfig.Current.ToggleState.AutoTrigger).BindActiveStateColor(TriggerBot);
         TriggerBot.Add<TriggerList>().BindTo(() => AppConfig.Current.Triggers);
-
-        //TriggerBot.AddToggleWithKeyBind(Locale.AutoTrigger, nameof(Locale.AutoTrigger), BindingManager).BindTo(() => AppConfig.Current.ToggleState.AutoTrigger).BindActiveStateColor(TriggerBot);
+        
         
         //TriggerBot.AddToggleWithKeyBind(Locale.ChargeMode, nameof(Locale.ChargeMode), BindingManager, null, b => b.ToolTip = Locale.ChargeModeToolTip)
         //    .BindTo(() => AppConfig.Current.ToggleState.AutoTriggerCharged);

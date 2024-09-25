@@ -1,21 +1,56 @@
-﻿using System.Windows.Forms;
+﻿using System.Collections.ObjectModel;
+using System.Windows.Forms;
 using Aimmy2.InputLogic;
 using Aimmy2.Types;
+using Nextended.Core;
+using Nextended.Core.Extensions;
 
 namespace Aimmy2.Config;
 
-public class ActionTrigger : BaseSettings
+public class ActionTrigger : EditableNotificationObject
 {
     private string _name;
     private bool _enabled;
     private bool _chargeMode;
     private StoredInputBinding _action = MouseButtons.Left;
-    private StoredInputBinding _triggerKey;
+    private ObservableCollection<StoredInputBinding> _antiTriggerKeys = new();
+    private ObservableCollection<StoredInputBinding> _triggerKeys = new();
     private double _delay;
     private double _breakTime;
     private double _triggerKeyMin;
     private TriggerCheck _intersectionCheck;
     private RelativeRect _intersectionArea;
+    private bool _needsDetection = true;
+
+    public ActionTrigger()
+    {
+        Id = Guid.NewGuid().ToFormattedId();
+    }
+
+    private StoredInputBinding[] _originalKeys;
+    private StoredInputBinding[] _originalAntiKeys;
+
+    public override void BeginEdit()
+    {
+        _originalKeys = TriggerKeys?.ToArray() ?? [];
+        _originalAntiKeys = AntiTriggerKeys?.ToArray() ?? [];
+        base.BeginEdit();
+    }
+
+    public override void CancelEdit()
+    {
+        base.CancelEdit();
+        TriggerKeys = new ObservableCollection<StoredInputBinding>(_originalKeys);
+        AntiTriggerKeys = new ObservableCollection<StoredInputBinding>(_originalAntiKeys);
+    }
+
+    public string Id { get; set; }
+
+    public bool NeedsDetection
+    {
+        get => _needsDetection;
+        set => SetProperty(ref _needsDetection, value);
+    }
 
     /// <summary>
     /// Name of your trigger
@@ -23,7 +58,11 @@ public class ActionTrigger : BaseSettings
     public string Name
     {
         get => _name;
-        set => SetField(ref _name, value);
+        set
+        {
+            if (SetProperty(ref _name, value))
+                RaisePropertyChanged(nameof(IsValid));
+        }
     }
 
     /// <summary>
@@ -32,7 +71,7 @@ public class ActionTrigger : BaseSettings
     public bool Enabled
     {
         get => _enabled;
-        set => SetField(ref _enabled, value);
+        set => SetProperty(ref _enabled, value);
     }
 
     /// <summary>
@@ -41,7 +80,7 @@ public class ActionTrigger : BaseSettings
     public bool ChargeMode
     {
         get => _chargeMode;
-        set => SetField(ref _chargeMode, value);
+        set => SetProperty(ref _chargeMode, value);
     }
 
     /// <summary>
@@ -50,16 +89,38 @@ public class ActionTrigger : BaseSettings
     public StoredInputBinding Action
     {
         get => _action;
-        set => SetField(ref _action, value);
+        set
+        {
+            if (SetProperty(ref _action, value))
+                RaisePropertyChanged(nameof(IsValid));
+        }
     }
 
     /// <summary>
-    /// Key that needs to be hold before trigger is executed
+    /// Keys that needs to hold before trigger is executed
     /// </summary>
-    public StoredInputBinding TriggerKey
+    public ObservableCollection<StoredInputBinding> TriggerKeys
     {
-        get => _triggerKey;
-        set => SetField(ref _triggerKey, value);
+        get => _triggerKeys;
+        set => SetProperty(ref _triggerKeys, value);
+    }
+
+    /// <summary>
+    /// Keys that will ensure not hold before trigger is executed
+    /// </summary>
+    public ObservableCollection<StoredInputBinding> AntiTriggerKeys
+    {
+        get => _antiTriggerKeys;
+        set => SetProperty(ref _antiTriggerKeys, value);
+    }
+
+    /// <summary>
+    /// Time the <see cref="TriggerKey"/> needs to hold before trigger is executed
+    /// </summary>
+    public double TriggerKeyMin
+    {
+        get => _triggerKeyMin;
+        set => SetProperty(ref _triggerKeyMin, value);
     }
 
     /// <summary>
@@ -68,7 +129,7 @@ public class ActionTrigger : BaseSettings
     public double Delay
     {
         get => _delay;
-        set => SetField(ref _delay, value);
+        set => SetProperty(ref _delay, value);
     }
 
     /// <summary>
@@ -77,17 +138,9 @@ public class ActionTrigger : BaseSettings
     public double BreakTime
     {
         get => _breakTime;
-        set => SetField(ref _breakTime, value);
+        set => SetProperty(ref _breakTime, value);
     }
 
-    /// <summary>
-    /// Time the <see cref="TriggerKey"/> needs to be hold before trigger is executed
-    /// </summary>
-    public double TriggerKeyMin
-    {
-        get => _triggerKeyMin;
-        set => SetField(ref _triggerKeyMin, value);
-    }
 
     /// <summary>
     /// Intersection check for the detected object before trigger is executed
@@ -95,7 +148,7 @@ public class ActionTrigger : BaseSettings
     public TriggerCheck IntersectionCheck
     {
         get => _intersectionCheck;
-        set => SetField(ref _intersectionCheck, value);
+        set => SetProperty(ref _intersectionCheck, value);
     }
 
     /// <summary>
@@ -104,7 +157,9 @@ public class ActionTrigger : BaseSettings
     public RelativeRect IntersectionArea
     {
         get => _intersectionArea;
-        set => SetField(ref _intersectionArea, value);
+        set => SetProperty(ref _intersectionArea, value);
     }
+
+    public bool IsValid => !string.IsNullOrWhiteSpace(Name) && Action.IsValid;
 
 }

@@ -8,7 +8,7 @@
         xmlns:converter="clr-namespace:Aimmy2.Converter"
         xmlns:uiLibrary="clr-namespace:Aimmy2.UILibrary"
         mc:Ignorable="d"
-        Title="Edit Head Area"
+        Title="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='EditHeadArea'}"
         Height="600"
         Width="800"
         WindowStyle="None"

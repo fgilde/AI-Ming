@@ -36,7 +36,7 @@
                            VerticalAlignment="Center" 
                            Margin="0,0,5,0"/>
                             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                <uiLibrary:AKeyChanger KeyConfigName="{Binding}"
+                                <uiLibrary:AKeyChanger KeyConfigName="{Binding Id}"
                                                    Tag="{Binding}"
                                                    KeyConfigPrefix="ACTION_TRIGGER"
                                                    BindingManager="{Binding DataContext.BindingManager, RelativeSource={RelativeSource AncestorType=aimmy2:MainWindow}}" 
@@ -44,6 +44,7 @@
                                                    GlobalKeyPressed="ApplyBindingEnabled"
                                                    WithBorder="False"
                                                    Text="" />
+
                                 <uiLibrary:AToggle Background="Transparent" BorderBrush="Transparent" Text="" Grid.Column="2" Checked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}">
 
                                 </uiLibrary:AToggle>
