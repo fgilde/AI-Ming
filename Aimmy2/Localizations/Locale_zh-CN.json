@@ -230,5 +230,20 @@
   "vJoyInfoInfoText": "使用 vJoy 的虚拟游戏手柄。{0}要使用 vJoy 的游戏手柄，您需要从 https://sourceforge.net/projects/vjoystick/ 安装 vJoy。{0}然后将创建一个虚拟的 Xbox360 控制器，并同步您的当前控制器。请确保在游戏中使用虚拟设备",
   "InputSettings": "输入设置",
   "CaptureSettings": "捕获设置",
-  "UISettings": "UI 设置"
+  "UISettings": "UI 设置",
+  "Name": "姓名",
+  "EditTrigger": "编辑触发器",
+  "AutoTriggerBreakTime": "间隔时间",
+  "AutoTriggerBreakTimeTooltip": "如果触发器已执行，则需要等待间隔时间才能再次执行",
+  "LabelTriggerAction": "动作/键发送",
+  "DescriptionTriggerAction": "此键是触发器执行时按下的动作",
+  "NeedsDetection": "需要检测",
+  "DescriptionNeedsDetection": "如果未启用，触发器即使在没有检测到敌人的情况下也能工作",
+  "LabelTriggerKeys": "触发键",
+  "DescriptionTriggerKeys": "在执行触发器之前，您配置的每个键都必须按下",
+  "AntiTriggerKeys": "防触发键",
+  "DescriptionAntiTriggerKeys": "为了执行触发器，这里配置的任何键都不应被按下。",
+  "EnabledActive": "启用/激活",
+  "Active": "激活",
+  "Enabled": "启用"
 }

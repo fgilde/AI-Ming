@@ -230,5 +230,20 @@
   "vJoyInfoInfoText": "Gamepad virtual con vJoy. {0}Para usar el gamepad con vJoy, debes instalar vJoy desde https://sourceforge.net/projects/vjoystick/ {0}Luego se creará un controlador virtual de Xbox360 y tu controlador actual se sincronizará con el virtual. Asegúrate de usar el dispositivo virtual en tu juego",
   "InputSettings": "Configuración de entrada",
   "CaptureSettings": "Configuración de captura",
-  "UISettings": "Configuración de la interfaz de usuario"
+  "UISettings": "Configuración de la interfaz de usuario",
+  "Name": "Nombre",
+  "EditTrigger": "Editar disparador",
+  "AutoTriggerBreakTime": "Tiempo de pausa",
+  "AutoTriggerBreakTimeTooltip": "Si se ejecuta el disparador, debe esperar el tiempo de pausa antes de que se vuelva a ejecutar",
+  "LabelTriggerAction": "Acción/Tecla a enviar",
+  "DescriptionTriggerAction": "Esta tecla es la acción que se presionará cuando se ejecute el disparador",
+  "NeedsDetection": "Necesita una detección",
+  "DescriptionNeedsDetection": "Si esto no está habilitado, el disparador funcionará incluso sin un enemigo detectado",
+  "LabelTriggerKeys": "Teclas del disparador",
+  "DescriptionTriggerKeys": "Cada tecla configurada aquí debe ser presionada antes de que el disparador se ejecute",
+  "AntiTriggerKeys": "Teclas anti-disparador",
+  "DescriptionAntiTriggerKeys": "Ninguna de las teclas configuradas aquí debe ser presionada para que el disparador se ejecute.",
+  "EnabledActive": "Habilitado/Activo",
+  "Active": "Activo",
+  "Enabled": "Habilitado"
 }

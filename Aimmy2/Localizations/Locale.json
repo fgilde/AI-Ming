@@ -234,5 +234,18 @@
   "CaptureSettings": "Capture Settings",
   "UISettings": "UI Settings",
   "Name": "Name",
-  "EditTrigger": "Edit Trigger"
+  "EditTrigger": "Edit Trigger",
+  "AutoTriggerBreakTime": "Break Time",
+  "AutoTriggerBreakTimeTooltip": "If the trigger was executed, it needs to wait for the break time before it will be executed again",
+  "LabelTriggerAction": "Action/Key to send",
+  "DescriptionTriggerAction": "This key is the action that will be pressed when the trigger executes",
+  "NeedsDetection": "Needs a detection",
+  "DescriptionNeedsDetection": "If this is not enabled, the trigger works even without a detected enemy",
+  "LabelTriggerKeys": "Trigger Keys",
+  "DescriptionTriggerKeys": "Every key you configure here needs to be pressed before the trigger will be executed",
+  "AntiTriggerKeys": "Anti Trigger Keys",
+  "DescriptionAntiTriggerKeys": "None of the keys configured here should be pressed for the trigger to execute.",
+  "EnabledActive": "Enabled/Active",
+  "Active": "Active",
+  "Enabled": "Enabled"
 }

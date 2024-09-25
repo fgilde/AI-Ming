@@ -58,11 +58,20 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <Label Grid.Row="1"
-               Content="{Binding ErrorMessage, RelativeSource={RelativeSource AncestorType=local:MultiKeyChanger}}"
-               Foreground="Red"
-               >
-        
-        </Label>
+        <Border Grid.Row="1" Margin="0 -6 0 0" VerticalAlignment="Top" HorizontalAlignment="Right"
+                Visibility="{Binding HasError, Converter={StaticResource boolToVis}, ConverterParameter={x:Static Visibility.Hidden}, RelativeSource={RelativeSource AncestorType=local:MultiKeyChanger}}"
+                Background="Red"
+                Panel.ZIndex="12"
+                BorderBrush="White"
+                CornerRadius="3">
+            <StackPanel>
+                <Label Content="{Binding ErrorMessage, RelativeSource={RelativeSource AncestorType=local:MultiKeyChanger}}"
+                       Foreground="White">
+
+                </Label>
+            </StackPanel>
+
+        </Border>
+
     </Grid>
 </UserControl>

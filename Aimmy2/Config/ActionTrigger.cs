@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Windows.Forms;
 using Aimmy2.InputLogic;
 using Aimmy2.Types;
@@ -21,11 +22,28 @@ public class ActionTrigger : EditableNotificationObject
     private TriggerCheck _intersectionCheck;
     private RelativeRect _intersectionArea;
     private bool _needsDetection = true;
-
+    
     public ActionTrigger()
     {
         Id = Guid.NewGuid().ToFormattedId();
+        AppConfig.ConfigLoaded += (sender, args) => DetectChanges();
     }
+    
+    private void DetectChanges()
+    {
+        if (AppConfig.Current?.ToggleState != null)
+        {
+            AppConfig.Current.ToggleState.PropertyChanged -= OnToogleStateChange;
+            AppConfig.Current.ToggleState.PropertyChanged += OnToogleStateChange;
+        }
+    }
+
+    private void OnToogleStateChange(object? s, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(AppConfig.Current.ToggleState.AutoTrigger) or nameof(AppConfig.Current.ToggleState.GlobalActive))
+            RaisePropertyChanged(nameof(IsActive));
+    }
+
 
     private StoredInputBinding[] _originalKeys;
     private StoredInputBinding[] _originalAntiKeys;
@@ -61,7 +79,10 @@ public class ActionTrigger : EditableNotificationObject
         set
         {
             if (SetProperty(ref _name, value))
+            {
                 RaisePropertyChanged(nameof(IsValid));
+                RaisePropertyChanged(nameof(IsActive));
+            }
         }
     }
 
@@ -71,7 +92,11 @@ public class ActionTrigger : EditableNotificationObject
     public bool Enabled
     {
         get => _enabled;
-        set => SetProperty(ref _enabled, value);
+        set
+        {
+            if(SetProperty(ref _enabled, value))
+                RaisePropertyChanged(nameof(IsActive));
+        }
     }
 
     /// <summary>
@@ -92,7 +117,10 @@ public class ActionTrigger : EditableNotificationObject
         set
         {
             if (SetProperty(ref _action, value))
+            {
                 RaisePropertyChanged(nameof(IsValid));
+                RaisePropertyChanged(nameof(IsActive));
+            }
         }
     }
 
@@ -161,5 +189,6 @@ public class ActionTrigger : EditableNotificationObject
     }
 
     public bool IsValid => !string.IsNullOrWhiteSpace(Name) && Action.IsValid;
+    public bool IsActive => IsValid && Enabled && /*AppConfig.Current.ToggleState.GlobalActive &&*/ AppConfig.Current.ToggleState.AutoTrigger;
 
 }

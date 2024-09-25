@@ -14,7 +14,9 @@
 
             <StackPanel HorizontalAlignment="Stretch">
                 <Grid>
-                    <uiLibrary:AToggle Margin="0 -10 -8 0" Panel.ZIndex="10" BorderBrush="Transparent" Background="Transparent" Text="Enabled/Active" VerticalAlignment="Top" HorizontalAlignment="Right" 
+                    <uiLibrary:AToggle Margin="0 -10 -8 0" Panel.ZIndex="10" BorderBrush="Transparent" Background="Transparent" 
+                                       Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='EnabledActive'}" 
+                                       VerticalAlignment="Top" HorizontalAlignment="Right" 
                                        Checked="{Binding Trigger.Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></uiLibrary:AToggle>
                     <StackPanel>
                         <Label Foreground="{StaticResource Foreground}"
@@ -37,7 +39,8 @@
                 </Grid>
                 <StackPanel>
 
-                    <uiLibrary:AKeyChanger Background="Transparent" BorderBrush="Transparent" Text="Action/Key to send"
+                    <uiLibrary:AKeyChanger Background="Transparent" BorderBrush="Transparent" 
+                                           x:Name="ActionKeyChanger"
                                        BindingManager="{Binding BindingManager, RelativeSource={RelativeSource AncestorType=local:TriggerEdit}}" 
                                        WithBorder="False"
                                        Margin="-7 0 0 0"
@@ -47,21 +50,21 @@
 
                     <TextBlock Foreground="{StaticResource Foreground}"
                                FontSize="11"
-                               Margin="0 -10 0 10"
+                               Margin="2 -10 0 10"
                                TextWrapping="Wrap"
-                               Text="This key is the action that will be pressed when trigger executes"
+                               Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DescriptionTriggerAction'}"
                                FontFamily="{StaticResource Atkinson Hyperlegible}"></TextBlock>
                 </StackPanel>
 
                 <StackPanel>
-                    <uiLibrary:AToggle BorderBrush="Transparent" Background="Transparent" Text="Needs a detection" HorizontalAlignment="Stretch" 
+                    <uiLibrary:AToggle BorderBrush="Transparent" Background="Transparent" Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='NeedsDetection'}" HorizontalAlignment="Stretch" 
                                    Margin="-9 0  0 0"
                                    Checked="{Binding Trigger.NeedsDetection, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></uiLibrary:AToggle>
                     <TextBlock Foreground="{StaticResource Foreground}"
                        FontSize="11"
                        Margin="2 -9 0 10"
                        TextWrapping="Wrap"
-                       Text="If this is not enabled the trigger works also without a detected enemy"
+                       Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DescriptionNeedsDetection'}"
                        FontFamily="{StaticResource Atkinson Hyperlegible}"></TextBlock>
                 </StackPanel>
 
@@ -84,28 +87,28 @@
                 <StackPanel>
                     <Label Foreground="{StaticResource Foreground}"
                        FontSize="13"
-                       Content="Trigger keys"
+                       Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='LabelTriggerKeys'}"
                        FontFamily="{StaticResource Atkinson Hyperlegible}"></Label>
                     <local:MultiKeyChanger Keys="{Binding Trigger.TriggerKeys, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}"></local:MultiKeyChanger>
                     <TextBlock Foreground="{StaticResource Foreground}"
                        FontSize="11"
                        Margin="0 -15 0 10"
                        TextWrapping="Wrap"
-                       Text="Every key you configure here needs to be pressed before the trigger will be executed"
+                       Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DescriptionTriggerKeys'}"
                        FontFamily="{StaticResource Atkinson Hyperlegible}"></TextBlock>
                 </StackPanel>
 
                 <StackPanel>
                     <Label Foreground="{StaticResource Foreground}"
                        FontSize="13"
-                       Content="Anti Trigger keys"
+                       Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AntiTriggerKeys'}"
                        FontFamily="{StaticResource Atkinson Hyperlegible}"></Label>
                     <local:MultiKeyChanger Keys="{Binding Trigger.AntiTriggerKeys, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}"></local:MultiKeyChanger>
                     <TextBlock Foreground="{StaticResource Foreground}"
                        FontSize="11"
                        Margin="0 -15 0 10"
                        TextWrapping="Wrap"
-                       Text="None of the keys configured here should be pressed for the trigger to execute."
+                       Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DescriptionAntiTriggerKeys'}"
                        FontFamily="{StaticResource Atkinson Hyperlegible}"></TextBlock>
                 </StackPanel>
 

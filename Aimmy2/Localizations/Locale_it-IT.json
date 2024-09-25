@@ -230,5 +230,20 @@
   "vJoyInfoInfoText": "Gamepad virtuale con vJoy. {0}Per utilizzare il gamepad con vJoy, devi installare vJoy da https://sourceforge.net/projects/vjoystick/ {0}Verrà quindi creato un controller virtuale Xbox360 e il tuo controller attuale sarà sincronizzato con quello virtuale. Assicurati quindi di utilizzare il dispositivo virtuale nel tuo gioco",
   "InputSettings": "Impostazioni di input",
   "CaptureSettings": "Impostazioni di cattura",
-  "UISettings": "Impostazioni dell'interfaccia utente"
+  "UISettings": "Impostazioni dell'interfaccia utente",
+  "Name": "Nome",
+  "EditTrigger": "Modifica grilletto",
+  "AutoTriggerBreakTime": "Tempo di pausa",
+  "AutoTriggerBreakTimeTooltip": "Se il grilletto è stato eseguito, deve attendere il tempo di pausa prima di poter essere eseguito di nuovo",
+  "LabelTriggerAction": "Azione/Tasto da inviare",
+  "DescriptionTriggerAction": "Questo tasto è l'azione che verrà premuta quando il grilletto verrà eseguito",
+  "NeedsDetection": "Necessita di una rilevazione",
+  "DescriptionNeedsDetection": "Se non è abilitato, il grilletto funziona anche senza un nemico rilevato",
+  "LabelTriggerKeys": "Tasti di grilletto",
+  "DescriptionTriggerKeys": "Ogni tasto configurato qui deve essere premuto prima che il grilletto venga eseguito",
+  "AntiTriggerKeys": "Tasti anti-grilletto",
+  "DescriptionAntiTriggerKeys": "Nessuno dei tasti configurati qui deve essere premuto affinché il grilletto venga eseguito.",
+  "EnabledActive": "Abilitato/Attivo",
+  "Active": "Attivo",
+  "Enabled": "Abilitato"
 }

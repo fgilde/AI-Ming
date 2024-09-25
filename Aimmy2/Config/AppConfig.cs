@@ -41,20 +41,9 @@ public class AppConfig : BaseSettings
         {
             Name = "Primary Fire",
             Enabled = true,
-            TriggerKeys = [GamepadSlider.LeftTrigger, MouseButtons.Left],
+            TriggerKeys = [GamepadSlider.LeftTrigger],
             Delay = 0,
-            BreakTime = 5,
-            TriggerKeyMin = 0.39,
-            IntersectionCheck = TriggerCheck.HeadIntersectingCenter,
-            IntersectionArea = RelativeRect.Default
-        },
-        new ActionTrigger()
-        {
-            Name = "Second Fire",
-            Enabled = true,
-            TriggerKeys = [GamepadSlider.RightTrigger],
-            Delay = 0,
-            BreakTime = 5,
+            BreakTime = 0,
             TriggerKeyMin = 0.39,
             IntersectionCheck = TriggerCheck.HeadIntersectingCenter,
             IntersectionArea = RelativeRect.Default

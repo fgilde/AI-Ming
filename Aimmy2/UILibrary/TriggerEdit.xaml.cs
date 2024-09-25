@@ -78,15 +78,20 @@ namespace UILibrary
             TimeSettings.AddSlider(Locale.AutoTriggerDelay, Locale.Seconds, 0.01, 0.1, 0.00, 5).InitWith(slider =>
             {
                 slider.BorderBrush = slider.Background = Brushes.Transparent;
-                slider.ToolTip = "If the trigger was executed it needs to wait for the break time before it will be executed again";
+                slider.ToolTip = Locale.AutoTriggerDelayTooltip;
             }).BindTo(() => Trigger.Delay);
-            TimeSettings.AddSlider("Breaktime", Locale.Seconds, 0.01, 0.1, 0.0, 5).InitWith(slider =>
+            TimeSettings.AddSlider(Locale.AutoTriggerBreakTime, Locale.Seconds, 0.01, 0.1, 0.0, 5).InitWith(slider =>
             {
                 slider.BorderBrush = slider.Background = Brushes.Transparent;
-                slider.ToolTip = "If the trigger was executed it needs to wait for the break time before it will be executed again";
+                slider.ToolTip = Locale.AutoTriggerBreakTimeTooltip;
             }).BindTo(() => Trigger.BreakTime);
         }
 
+        protected override void OnInitialized(EventArgs e)
+        {
+            base.OnInitialized(e);
+            ActionKeyChanger.Text = Locale.LabelTriggerAction;
+        }
 
         public TriggerEdit()
         {

@@ -230,5 +230,21 @@
   "vJoyInfoInfoText": "vJoy ile Sanal Oyun Kumandası.{0}Oyun kumandasıyla vJoy kullanmak için vJoy'u https://sourceforge.net/projects/vjoystick/ adresinden yüklemeniz gerekiyor {0}Sonrasında bir Sanal Xbox360 Kontrol Cihazı oluşturulacak ve mevcut kontrol cihazınız sanal olanla senkronize edilecek. Lütfen oyununuzda sanal cihazı kullanmayı unutmayın",
   "InputSettings": "Giriş Ayarları",
   "CaptureSettings": "Yakalama Ayarları",
-  "UISettings": "Arayüz Ayarları"
+  "UISettings": "Arayüz Ayarları",
+  "Name": "İsim",
+  "EditTrigger": "Tetikleyiciyi Düzenle",
+  "AutoTriggerBreakTime": "Ara Süresi",
+  "AutoTriggerBreakTimeTooltip": "Tetikleyici çalıştırıldıysa, yeniden çalıştırılmadan önce ara süresini beklemesi gerekir",
+  "LabelTriggerAction": "Gönderilecek Eylem/Tuş",
+  "DescriptionTriggerAction": "Bu tuş, tetikleyici çalıştığında basılacak eylemdir",
+  "NeedsDetection": "Tespit Gerekiyor",
+  "DescriptionNeedsDetection": "Bu etkin değilse, tetikleyici tespit edilmiş bir düşman olmadan da çalışır",
+  "LabelTriggerKeys": "Tetikleme Tuşları",
+  "DescriptionTriggerKeys": "Burada yapılandırılan her tuş, tetikleyici çalıştırılmadan önce basılmalıdır",
+  "AntiTriggerKeys": "Anti Tetikleme Tuşları",
+  "DescriptionAntiTriggerKeys": "Tetikleyicinin çalışması için burada yapılandırılan tuşlardan hiçbiri basılmamalıdır.",
+  "EnabledActive": "Etkin/Aktif",
+  "Active": "Aktif",
+  "Enabled": "Etkin"
+
 }

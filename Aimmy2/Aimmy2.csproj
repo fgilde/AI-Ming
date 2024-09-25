@@ -64,10 +64,10 @@
   <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
     <None Include="bin\configs\Default Gamepad.cfg">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="bin\configs\Default Keyboard.cfg">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="bin\models\default.onnx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -80,7 +80,7 @@
     <PackageReference Include="SharpDX.XInput" Version="4.2.0" />
     <PackageReference Include="Accord.Statistics" Version="3.8.0" />
     <PackageReference Include="AntWpf" Version="1.0.3" />
-    <PackageReference Include="Nextended.Core" Version="7.0.54" />
+    <PackageReference Include="Nextended.Core" Version="7.0.56" />
     <PackageReference Include="Nextended.UI" Version="7.0.33" />
     <PackageReference Include="MaterialDesignThemes" Version="4.9.0" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.17.3" />

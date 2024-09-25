@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using AimmyWPF.Class;
@@ -11,6 +12,7 @@ using ColorConverter = System.Windows.Media.ColorConverter;
 using System.Reflection;
 using System.Windows.Controls;
 using Aimmy2.Config;
+using Aimmy2.Converter;
 using Aimmy2.Extensions;
 
 namespace Aimmy2.UILibrary
@@ -188,12 +190,12 @@ namespace Aimmy2.UILibrary
                 var themeForActive = ThemePalette.ThemeForActive;
                 if (title != null)
                 {
-                    title.LabelTitle.Foreground = isChecked ? new SolidColorBrush(themeForActive.AccentColor) : Brushes.White;
+                    title.LabelTitle.Foreground = new BoolToColorConverter().Convert(isChecked, null, null, CultureInfo.InvariantCulture) as Brush;
                 }
 
                 var solidColorBrush = new SolidColorBrush(themeForActive.MainColor)
                 {
-                    Opacity = AppConfig.Current.ToggleState.GlobalActive ? 1 : 0.35
+                    Opacity = (double)new BoolToOpacity().Convert(AppConfig.Current.ToggleState.GlobalActive, null, null, CultureInfo.InvariantCulture)
                 };
                 panel.Background = isChecked ? solidColorBrush : Brushes.Transparent;
             }

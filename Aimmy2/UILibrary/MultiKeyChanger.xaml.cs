@@ -1,4 +1,6 @@
 ﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -13,7 +15,7 @@ namespace UILibrary
     /// <summary>
     /// Interaction logic for MultiKeyChanger.xaml
     /// </summary>
-    public partial class MultiKeyChanger : UserControl
+    public partial class MultiKeyChanger : INotifyPropertyChanged
     {
         public InputBindingManager BindingManager => MainWindow.Instance.BindingManager;
         public ObservableCollection<StoredInputBinding> Keys    
@@ -22,17 +24,22 @@ namespace UILibrary
             set => SetValue(KeysProperty, value);
         }
 
-
+        public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
+        
 
         public string ErrorMessage
         {
-            get { return (string)GetValue(ErrorMessageProperty); }
-            set { SetValue(ErrorMessageProperty, value); }
+            get => (string)GetValue(ErrorMessageProperty);
+            set => SetValue(ErrorMessageProperty, value);
         }
 
         public static readonly DependencyProperty ErrorMessageProperty =
-            DependencyProperty.Register(nameof(ErrorMessage), typeof(string), typeof(MultiKeyChanger), new PropertyMetadata(string.Empty));
+            DependencyProperty.Register(nameof(ErrorMessage), typeof(string), typeof(MultiKeyChanger), new PropertyMetadata(string.Empty, ErrorMessageChange));
 
+        private static void ErrorMessageChange(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((MultiKeyChanger)d).OnPropertyChanged(nameof(HasError));
+        }
 
 
         public static readonly DependencyProperty KeysProperty =
@@ -96,8 +103,19 @@ namespace UILibrary
 
         private void Remove_Key_Click(object sender, MouseButtonEventArgs e)
         {
-           if (((FrameworkElement)sender).Tag is StoredInputBinding binding)
-               Keys.Remove(binding);
+            if (((FrameworkElement)sender).Tag is StoredInputBinding binding)
+            {
+                Keys.Remove(binding);
+                OnKeysChanged();
+            }
         }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
     }
 }

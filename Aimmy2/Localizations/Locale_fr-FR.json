@@ -230,5 +230,20 @@
   "vJoyInfoInfoText": "Gamepad virtuel avec vJoy. {0}Pour utiliser le gamepad avec vJoy, vous devez installer vJoy depuis https://sourceforge.net/projects/vjoystick/ {0}Un contrôleur virtuel Xbox360 sera ensuite créé et votre contrôleur actuel sera synchronisé avec le virtuel. Assurez-vous d'utiliser l'appareil virtuel dans votre jeu.",
   "InputSettings": "Paramètres d'entrée",
   "CaptureSettings": "Paramètres de capture",
-  "UISettings": "Paramètres de l'interface utilisateur"
+  "UISettings": "Paramètres de l'interface utilisateur",
+  "Name": "Nom",
+  "EditTrigger": "Modifier le déclencheur",
+  "AutoTriggerBreakTime": "Temps de pause",
+  "AutoTriggerBreakTimeTooltip": "Si le déclencheur a été exécuté, il doit attendre le temps de pause avant de pouvoir être exécuté à nouveau",
+  "LabelTriggerAction": "Action/Touche à envoyer",
+  "DescriptionTriggerAction": "Cette touche est l'action qui sera pressée lorsque le déclencheur sera exécuté",
+  "NeedsDetection": "Nécessite une détection",
+  "DescriptionNeedsDetection": "Si cela n'est pas activé, le déclencheur fonctionne même sans ennemi détecté",
+  "LabelTriggerKeys": "Touches de déclenchement",
+  "DescriptionTriggerKeys": "Chaque touche configurée ici doit être pressée avant que le déclencheur ne soit exécuté",
+  "AntiTriggerKeys": "Touches anti-déclenchement",
+  "DescriptionAntiTriggerKeys": "Aucune des touches configurées ici ne doit être pressée pour que le déclencheur s'exécute.",
+  "EnabledActive": "Activé/Actif",
+  "Active": "Actif",
+  "Enabled": "Activé"
 }

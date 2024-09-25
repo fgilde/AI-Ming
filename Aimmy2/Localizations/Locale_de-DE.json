@@ -233,5 +233,18 @@
   "CaptureSettings": "Einstellungen Aufnahme",
   "UISettings": "Einstellung Benutzeroberfläche",
   "Name": "Name",
-  "EditTrigger": "Automatischen Auslöser bearbeiten"
+  "EditTrigger": "Auslöser bearbeiten",
+  "AutoTriggerBreakTime": "Pausenzeit",
+  "AutoTriggerBreakTimeTooltip": "Wenn der Auslöser ausgeführt wurde, muss er auf die Pausenzeit warten, bevor er erneut ausgeführt wird",
+  "LabelTriggerAction": "Aktion/Taste senden",
+  "DescriptionTriggerAction": "Diese Taste ist die Aktion, die gedrückt wird, wenn der Auslöser ausgeführt wird",
+  "NeedsDetection": "Benötigt eine Erkennung",
+  "DescriptionNeedsDetection": "Wenn dies nicht aktiviert ist, funktioniert der Auslöser auch ohne erkannte Feinde",
+  "LabelTriggerKeys": "Auslösetasten",
+  "DescriptionTriggerKeys": "Jede hier konfigurierte Taste muss gedrückt werden, bevor der Auslöser ausgeführt wird",
+  "AntiTriggerKeys": "Anti-Auslösetasten",
+  "DescriptionAntiTriggerKeys": "Keine der hier konfigurierten Tasten darf gedrückt werden, damit der Auslöser ausgeführt wird.",
+  "EnabledActive": "Aktiviert/Aktiv",
+  "Active": "Aktiv",
+  "Enabled": "Aktiviert"
 }
