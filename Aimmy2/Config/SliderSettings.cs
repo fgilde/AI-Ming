@@ -13,7 +13,6 @@ public class SliderSettings: BaseSettings
     private double _yOffsetPercentage = 90;
     private double _xOffsetPercentage = 50;
     private double _emaSmoothening = 0.5;
-    private double _autoTriggerDelay = 0.0;
     private double _aiMinimumConfidence = 45;
     private double _gamepadMinimumLt = 0.7;
     private double _gamepadMinimumRt = 0.7;
@@ -22,7 +21,6 @@ public class SliderSettings: BaseSettings
     private double _borderThickness = 1;
     private double _opacity = 1;
     private double _fovOpacity = 1;
-    private double _triggerKeyMin = 0.39;
     private double _firePressDelay = 0.02;
     private float _magnificationFactor = 2;
     private double _magnifierWindowHeight = 250;
@@ -87,22 +85,10 @@ public class SliderSettings: BaseSettings
         set => SetField(ref _emaSmoothening, value);
     }
 
-    public double TriggerKeyMin
-    {
-        get => _triggerKeyMin;
-        set => SetField(ref _triggerKeyMin, value);
-    }
-
     public double FirePressDelay
     {
         get => _firePressDelay;
         set => SetField(ref _firePressDelay, value);
-    }
-
-    public double AutoTriggerDelay
-    {
-        get => _autoTriggerDelay;
-        set => SetField(ref _autoTriggerDelay, value);
     }
 
     public double AIMinimumConfidence

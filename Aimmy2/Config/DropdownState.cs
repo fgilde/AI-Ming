@@ -3,16 +3,13 @@
 public class DropdownState: BaseSettings
 {
     private string _gamepadProcess = "";
-    private string _headArea = "";
-    private TriggerCheck _triggerCheck = TriggerCheck.HeadIntersectingCenter;
     private PredictionMethod _predictionMethod = PredictionMethod.KalmanFilter;
     private DetectionAreaType _detectionAreaType = DetectionAreaType.ClosestToCenter;
     private AimingBoundariesAlignment _aimingBoundariesAlignment = AimingBoundariesAlignment.Top;
     private MouseMovementMethod _mouseMovementMethod = MouseMovementMethod.MouseEvent;
     private OverlayDrawingMethod _overlayDrawingMethod;
     private GamepadSendMode _gamepadSendMode = GamepadSendMode.ViGEm;
-    private TriggerCheck _triggerAdditionalCommandCheck = TriggerCheck.IntersectingCenter;
-
+    
     public GamepadSendMode GamepadSendMode
     {
         get => _gamepadSendMode;
@@ -24,25 +21,7 @@ public class DropdownState: BaseSettings
         get => _gamepadProcess;
         set => SetField(ref _gamepadProcess, value);
     }
-
-    public string HeadArea
-    {
-        get => _headArea;
-        set => SetField(ref _headArea, value);
-    }
-
-    public TriggerCheck TriggerAdditionalCommandCheck
-    {
-        get => _triggerAdditionalCommandCheck;
-        set => SetField(ref _triggerAdditionalCommandCheck, value);
-    }
-
-    public TriggerCheck TriggerCheck
-    {
-        get => _triggerCheck;
-        set => SetField(ref _triggerCheck, value);
-    }
-
+    
     public OverlayDrawingMethod OverlayDrawingMethod    
     {
         get => _overlayDrawingMethod;

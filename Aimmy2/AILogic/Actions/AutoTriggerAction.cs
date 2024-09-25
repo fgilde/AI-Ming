@@ -73,7 +73,7 @@ public class AutoTriggerAction : BaseAction
             var delay = TimeSpan.FromSeconds(trigger.Delay);
             var breakTime = TimeSpan.FromSeconds(trigger.BreakTime);
 
-            if (!trigger.NeedsDetection || PredictionIsIntersecting(trigger.IntersectionCheck, trigger.IntersectionArea, prediction))
+            if (!trigger.NeedsDetection || trigger.ChargeMode || PredictionIsIntersecting(trigger.IntersectionCheck, trigger.IntersectionArea, prediction))
             {
                 if (trigger.NeedsDetection && trigger.ChargeMode)
                 {
@@ -83,7 +83,7 @@ public class AutoTriggerAction : BaseAction
                     }
                 }
                 else
-                {
+                {                          
                     await Task.Delay(delay, cancellationToken); // Delay for this specific trigger
                     await InputSender.SendKeyAsync(trigger.Action);
                    // await MouseManager.DoTriggerClick(); // Perform the action

@@ -24,8 +24,6 @@ public class ToggleState : BaseSettings
     private bool _uiTopMost = true;
     private bool _xAxisPercentageAdjustment = false;
     private bool _yAxisPercentageAdjustment = true;
-    private bool _autoTriggerCharged;
-    private bool _rapidFire;
     private bool _autoHideController;
     private bool _showCapturedArea = true;
     private bool _ensureCaptureForeground;
@@ -95,19 +93,7 @@ public class ToggleState : BaseSettings
         get => _enableGunSwitchingKeybind;
         set => SetField(ref _enableGunSwitchingKeybind, value);
     }
-
-    public bool AutoTriggerCharged
-    {
-        get => _autoTriggerCharged;
-        set => SetField(ref _autoTriggerCharged, value);
-    }
-
-    public bool RapidFire
-    {
-        get => _rapidFire;
-        set => SetField(ref _rapidFire, value);
-    }
-
+    
     public bool AutoTrigger
     {
         get => _autoTrigger;

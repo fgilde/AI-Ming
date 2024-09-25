@@ -8,6 +8,7 @@ using System.Windows.Interop;
 using Aimmy2.AILogic;
 using Aimmy2.Config;
 using Aimmy2.Extensions;
+using Aimmy2.Types;
 using Class;
 using Color = System.Drawing.Color;
 using MediaColor = System.Windows.Media.Color;
@@ -144,7 +145,8 @@ namespace Aimmy2.Other
 
             if (config.ToggleState.ShowTriggerHeadArea)
             {
-                var headRelativeRect = prediction.HeadRelativeRect;
+                var headRelativeRect = AppConfig.Current.Triggers.FirstOrDefault(t => t is { Enabled: true, IntersectionCheck: TriggerCheck.HeadIntersectingCenter })?.IntersectionArea ?? RelativeRect.Default;
+
                 float headAreaWidth = rect.Width * headRelativeRect.WidthPercentage;
                 float headAreaHeight = rect.Height * headRelativeRect.HeightPercentage;
                 float headAreaLeft = rect.X + rect.Width * headRelativeRect.LeftMarginPercentage;
@@ -213,7 +215,8 @@ namespace Aimmy2.Other
 
             if (config.ToggleState.ShowTriggerHeadArea)
             {
-                var headRelativeRect = prediction.HeadRelativeRect;
+                var headRelativeRect = AppConfig.Current.Triggers.FirstOrDefault(t => t is { Enabled: true, IntersectionCheck: TriggerCheck.HeadIntersectingCenter })?.IntersectionArea ?? RelativeRect.Default;
+
                 float headAreaWidth = rect.Width * headRelativeRect.WidthPercentage;
                 float headAreaHeight = rect.Height * headRelativeRect.HeightPercentage;
                 float headAreaLeft = rect.X + rect.Width * headRelativeRect.LeftMarginPercentage;

@@ -191,7 +191,6 @@ namespace Visuality
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            AppConfig.Current.DropdownState.HeadArea = RelativeRect.ToString();
             Application.Current.Dispatcher.BeginInvoke(new Action(() => new NoticeBar($"Saved Head Area {RelativeRect}.", 2000).Show()));
             Close();
         }

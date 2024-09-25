@@ -281,7 +281,6 @@
                                     Visibility="{Binding Path=IsModelLoaded, Converter={StaticResource boolToVis }}"
                                     Grid.Column="0"
                                     Margin="10,0,5,0">
-                            <StackPanel x:Name="RapidFire" />
                             <StackPanel x:Name="AimAssist" />
                             <StackPanel x:Name="TriggerBot" />
                             <StackPanel x:Name="AntiRecoil" />

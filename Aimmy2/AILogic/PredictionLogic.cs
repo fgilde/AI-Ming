@@ -135,7 +135,6 @@ public class PredictionLogic : IPredictionLogic
             float translatedYMin = prediction.Rectangle.Y + detectionBox.Top;
             prediction.TranslatedRectangle = new RectangleF(translatedXMin, translatedYMin, prediction.Rectangle.Width, prediction.Rectangle.Height);
 
-            prediction.HeadRelativeRect = RelativeRect.ParseOrDefault(AppConfig.Current.DropdownState.HeadArea);
             await SaveFrameAsync(frame, prediction);
         }
 
