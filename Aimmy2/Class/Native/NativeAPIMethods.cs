@@ -10,6 +10,12 @@ namespace Aimmy2.Class.Native
     {
         static readonly Guid GraphicsCaptureItemGuid = new Guid("79C3F95B-31F7-4EC2-A464-632EF5D30760");
 
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern uint SendInput(uint nInputs, [MarshalAs(UnmanagedType.LPArray), In] INPUT[] pInputs, int cbSize);
+
+        [DllImport("user32.dll")]
+        private static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, int dwExtraInfo);
+        public static void MouseEvent(uint dwFlags, uint dx, uint dy, uint dwData, int dwExtraInfo) => mouse_event(dwFlags, dx, dy, dwData, dwExtraInfo);
 
         #region P/Invoke signatures
         [DllImport("user32.dll")]

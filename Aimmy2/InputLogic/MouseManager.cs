@@ -6,9 +6,13 @@ using MouseMovementLibraries.ddxoftSupport;
 using MouseMovementLibraries.RazerSupport;
 using MouseMovementLibraries.SendInputSupport;
 using System.Runtime.InteropServices;
-using System.Windows;
+using System.Windows.Forms;
 using System.Windows.Input;
+using Aimmy2.Class.Native;
+using Application = System.Windows.Application;
+using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using Point = System.Drawing.Point;
+using Aimmy2.InputLogic;
 
 namespace InputLogic
 {
@@ -18,19 +22,12 @@ namespace InputLogic
         private static DateTime LastClickTime = DateTime.MinValue;
         private static int LastAntiRecoilClickTime = 0;
         private static Random _random = new Random();
-        private const uint MOUSEEVENTF_WHEEL = 0x0800;
         private const int WHEEL_DELTA = 120; 
-
-        private const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
-        private const uint MOUSEEVENTF_LEFTUP = 0x0004;
-        private const uint MOUSEEVENTF_MOVE = 0x0001;
         private static double previousX = 0;
         private static double previousY = 0;
         public static double smoothingFactor => AppConfig.Current.SliderSettings.EMASmoothening;
         public static bool IsEMASmoothingEnabled => AppConfig.Current.ToggleState.EMASmoothening;
 
-        [DllImport("user32.dll")]
-        private static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, int dwExtraInfo);
 
         private static Random MouseRandom = new();
 
@@ -68,7 +65,86 @@ namespace InputLogic
         private static bool _leftDown;
         public static void ScrollMouseWheel(int delta)
         {
-            mouse_event(MOUSEEVENTF_WHEEL, 0, 0, (uint)delta, 0);
+            NativeAPIMethods.MouseEvent((uint)InputEventFlags.MOUSEEVENTF_WHEEL, 0, 0, (uint)delta, 0);
+        }
+
+        //public static void SendMouseEvent(MouseEventArgs args)
+        //{
+        //    SendMouseEvent(args.LeftButton, args.X, args.Y, args.Delta);
+        //}
+
+        public static void SendMouseEvent(System.Windows.Forms.MouseEventArgs args, KeyPressState state = KeyPressState.DownAndUp)
+        {
+            SendMouseEvent(args.Button, args.X, args.Y, args.Delta, state);
+        }
+
+        public static void SendMouseEvent(MouseButtons button, int x = 0, int y = 0, int wheelDelta = 0, KeyPressState state = KeyPressState.DownAndUp)
+        {
+            INPUT[] inputs = new INPUT[1];
+            inputs[0].type = (uint)InputEventFlags.INPUT_MOUSE;
+            inputs[0].u.mi.dx = x;
+            inputs[0].u.mi.dy = y;
+            inputs[0].u.mi.mouseData = 0;
+            inputs[0].u.mi.dwFlags = 0;
+            inputs[0].u.mi.time = 0;
+            inputs[0].u.mi.dwExtraInfo = IntPtr.Zero;
+
+            switch (button)
+            {
+                case MouseButtons.Left: ;
+                    inputs[0].u.mi.dwFlags = state switch
+                    {
+                        KeyPressState.Down => (uint)InputEventFlags.MOUSEEVENTF_LEFTDOWN,
+                        KeyPressState.Up => (uint)InputEventFlags.MOUSEEVENTF_LEFTUP,
+                        _ => (uint)InputEventFlags.MOUSEEVENTF_LEFTDOWN | (uint)InputEventFlags.MOUSEEVENTF_LEFTUP
+                    };
+                    break;
+                case MouseButtons.Right:
+                    inputs[0].u.mi.dwFlags = state switch
+                    {
+                        KeyPressState.Down => (uint)InputEventFlags.MOUSEEVENTF_RIGHTDOWN,
+                        KeyPressState.Up => (uint)InputEventFlags.MOUSEEVENTF_RIGHTUP,
+                        _ => (uint)InputEventFlags.MOUSEEVENTF_RIGHTDOWN | (uint)InputEventFlags.MOUSEEVENTF_RIGHTUP
+                    };
+                    break;
+                case MouseButtons.Middle:
+                    inputs[0].u.mi.dwFlags = state switch
+                    {
+                        KeyPressState.Down => (uint)InputEventFlags.MOUSEEVENTF_MIDDLEDOWN,
+                        KeyPressState.Up => (uint)InputEventFlags.MOUSEEVENTF_MIDDLEUP,
+                        _ => (uint)InputEventFlags.MOUSEEVENTF_MIDDLEDOWN | (uint)InputEventFlags.MOUSEEVENTF_MIDDLEUP
+                    };
+                    break;
+                case MouseButtons.XButton1:
+                    inputs[0].u.mi.dwFlags = state switch
+                    {
+                        KeyPressState.Down => (uint)InputEventFlags.MOUSEEVENTF_XDOWN,
+                        KeyPressState.Up => (uint)InputEventFlags.MOUSEEVENTF_XUP,
+                        _ => (uint)InputEventFlags.MOUSEEVENTF_XDOWN | (uint)InputEventFlags.MOUSEEVENTF_XUP
+                    };
+                    inputs[0].u.mi.mouseData = (uint)InputEventFlags.XBUTTON1;
+                    break;
+                case MouseButtons.XButton2:
+                    inputs[0].u.mi.dwFlags = state switch
+                    {
+                        KeyPressState.Down => (uint)InputEventFlags.MOUSEEVENTF_XDOWN,
+                        KeyPressState.Up => (uint)InputEventFlags.MOUSEEVENTF_XUP,
+                        _ => (uint)InputEventFlags.MOUSEEVENTF_XDOWN | (uint)InputEventFlags.MOUSEEVENTF_XUP
+                    };
+                    inputs[0].u.mi.mouseData = (uint)InputEventFlags.XBUTTON2;
+                    break;
+                default:
+                    inputs[0].u.mi.dwFlags = (uint)InputEventFlags.MOUSEEVENTF_MOVE;
+                    break;
+            }
+
+            if (wheelDelta != 0)
+            {
+                inputs[0].u.mi.mouseData = (uint)wheelDelta;
+                inputs[0].u.mi.dwFlags |= (uint)InputEventFlags.MOUSEEVENTF_WHEEL;
+            }
+
+            NativeAPIMethods.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
         }
 
         public static async Task ScrollMouseWheelUpAndDown()
@@ -86,7 +162,7 @@ namespace InputLogic
             switch (AppConfig.Current.DropdownState.MouseMovementMethod)
             {
                 case MouseMovementMethod.SendInput:
-                    SendInputMouse.SendMouseCommand(MOUSEEVENTF_LEFTDOWN);
+                    SendInputMouse.SendMouseCommand((uint)InputEventFlags.MOUSEEVENTF_LEFTDOWN);
                     return;
 
                 case MouseMovementMethod.LGHUB:
@@ -102,7 +178,7 @@ namespace InputLogic
                     return;
 
                 default:
-                    mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+                    NativeAPIMethods.MouseEvent((uint)InputEventFlags.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
                     break;
             }
 
@@ -129,7 +205,7 @@ namespace InputLogic
             _leftDown = true;
             Task.Delay(1000).ContinueWith(_ =>
             {
-                mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+                NativeAPIMethods.MouseEvent((uint)InputEventFlags.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
                 _leftDown = false;
             });
             LastClickTime = DateTime.UtcNow;
@@ -140,7 +216,7 @@ namespace InputLogic
             switch (AppConfig.Current.DropdownState.MouseMovementMethod)
             {
                 case MouseMovementMethod.SendInput:
-                    SendInputMouse.SendMouseCommand(MOUSEEVENTF_LEFTUP);
+                    SendInputMouse.SendMouseCommand((uint)InputEventFlags.MOUSEEVENTF_LEFTUP);
                     return;
 
                 case MouseMovementMethod.LGHUB:
@@ -156,7 +232,7 @@ namespace InputLogic
                     return;
 
                 default:
-                    mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+                    NativeAPIMethods.MouseEvent((uint)InputEventFlags.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
                     break;
             }
 
@@ -196,7 +272,7 @@ namespace InputLogic
             switch (AppConfig.Current.DropdownState.MouseMovementMethod)
             {
                 case MouseMovementMethod.SendInput:
-                    SendInputMouse.SendMouseCommand(MOUSEEVENTF_MOVE, xRecoil, yRecoil);
+                    SendInputMouse.SendMouseCommand((uint)InputEventFlags.MOUSEEVENTF_MOVE, xRecoil, yRecoil);
                     break;
 
                 case MouseMovementMethod.LGHUB:
@@ -212,7 +288,7 @@ namespace InputLogic
                     break;
 
                 default:
-                    mouse_event(MOUSEEVENTF_MOVE, (uint)xRecoil, (uint)yRecoil, 0, 0);
+                    NativeAPIMethods.MouseEvent((uint)InputEventFlags.MOUSEEVENTF_MOVE, (uint)xRecoil, (uint)yRecoil, 0, 0);
                     break;
             }
 
@@ -250,7 +326,7 @@ namespace InputLogic
             switch (AppConfig.Current.DropdownState.MouseMovementMethod)
             {
                 case MouseMovementMethod.SendInput:
-                    SendInputMouse.SendMouseCommand(MOUSEEVENTF_MOVE, newPosition.X, newPosition.Y);
+                    SendInputMouse.SendMouseCommand((uint)InputEventFlags.MOUSEEVENTF_MOVE, newPosition.X, newPosition.Y);
                     break;
 
                 case MouseMovementMethod.LGHUB:
@@ -266,7 +342,7 @@ namespace InputLogic
                     break;
 
                 default:
-                    mouse_event(MOUSEEVENTF_MOVE, (uint)newPosition.X, (uint)newPosition.Y, 0, 0);
+                    NativeAPIMethods.MouseEvent((uint)InputEventFlags.MOUSEEVENTF_MOVE, (uint)newPosition.X, (uint)newPosition.Y, 0, 0);
                     break;
             }
 

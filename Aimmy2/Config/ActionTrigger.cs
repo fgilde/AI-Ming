@@ -19,8 +19,10 @@ public class ActionTrigger : EditableNotificationObject
     private double _delay;
     private double _breakTime;
     private double _triggerKeyMin;
-    private TriggerCheck _intersectionCheck;
-    private RelativeRect _intersectionArea;
+    private TriggerCheck _executionIntersectionCheck;
+    private TriggerCheck _beginIntersectionCheck;
+    private RelativeRect _beginIntersectionArea;
+    private RelativeRect _executionIntersectionArea;
     private bool _needsDetection = true;
     
     public ActionTrigger()
@@ -100,7 +102,7 @@ public class ActionTrigger : EditableNotificationObject
     }
 
     /// <summary>
-    ///When charge mode is enabled the <see cref="Action"/> will we pressed down when a prediction is available and released when the prediction is intersecting based on your <see cref="IntersectionCheck"/>
+    ///When charge mode is enabled the <see cref="Action"/> will we pressed down when a prediction is available and released when the prediction is intersecting based on your <see cref="ExecutionIntersectionCheck"/>
     /// </summary>
     public bool ChargeMode
     {
@@ -169,23 +171,41 @@ public class ActionTrigger : EditableNotificationObject
         set => SetProperty(ref _breakTime, value);
     }
 
+    /// <summary>
+    /// Intersection check for the detected object before trigger is executed
+    /// </summary>
+    public TriggerCheck BeginIntersectionCheck
+    {
+        get => _beginIntersectionCheck;
+        set => SetProperty(ref _beginIntersectionCheck, value);
+    }
+
+    /// <summary>
+    /// Intersection area for the detected object before trigger is executed only if <see cref="ExecutionIntersectionCheck"/> is set to <see cref="TriggerCheck.HeadIntersectingCenter"/>
+    /// </summary>
+    public RelativeRect BeginIntersectionArea
+    {
+        get => _beginIntersectionArea;
+        set => SetProperty(ref _beginIntersectionArea, value);
+    }
+
 
     /// <summary>
     /// Intersection check for the detected object before trigger is executed
     /// </summary>
-    public TriggerCheck IntersectionCheck
+    public TriggerCheck ExecutionIntersectionCheck
     {
-        get => _intersectionCheck;
-        set => SetProperty(ref _intersectionCheck, value);
+        get => _executionIntersectionCheck;
+        set => SetProperty(ref _executionIntersectionCheck, value);
     }
 
     /// <summary>
-    /// Intersection area for the detected object before trigger is executed only if <see cref="IntersectionCheck"/> is set to <see cref="TriggerCheck.HeadIntersectingCenter"/>
+    /// Intersection area for the detected object before trigger is executed only if <see cref="ExecutionIntersectionCheck"/> is set to <see cref="TriggerCheck.HeadIntersectingCenter"/>
     /// </summary>
-    public RelativeRect IntersectionArea
+    public RelativeRect ExecutionIntersectionArea
     {
-        get => _intersectionArea;
-        set => SetProperty(ref _intersectionArea, value);
+        get => _executionIntersectionArea;
+        set => SetProperty(ref _executionIntersectionArea, value);
     }
 
     public bool IsValid => !string.IsNullOrWhiteSpace(Name) && Action.IsValid;

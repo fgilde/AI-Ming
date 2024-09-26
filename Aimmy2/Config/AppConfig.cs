@@ -45,8 +45,8 @@ public class AppConfig : BaseSettings
             Delay = 0,
             BreakTime = 0,
             TriggerKeyMin = 0.39,
-            IntersectionCheck = TriggerCheck.HeadIntersectingCenter,
-            IntersectionArea = RelativeRect.Default
+            ExecutionIntersectionCheck = TriggerCheck.HeadIntersectingCenter,
+            ExecutionIntersectionArea = RelativeRect.Default
         },
     };
     public string SuggestedModelName => SliderSettings.SuggestedModel;

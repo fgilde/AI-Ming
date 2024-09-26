@@ -10,26 +10,35 @@ namespace Aimmy2.InputLogic
     {
         private static ConcurrentDictionary<Controller, string> _cache = new();
 
-        public static void Send(this IGamepadSender sender, GamepadEventArgs args)
+        public static void Send(this IGamepadSender sender, GamepadEventArgs args, KeyPressState? pressState = null)
         {
+            var syncState = GamepadSyncState.Paused;
+            if (pressState != null)
+            {
+                args.IsPressed = pressState is KeyPressState.Down or KeyPressState.DownAndUp;
+                args.Value = pressState is KeyPressState.Down or KeyPressState.DownAndUp ? 1f : 0f;
+                if(pressState == KeyPressState.Up)
+                    syncState = GamepadSyncState.Resume;
+            }
+
             if(args.GamepadButton is not null)
             {
-                sender.SetButtonState(args.GamepadButton.Value, args.IsPressed ?? false, GamepadSyncState.Paused);
+                sender.SetButtonState(args.GamepadButton.Value, args.IsPressed ?? false, syncState);
             }
             else if(args.GamepadSlider is not null)
             {
                 var argsValue = args.Value * 255f ?? 0;
-                sender.SetSliderValue(args.GamepadSlider.Value, (byte)argsValue, GamepadSyncState.Paused);
+                sender.SetSliderValue(args.GamepadSlider.Value, (byte)argsValue, syncState);
             }
             else if(args.GamepadAxis is not null)
             {
-                sender.SetAxisValue(args.GamepadAxis.Value, (short)(args.Value ?? 0), GamepadSyncState.Paused);
+                sender.SetAxisValue(args.GamepadAxis.Value, (short)(args.Value ?? 0), syncState);
             }
 
-            Task.Delay(MouseManager.GetRandomDelay()).ContinueWith(task =>
+            if (pressState == null || pressState == KeyPressState.DownAndUp)
             {
-                sender.ResumeSync();
-            });
+                Task.Delay(MouseManager.GetRandomDelay()).ContinueWith(task => { sender.ResumeSync(); });
+            }
         }
 
         public static string GetControllerId(this Controller controller)

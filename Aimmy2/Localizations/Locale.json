@@ -21,7 +21,7 @@
   "Cancel": "Cancel",
   "CapturedAreaBorderColor": "Captured Area Border Color",
   "ChargeMode": "Charge Mode",
-  "ChargeModeToolTip": "If this is on, mouse will be clicked down when enemy is detected and trigger key is hold and then released when configured area is reached",
+  "ChargeModeToolTip": "If this is on, {0} will be pressed down when enemy is detected, area reached and trigger key is hold. Then {0} will be released when configured execute area is reached",
   "CheckBoxIsDownloadable": "Can this model be found in the \"Downloadable Models\" Menu?",
   "CheckForUpdate": "Check for Update",
   "CheckingForUpdates": "Checking for updates...",
@@ -247,5 +247,7 @@
   "DescriptionAntiTriggerKeys": "None of the keys configured here should be pressed for the trigger to execute.",
   "EnabledActive": "Enabled/Active",
   "Active": "Active",
-  "Enabled": "Enabled"
+  "Enabled": "Enabled",
+  "TriggerCheckChargeIn" : "Trigger Check for begin charge",
+  "TriggerCheckChargeInToolTip" : "Specify Area/Timing when pressing down should start",
 }

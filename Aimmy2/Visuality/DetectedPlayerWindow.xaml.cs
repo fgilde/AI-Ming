@@ -173,7 +173,7 @@ namespace Visuality
             DetectedPlayerFocus.Width = lastDetectionBox.Width;
             DetectedPlayerFocus.Height = lastDetectionBox.Height;
 
-            var headRelativeRect = AppConfig.Current.Triggers.FirstOrDefault(t => t is { Enabled: true, IntersectionCheck: TriggerCheck.HeadIntersectingCenter })?.IntersectionArea ?? RelativeRect.Default;
+            var headRelativeRect = AppConfig.Current.Triggers.FirstOrDefault(t => t is { Enabled: true, ExecutionIntersectionCheck: TriggerCheck.HeadIntersectingCenter })?.ExecutionIntersectionArea ?? RelativeRect.Default;
 
             SetHeadRelativeArea(AppConfig.Current.ToggleState.ShowTriggerHeadArea ? headRelativeRect : null);
         }

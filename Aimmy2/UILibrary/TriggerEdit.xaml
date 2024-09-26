@@ -45,6 +45,7 @@
                                        WithBorder="False"
                                        Margin="-7 0 0 0"
                                        CanRemoveBinding="false"
+                                           KeyBindChanged="ActionKeyChanger_OnKeyBindChanged"
                                        Tag="{Binding}"
                                        KeyBind="{Binding Path=Trigger.Action, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}" />
 
@@ -62,7 +63,7 @@
                                    Checked="{Binding Trigger.NeedsDetection, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></uiLibrary:AToggle>
                     <TextBlock Foreground="{StaticResource Foreground}"
                        FontSize="11"
-                       Margin="2 -9 0 10"
+                       Margin="2 -7 0 10"
                        TextWrapping="Wrap"
                        Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DescriptionNeedsDetection'}"
                        FontFamily="{StaticResource Atkinson Hyperlegible}"></TextBlock>
@@ -75,12 +76,24 @@
                     <TextBlock Foreground="{StaticResource Foreground}"
                            FontSize="11"
                            TextWrapping="Wrap"
-                           Margin="2 -9 0 10"
+                           x:Name="ChargeModeDescription"
+                           Margin="2 -7 0 10"
                            Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ChargeModeToolTip'}"
                            FontFamily="{StaticResource Atkinson Hyperlegible}"></TextBlock>
                 </StackPanel>
 
-                <StackPanel Visibility="{Binding Trigger.NeedsDetection, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource boolToVis}}" x:Name="IntersectionBox"></StackPanel>
+                <StackPanel Visibility="{Binding Trigger.NeedsDetection, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource boolToVis}}">
+                    <StackPanel Visibility="{Binding Trigger.ChargeMode, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource boolToVis}}" x:Name="ChargeEnterIntersectionBox">
+
+                    </StackPanel>
+                    <uiLibrary:Line Margin="0 0 0 10"></uiLibrary:Line>
+
+                </StackPanel>
+
+                <StackPanel Visibility="{Binding Trigger.NeedsDetection, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource boolToVis}}" x:Name="IntersectionBox">
+
+
+                </StackPanel>
 
                 <uiLibrary:Line Margin="0 0 0 10"></uiLibrary:Line>
 

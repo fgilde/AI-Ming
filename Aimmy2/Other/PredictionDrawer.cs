@@ -145,7 +145,7 @@ namespace Aimmy2.Other
 
             if (config.ToggleState.ShowTriggerHeadArea)
             {
-                var headRelativeRect = AppConfig.Current.Triggers.FirstOrDefault(t => t is { Enabled: true, IntersectionCheck: TriggerCheck.HeadIntersectingCenter })?.IntersectionArea ?? RelativeRect.Default;
+                var headRelativeRect = AppConfig.Current.Triggers.FirstOrDefault(t => t is { Enabled: true, ExecutionIntersectionCheck: TriggerCheck.HeadIntersectingCenter })?.ExecutionIntersectionArea ?? RelativeRect.Default;
 
                 float headAreaWidth = rect.Width * headRelativeRect.WidthPercentage;
                 float headAreaHeight = rect.Height * headRelativeRect.HeightPercentage;
@@ -215,7 +215,7 @@ namespace Aimmy2.Other
 
             if (config.ToggleState.ShowTriggerHeadArea)
             {
-                var headRelativeRect = AppConfig.Current.Triggers.FirstOrDefault(t => t is { Enabled: true, IntersectionCheck: TriggerCheck.HeadIntersectingCenter })?.IntersectionArea ?? RelativeRect.Default;
+                var headRelativeRect = AppConfig.Current.Triggers.FirstOrDefault(t => t is { Enabled: true, ExecutionIntersectionCheck: TriggerCheck.HeadIntersectingCenter })?.ExecutionIntersectionArea ?? RelativeRect.Default;
 
                 float headAreaWidth = rect.Width * headRelativeRect.WidthPercentage;
                 float headAreaHeight = rect.Height * headRelativeRect.HeightPercentage;

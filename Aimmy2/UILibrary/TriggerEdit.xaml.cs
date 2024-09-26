@@ -13,7 +13,11 @@ using System.Windows.Shapes;
 using Aimmy2;
 using Aimmy2.Config;
 using Aimmy2.Extensions;
+using Aimmy2.InputLogic;
+using Aimmy2.Types;
+using Aimmy2.UILibrary;
 using InputLogic;
+using Nextended.Core.Extensions;
 using Visuality;
 
 namespace UILibrary
@@ -47,27 +51,52 @@ namespace UILibrary
         private void UpdateDynamicUi()
         {
             IntersectionBox.RemoveAll();
+            ChargeEnterIntersectionBox.RemoveAll();
             TimeSettings.RemoveAll();
-            var d = IntersectionBox.AddDropdown(Locale.TriggerCheck, Trigger.IntersectionCheck,
-                check => Trigger.IntersectionCheck = check);
+
+            var drop = ChargeEnterIntersectionBox.AddDropdown(Locale.TriggerCheckChargeIn, Trigger.BeginIntersectionCheck,
+                check => Trigger.BeginIntersectionCheck = check);
+            drop.ToolTip = Locale.TriggerCheckChargeInToolTip;
+            drop.Margin = new Thickness(-11, 0, -11, -10);
+            drop.BorderBrush = Brushes.Transparent;
+            drop.Background = Brushes.Transparent;
+            ChargeEnterIntersectionBox.AddButton(Locale.ConfigureHeadArea, b =>
+            {
+                Trigger.PropertyChanged += (sender, args) =>
+                {
+                    if (args.PropertyName == nameof(Trigger.BeginIntersectionCheck))
+                    {
+                        b.Visibility = Trigger.ChargeMode && Trigger.BeginIntersectionCheck == TriggerCheck.HeadIntersectingCenter ? Visibility.Visible : Visibility.Collapsed;
+                    }
+                };
+                b.Visibility = Trigger.ChargeMode && Trigger.BeginIntersectionCheck == TriggerCheck.HeadIntersectingCenter ? Visibility.Visible : Visibility.Collapsed;
+                b.ToolTip = Locale.ConfigureHeadAreaTooltip;
+            }).Reader.Click += (s, e) =>
+            {
+                new EditHeadArea(Trigger.BeginIntersectionArea, model => Trigger.BeginIntersectionArea = model.ToRelativeRect()).Show();
+            };
+
+
+
+            var d = IntersectionBox.AddDropdown(Locale.TriggerCheck, Trigger.ExecutionIntersectionCheck,
+                check => Trigger.ExecutionIntersectionCheck = check);
             d.Margin = new Thickness(-11, 0, -11 ,-10);
             d.BorderBrush = Brushes.Transparent;
             d.Background = Brushes.Transparent;
-
             IntersectionBox.AddButton(Locale.ConfigureHeadArea, b =>
             {
                 Trigger.PropertyChanged += (sender, args) =>
                 {
-                    if (args.PropertyName == nameof(Trigger.IntersectionCheck))
+                    if (args.PropertyName == nameof(Trigger.ExecutionIntersectionCheck))
                     {
-                        b.Visibility = Trigger.IntersectionCheck == TriggerCheck.HeadIntersectingCenter ? Visibility.Visible : Visibility.Collapsed;
+                        b.Visibility = Trigger.ExecutionIntersectionCheck == TriggerCheck.HeadIntersectingCenter ? Visibility.Visible : Visibility.Collapsed;
                     }
                 };
-                b.Visibility = Trigger.IntersectionCheck == TriggerCheck.HeadIntersectingCenter ? Visibility.Visible : Visibility.Collapsed;
+                b.Visibility = Trigger.ExecutionIntersectionCheck == TriggerCheck.HeadIntersectingCenter ? Visibility.Visible : Visibility.Collapsed;
                 b.ToolTip = Locale.ConfigureHeadAreaTooltip;
             }).Reader.Click += (s, e) =>
             {
-                new EditHeadArea(Trigger.IntersectionArea, model => Trigger.IntersectionArea = model.ToRelativeRect()).Show();
+                new EditHeadArea(Trigger.ExecutionIntersectionArea, model => Trigger.ExecutionIntersectionArea = model.ToRelativeRect()).Show();
             };
             
             TimeSettings.AddSlider(Locale.MinTimeTriggerKey, Locale.Seconds, 0.01, 0.1, 0.0, 5).InitWith(slider =>
@@ -97,6 +126,11 @@ namespace UILibrary
         {
             InitializeComponent();
             DataContext = this;
+        }
+
+        private void ActionKeyChanger_OnKeyBindChanged(object? sender, EventArgs<(AKeyChanger Sender, StoredInputBinding KeyBinding)> e)
+        {
+            ChargeModeDescription.Text = Locale.ChargeModeToolTip.FormatWith(Trigger.Action.Key);
         }
     }
 }

@@ -151,17 +151,23 @@ namespace Aimmy2.UILibrary
 
         private void AKeyChanger_OnLoaded(object sender, RoutedEventArgs e)
         {
-            if (!KeyBind.IsValid)
+            try
             {
-                KeyBind = AppConfig.Current.BindingSettings[KeyConfigName];
-                if(KeyBind.IsValid)
-                    SetContent(KeyBind);
-            }
+                if (!KeyBind.IsValid)
+                {
+                    KeyBind = AppConfig.Current.BindingSettings[KeyConfigName];
+                    if(KeyBind.IsValid)
+                        SetContent(KeyBind);
+                }
 
-            if (BindingManager != null)
+                if (BindingManager != null)
+                {
+                    BindingManager.SetupDefault(KeyConfigName, KeyBind);
+                    BindingManager.OnBindingPressed += OnGlobalKeyHandler;
+                }
+            }
+            catch (Exception exception)
             {
-                BindingManager.SetupDefault(KeyConfigName, KeyBind);
-                BindingManager.OnBindingPressed += OnGlobalKeyHandler;
             }
         }
 

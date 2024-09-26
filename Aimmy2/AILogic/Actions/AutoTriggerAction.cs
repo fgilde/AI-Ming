@@ -1,11 +1,13 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using Aimmy2.AILogic.Actions;
 using Aimmy2.AILogic;
 using Aimmy2.Config;
 using Aimmy2.InputLogic;
 using Aimmy2.Types;
 using InputLogic;
+using System.Windows.Input;
 
 
 public class AutoTriggerAction : BaseAction
@@ -13,7 +15,7 @@ public class AutoTriggerAction : BaseAction
     private Prediction? _lastPrediction;
     private List<CancellationTokenSource> _autoTriggerCtsList = new();
     private Dictionary<ActionTrigger, DateTime> _triggerCooldowns = new(); // Track cooldowns for each trigger
-
+    private Dictionary<ActionTrigger, KeyPressState> _triggerKeyStates = new(); // Store current key states for each trigger
 
     public AutoTriggerAction()
     {
@@ -38,6 +40,7 @@ public class AutoTriggerAction : BaseAction
             }
         }
         _autoTriggerCtsList.Clear();
+        _triggerKeyStates.Clear();
     }
 
     public override Task ExecuteAsync(Prediction[] predictions)
@@ -64,35 +67,69 @@ public class AutoTriggerAction : BaseAction
     {
         if (TriggerIsOnCooldown(trigger))
         {
-            // Skip this trigger if it is still in cooldown
-            return;
+            return; // Skip this trigger if it is still in cooldown
         }
 
         if (TriggerKeysStateCorrect(trigger))
         {
-            var delay = TimeSpan.FromSeconds(trigger.Delay);
-            var breakTime = TimeSpan.FromSeconds(trigger.BreakTime);
-
-            if (!trigger.NeedsDetection || trigger.ChargeMode || PredictionIsIntersecting(trigger.IntersectionCheck, trigger.IntersectionArea, prediction))
+            if (trigger.ChargeMode)
             {
-                if (trigger.NeedsDetection && trigger.ChargeMode)
+                cancellationToken.Register(() => // On cancel ensure key is released
                 {
-                    if (!MouseManager.IsLeftDown)
+                    if(_triggerKeyStates.TryGetValue(trigger, out var currentState) && currentState == KeyPressState.Down)
                     {
-                        await MouseManager.LeftDownUntil(() => Task.FromResult(TriggerKeysStateCorrect(trigger) && PredictionIsIntersecting(trigger.IntersectionCheck, trigger.IntersectionArea, prediction)), delay, cancellationToken);
+                        _= InputSender.SendKeyAsync(trigger.Action, KeyPressState.Up);
                     }
-                }
-                else
-                {                          
-                    await Task.Delay(delay, cancellationToken); // Delay for this specific trigger
-                    await InputSender.SendKeyAsync(trigger.Action);
-                   // await MouseManager.DoTriggerClick(); // Perform the action
+                });
+            }
 
-                    // After execution, set the cooldown
+            var delay = TimeSpan.FromSeconds(trigger.Delay);
+            var breakTime = TimeSpan.FromSeconds(Math.Max(trigger.BreakTime, trigger.ChargeMode ? .2 : 0)); // on chargemode, breaktime should be at least a half second
+            var keyState = DetermineKeyState(trigger, prediction);
+
+            if (keyState != null)
+            {
+                
+                if (!_triggerKeyStates.TryGetValue(trigger, out var currentState) || currentState != keyState.Value || keyState.Value == KeyPressState.DownAndUp)
+                {
+                    await Task.Delay(delay, cancellationToken); // Delay for this specific trigger
+                    await InputSender.SendKeyAsync(trigger.Action, keyState.Value);
+
+                    // Update the state to the current one
+                    _triggerKeyStates[trigger] = keyState.Value;
+
+                    // If the key was released (Up), remove it from the state tracking
+                    if (keyState.Value == KeyPressState.Up)
+                    {
+                        _triggerKeyStates.Remove(trigger);
+                    }
+
                     SetTriggerCooldown(trigger, breakTime);
                 }
             }
         }
+    }
+
+    private KeyPressState? DetermineKeyState(ActionTrigger trigger, Prediction? prediction)
+    {
+        if (!trigger.NeedsDetection)
+            return KeyPressState.DownAndUp;
+
+        if (trigger.ChargeMode)
+        {
+            if (PredictionIsIntersecting(trigger.ExecutionIntersectionCheck, trigger.ExecutionIntersectionArea, prediction))
+                return KeyPressState.Up;
+
+            if (PredictionIsIntersecting(trigger.BeginIntersectionCheck, trigger.BeginIntersectionArea, prediction))
+                return KeyPressState.Down;
+        }
+        else
+        {
+            if (PredictionIsIntersecting(trigger.ExecutionIntersectionCheck, trigger.ExecutionIntersectionArea, prediction))
+                return KeyPressState.DownAndUp;
+        }
+
+        return null;
     }
 
     private bool TriggerKeysStateCorrect(ActionTrigger trigger)
@@ -138,7 +175,6 @@ public class AutoTriggerAction : BaseAction
         return base.OnPause();
     }
 
-    // Check if the trigger is on cooldown
     private bool TriggerIsOnCooldown(ActionTrigger trigger)
     {
         if (_triggerCooldowns.TryGetValue(trigger, out var cooldownEnd))
@@ -152,7 +188,6 @@ public class AutoTriggerAction : BaseAction
         return false;
     }
 
-    // Set the cooldown for a trigger after it has been executed
     private void SetTriggerCooldown(ActionTrigger trigger, TimeSpan breakTime)
     {
         _triggerCooldowns[trigger] = DateTime.UtcNow.Add(breakTime); // Set cooldown end time
