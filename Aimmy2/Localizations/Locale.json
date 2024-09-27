@@ -249,5 +249,9 @@
   "Active": "Active",
   "Enabled": "Enabled",
   "TriggerCheckChargeIn" : "Trigger Check for begin charge",
-  "TriggerCheckChargeInToolTip" : "Specify Area/Timing when pressing down should start",
+  "TriggerCheckChargeInToolTip": "Specify Area/Timing when pressing down should start",
+  "Edit": "Edit", 
+  "Add": "Add",
+  "Remove": "Remove",
+  "Delete": "Delete",
 }

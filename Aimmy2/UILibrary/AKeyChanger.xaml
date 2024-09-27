@@ -10,19 +10,23 @@
              mc:Ignorable="d"
              d:DesignWidth="282.5"
              d:DesignHeight="40">
-    <Grid x:Name="MainGrid" PreviewMouseRightButtonUp="ContextMenu_OnOpened">
-        <Grid.ContextMenu>
-            <ContextMenu  Name="ContextMenu">
-                <MenuItem Header="Delete Binding" Click="DeleteBinding_Click"/>
-            </ContextMenu>
-        </Grid.ContextMenu>
-        <Border x:Name="MainBorder"
-                Background="Transparent"
-                CornerRadius="00"
-                BorderThickness="1,0,1,0"
-                BorderBrush="#3FFFFFFF">
-            <Grid>
-                <Label x:Name="KeyChangerTitle"
+    <Border x:Name="MainBorder" BorderThickness="1,0,1,0"
+            Height="40"
+                              BorderBrush="#3FFFFFFF">
+        <Grid x:Name="MainGrid" PreviewMouseRightButtonUp="ContextMenu_OnOpened">
+            <Grid.ContextMenu>
+                <ContextMenu  Name="ContextMenu">
+                    <MenuItem Header="Delete Binding" Click="DeleteBinding_Click"/>
+                </ContextMenu>
+            </Grid.ContextMenu>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Border 
+                Background="Transparent">
+                <Grid>
+                    <Label x:Name="KeyChangerTitle"
                        Padding="10,10,10,10"
                        FontFamily="{StaticResource Atkinson Hyperlegible}"
                        Content="Change Aim Keybind"
@@ -31,13 +35,13 @@
                        FontSize="13"
                        Margin="0,0,0,0" />
 
-                <Border HorizontalAlignment="Right"
+                    <Border HorizontalAlignment="Right"
                         Margin="5,5,10,6"
                         BorderBrush="#3FFFFFFF"
                         BorderThickness="1"
                         CornerRadius="5">
-                    <Grid>
-                        <TextBlock x:Name="KeyDeviceInfo"
+                        <Grid>
+                            <TextBlock x:Name="KeyDeviceInfo"
                                    Visibility="Collapsed"
                                    Text="&#xE7FC;"
                                    Background="{x:Null}"
@@ -47,7 +51,7 @@
                                    FontSize="18"
                                    VerticalAlignment="Top"
                         />
-                        <Label x:Name="KeyNotifierLabel"
+                            <Label x:Name="KeyNotifierLabel"
                                FontFamily="{StaticResource Atkinson Hyperlegible}"
                                Content="Right"
                                FontSize="13"
@@ -55,17 +59,63 @@
                                VerticalContentAlignment="Center"
                                Padding="10,0,10,0"
                                Foreground="#DDFFFFFF" />
-                    </Grid>
+                        </Grid>
+                    </Border>
 
-                </Border>
-
-                <Button x:Name="Reader"
+                    <Button x:Name="Reader"
                         PreviewMouseLeftButtonDown="Reader_OnClick"
                         Background="{x:Null}"
                         BorderBrush="{x:Null}"
                         Padding="0,0,0,0"
                         Margin="0"></Button>
-            </Grid>
-        </Border>
-    </Grid>
+                </Grid>
+            </Border>
+
+            <Label Grid.Column="1"
+               Visibility="{Binding ShowTimeEdit, RelativeSource={RelativeSource AncestorType=local:AKeyChanger}, Converter={StaticResource boolToVis}}"
+               Content="&#xec92;"
+               Cursor="Hand"
+               Background="{x:Null}"
+               Foreground="{Binding HasTimeValue, RelativeSource={RelativeSource AncestorType=local:AKeyChanger}, Converter={StaticResource boolToBrush}}"
+               FontFamily="Segoe MDL2 Assets"
+               ToolTip="Configure min time "
+               FontSize="11"
+               Margin="-10 10 5 0"
+               HorizontalAlignment="Right"
+               MouseLeftButtonUp="ConfigureMinTimeLabel_OnClick"
+               VerticalAlignment="Center"/>
+
+            <Popup x:Name="TimeSliderPopup"
+                   Placement="Mouse"
+                   StaysOpen="False"
+                   AllowsTransparency="True">
+                <Border Background="{StaticResource Background}"
+                        BorderBrush="{StaticResource Foreground}"
+                        CornerRadius="5"
+                        MinWidth="330"
+                        MinHeight="130"
+                        BorderThickness="1"
+                        Padding="5">
+                    <local:ASlider x:Name="MinTimeSlider"
+                         BorderBrush="Transparent" Background="Transparent"
+                         ValueChanged="MinTimeSlider_OnValueChanged"
+                                   Steps="0.1" 
+                                   TickFrequency="0.01" 
+                                   Maximum="5" 
+                                   Minimum="0">
+
+                    </local:ASlider>
+                    <!--<StackPanel Margin="10">
+                        <TextBlock Text="Set Min Time:" FontWeight="Bold"/>
+                        <Slider x:Name="MinTimeSlider"
+                                Minimum="0"
+                                Maximum="100"
+                                ValueChanged="MinTimeSlider_ValueChanged"
+                                Width="150"/>
+                    </StackPanel>-->
+                </Border>
+            </Popup>
+
+        </Grid>
+    </Border>
 </UserControl>

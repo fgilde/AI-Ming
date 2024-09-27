@@ -27,16 +27,15 @@ namespace Aimmy2.UILibrary
         private string _text;
         private string _keyConfigPrefix;
 
-        public event EventHandler<EventArgs<(AKeyChanger Sender, string Key)>> GlobalKeyPressed;
-        public event EventHandler<EventArgs<(AKeyChanger Sender, StoredInputBinding KeyBinding)>> KeyBindChanged;
-        
+        public event EventHandler<EventArgs<(AKeyChanger Sender, string Key, StoredInputBinding KeyBinding)>> GlobalKeyPressed;
+        public event EventHandler<EventArgs<(AKeyChanger Sender, StoredInputBinding KeyBinding, StoredInputBinding OldValue)>> KeyBindChanged;
+        public event EventHandler<CancelableEventArgs<(AKeyChanger Sender, StoredInputBinding KeyBinding, StoredInputBinding OldValue)>> BeforeKeyBindChangedByUser;
+
         public bool CanRemoveBinding
         {
             get => (bool)GetValue(CanRemoveBindingProperty);
             set => SetValue(CanRemoveBindingProperty, value);
         }
-
-
 
         public string InvalidText
         {
@@ -44,15 +43,26 @@ namespace Aimmy2.UILibrary
             set => SetValue(InvalidTextProperty, value);
         }
 
-        // Using a DependencyProperty as the backing store for InvalidText.  This enables animation, styling, binding, etc...
+        public bool CanEditMinTime
+        {
+            get => (bool)GetValue(CanEditMinTimeProperty);
+            set => SetValue(CanEditMinTimeProperty, value);
+        }
+
+        public static readonly DependencyProperty CanEditMinTimeProperty =
+            DependencyProperty.Register(nameof(CanEditMinTime), typeof(bool), typeof(AKeyChanger), new PropertyMetadata(true, CanEditMinTimeChanged));
+
+        private static void CanEditMinTimeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((AKeyChanger)d).OnPropertyChanged(nameof(ShowTimeEdit));
+        }
+
         public static readonly DependencyProperty InvalidTextProperty =
             DependencyProperty.Register(nameof(InvalidText), typeof(string), typeof(AKeyChanger), new PropertyMetadata("None"));
 
-
-
         public static readonly DependencyProperty CanRemoveBindingProperty =
             DependencyProperty.Register(nameof(CanRemoveBinding), typeof(bool), typeof(AKeyChanger), new PropertyMetadata(true));
-        
+
         public static readonly DependencyProperty BindingManagerProperty =
             DependencyProperty.Register(nameof(BindingManager), typeof(InputBindingManager), typeof(AKeyChanger),
                 new PropertyMetadata(null));
@@ -65,7 +75,9 @@ namespace Aimmy2.UILibrary
             DependencyProperty.Register(nameof(WithBorder), typeof(bool), typeof(AKeyChanger),
                 new PropertyMetadata(true, WithBorderChanged));
 
-        
+        public bool ShowTimeEdit => /*!InUpdateMode &&*/ KeyBind is { IsValid: true } && CanEditMinTime;
+        public bool HasTimeValue => KeyBind is { IsValid: true, MinTime: > 0 };
+
         public StoredInputBinding KeyBind
         {
             get => (StoredInputBinding)GetValue(KeyBindProperty);
@@ -78,8 +90,15 @@ namespace Aimmy2.UILibrary
 
         private static void HandleKeyBindChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((AKeyChanger)d).SetContent((StoredInputBinding)e.NewValue);
-            ((AKeyChanger)d).KeyBindChanged?.Invoke(d, new EventArgs<(AKeyChanger Sender, StoredInputBinding KeyBinding)>(((AKeyChanger)d, (StoredInputBinding)e.NewValue)));
+            var newValue = (StoredInputBinding)e.NewValue;
+            var oldValue = (StoredInputBinding)e.OldValue;
+            if (oldValue is { IsValid: true, MinTime: > 0 })
+                newValue.SetMinTime(oldValue.MinTime);
+
+            ((AKeyChanger)d).SetContent(newValue);
+            ((AKeyChanger)d).KeyBindChanged?.Invoke(d, new EventArgs<(AKeyChanger Sender, StoredInputBinding KeyBinding, StoredInputBinding OldValue)>(((AKeyChanger)d, newValue, oldValue)));
+            ((AKeyChanger)d).OnPropertyChanged(nameof(ShowTimeEdit));
+            ((AKeyChanger)d).OnPropertyChanged(nameof(HasTimeValue));
         }
 
 
@@ -99,7 +118,7 @@ namespace Aimmy2.UILibrary
             get => (bool)GetValue(WithBorderProperty);
             set => SetValue(WithBorderProperty, value);
         }
-        
+
 
         public InputBindingManager? BindingManager
         {
@@ -153,10 +172,10 @@ namespace Aimmy2.UILibrary
         {
             try
             {
-                if (!KeyBind.IsValid)
+                if (KeyBind is not { IsValid: true })
                 {
                     KeyBind = AppConfig.Current.BindingSettings[KeyConfigName];
-                    if(KeyBind.IsValid)
+                    if (KeyBind is { IsValid: true })
                         SetContent(KeyBind);
                 }
 
@@ -171,13 +190,13 @@ namespace Aimmy2.UILibrary
             }
         }
 
-        private void OnGlobalKeyHandler(string key)
+        private async void OnGlobalKeyHandler(string key)
         {
             if (HasKeySet && key == KeyConfigName && !InUpdateMode)
             {
-                if(KeyBind.Is<MouseEventArgs>() && (IsMouseOver || ContextMenu.IsOpen))
+                if (KeyBind.Is<MouseEventArgs>() && (IsMouseOver || ContextMenu.IsOpen))
                     return;
-                var args = new EventArgs<(AKeyChanger Sender, string Key)>((this, key));
+                var args = new EventArgs<(AKeyChanger Sender, string Key, StoredInputBinding KeyBinding)>((this, key, KeyBind));
                 GlobalKeyPressed?.Invoke(this, args);
             }
         }
@@ -209,7 +228,7 @@ namespace Aimmy2.UILibrary
         public void SetContent(StoredInputBinding keybind)
         {
             ToolTip = Locale.KeyChangerToolTip;
-            HasKeySet = keybind.IsValid;
+            HasKeySet = keybind is { IsValid: true };
             SetDeviceIcon();
             if (!HasKeySet)
             {
@@ -234,12 +253,22 @@ namespace Aimmy2.UILibrary
             KeyNotifierLabel.Content = keyName;
         }
 
+        bool ShouldChange(StoredInputBinding newValue)
+        {
+            var args = new CancelableEventArgs<(AKeyChanger Sender, StoredInputBinding KeyBinding, StoredInputBinding OldValue)>((this, newValue, KeyBind));
+            BeforeKeyBindChangedByUser?.Invoke(this, args);
+            return !args.Cancel;
+        }
+
         private void DeleteBinding_Click(object sender, RoutedEventArgs e)
         {
-            if(!string.IsNullOrEmpty(KeyConfigName))
+            if (!string.IsNullOrEmpty(KeyConfigName))
                 AppConfig.Current.BindingSettings[KeyConfigName] = StoredInputBinding.Empty;
-            KeyBind = StoredInputBinding.Empty;
-            KeyDeleted?.Invoke(this, EventArgs.Empty);
+            if (ShouldChange(StoredInputBinding.Empty))
+            {
+                KeyBind = StoredInputBinding.Empty;
+                KeyDeleted?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         private string GetCode(string keyConfigName)
@@ -267,9 +296,15 @@ namespace Aimmy2.UILibrary
 
         private void Reader_OnClick(object sender, RoutedEventArgs e)
         {
+            RecordNewBinding();
+        }
+
+        public void RecordNewBinding()
+        {
             if (InUpdateMode || BindingManager == null)
                 return;
             InUpdateMode = true;
+            OnPropertyChanged(nameof(ShowTimeEdit));
             MainGrid.ContextMenu = null;
             SetDeviceIcon("\uEA3B", Brushes.Red);
             SetContent("...");
@@ -282,15 +317,22 @@ namespace Aimmy2.UILibrary
             {
                 if (bindingId == KeyConfigName)
                 {
-                    KeyBind = key;
-                    if(!string.IsNullOrEmpty(bindingId))
-                        AppConfig.Current.BindingSettings[bindingId] = key;
+                    bool hasChanged = ShouldChange(key);
+
+                    if (hasChanged)
+                    {
+                        KeyBind = key;
+                        if (!string.IsNullOrEmpty(bindingId))
+                            AppConfig.Current.BindingSettings[bindingId] = KeyBind;
+                    }
+
                     BindingManager.OnBindingSet -= bindingSetHandler; // Unsubscribe after setting
-                    Task.Delay(700).ContinueWith(_ =>
+                    Task.Delay(hasChanged ? 700 : 10).ContinueWith(_ =>
                     {
                         Dispatcher.Invoke(() =>
                         {
                             InUpdateMode = false;
+                            OnPropertyChanged(nameof(ShowTimeEdit));
                             MainGrid.ContextMenu = ContextMenu;
                         });
                     });
@@ -326,5 +368,23 @@ namespace Aimmy2.UILibrary
             }
         }
 
+        private void ConfigureMinTimeLabel_OnClick(object sender, MouseButtonEventArgs e)
+        {
+            MinTimeSlider.Value = KeyBind.MinTime;
+            MinTimeSlider.Label = Locale.MinTimeTriggerKey;
+            MinTimeSlider.Text = Locale.Seconds;
+            TimeSliderPopup.IsOpen = true;
+        }
+
+
+        private void MinTimeSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            var a = KeyBind;
+            a.MinTime = e.NewValue;
+            KeyBind = a;
+            if (!string.IsNullOrEmpty(KeyConfigName))
+                AppConfig.Current.BindingSettings[KeyConfigName] = KeyBind;
+            OnPropertyChanged(nameof(HasTimeValue));
+        }
     }
 }

@@ -16,17 +16,17 @@
                 BorderThickness="1,0,1,0"
                 BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType=local:ASlider}}">
             <Grid>
-                <Label x:Name="SliderTitle"
+                <TextBlock x:Name="SliderTitle"
                        Padding="10,10,10,10"
                        FontFamily="{StaticResource Atkinson Hyperlegible}"
-                       Content="Mouse Sensitivity"
+                       Text="Mouse Sensitivity"
                        Foreground="#DDFFFFFF"
-                       VerticalContentAlignment="Center"
+                       TextTrimming="CharacterEllipsis"
                        FontSize="13"
                        VerticalAlignment="Top"
                        Height="40"
                        HorizontalAlignment="Left"
-                       Width="172" />
+                        />
                 <Label x:Name="AdjustNotifier"
                        Padding="10,10,10,10"
                        FontFamily="{StaticResource Atkinson Hyperlegible}"

@@ -1,15 +1,17 @@
-﻿using Aimmy2.InputLogic.Contracts;
+﻿using System.Diagnostics;
+using Aimmy2.InputLogic.Contracts;
 using System.Windows.Forms;
+using InputLogic;
 
 namespace Aimmy2.InputLogic;
 
-public struct StoredInputBinding
+public class StoredInputBinding
 {
     public bool Equals(StoredInputBinding other)
     {
-        if(!IsValid && !other.IsValid)
+        if (!IsValid && !other.IsValid)
             return true;
-        return Key == other.Key && 
+        return Key == other.Key &&
                (Is<GamepadEventArgs>() && other.Is<GamepadEventArgs>() || Is<MouseEventArgs>() && other.Is<MouseEventArgs>() || Is<KeyEventArgs>() && other.Is<KeyEventArgs>());
     }
 
@@ -24,10 +26,15 @@ public struct StoredInputBinding
     }
 
     public string Key { get; set; }
-
     public MouseEventArgs? MouseEventArgs { get; set; }
     public KeyEventArgs? KeyEventArgs { get; set; }
     public GamepadEventArgs? GamepadEventArgs { get; set; }
+    public double MinTime { get; set; } = 0;
+
+    public void SetMinTime(double value)
+    {
+        MinTime = value;
+    }
 
     public bool Is<T>() where T : EventArgs => typeof(T) switch
     {
@@ -52,8 +59,9 @@ public struct StoredInputBinding
     public static StoredInputBinding Empty => new();
     public string DeviceName => MouseEventArgs != null ? "Mouse" : KeyEventArgs != null ? "Keyboard" : GamepadEventArgs != null ? "Gamepad" : "Unknown";
 
+
     public StoredInputBinding()
-    {}
+    { }
 
     public StoredInputBinding(KeyEventArgs data)
     {
@@ -74,24 +82,68 @@ public struct StoredInputBinding
     }
 
     public StoredInputBinding(GamepadSlider slider) : this(new GamepadEventArgs(slider))
-    {}
+    { }
 
     public StoredInputBinding(MouseButtons mouseButtons) : this(new MouseEventArgs(mouseButtons, 0, 0, 0, 0))
-    {}
+    { }
 
     public StoredInputBinding(Keys keys) : this(new KeyEventArgs(keys))
-    {}
+    { }
 
     public StoredInputBinding(GamepadButton gamepadButton) : this(new GamepadEventArgs(gamepadButton))
-    {}
+    { }
 
-    public StoredInputBinding(GamepadAxis gamepadAxis): this(new GamepadEventArgs(gamepadAxis))
-    {}
+    public StoredInputBinding(GamepadAxis gamepadAxis) : this(new GamepadEventArgs(gamepadAxis))
+    { }
 
     public static implicit operator StoredInputBinding(Keys a) => new(a);
     public static implicit operator StoredInputBinding(MouseButtons a) => new(a);
     public static implicit operator StoredInputBinding(GamepadButton a) => new(a);
     public static implicit operator StoredInputBinding(GamepadSlider a) => new(a);
     public static implicit operator StoredInputBinding(GamepadAxis a) => new(a);
-    
+
+    public bool IsHoldingFor(TimeSpan? timeSpan = null) => InputBindingManager.IsHoldingBindingFor(this, timeSpan ?? TimeSpan.FromSeconds(MinTime));
+    public bool IsHolding() => InputBindingManager.IsHoldingBindingFor(this, null);
+
+    public async Task<bool> WaitHoldingFor()
+    {
+        var cancel = new CancellationTokenSource();
+        Action<StoredInputBinding>? onReleased = s =>
+        {
+            if (s?.Equals(this) == true)
+            {
+                cancel.Cancel();
+            }
+        };
+        try
+        {
+            if (MinTime <= 0)
+                return IsHolding();
+            if(InputBindingManager.Instance != null)
+                InputBindingManager.Instance.OnKeyReleased += onReleased;
+
+            var fromSeconds = TimeSpan.FromSeconds(MinTime);
+            await Task.Delay(fromSeconds, cancel.Token);
+            return !cancel.IsCancellationRequested && IsHolding();
+        }
+        catch
+        {
+            return false;
+        }
+        finally
+        {
+            if (InputBindingManager.Instance != null)
+                InputBindingManager.Instance.OnKeyReleased -= onReleased;
+        }
+    }
+
+    public void ExecuteWhenHold(Action action)
+    {
+        WaitHoldingFor().ContinueWith(t =>
+        {
+            if(t.Result)
+                System.Windows.Application.Current.Dispatcher.Invoke(action);
+        });
+    }
+
 }

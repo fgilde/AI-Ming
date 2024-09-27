@@ -83,8 +83,8 @@ public class AimingAction : BaseAction
     private void HandleAim(Prediction closestPrediction)
     {
         if (AppConfig.Current.ToggleState.AimAssist && (AppConfig.Current.ToggleState.ConstantAITracking
-                                                        || AppConfig.Current.ToggleState.AimAssist && InputBindingManager.IsHoldingBinding(nameof(AppConfig.Current.BindingSettings.AimKeybind))
-                                                        || AppConfig.Current.ToggleState.AimAssist && InputBindingManager.IsHoldingBinding(nameof(AppConfig.Current.BindingSettings.SecondAimKeybind))))
+                                                        || AppConfig.Current.BindingSettings.AimKeybind.IsHoldingFor())
+                                                        || AppConfig.Current.BindingSettings.SecondAimKeybind.IsHoldingFor())
         {
             var area = ImageCapture.CaptureArea;
             float scaleX = area.Width / 640f;

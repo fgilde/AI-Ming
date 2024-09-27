@@ -1,15 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Aimmy2;
 using Aimmy2.Config;
 using Aimmy2.Extensions;
@@ -99,11 +90,6 @@ namespace UILibrary
                 new EditHeadArea(Trigger.ExecutionIntersectionArea, model => Trigger.ExecutionIntersectionArea = model.ToRelativeRect()).Show();
             };
             
-            TimeSettings.AddSlider(Locale.MinTimeTriggerKey, Locale.Seconds, 0.01, 0.1, 0.0, 5).InitWith(slider =>
-            {
-                slider.BorderBrush = slider.Background = Brushes.Transparent;
-                slider.ToolTip = Locale.MinTimeTriggerKeyTooltip;
-            }).BindTo(() => Trigger.TriggerKeyMin);
             TimeSettings.AddSlider(Locale.AutoTriggerDelay, Locale.Seconds, 0.01, 0.1, 0.00, 5).InitWith(slider =>
             {
                 slider.BorderBrush = slider.Background = Brushes.Transparent;
@@ -128,7 +114,7 @@ namespace UILibrary
             DataContext = this;
         }
 
-        private void ActionKeyChanger_OnKeyBindChanged(object? sender, EventArgs<(AKeyChanger Sender, StoredInputBinding KeyBinding)> e)
+        private void ActionKeyChanger_OnKeyBindChanged(object? sender, EventArgs<(AKeyChanger Sender, StoredInputBinding KeyBinding, StoredInputBinding OldValue)> e)
         {
             ChargeModeDescription.Text = Locale.ChargeModeToolTip.FormatWith(Trigger.Action.Key);
         }

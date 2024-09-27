@@ -13,7 +13,8 @@
             <RowDefinition Height="*"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
         </Grid.RowDefinitions>
-        <ItemsControl Focusable="False" IsTabStop="False" BorderBrush="#3FFFFFFF" BorderThickness="1" ItemsSource="{Binding Keys, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, RelativeSource={RelativeSource AncestorType=local:MultiKeyChanger}}">
+        <ItemsControl Focusable="False" IsTabStop="False" BorderBrush="#3FFFFFFF" BorderThickness="1" 
+                      ItemsSource="{Binding Keys, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, RelativeSource={RelativeSource AncestorType=local:MultiKeyChanger}}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <WrapPanel />
@@ -26,9 +27,9 @@
                                            BindingManager="{Binding BindingManager, RelativeSource={RelativeSource AncestorType=local:MultiKeyChanger}}" 
                                            WithBorder="False"
                                            CanRemoveBinding="true"
-                                           InvalidText="Add"
+                                           InvalidText="+"
                                            Tag="{Binding}"
-                                           KeyBindChanged="AKeyChanger_OnKeyBindChanged"
+                                           BeforeKeyBindChangedByUser="AKeyChanger_OnKeyBindChanged"
                                            KeyBind="{Binding Path=., Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}" />
                         <Border BorderBrush="#3FFFFFFF"
                                 BorderThickness="1"
@@ -37,18 +38,19 @@
                                 Visibility="{Binding IsValid, Converter={StaticResource boolToVis}}"
                                 MouseLeftButtonDown="Remove_Key_Click"
                                 Background="Black"
-                                Margin="-3,0,0,0"
+                                Margin="0,-4,0,0"
+                                ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Remove'}"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Top"
-                                MinWidth="15"
-                                MinHeight="15"
+                                MinWidth="10"
+                                MinHeight="10"
                                 CornerRadius="2">
                             <Grid>
                                 <Label 
                                     FontFamily="Segoe MDL2 Assets"
                                     Content="&#xE74D;"
                                     Padding="4"
-                                    FontSize="12"
+                                    FontSize="10"
                                     HorizontalContentAlignment="Center"
                                     VerticalContentAlignment="Center"
                                     Foreground="White" />

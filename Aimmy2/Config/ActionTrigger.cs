@@ -18,7 +18,6 @@ public class ActionTrigger : EditableNotificationObject
     private ObservableCollection<StoredInputBinding> _triggerKeys = new();
     private double _delay;
     private double _breakTime;
-    private double _triggerKeyMin;
     private TriggerCheck _executionIntersectionCheck;
     private TriggerCheck _beginIntersectionCheck;
     private RelativeRect _beginIntersectionArea;
@@ -142,15 +141,6 @@ public class ActionTrigger : EditableNotificationObject
     {
         get => _antiTriggerKeys;
         set => SetProperty(ref _antiTriggerKeys, value);
-    }
-
-    /// <summary>
-    /// Time the <see cref="TriggerKey"/> needs to hold before trigger is executed
-    /// </summary>
-    public double TriggerKeyMin
-    {
-        get => _triggerKeyMin;
-        set => SetProperty(ref _triggerKeyMin, value);
     }
 
     /// <summary>

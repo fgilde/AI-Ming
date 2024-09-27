@@ -252,7 +252,7 @@ public partial class MainWindow
         {
             toggle.BindTo(() => AppConfig.Current.ToggleState.GlobalActive);
             toggle.Changed += (s, e) => SetActive(e.Value);
-        }, border => border.Background = Brushes.Transparent);
+        }, border => border.Background = Brushes.Transparent, changer => changer.CanEditMinTime = false);
     }
 
     public void SetActive(bool active)
@@ -1215,7 +1215,7 @@ public partial class MainWindow
         e.Handled = true;
     }
 
-    private void AKeyChanger_ModelOnGlobalKeyPressed(object? sender, EventArgs<(AKeyChanger Sender, string Key)> e)
+    private void AKeyChanger_ModelOnGlobalKeyPressed(object? sender, EventArgs<(AKeyChanger Sender, string Key, StoredInputBinding KeyBinding)> e)
     {
         var args = e.Value;
         var modelToLoad = args.Sender.Tag?.ToString();
@@ -1232,7 +1232,7 @@ public partial class MainWindow
         }
     }
 
-    private void AKeyChanger_ConfigOnGlobalKeyPressed(object? sender, EventArgs<(AKeyChanger Sender, string Key)> e)
+    private void AKeyChanger_ConfigOnGlobalKeyPressed(object? sender, EventArgs<(AKeyChanger Sender, string Key, StoredInputBinding KeyBinding)> e)
     {
         var args = e.Value;
         var configToLoad = args.Sender.Tag?.ToString();

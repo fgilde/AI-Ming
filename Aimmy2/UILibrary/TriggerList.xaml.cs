@@ -9,6 +9,7 @@ using System.Windows.Controls;
 using Aimmy2.Extensions;
 using System.Windows.Input;
 using Aimmy2;
+using Aimmy2.InputLogic;
 using Aimmy2.Types;
 using Nextended.Core.Extensions;
 using Visuality;
@@ -74,7 +75,7 @@ namespace UILibrary
                 Triggers.Remove(trigger);
         }
 
-        private void ApplyBindingEnabled(object? sender, EventArgs<(AKeyChanger Sender, string Key)> e)
+        private void ApplyBindingEnabled(object? sender, EventArgs<(AKeyChanger Sender, string Key, StoredInputBinding KeyBinding)> e)
         {
             var args = e.Value;
             if (args.Sender.Tag is ActionTrigger trigger)

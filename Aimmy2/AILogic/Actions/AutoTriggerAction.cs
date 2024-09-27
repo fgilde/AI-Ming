@@ -134,29 +134,9 @@ public class AutoTriggerAction : BaseAction
 
     private bool TriggerKeysStateCorrect(ActionTrigger trigger)
     {
-        return TriggerKeysAreUnsetOrHold(trigger.TriggerKeys.ToArray(), trigger.TriggerKeyMin) && TriggerKeysAreNotHold(trigger.AntiTriggerKeys.ToArray(), trigger.TriggerKeyMin);
+        return KeysAreUnsetOrHold(trigger.TriggerKeys.ToArray()) && KeysAreNotHold(trigger.AntiTriggerKeys.ToArray());
     }
-
-    private bool TriggerKeysAreUnsetOrHold(StoredInputBinding[] triggerKeys, double triggerKeyMin)
-    {
-        return triggerKeys.All(triggerKey => TriggerKeyUnsetOrHold(triggerKey, triggerKeyMin));
-    }
-
-    private bool TriggerKeyUnsetOrHold(StoredInputBinding triggerKey, double triggerKeyMin)
-    {
-        return !triggerKey.IsValid || InputBindingManager.IsHoldingBindingFor(triggerKey, TimeSpan.FromSeconds(triggerKeyMin));
-    }
-
-    private bool TriggerKeysAreNotHold(StoredInputBinding[] triggerKeys, double triggerKeyMin)
-    {
-        return triggerKeys.All(triggerKey => TriggerKeyNotHold(triggerKey, triggerKeyMin));
-    }
-
-    private bool TriggerKeyNotHold(StoredInputBinding triggerKey, double triggerKeyMin)
-    {
-        return !triggerKey.IsValid || !InputBindingManager.IsHoldingBindingFor(triggerKey, TimeSpan.FromSeconds(triggerKeyMin));
-    }
-
+    
     private bool PredictionIsIntersecting(TriggerCheck check, RelativeRect area, Prediction? prediction = null)
     {
         prediction ??= _lastPrediction;

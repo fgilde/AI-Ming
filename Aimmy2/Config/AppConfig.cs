@@ -44,7 +44,6 @@ public class AppConfig : BaseSettings
             TriggerKeys = [GamepadSlider.LeftTrigger],
             Delay = 0,
             BreakTime = 0,
-            TriggerKeyMin = 0.39,
             ExecutionIntersectionCheck = TriggerCheck.HeadIntersectingCenter,
             ExecutionIntersectionArea = RelativeRect.Default
         },

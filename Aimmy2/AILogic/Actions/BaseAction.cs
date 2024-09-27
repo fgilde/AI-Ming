@@ -1,5 +1,7 @@
 ﻿using Aimmy2.AILogic.Contracts;
 using Aimmy2.Config;
+using Aimmy2.InputLogic;
+using InputLogic;
 using Nextended.Core.Helper;
 
 namespace Aimmy2.AILogic.Actions;
@@ -23,6 +25,27 @@ public abstract class BaseAction: IAction
         return typeof(BaseAction).Assembly.GetTypes()
             .Where(t => t.ImplementsInterface(typeof(IAction)) && !t.IsAbstract)
             .Select(t => (IAction)Activator.CreateInstance(t)).ToList();
+    }
+
+
+    protected bool KeysAreUnsetOrHold(StoredInputBinding[] triggerKeys)
+    {
+        return triggerKeys.All(triggerKey => KeyIsUnsetOrHold(triggerKey));
+    }
+
+    protected bool KeyIsUnsetOrHold(StoredInputBinding triggerKey)
+    {
+        return !triggerKey.IsValid || InputBindingManager.IsHoldingBindingFor(triggerKey, TimeSpan.FromSeconds(triggerKey.MinTime));
+    }
+
+    protected bool KeysAreNotHold(StoredInputBinding[] triggerKeys)
+    {
+        return triggerKeys.All(triggerKey => KeyIsNotHold(triggerKey));
+    }
+
+    protected bool KeyIsNotHold(StoredInputBinding triggerKey)
+    {
+        return !triggerKey.IsValid || !InputBindingManager.IsHoldingBindingFor(triggerKey, TimeSpan.FromSeconds(triggerKey.MinTime));
     }
 
     public virtual void Dispose()

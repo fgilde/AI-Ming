@@ -302,7 +302,7 @@ public static class UIElementExtensions
         return element;
     }
 
-    internal static AToggle AddToggleWithKeyBind<T>(this T owner, string title, string key, InputBindingManager bindingManager, Action<AToggle>? cfg = null, Action<Border>? containerCfg = null) where T : IAddChild, new()
+    internal static AToggle AddToggleWithKeyBind<T>(this T owner, string title, string key, InputBindingManager bindingManager, Action<AToggle>? cfg = null, Action<Border>? containerCfg = null, Action<AKeyChanger>? changerCfg = null) where T : IAddChild, new()
     {
         var border = owner.Add<Border>(p =>
         {
@@ -337,6 +337,8 @@ public static class UIElementExtensions
         changer.KeyBind = keyCodeValue;
         changer.ShowTitle = false;
         changer.BindingManager = bindingManager;
+        if(changerCfg != null)
+            changerCfg.Invoke(changer);
         changer.GlobalKeyPressed += (sender, args) =>
         {
             if (!updating && toggle.IsEnabled)

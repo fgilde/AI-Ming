@@ -17,14 +17,14 @@ namespace UILibrary
     public partial class MultiKeyChanger : INotifyPropertyChanged
     {
         public InputBindingManager BindingManager => MainWindow.Instance.BindingManager;
-        public ObservableCollection<StoredInputBinding> Keys    
+        public ObservableCollection<StoredInputBinding> Keys
         {
             get => (ObservableCollection<StoredInputBinding>)GetValue(KeysProperty);
             set => SetValue(KeysProperty, value);
         }
 
         public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
-        
+
 
         public string ErrorMessage
         {
@@ -39,10 +39,9 @@ namespace UILibrary
         {
             ((MultiKeyChanger)d).OnPropertyChanged(nameof(HasError));
         }
-
-
+        
         public static readonly DependencyProperty KeysProperty =
-            DependencyProperty.Register("Keys", typeof(ObservableCollection<StoredInputBinding>), typeof(MultiKeyChanger), new PropertyMetadata(new ObservableCollection<StoredInputBinding>(), OnKeysChanged));
+            DependencyProperty.Register(nameof(Keys), typeof(ObservableCollection<StoredInputBinding>), typeof(MultiKeyChanger), new PropertyMetadata(new ObservableCollection<StoredInputBinding>(), OnKeysChanged));
 
         private bool _internalChange;
         private static void OnKeysChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -56,7 +55,7 @@ namespace UILibrary
             _internalChange = true;
             ErrorMessage = string.Empty;
             var keys = Keys;
-            var invalids = keys.Where(k => !k.IsValid).ToList();
+            var invalids = keys.Where(k => k is not { IsValid: true }).ToList();
             foreach (var invalid in invalids)
             {
                 if (keys.Contains(invalid))
@@ -73,31 +72,52 @@ namespace UILibrary
         {
             InitializeComponent();
         }
-        
-        private void AKeyChanger_OnKeyBindChanged(object? sender, EventArgs<(AKeyChanger Sender, StoredInputBinding KeyBinding)> e)
+
+        private bool HasDuplicate(StoredInputBinding binding)
         {
-            if (e.Value.Sender.Tag is StoredInputBinding binding)
+            if (binding is { IsValid: true } && Keys.Any(b => b?.Equals(binding) == true))
             {
-                if (Keys.Contains(binding))
-                {
-                    if (e.Value.KeyBinding.IsValid && Keys.Any(b => b.Equals(e.Value.KeyBinding)))
-                    {
-                        OnKeysChanged();
-                        ErrorMessage = $"The key {e.Value.KeyBinding.Key} already exists in this list";
-                        return;
-                    }
-                    try
-                    {
-                        Keys[Keys.IndexOf(binding)] = e.Value.KeyBinding;
-                    }
-                    catch
-                    {
-                        Keys.Remove(binding);
-                    }
-                    OnKeysChanged();
-                }
+                OnKeysChanged();
+                ErrorMessage = $"The key {binding.Key} already exists in this list";
+                return true;
             }
+
+            return false;
         }
+
+
+        private void AKeyChanger_OnKeyBindChanged(object? sender, CancelableEventArgs<(AKeyChanger Sender, StoredInputBinding KeyBinding, StoredInputBinding OldValue)> e)
+        {
+            ErrorMessage = string.Empty;
+            if (HasDuplicate(e.Value.KeyBinding))
+            {
+                e.Cancel = true;
+                if (e.Value.Sender.Tag is StoredInputBinding { IsValid: true } existing && Keys.Contains(existing))
+                {
+                    Keys[Keys.IndexOf(existing)] = e.Value.OldValue;
+                    Task.Delay(100).ContinueWith(_ => e.Value.Sender.Dispatcher.Invoke(() =>
+                    {
+                        e.Value.Sender.RecordNewBinding();
+                        e.Value.Sender.Focus();
+                    }));
+                    System.Diagnostics.Debug.WriteLine("Duplicate key found");
+                }
+
+                return;
+            }
+
+            if (e.Value.Sender.Tag is not StoredInputBinding { IsValid: true } binding)
+            {
+                Keys.Insert(Keys.Count - 1, e.Value.KeyBinding);
+              
+            }
+            else
+            {
+                Keys[Keys.IndexOf(binding)] = e.Value.KeyBinding;
+            }
+            OnKeysChanged();
+        }
+        
 
         private void Remove_Key_Click(object sender, MouseButtonEventArgs e)
         {
@@ -114,6 +134,7 @@ namespace UILibrary
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
 
     }
 }

@@ -8,6 +8,12 @@ namespace InputLogic
 {
     public class InputBindingManager : IDisposable
     {
+        public static InputBindingManager? Instance { get; private set; }
+        public InputBindingManager()
+        {
+            Instance = this;
+        }
+
         private IKeyboardMouseEvents? _mEvents;
         private bool _gamepadListen;
         private readonly Dictionary<string, StoredInputBinding> bindings = new();
@@ -16,6 +22,10 @@ namespace InputLogic
         private static readonly List<(StoredInputBinding Binding, bool IsHolding, DateTime StartTime)> holdingBindings = new();
 
         public event Action<string, StoredInputBinding>? OnBindingSet;
+
+        public event Action<StoredInputBinding>? OnKeyPressed;
+
+        public event Action<StoredInputBinding>? OnKeyReleased;
 
         public event Action<string>? OnBindingPressed;
 
@@ -40,7 +50,7 @@ namespace InputLogic
         {
             var holdingEntry = holdingBindings.FirstOrDefault(h => h.Binding.Equals(binding));
 
-            if (holdingEntry.Binding.IsValid && holdingEntry.IsHolding)
+            if (holdingEntry.Binding is { IsValid: true } && holdingEntry.IsHolding)
             {
                 if (duration == null || duration <= TimeSpan.Zero)
                     return true;
@@ -53,6 +63,11 @@ namespace InputLogic
 
         private void UpdateHoldingState(StoredInputBinding binding, bool isPressed)
         {
+            if(isPressed)
+                OnKeyPressed?.Invoke(binding);
+            else
+                OnKeyReleased?.Invoke(binding);
+
             var index = holdingBindings.FindIndex(h => h.Binding.Equals(binding));
 
             if (index != -1)
@@ -81,7 +96,7 @@ namespace InputLogic
 
         public void SetupDefault(string bindingId, StoredInputBinding bindingValue)
         {
-            if (!bindingValue.IsValid)
+            if (bindingValue is not { IsValid: true })
                 return;
             bindings[bindingId] = bindingValue;
             isHolding[bindingId] = (false, DateTime.MinValue);
@@ -134,16 +149,29 @@ namespace InputLogic
                             if (pressed)
                             {
                                 isHolding[binding.Key] = (true, DateTime.Now);
-                                OnBindingPressed?.Invoke(binding.Key);
+                                InvokeBindingPressed(binding);
                             }
                             else
                             {
                                 isHolding[binding.Key] = (false, DateTime.MinValue);
-                                OnBindingReleased?.Invoke(binding.Key);
+                                InvokeBindingReleased(binding);
                             }
                         }
                     }
                 }
+            }
+        }
+
+        private void InvokeBindingReleased(KeyValuePair<string, StoredInputBinding> binding)
+        {
+            OnBindingReleased?.Invoke(binding.Key);
+        }
+
+        private async void InvokeBindingPressed(KeyValuePair<string, StoredInputBinding> binding)
+        {
+            if (binding.Value == null || await binding.Value.WaitHoldingFor())
+            {
+                OnBindingPressed?.Invoke(binding.Key);
             }
         }
 
@@ -164,7 +192,7 @@ namespace InputLogic
                     if (binding.Value.Matches(e))
                     {
                         isHolding[binding.Key] = (true, DateTime.Now);
-                        OnBindingPressed?.Invoke(binding.Key);
+                        InvokeBindingPressed(binding);
                     }
                 }
             }
@@ -187,7 +215,7 @@ namespace InputLogic
                     if (binding.Value.Matches(e))
                     {
                         isHolding[binding.Key] = (true, DateTime.Now);
-                        OnBindingPressed?.Invoke(binding.Key);
+                        InvokeBindingPressed(binding);
                     }
                 }
             }
@@ -202,7 +230,7 @@ namespace InputLogic
                 if (binding.Value.Matches(e))
                 {
                     isHolding[binding.Key] = (false, DateTime.MinValue);
-                    OnBindingReleased?.Invoke(binding.Key);
+                    InvokeBindingReleased(binding);
                 }
             }
         }
@@ -215,7 +243,7 @@ namespace InputLogic
                 if (binding.Value.Matches(e))
                 {
                     isHolding[binding.Key] = (false, DateTime.MinValue);
-                    OnBindingReleased?.Invoke(binding.Key);
+                    InvokeBindingReleased(binding);
                 }
             }
         }
