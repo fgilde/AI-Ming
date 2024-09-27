@@ -7,15 +7,18 @@
              xmlns:Ant="clr-namespace:AntWpf.Controls;assembly=AntWpf"
              xmlns:local="clr-namespace:UILibrary"
              mc:Ignorable="d"
-             d:DesignWidth="282.5"
-             Height="80">
+             d:DesignWidth="282.5">
     <Grid>
-        <Border Height="80"
+        <Border 
                 Background="Transparent"
                 CornerRadius="00"
                 BorderThickness="1,0,1,0"
                 BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType=local:ADropdown}}">
             <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
                 <Label x:Name="DropdownTitle"
                        Padding="10,10,10,10"
                        FontFamily="{StaticResource Atkinson Hyperlegible}"
@@ -24,9 +27,11 @@
                        VerticalContentAlignment="Center"
                        FontSize="13"
                        VerticalAlignment="Top"
-                       Height="40" />
+                />
                 <ComboBox x:Name="DropdownBox"
+                          Grid.Row="1"
                           Height="30"
+                          HorizontalAlignment="Stretch"
                           Margin="10,0,10,10"
                           VerticalAlignment="Bottom"
                           Foreground="White"

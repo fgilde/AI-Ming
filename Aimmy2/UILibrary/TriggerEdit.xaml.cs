@@ -45,7 +45,8 @@ namespace UILibrary
             ChargeEnterIntersectionBox.RemoveAll();
             TimeSettings.RemoveAll();
             ModePanel.RemoveAll();
-
+            TriggerKeyOperator.RemoveAll();
+            AntiTriggerKeyOperator.RemoveAll();
             var drop = ChargeEnterIntersectionBox.AddDropdown(Locale.TriggerCheckChargeIn, Trigger.BeginIntersectionCheck,
                 check => Trigger.BeginIntersectionCheck = check);
             drop.ToolTip = Locale.TriggerCheckChargeInToolTip;
@@ -70,11 +71,8 @@ namespace UILibrary
 
 
 
-            var d = IntersectionBox.AddDropdown(Locale.TriggerCheck, Trigger.ExecutionIntersectionCheck,
-                check => Trigger.ExecutionIntersectionCheck = check);
-            d.Margin = new Thickness(-11, 0, -11 ,-10);
-            d.BorderBrush = Brushes.Transparent;
-            d.Background = Brushes.Transparent;
+            IntersectionBox.AddDropdown(Locale.TriggerCheck, Trigger.ExecutionIntersectionCheck,
+                check => Trigger.ExecutionIntersectionCheck = check).AsSimple();
             IntersectionBox.AddButton(Locale.ConfigureHeadArea, b =>
             {
                 Trigger.PropertyChanged += (sender, args) =>
@@ -102,7 +100,7 @@ namespace UILibrary
                 slider.ToolTip = Locale.AutoTriggerBreakTimeTooltip;
             }).BindTo(() => Trigger.BreakTime);
 
-            var executionDropdown = ModePanel.AddDropdown("", Trigger.ExecutionMode,
+            ModePanel.AddDropdown("", Trigger.ExecutionMode,
                 mode =>
                 {
                     Trigger.ExecutionMode = mode;
@@ -112,10 +110,31 @@ namespace UILibrary
                         TriggerExecutionMode.Simultaneous => Locale.DescriptionTriggerSimultaneous,
                         _ => ""
                     };
-                });
-            executionDropdown.Margin = new Thickness(-11, 0, -11, 0);
-            executionDropdown.BorderBrush = Brushes.Transparent;
-            executionDropdown.Background = Brushes.Transparent;
+                }).AsSimple();
+
+            TriggerKeyOperator.AddDropdown("", Trigger.TriggerKeysOperator,
+                mode =>
+                {
+                    Trigger.TriggerKeysOperator = mode;
+                    DescriptionTriggerKeys.Text = mode switch
+                    {
+                        KeyOperator.And => Locale.DescriptionTriggerKeys,
+                        KeyOperator.Or => Locale.DescriptionTriggerKeysOr,
+                        _ => ""
+                    };
+                }).AsSimple().SetProperties(m => m.MinWidth = 80);
+
+            AntiTriggerKeyOperator.AddDropdown("", Trigger.AntiTriggerKeysOperator,
+                mode =>
+                {
+                    Trigger.AntiTriggerKeysOperator = mode;
+                    DescriptionAntiTriggerKeys.Text = mode switch
+                    {
+                        KeyOperator.And => Locale.DescriptionAntiTriggerKeys,
+                        KeyOperator.Or => Locale.DescriptionAntiTriggerKeysOr,
+                        _ => ""
+                    };
+                }).AsSimple().SetProperties(m => m.MinWidth = 80);
 
         }
 

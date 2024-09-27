@@ -52,6 +52,8 @@ public class ActionTrigger : EditableNotificationObject
 
     private StoredInputBinding[] _originalKeys;
     private StoredInputBinding[] _originalAntiKeys;
+    private KeyOperator _triggerKeysOperator;
+    private KeyOperator _antiTriggerKeysOperator;
 
     public override void BeginEdit()
     {
@@ -68,6 +70,18 @@ public class ActionTrigger : EditableNotificationObject
     }
 
     public string Id { get; set; }
+
+    public KeyOperator TriggerKeysOperator
+    {
+        get => _triggerKeysOperator;
+        set => SetProperty(ref _triggerKeysOperator, value);
+    }
+
+    public KeyOperator AntiTriggerKeysOperator
+    {
+        get => _antiTriggerKeysOperator;
+        set => SetProperty(ref _antiTriggerKeysOperator, value);
+    }
 
     public TriggerExecutionMode ExecutionMode
     {

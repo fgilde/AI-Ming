@@ -9,3 +9,11 @@ public enum TriggerExecutionMode
     [Description("Sequential execution")]
     Sequential,
 }
+
+public enum KeyOperator
+{
+    [Description("And")]
+    And,
+    [Description("Or")]
+    Or,
+}

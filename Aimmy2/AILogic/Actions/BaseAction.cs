@@ -47,9 +47,14 @@ public abstract class BaseAction : IAction
         return !triggerKey.IsValid || InputBindingManager.IsHoldingBindingFor(triggerKey, TimeSpan.FromSeconds(triggerKey.MinTime));
     }
 
-    protected bool KeysAreNotHold(IEnumerable<StoredInputBinding> triggerKeys)
+    protected bool AllKeysAreNotHold(IEnumerable<StoredInputBinding> triggerKeys)
     {
         return triggerKeys.All(KeyIsNotHold);
+    }
+
+    protected bool AnyKeysIsNotHold(IEnumerable<StoredInputBinding> triggerKeys)
+    {
+        return triggerKeys.Any(k => k is { IsValid: true } && KeyIsNotHold(k));
     }
 
     protected bool KeyIsNotHold(StoredInputBinding triggerKey)

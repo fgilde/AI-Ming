@@ -162,9 +162,8 @@ public class AutoTriggerAction : BaseAction
 
     private bool TriggerKeysStateCorrect(ActionTrigger trigger)
     {
-        var key = trigger.TriggerKeys.FirstOrDefault();
-        System.Diagnostics.Debug.WriteLine("T "+ key.MinTime);
-        return AllKeysAreUnsetOrHold(trigger.TriggerKeys.ToArray()) && KeysAreNotHold(trigger.AntiTriggerKeys.ToArray());
+        return (trigger.TriggerKeysOperator == KeyOperator.And ? AllKeysAreUnsetOrHold(trigger.TriggerKeys) : AnyKeyIsHold(trigger.TriggerKeys) )
+            && (!HasValidKey(trigger.AntiTriggerKeys) || (trigger.AntiTriggerKeysOperator == KeyOperator.And ? AllKeysAreNotHold(trigger.AntiTriggerKeys) : AnyKeysIsNotHold(trigger.AntiTriggerKeys)));
     }
     
     private bool PredictionIsIntersecting(TriggerCheck check, RelativeRect area, Prediction? prediction = null)

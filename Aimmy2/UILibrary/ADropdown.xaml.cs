@@ -35,6 +35,15 @@ namespace UILibrary
             main_dictionary_path = dictionary_path;
         }
 
+        internal ADropdown AsSimple()
+        {
+            DropdownTitle.Visibility = Visibility.Collapsed;
+            Margin = new Thickness(-11, 0, -11, 0);
+            BorderBrush = Brushes.Transparent;
+            Background = Brushes.Transparent;
+            return this;
+        }
+
         private void DropdownBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var selectedItemContent = ((ComboBoxItem)DropdownBox.SelectedItem)?.Content?.ToString();

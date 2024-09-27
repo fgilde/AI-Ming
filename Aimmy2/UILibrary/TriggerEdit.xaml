@@ -54,17 +54,7 @@
                                        Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='LabelTriggerActions'}"
                                        FontFamily="{StaticResource Atkinson Hyperlegible}"></Label>
                     <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
-                        <!--<uiLibrary:AKeyChanger Background="Transparent" BorderBrush="Transparent" 
-                                           x:Name="ActionKeyChanger"
-                                       BindingManager="{Binding BindingManager, RelativeSource={RelativeSource AncestorType=local:TriggerEdit}}" 
-                                       WithBorder="False"
-                                       Margin="-7 0 0 0"
-                                       CanRemoveBinding="false"
-                                           KeyBindChanged="ActionKeyChanger_OnKeyBindChanged"
-                                       Tag="{Binding}"
-                                       KeyBind="{Binding Path=Trigger.Action, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}" />-->
                         <local:MultiKeyChanger Keys="{Binding Trigger.Actions, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}">
-
                         </local:MultiKeyChanger>
                         <TextBlock Foreground="{StaticResource Foreground}"
                                    x:Name="TriggerActionsHelp"
@@ -118,12 +108,27 @@
                 <uiLibrary:Line Margin="0 0 0 10"></uiLibrary:Line>
 
                 <StackPanel>
-                    <Label Foreground="{StaticResource Foreground}"
-                       FontSize="13"
-                       Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='LabelTriggerKeys'}"
-                       FontFamily="{StaticResource Atkinson Hyperlegible}"></Label>
+                    <Grid Height="40">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            <ColumnDefinition Width="*"></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <Label Foreground="{StaticResource Foreground}"
+                               FontSize="13"
+                               Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='LabelTriggerKeys'}"
+                               FontFamily="{StaticResource Atkinson Hyperlegible}"></Label>
+                        <StackPanel Orientation="Horizontal" Grid.Column="1" HorizontalAlignment="Right">
+                            <Label Foreground="{StaticResource Foreground}"
+                                   FontSize="13"
+                                   Margin="0 0 5 0"
+                                   Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='TriggerKeysOperator'}"
+                                   FontFamily="{StaticResource Atkinson Hyperlegible}"></Label>
+                            <StackPanel x:Name="TriggerKeyOperator"></StackPanel>
+                        </StackPanel>
+                    </Grid>
                     <local:MultiKeyChanger Keys="{Binding Trigger.TriggerKeys, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}"></local:MultiKeyChanger>
                     <TextBlock Foreground="{StaticResource Foreground}"
+                               x:Name="DescriptionTriggerKeys"
                        FontSize="11"
                        Margin="0 -15 0 10"
                        TextWrapping="Wrap"
@@ -132,12 +137,28 @@
                 </StackPanel>
 
                 <StackPanel>
-                    <Label Foreground="{StaticResource Foreground}"
-                       FontSize="13"
-                       Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AntiTriggerKeys'}"
-                       FontFamily="{StaticResource Atkinson Hyperlegible}"></Label>
+
+                    <Grid Height="40">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            <ColumnDefinition Width="*"></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <Label Foreground="{StaticResource Foreground}"
+                           FontSize="13"
+                           Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AntiTriggerKeys'}"
+                           FontFamily="{StaticResource Atkinson Hyperlegible}"></Label>
+                        <StackPanel Orientation="Horizontal" Grid.Column="1" HorizontalAlignment="Right">
+                            <Label Foreground="{StaticResource Foreground}"
+                               FontSize="13"
+                               Margin="0 0 5 0"
+                               Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AntiTriggerKeysOperator'}"
+                               FontFamily="{StaticResource Atkinson Hyperlegible}"></Label>
+                            <StackPanel x:Name="AntiTriggerKeyOperator"></StackPanel>
+                        </StackPanel>
+                    </Grid>
+
                     <local:MultiKeyChanger Keys="{Binding Trigger.AntiTriggerKeys, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}"></local:MultiKeyChanger>
-                    <TextBlock Foreground="{StaticResource Foreground}"
+                    <TextBlock Foreground="{StaticResource Foreground}" x:Name="DescriptionAntiTriggerKeys"
                        FontSize="11"
                        Margin="0 -15 0 10"
                        TextWrapping="Wrap"

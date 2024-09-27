@@ -259,6 +259,8 @@
   "LabelTriggerActions": "Actions/Keys to send",
   "DescriptionTriggerActions": "This keys will be pressed when the trigger executes",
   "DescriptionTriggerActionsSequential": "This keys will be pressed one after the other when the trigger executes",
-  "DescriptionTriggerSimultaneous": "This keys will be pressed simultaneously when the trigger executes"
+  "DescriptionTriggerSimultaneous": "This keys will be pressed simultaneously when the trigger executes",
+  "DescriptionAntiTriggerKeysOr": "On of the keys configured here should not be pressed for the trigger to execute.",
+  "DescriptionTriggerKeysOr": "Any key you configure here needs to be pressed before the trigger will be executed"
 
 }
