@@ -1,7 +1,9 @@
 ﻿using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Windows.Forms;
 using Aimmy2.InputLogic;
+using Aimmy2.InputLogic.Contracts;
 using Aimmy2.Types;
 using Nextended.Core;
 using Nextended.Core.Extensions;
@@ -13,23 +15,25 @@ public class ActionTrigger : EditableNotificationObject
     private string _name;
     private bool _enabled;
     private bool _chargeMode;
-    private StoredInputBinding _action = MouseButtons.Left;
+
+    private ObservableCollection<StoredInputBinding> _actions = [MouseButtons.Left, GamepadSlider.RightTrigger];
     private ObservableCollection<StoredInputBinding> _antiTriggerKeys = new();
     private ObservableCollection<StoredInputBinding> _triggerKeys = new();
     private double _delay;
     private double _breakTime;
-    private TriggerCheck _executionIntersectionCheck;
+    private TriggerCheck _executionIntersectionCheck = TriggerCheck.HeadIntersectingCenter;
     private TriggerCheck _beginIntersectionCheck;
     private RelativeRect _beginIntersectionArea;
-    private RelativeRect _executionIntersectionArea;
+    private RelativeRect _executionIntersectionArea = RelativeRect.Default;
     private bool _needsDetection = true;
-    
+    private TriggerExecutionMode _executionMode = TriggerExecutionMode.Simultaneous;
+
     public ActionTrigger()
     {
         Id = Guid.NewGuid().ToFormattedId();
         AppConfig.ConfigLoaded += (sender, args) => DetectChanges();
     }
-    
+
     private void DetectChanges()
     {
         if (AppConfig.Current?.ToggleState != null)
@@ -65,6 +69,12 @@ public class ActionTrigger : EditableNotificationObject
 
     public string Id { get; set; }
 
+    public TriggerExecutionMode ExecutionMode
+    {
+        get => _executionMode;
+        set => SetProperty(ref _executionMode, value);
+    }
+
     public bool NeedsDetection
     {
         get => _needsDetection;
@@ -95,7 +105,7 @@ public class ActionTrigger : EditableNotificationObject
         get => _enabled;
         set
         {
-            if(SetProperty(ref _enabled, value))
+            if (SetProperty(ref _enabled, value))
                 RaisePropertyChanged(nameof(IsActive));
         }
     }
@@ -109,20 +119,29 @@ public class ActionTrigger : EditableNotificationObject
         set => SetProperty(ref _chargeMode, value);
     }
 
+
     /// <summary>
-    /// Action to be triggered
+    /// Keys that will ensure not hold before trigger is executed
     /// </summary>
-    public StoredInputBinding Action
+    public ObservableCollection<StoredInputBinding> Actions
     {
-        get => _action;
+        get => _actions;
         set
         {
-            if (SetProperty(ref _action, value))
+            if(_actions != null)
+                _actions.CollectionChanged -= RaiseValidChange;
+            if (SetProperty(ref _actions, value))
             {
-                RaisePropertyChanged(nameof(IsValid));
-                RaisePropertyChanged(nameof(IsActive));
+                value.CollectionChanged += RaiseValidChange;
+                RaiseValidChange(null, null);
             }
         }
+    }
+
+    private void RaiseValidChange(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        RaisePropertyChanged(nameof(IsValid));
+        RaisePropertyChanged(nameof(IsActive));
     }
 
     /// <summary>
@@ -198,7 +217,7 @@ public class ActionTrigger : EditableNotificationObject
         set => SetProperty(ref _executionIntersectionArea, value);
     }
 
-    public bool IsValid => !string.IsNullOrWhiteSpace(Name) && Action.IsValid;
+    public bool IsValid => !string.IsNullOrWhiteSpace(Name) && Actions.Any(a => a is { IsValid: true });
     public bool IsActive => IsValid && Enabled && /*AppConfig.Current.ToggleState.GlobalActive &&*/ AppConfig.Current.ToggleState.AutoTrigger;
 
 }

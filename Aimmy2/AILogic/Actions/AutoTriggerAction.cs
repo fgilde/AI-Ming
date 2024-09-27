@@ -78,7 +78,7 @@ public class AutoTriggerAction : BaseAction
                 {
                     if(_triggerKeyStates.TryGetValue(trigger, out var currentState) && currentState == KeyPressState.Down)
                     {
-                        _= InputSender.SendKeyAsync(trigger.Action, KeyPressState.Up);
+                        _= SendActionsAsync(trigger, KeyPressState.Up, false, TriggerExecutionMode.Simultaneous); // Cancel always simultaneous and as fast as possible
                     }
                 });
             }
@@ -93,7 +93,7 @@ public class AutoTriggerAction : BaseAction
                 if (!_triggerKeyStates.TryGetValue(trigger, out var currentState) || currentState != keyState.Value || keyState.Value == KeyPressState.DownAndUp)
                 {
                     await Task.Delay(delay, cancellationToken); // Delay for this specific trigger
-                    await InputSender.SendKeyAsync(trigger.Action, keyState.Value);
+                    await SendActionsAsync(trigger, keyState.Value, true);
 
                     // Update the state to the current one
                     _triggerKeyStates[trigger] = keyState.Value;
@@ -109,6 +109,34 @@ public class AutoTriggerAction : BaseAction
             }
         }
     }
+
+    private async Task SendActionsAsync(ActionTrigger trigger, KeyPressState keyState, bool waitMinTime, TriggerExecutionMode? modeOverwrite = null)
+    {
+        if (trigger.ExecutionMode == TriggerExecutionMode.Simultaneous || modeOverwrite == TriggerExecutionMode.Simultaneous)
+        {
+            await Task.WhenAll(trigger.Actions.Select(async action =>
+            {
+                if (waitMinTime && action.MinTime > 0)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(action.MinTime));
+                }
+                await InputSender.SendKeyAsync(action, keyState);
+            }));
+        }
+        else
+        {
+            foreach (var action in trigger.Actions)
+            {
+                if (waitMinTime && action.MinTime > 0)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(action.MinTime));
+                }
+                await InputSender.SendKeyAsync(action, keyState);
+            }
+        }
+    }
+
+
 
     private KeyPressState? DetermineKeyState(ActionTrigger trigger, Prediction? prediction)
     {
@@ -134,6 +162,8 @@ public class AutoTriggerAction : BaseAction
 
     private bool TriggerKeysStateCorrect(ActionTrigger trigger)
     {
+        var key = trigger.TriggerKeys.FirstOrDefault();
+        System.Diagnostics.Debug.WriteLine("T "+ key.MinTime);
         return AllKeysAreUnsetOrHold(trigger.TriggerKeys.ToArray()) && KeysAreNotHold(trigger.AntiTriggerKeys.ToArray());
     }
     

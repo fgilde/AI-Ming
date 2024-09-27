@@ -44,6 +44,7 @@ namespace UILibrary
             IntersectionBox.RemoveAll();
             ChargeEnterIntersectionBox.RemoveAll();
             TimeSettings.RemoveAll();
+            ModePanel.RemoveAll();
 
             var drop = ChargeEnterIntersectionBox.AddDropdown(Locale.TriggerCheckChargeIn, Trigger.BeginIntersectionCheck,
                 check => Trigger.BeginIntersectionCheck = check);
@@ -100,12 +101,28 @@ namespace UILibrary
                 slider.BorderBrush = slider.Background = Brushes.Transparent;
                 slider.ToolTip = Locale.AutoTriggerBreakTimeTooltip;
             }).BindTo(() => Trigger.BreakTime);
+
+            var executionDropdown = ModePanel.AddDropdown("", Trigger.ExecutionMode,
+                mode =>
+                {
+                    Trigger.ExecutionMode = mode;
+                    TriggerActionsHelp.Text = mode switch
+                    {
+                        TriggerExecutionMode.Sequential => Locale.DescriptionTriggerActionsSequential,
+                        TriggerExecutionMode.Simultaneous => Locale.DescriptionTriggerSimultaneous,
+                        _ => ""
+                    };
+                });
+            executionDropdown.Margin = new Thickness(-11, 0, -11, 0);
+            executionDropdown.BorderBrush = Brushes.Transparent;
+            executionDropdown.Background = Brushes.Transparent;
+
         }
 
         protected override void OnInitialized(EventArgs e)
         {
             base.OnInitialized(e);
-            ActionKeyChanger.Text = Locale.LabelTriggerAction;
+          //  ActionKeyChanger.Text = Locale.LabelTriggerAction;
         }
 
         public TriggerEdit()
@@ -116,7 +133,7 @@ namespace UILibrary
 
         private void ActionKeyChanger_OnKeyBindChanged(object? sender, EventArgs<(AKeyChanger Sender, StoredInputBinding KeyBinding, StoredInputBinding OldValue)> e)
         {
-            ChargeModeDescription.Text = Locale.ChargeModeToolTip.FormatWith(Trigger.Action.Key);
+            //ChargeModeDescription.Text = Locale.ChargeModeToolTip.FormatWith(Trigger.Action.Key);
         }
     }
 }

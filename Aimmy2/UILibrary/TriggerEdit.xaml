@@ -37,9 +37,24 @@
                          Foreground="{StaticResource Foreground}" />
                     </StackPanel>
                 </Grid>
-                <StackPanel>
-
-                    <uiLibrary:AKeyChanger Background="Transparent" BorderBrush="Transparent" 
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Grid.Column="1" x:Name="ModePanel"></StackPanel>
+                    <Label Grid.Row="0" Grid.Column="0" Foreground="{StaticResource Foreground}"
+                                       FontSize="13"
+                                       VerticalAlignment="Bottom"
+                                       Margin="0 0 0 13"
+                                       Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='LabelTriggerActions'}"
+                                       FontFamily="{StaticResource Atkinson Hyperlegible}"></Label>
+                    <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
+                        <!--<uiLibrary:AKeyChanger Background="Transparent" BorderBrush="Transparent" 
                                            x:Name="ActionKeyChanger"
                                        BindingManager="{Binding BindingManager, RelativeSource={RelativeSource AncestorType=local:TriggerEdit}}" 
                                        WithBorder="False"
@@ -47,15 +62,20 @@
                                        CanRemoveBinding="false"
                                            KeyBindChanged="ActionKeyChanger_OnKeyBindChanged"
                                        Tag="{Binding}"
-                                       KeyBind="{Binding Path=Trigger.Action, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}" />
+                                       KeyBind="{Binding Path=Trigger.Action, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}" />-->
+                        <local:MultiKeyChanger Keys="{Binding Trigger.Actions, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}">
 
-                    <TextBlock Foreground="{StaticResource Foreground}"
-                               FontSize="11"
-                               Margin="2 -10 0 10"
-                               TextWrapping="Wrap"
-                               Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DescriptionTriggerAction'}"
-                               FontFamily="{StaticResource Atkinson Hyperlegible}"></TextBlock>
-                </StackPanel>
+                        </local:MultiKeyChanger>
+                        <TextBlock Foreground="{StaticResource Foreground}"
+                                   x:Name="TriggerActionsHelp"
+                                   FontSize="11"
+                                   Margin="2 -10 0 10"
+                                   TextWrapping="Wrap"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DescriptionTriggerActions'}"
+                                   FontFamily="{StaticResource Atkinson Hyperlegible}"></TextBlock>
+                    </StackPanel>
+                </Grid>
+
 
                 <StackPanel>
                     <uiLibrary:AToggle BorderBrush="Transparent" Background="Transparent" Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='NeedsDetection'}" HorizontalAlignment="Stretch" 

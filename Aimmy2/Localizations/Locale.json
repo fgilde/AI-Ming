@@ -255,6 +255,10 @@
   "Remove": "Remove",
   "Delete": "Delete",
   "AimKeyBindings": "Aim Key Bindings",
-  "DescriptionAimKeyBindings": "Any key you configure here needs to be pressed before aim starts. If no key configured it has constant AI Tracking"
+  "DescriptionAimKeyBindings": "Any key you configure here needs to be pressed before aim starts. If no key configured it has constant AI Tracking",
+  "LabelTriggerActions": "Actions/Keys to send",
+  "DescriptionTriggerActions": "This keys will be pressed when the trigger executes",
+  "DescriptionTriggerActionsSequential": "This keys will be pressed one after the other when the trigger executes",
+  "DescriptionTriggerSimultaneous": "This keys will be pressed simultaneously when the trigger executes"
 
 }
