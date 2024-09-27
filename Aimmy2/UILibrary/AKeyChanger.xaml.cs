@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using Aimmy2.Config;
@@ -304,6 +305,7 @@ namespace Aimmy2.UILibrary
             if (InUpdateMode || BindingManager == null)
                 return;
             InUpdateMode = true;
+            ContextMenu.IsOpen = false;
             OnPropertyChanged(nameof(ShowTimeEdit));
             MainGrid.ContextMenu = null;
             SetDeviceIcon("\uEA3B", Brushes.Red);
@@ -361,7 +363,7 @@ namespace Aimmy2.UILibrary
 
         private void ContextMenu_OnOpened(object sender, MouseButtonEventArgs e)
         {
-            if (!CanRemoveBinding || !KeyBind.IsValid)
+            if (!CanRemoveBinding || InUpdateMode || KeyBind is not {IsValid : true})
             {
                 e.Handled = true;
                 ContextMenu.IsOpen = false;

@@ -134,7 +134,7 @@ public class AutoTriggerAction : BaseAction
 
     private bool TriggerKeysStateCorrect(ActionTrigger trigger)
     {
-        return KeysAreUnsetOrHold(trigger.TriggerKeys.ToArray()) && KeysAreNotHold(trigger.AntiTriggerKeys.ToArray());
+        return AllKeysAreUnsetOrHold(trigger.TriggerKeys.ToArray()) && KeysAreNotHold(trigger.AntiTriggerKeys.ToArray());
     }
     
     private bool PredictionIsIntersecting(TriggerCheck check, RelativeRect area, Prediction? prediction = null)

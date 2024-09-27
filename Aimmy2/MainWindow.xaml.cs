@@ -136,9 +136,7 @@ public partial class MainWindow
         BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.MagnifierKeybind), AppConfig.Current.BindingSettings.MagnifierKeybind);
         BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.MagnifierZoomInKeybind), AppConfig.Current.BindingSettings.MagnifierZoomInKeybind);
         BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.MagnifierZoomOutKeybind), AppConfig.Current.BindingSettings.MagnifierZoomOutKeybind);
-        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.AimKeybind), AppConfig.Current.BindingSettings.AimKeybind);
 
-        BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.SecondAimKeybind), AppConfig.Current.BindingSettings.SecondAimKeybind);
         BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind), AppConfig.Current.BindingSettings.DynamicFOVKeybind);
         BindingManager.SetupDefault(nameof(AppConfig.Current.BindingSettings.ModelSwitchKeybind), AppConfig.Current.BindingSettings.ModelSwitchKeybind);
 
@@ -496,14 +494,11 @@ public partial class MainWindow
         var keybind = AppConfig.Current.BindingSettings;
         AimAssist.AddTitle(Locale.AimAssist, true);
         AimAssist.AddToggleWithKeyBind(Locale.AimAssist, nameof(Locale.AimAssist), BindingManager).BindTo(() => AppConfig.Current.ToggleState.AimAssist).BindActiveStateColor(AimAssist);
-        
 
-        AimAssist.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.AimKeybind), () => keybind.AimKeybind, BindingManager);
-        AimAssist.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.SecondAimKeybind), () => keybind.SecondAimKeybind, BindingManager);
-        AimAssist.AddToggle(Locale.ConstantAITracking).BindTo(() => AppConfig.Current.ToggleState.ConstantAITracking);
+        AimAssist.AddMultiKeyChanger(Locale.AimKeyBindings, Locale.DescriptionAimKeyBindings).BindTo(() => AppConfig.Current.BindingSettings.AimKeyBindings);
 
-        AimAssist.AddToggle(Locale.Predictions).BindTo(() => AppConfig.Current.ToggleState.Predictions);
-        AimAssist.AddToggle(Locale.EMASmoothening).BindTo(() => AppConfig.Current.ToggleState.EMASmoothening);
+        AimAssist.AddToggleWithKeyBind(Locale.Predictions, nameof(Locale.Predictions), BindingManager).BindTo(() => AppConfig.Current.ToggleState.Predictions);
+        AimAssist.AddToggleWithKeyBind(Locale.EMASmoothening, nameof(Locale.EMASmoothening), BindingManager).BindTo(() => AppConfig.Current.ToggleState.EMASmoothening);
         AimAssist.AddSeparator();
         AimAssist.Visibility = GetVisibilityFor(nameof(AimAssist));
 

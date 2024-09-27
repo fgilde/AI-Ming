@@ -145,7 +145,7 @@ public class PredictionLogic : IPredictionLogic
 
     private async Task SaveFrameAsync(Bitmap frame, Prediction? DoLabel)
     {
-        if (AppConfig.Current.ToggleState.CollectDataWhilePlaying && !AppConfig.Current.ToggleState.ConstantAITracking)
+        if (AppConfig.Current.ToggleState.CollectDataWhilePlaying)
         {
             if ((DateTime.Now - lastSavedTime).TotalMilliseconds >= 500)
             {

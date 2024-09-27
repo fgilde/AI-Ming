@@ -1,13 +1,18 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 using Aimmy2;
+using Aimmy2.Extensions;
 using Aimmy2.InputLogic;
 using Aimmy2.Types;
 using Aimmy2.UILibrary;
 using InputLogic;
+using Nextended.Core;
+using static ICSharpCode.AvalonEdit.Document.TextDocumentWeakEventManager;
 
 namespace UILibrary
 {
@@ -17,6 +22,9 @@ namespace UILibrary
     public partial class MultiKeyChanger : INotifyPropertyChanged
     {
         public InputBindingManager BindingManager => MainWindow.Instance.BindingManager;
+
+        public event EventHandler<EventArgs<ObservableCollection<StoredInputBinding>>> Changed;
+
         public ObservableCollection<StoredInputBinding> Keys
         {
             get => (ObservableCollection<StoredInputBinding>)GetValue(KeysProperty);
@@ -61,8 +69,8 @@ namespace UILibrary
                 if (keys.Contains(invalid))
                     keys.Remove(invalid);
             }
-
             keys.Add(new StoredInputBinding());
+            Changed?.Invoke(this, new CancelableEventArgs<ObservableCollection<StoredInputBinding>>(keys));
 
             _internalChange = false;
         }
@@ -136,5 +144,28 @@ namespace UILibrary
         }
 
 
+        public MultiKeyChanger BindTo(Expression<Func<IEnumerable<StoredInputBinding>>> fn)
+        {
+            var memberExpression = fn.GetMemberExpression();
+            var propertyInfo = (PropertyInfo)memberExpression.Member;
+            var owner = memberExpression.GetOwnerAs<INotifyPropertyChanged>();
+
+            Keys = new ObservableCollection<StoredInputBinding>(fn.Compile()());
+
+            owner.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == propertyInfo.Name)
+                {
+                    Keys = new ObservableCollection<StoredInputBinding>(fn.Compile()());
+                }
+            };
+
+            Changed += (s, e) =>
+            {
+                propertyInfo.SetValue(owner, e.Value);
+            };
+
+            return this;
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.Collections.ObjectModel;
+using System.Drawing;
 using System.Runtime.CompilerServices;
 using Aimmy2.UILibrary;
 using Class;
@@ -371,7 +372,46 @@ public static class UIElementExtensions
         });
     }
 
-    // Similarly, add methods for other UI elements...
+    internal static MultiKeyChanger AddMultiKeyChanger(this IAddChild panel, string title, string description = "", Action<MultiKeyChanger>? cfg = null)
+    {
+        var border = panel.Add<Border>(p =>
+        {
+            p.Background = new SolidColorBrush(Color.FromArgb(63, 60, 60, 60));
+            p.BorderBrush = new SolidColorBrush(Color.FromArgb(63, 255, 255, 255));
+            p.BorderThickness = new Thickness(1, 0, 1, 0);
+        });
+        var spanel = border.Add<StackPanel>(p =>
+        {
+            p.Orientation = Orientation.Vertical;
+            p.Margin = new Thickness(0, 5, 0, 10);
+        });
+        spanel.Add<Label>(l =>
+        {
+            l.Margin = new Thickness(5, 0, 0, 5);
+            l.Content = title;
+            l.FontSize = 13;
+            l.Foreground = new SolidColorBrush(ApplicationConstants.Foreground);
+        });
+        var res = spanel.Add(new MultiKeyChanger(), multiKeyChanger =>
+        {
+            multiKeyChanger.Margin = new Thickness(10, 0, 10, 0);
+            cfg?.Invoke(multiKeyChanger);
+        });
+        if (!string.IsNullOrEmpty(description))
+        {
+            spanel.Add<TextBlock>(l =>
+            {
+                l.Margin = new Thickness(10, -15, 0, 5);
+                l.Text = description;
+                l.TextWrapping = TextWrapping.Wrap;
+                l.FontSize = 11;
+                l.Foreground = new SolidColorBrush(ApplicationConstants.Foreground);
+            });
+        }
+
+        return res;
+    }
+    
     internal static AKeyChanger AddKeyChanger(this IAddChild panel, string title, Func<StoredInputBinding> keybind,
         InputBindingManager? bindingManager = null, Action<AKeyChanger>? cfg = null) =>
         panel.AddKeyChanger(title, keybind(), bindingManager, cfg);

@@ -4,7 +4,6 @@ public class ToggleState : BaseSettings
 {
     private bool _globalActive = false;
     private bool _aimAssist = false;
-    private bool _constantAiTracking = false;
     private bool _predictions = false;
     private bool _emaSmoothening = false;
     private bool _enableGunSwitchingKeybind = false;
@@ -61,19 +60,6 @@ public class ToggleState : BaseSettings
     {
         get => _aimAssist;
         set => SetField(ref _aimAssist, value);
-    }
-
-    public bool ConstantAITracking
-    {
-        get => _constantAiTracking;
-        set
-        {
-            SetField(ref _constantAiTracking, value);
-            if (value)
-            {
-                AimAssist = true;
-            }
-        }
     }
 
     public bool Predictions

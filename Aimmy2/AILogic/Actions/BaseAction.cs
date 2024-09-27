@@ -6,7 +6,7 @@ using Nextended.Core.Helper;
 
 namespace Aimmy2.AILogic.Actions;
 
-public abstract class BaseAction: IAction
+public abstract class BaseAction : IAction
 {
     public AIManager AIManager { get; set; }
     public Task Execute(Prediction[] predictions) => Task.Run(() => ExecuteAsync(predictions.ToArray()));
@@ -27,10 +27,19 @@ public abstract class BaseAction: IAction
             .Select(t => (IAction)Activator.CreateInstance(t)).ToList();
     }
 
-
-    protected bool KeysAreUnsetOrHold(StoredInputBinding[] triggerKeys)
+    protected bool HasValidKey(IEnumerable<StoredInputBinding> triggerKeys)
     {
-        return triggerKeys.All(triggerKey => KeyIsUnsetOrHold(triggerKey));
+        return triggerKeys.Any(k => k is { IsValid: true });
+    }
+
+    protected bool AnyKeyIsHold(IEnumerable<StoredInputBinding> triggerKeys)
+    {
+        return triggerKeys.Any(k => k is { IsValid: true } && KeyIsUnsetOrHold(k));
+    }
+
+    protected bool AllKeysAreUnsetOrHold(IEnumerable<StoredInputBinding> triggerKeys)
+    {
+        return triggerKeys.All(KeyIsUnsetOrHold);
     }
 
     protected bool KeyIsUnsetOrHold(StoredInputBinding triggerKey)
@@ -38,9 +47,9 @@ public abstract class BaseAction: IAction
         return !triggerKey.IsValid || InputBindingManager.IsHoldingBindingFor(triggerKey, TimeSpan.FromSeconds(triggerKey.MinTime));
     }
 
-    protected bool KeysAreNotHold(StoredInputBinding[] triggerKeys)
+    protected bool KeysAreNotHold(IEnumerable<StoredInputBinding> triggerKeys)
     {
-        return triggerKeys.All(triggerKey => KeyIsNotHold(triggerKey));
+        return triggerKeys.All(KeyIsNotHold);
     }
 
     protected bool KeyIsNotHold(StoredInputBinding triggerKey)

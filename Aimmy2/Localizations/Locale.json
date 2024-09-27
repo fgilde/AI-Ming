@@ -248,10 +248,13 @@
   "EnabledActive": "Enabled/Active",
   "Active": "Active",
   "Enabled": "Enabled",
-  "TriggerCheckChargeIn" : "Trigger Check for begin charge",
+  "TriggerCheckChargeIn": "Trigger Check for begin charge",
   "TriggerCheckChargeInToolTip": "Specify Area/Timing when pressing down should start",
-  "Edit": "Edit", 
+  "Edit": "Edit",
   "Add": "Add",
   "Remove": "Remove",
   "Delete": "Delete",
+  "AimKeyBindings": "Aim Key Bindings",
+  "DescriptionAimKeyBindings": "Any key you configure here needs to be pressed before aim starts. If no key configured it has constant AI Tracking"
+
 }
