@@ -18,6 +18,7 @@
             <FontFamily x:Key="AKONY">pack://application:,,,/Graphics/Fonts/#AKONY</FontFamily>
             <FontFamily x:Key="Atkinson Hyperlegible">pack://application:,,,/Graphics/Fonts/#Atkinson Hyperlegible</FontFamily>
             <FontFamily x:Key="Font Awesome 6 Brands">pack://application:,,,/Graphics/Fonts/#Font Awesome 6 Brands Regular</FontFamily>
+            <converter:ShowHelpTextsVisConverter x:Key="helpVis"/>
             <converter:TimeSpanToDouble x:Key="timeSpanToDouble"/>
             <converter:BoolToVis x:Key="boolToVis"/>
             <converter:BoolToOpacity x:Key="boolToOpacity"/>

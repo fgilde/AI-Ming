@@ -5,25 +5,32 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:UILibrary"
              xmlns:uiLibrary="clr-namespace:Aimmy2.UILibrary"
+             Initialized="MultiKeyChanger_OnInitialized"
              xmlns:aimmy2="clr-namespace:Aimmy2"
+             xmlns:controls="clr-namespace:AntWpf.Controls;assembly=AntWpf"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"></RowDefinition>
-            <RowDefinition Height="Auto"></RowDefinition>
-        </Grid.RowDefinitions>
-        <ItemsControl Focusable="False" IsTabStop="False" BorderBrush="#3FFFFFFF" BorderThickness="1" 
+    <Border Padding="0" BorderBrush="#3FFFFFFF" BorderThickness="1" >
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <ItemsControl Focusable="False" IsTabStop="False"
                       ItemsSource="{Binding Keys, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, RelativeSource={RelativeSource AncestorType=local:MultiKeyChanger}}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <WrapPanel />
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Grid Margin="8">
-                        <uiLibrary:AKeyChanger Background="Transparent" BorderBrush="Transparent" Text=""
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="8">
+                            <uiLibrary:AKeyChanger Background="Transparent" BorderBrush="Transparent" Text=""
                                            BindingManager="{Binding BindingManager, RelativeSource={RelativeSource AncestorType=local:MultiKeyChanger}}" 
                                            WithBorder="False"
                                            CanRemoveBinding="true"
@@ -31,7 +38,7 @@
                                            Tag="{Binding}"
                                            BeforeKeyBindChangedByUser="AKeyChanger_OnKeyBindChanged"
                                            KeyBind="{Binding Path=., Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}" />
-                        <Border BorderBrush="#3FFFFFFF"
+                            <Border BorderBrush="#3FFFFFFF"
                                 BorderThickness="1"
                                 Cursor="Hand"
                                 Tag="{Binding}"
@@ -45,8 +52,8 @@
                                 MinWidth="10"
                                 MinHeight="10"
                                 CornerRadius="2">
-                            <Grid>
-                                <Label 
+                                <Grid>
+                                    <Label 
                                     FontFamily="Segoe MDL2 Assets"
                                     Content="&#xE74D;"
                                     Padding="4"
@@ -54,26 +61,46 @@
                                     HorizontalContentAlignment="Center"
                                     VerticalContentAlignment="Center"
                                     Foreground="White" />
-                            </Grid>
-                        </Border>
-                    </Grid>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-        <Border Grid.Row="1" Margin="0 -6 0 0" VerticalAlignment="Top" HorizontalAlignment="Right"
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <controls:Button x:Name="RecordButton"
+                         Grid.Column="1"
+                         BorderBrush="{StaticResource ButtonBorder}"
+                         Background="{StaticResource ButtonBackground}"
+                         EffectBrush="{StaticResource ButtonEffect}"
+                         Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='RecordSequence'}"
+                         VerticalAlignment="Center" 
+                         HorizontalAlignment="Right" 
+                         Padding="5"
+                         Margin="5 0 10 0"
+                         FontFamily="{StaticResource Atkinson Hyperlegible}"
+                         BorderThickness="0,0,0,0"
+                         FontSize="12"
+                         Foreground="White"
+                         Click="ButtonBase_OnClick" />
+
+
+            <Border Grid.Row="1" Margin="0 -6 0 0" VerticalAlignment="Top" HorizontalAlignment="Right"
+                Grid.ColumnSpan="2"
                 Visibility="{Binding HasError, Converter={StaticResource boolToVis}, ConverterParameter={x:Static Visibility.Hidden}, RelativeSource={RelativeSource AncestorType=local:MultiKeyChanger}}"
                 Background="Red"
                 Panel.ZIndex="12"
                 BorderBrush="White"
                 CornerRadius="3">
-            <StackPanel>
-                <Label Content="{Binding ErrorMessage, RelativeSource={RelativeSource AncestorType=local:MultiKeyChanger}}"
+                <StackPanel>
+                    <Label Content="{Binding ErrorMessage, RelativeSource={RelativeSource AncestorType=local:MultiKeyChanger}}"
                        Foreground="White">
 
-                </Label>
-            </StackPanel>
+                    </Label>
+                </StackPanel>
 
-        </Border>
+            </Border>
 
-    </Grid>
+        </Grid>
+    </Border>
 </UserControl>

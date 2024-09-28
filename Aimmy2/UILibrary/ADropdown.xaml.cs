@@ -35,9 +35,10 @@ namespace UILibrary
             main_dictionary_path = dictionary_path;
         }
 
-        internal ADropdown AsSimple()
+        internal ADropdown AsSimple(bool keepLabel = false)
         {
-            DropdownTitle.Visibility = Visibility.Collapsed;
+            if(!keepLabel)
+                DropdownTitle.Visibility = Visibility.Collapsed;
             Margin = new Thickness(-11, 0, -11, 0);
             BorderBrush = Brushes.Transparent;
             Background = Brushes.Transparent;

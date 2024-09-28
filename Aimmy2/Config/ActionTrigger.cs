@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using Aimmy2.InputLogic;
 using Aimmy2.InputLogic.Contracts;
+using Aimmy2.Other;
 using Aimmy2.Types;
 using Nextended.Core;
 using Nextended.Core.Extensions;
@@ -50,6 +51,7 @@ public class ActionTrigger : EditableNotificationObject
     }
 
 
+    private StoredInputBinding[] _originalActions;
     private StoredInputBinding[] _originalKeys;
     private StoredInputBinding[] _originalAntiKeys;
     private KeyOperator _triggerKeysOperator;
@@ -57,6 +59,7 @@ public class ActionTrigger : EditableNotificationObject
 
     public override void BeginEdit()
     {
+        _originalActions = Actions?.ToArray() ?? [];
         _originalKeys = TriggerKeys?.ToArray() ?? [];
         _originalAntiKeys = AntiTriggerKeys?.ToArray() ?? [];
         base.BeginEdit();
@@ -67,6 +70,14 @@ public class ActionTrigger : EditableNotificationObject
         base.CancelEdit();
         TriggerKeys = new ObservableCollection<StoredInputBinding>(_originalKeys);
         AntiTriggerKeys = new ObservableCollection<StoredInputBinding>(_originalAntiKeys);
+        Actions = new ObservableCollection<StoredInputBinding>(_originalActions);
+    }
+
+    protected override void RaisePropertyChanged(string propertyName)
+    {
+        if (propertyName is not nameof(Description))
+            RaisePropertyChanged(nameof(Description));
+        base.RaisePropertyChanged(propertyName);
     }
 
     public string Id { get; set; }
@@ -233,5 +244,6 @@ public class ActionTrigger : EditableNotificationObject
 
     public bool IsValid => !string.IsNullOrWhiteSpace(Name) && Actions.Any(a => a is { IsValid: true });
     public bool IsActive => IsValid && Enabled && /*AppConfig.Current.ToggleState.GlobalActive &&*/ AppConfig.Current.ToggleState.AutoTrigger;
+    public string Description => this.GetDescription();
 
 }

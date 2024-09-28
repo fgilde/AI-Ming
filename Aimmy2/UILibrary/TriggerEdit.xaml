@@ -54,12 +54,13 @@
                                        Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='LabelTriggerActions'}"
                                        FontFamily="{StaticResource Atkinson Hyperlegible}"></Label>
                     <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
-                        <local:MultiKeyChanger Keys="{Binding Trigger.Actions, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}">
+                        <local:MultiKeyChanger AllowDuplicates="True" CanRecordSequence="True" Changed="MultiKeyChanger_OnChanged" Keys="{Binding Trigger.Actions, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}">
                         </local:MultiKeyChanger>
                         <TextBlock Foreground="{StaticResource Foreground}"
                                    x:Name="TriggerActionsHelp"
+                                   Visibility="{Binding Converter={StaticResource helpVis}}"
                                    FontSize="11"
-                                   Margin="2 -10 0 10"
+                                   Margin="2 5 0 10"
                                    TextWrapping="Wrap"
                                    Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DescriptionTriggerActions'}"
                                    FontFamily="{StaticResource Atkinson Hyperlegible}"></TextBlock>
@@ -75,6 +76,7 @@
                        FontSize="11"
                        Margin="2 -7 0 10"
                        TextWrapping="Wrap"
+                       Visibility="{Binding Converter={StaticResource helpVis}}"
                        Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DescriptionNeedsDetection'}"
                        FontFamily="{StaticResource Atkinson Hyperlegible}"></TextBlock>
                 </StackPanel>
@@ -88,6 +90,7 @@
                            TextWrapping="Wrap"
                            x:Name="ChargeModeDescription"
                            Margin="2 -7 0 10"
+                           Visibility="{Binding Converter={StaticResource helpVis}}"
                            Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ChargeModeToolTip'}"
                            FontFamily="{StaticResource Atkinson Hyperlegible}"></TextBlock>
                 </StackPanel>
@@ -130,7 +133,8 @@
                     <TextBlock Foreground="{StaticResource Foreground}"
                                x:Name="DescriptionTriggerKeys"
                        FontSize="11"
-                       Margin="0 -15 0 10"
+                               Visibility="{Binding Converter={StaticResource helpVis}}"
+                       Margin="0 5 0 10"
                        TextWrapping="Wrap"
                        Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DescriptionTriggerKeys'}"
                        FontFamily="{StaticResource Atkinson Hyperlegible}"></TextBlock>
@@ -160,7 +164,8 @@
                     <local:MultiKeyChanger Keys="{Binding Trigger.AntiTriggerKeys, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}"></local:MultiKeyChanger>
                     <TextBlock Foreground="{StaticResource Foreground}" x:Name="DescriptionAntiTriggerKeys"
                        FontSize="11"
-                       Margin="0 -15 0 10"
+                       Visibility="{Binding Converter={StaticResource helpVis}}"
+                       Margin="0 5 0 10"
                        TextWrapping="Wrap"
                        Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DescriptionAntiTriggerKeys'}"
                        FontFamily="{StaticResource Atkinson Hyperlegible}"></TextBlock>

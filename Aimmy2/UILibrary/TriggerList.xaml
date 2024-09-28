@@ -32,6 +32,7 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock
                                 Text="{Binding Name}"
+                                ToolTip="{Binding Description}"
                                 Foreground="{Binding Enabled, Converter={StaticResource boolToBrush}}"
                                 Opacity="{Binding IsActive, Converter={StaticResource boolToOpacity}}"
                                 VerticalAlignment="Center"
@@ -50,7 +51,7 @@
                                                    Checked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}" />
 
                                 <controls:Button
-                                    ToolTip="Edit"
+                                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Edit'}"
                                     BorderThickness="0"
                                     Tag="{Binding}"
                                     MouseDown="UIElement_OnMouseDown"
@@ -89,7 +90,7 @@
             <Border Grid.Row="1">
                 <controls:Button
                     HorizontalAlignment="Right"
-                    ToolTip="Edit"
+                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Add'}"
                     BorderThickness="0"
                     Tag="{Binding}"
                     MouseDown="UIElement_OnMouseDown"

@@ -394,14 +394,14 @@ public static class UIElementExtensions
         });
         var res = spanel.Add(new MultiKeyChanger(), multiKeyChanger =>
         {
-            multiKeyChanger.Margin = new Thickness(10, 0, 10, 0);
+            multiKeyChanger.Margin = new Thickness(10, 5, 10, 5);
             cfg?.Invoke(multiKeyChanger);
         });
-        if (!string.IsNullOrEmpty(description))
+        if (!string.IsNullOrEmpty(description) && AppConfig.Current?.ToggleState?.ShowHelpTexts == true)
         {
             spanel.Add<TextBlock>(l =>
             {
-                l.Margin = new Thickness(10, -15, 0, 5);
+                l.Margin = new Thickness(10, 0, 10, 5);
                 l.Text = description;
                 l.TextWrapping = TextWrapping.Wrap;
                 l.FontSize = 11;

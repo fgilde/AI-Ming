@@ -1,10 +1,13 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System.Windows.Forms;
 using System.Windows.Input;
+using System.Windows.Media;
 using Aimmy2;
 using Aimmy2.Extensions;
 using Aimmy2.InputLogic;
@@ -12,6 +15,7 @@ using Aimmy2.Types;
 using Aimmy2.UILibrary;
 using InputLogic;
 using Nextended.Core;
+using Nextended.Core.Extensions;
 using static ICSharpCode.AvalonEdit.Document.TextDocumentWeakEventManager;
 
 namespace UILibrary
@@ -40,6 +44,41 @@ namespace UILibrary
             set => SetValue(ErrorMessageProperty, value);
         }
 
+
+
+        public bool AllowDuplicates
+        {
+            get { return (bool)GetValue(AllowDuplicatesProperty); }
+            set { SetValue(AllowDuplicatesProperty, value); }
+        }
+
+
+
+        public bool CanRecordSequence
+        {
+            get { return (bool)GetValue(CanRecordSequenceProperty); }
+            set { SetValue(CanRecordSequenceProperty, value); }
+        }
+
+        
+        public static readonly DependencyProperty CanRecordSequenceProperty =
+            DependencyProperty.Register(nameof(CanRecordSequence), typeof(bool), typeof(MultiKeyChanger), new PropertyMetadata(false, CanRecordChange));
+
+        private static void CanRecordChange(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((MultiKeyChanger)d).CanRecordChange();
+        }
+
+        private void CanRecordChange()
+        {
+            RecordButton.Visibility = CanRecordSequence ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+
+        public static readonly DependencyProperty AllowDuplicatesProperty =
+            DependencyProperty.Register(nameof(AllowDuplicates), typeof(bool), typeof(MultiKeyChanger), new PropertyMetadata(false));
+
+
         public static readonly DependencyProperty ErrorMessageProperty =
             DependencyProperty.Register(nameof(ErrorMessage), typeof(string), typeof(MultiKeyChanger), new PropertyMetadata(string.Empty, ErrorMessageChange));
 
@@ -47,7 +86,7 @@ namespace UILibrary
         {
             ((MultiKeyChanger)d).OnPropertyChanged(nameof(HasError));
         }
-        
+
         public static readonly DependencyProperty KeysProperty =
             DependencyProperty.Register(nameof(Keys), typeof(ObservableCollection<StoredInputBinding>), typeof(MultiKeyChanger), new PropertyMetadata(new ObservableCollection<StoredInputBinding>(), OnKeysChanged));
 
@@ -83,10 +122,11 @@ namespace UILibrary
 
         private bool HasDuplicate(StoredInputBinding binding)
         {
+            if (AllowDuplicates) return false;
             if (binding is { IsValid: true } && Keys.Any(b => b?.Equals(binding) == true))
             {
                 OnKeysChanged();
-                ErrorMessage = $"The key {binding.Key} already exists in this list";
+                ErrorMessage = Locale.KeyDuplicateError.FormatWith(binding.Key);
                 return true;
             }
 
@@ -108,7 +148,6 @@ namespace UILibrary
                         e.Value.Sender.RecordNewBinding();
                         e.Value.Sender.Focus();
                     }));
-                    System.Diagnostics.Debug.WriteLine("Duplicate key found");
                 }
 
                 return;
@@ -117,7 +156,7 @@ namespace UILibrary
             if (e.Value.Sender.Tag is not StoredInputBinding { IsValid: true } binding)
             {
                 Keys.Insert(Keys.Count - 1, e.Value.KeyBinding);
-              
+
             }
             else
             {
@@ -125,7 +164,7 @@ namespace UILibrary
             }
             OnKeysChanged();
         }
-        
+
 
         private void Remove_Key_Click(object sender, MouseButtonEventArgs e)
         {
@@ -166,6 +205,64 @@ namespace UILibrary
             };
 
             return this;
+        }
+
+        private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
+        {
+            SetRecordSequence(_recording = !_recording);
+            RecordButton.Content = _recording ? Locale.StopRecording : Locale.RecordSequence;
+            RecordButton.Foreground = _recording ? Brushes.Red : new SolidColorBrush(ApplicationConstants.Foreground);
+        }
+
+        bool _recording = false;
+        List<StoredInputBinding> pressed = new();
+        private Stopwatch? _timeStopwatch;
+
+        void BindingManagerOnOnKeyPressed(StoredInputBinding obj)
+        {
+            if (RecordButton.IsMouseOver && obj.Is(MouseButtons.Left))
+                return;
+            if (!pressed.Contains(obj))
+            {
+                obj.MinTime = _timeStopwatch != null ? _timeStopwatch.Elapsed.TotalSeconds : 0;
+                _timeStopwatch?.Stop();
+                _timeStopwatch = Stopwatch.StartNew();
+                pressed.Add(obj);
+            }
+        }
+
+        void BindingManager_OnKeyReleased(StoredInputBinding obj)
+        {
+            if (pressed.Contains(obj))
+            {
+                var key = pressed[pressed.IndexOf(obj)];
+                Keys.Add(key);
+                pressed.Remove(key);
+                OnKeysChanged();
+            }
+        }
+
+        private void SetRecordSequence(bool record)
+        {
+            if (record)
+            {
+                BindingManager.OnKeyPressed += BindingManagerOnOnKeyPressed;
+                BindingManager.OnKeyReleased += BindingManager_OnKeyReleased;
+            }
+            else
+            {
+                _timeStopwatch?.Stop();
+                _timeStopwatch = null;
+                pressed.Clear();
+                BindingManager.OnKeyPressed -= BindingManagerOnOnKeyPressed;
+                BindingManager.OnKeyReleased -= BindingManager_OnKeyReleased;
+            }
+
+        }
+
+        private void MultiKeyChanger_OnInitialized(object? sender, EventArgs e)
+        {
+            CanRecordChange();
         }
     }
 }

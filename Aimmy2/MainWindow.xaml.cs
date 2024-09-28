@@ -909,6 +909,7 @@ public partial class MainWindow
 
         UISettings.AddToggle(Locale.MouseBackgroundEffect).BindTo(() => AppConfig.Current.ToggleState.MouseBackgroundEffect);
         UISettings.AddToggle(Locale.UITopMost).BindTo(() => AppConfig.Current.ToggleState.UITopMost);
+        UISettings.AddToggle("Locale.ShowHelpTexts").BindTo(() => AppConfig.Current.ToggleState.ShowHelpTexts);
         UISettings.AddSeparator();
 
         CaptureSettings.AddToggle(Locale.CollectDataWhilePlaying).BindTo(() => AppConfig.Current.ToggleState.CollectDataWhilePlaying);

@@ -46,13 +46,25 @@
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-  
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
                     <!-- Red Border Container -->
-                    <uiLibrary1:TriggerEdit x:Name="TriggerEdit"></uiLibrary1:TriggerEdit>
+                    <uiLibrary1:TriggerEdit Grid.ColumnSpan="2" Grid.Column="0" x:Name="TriggerEdit"></uiLibrary1:TriggerEdit>
       
+                    <TextBlock Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left"
+                               Text="{Binding Trigger.Description}"
+                               Visibility="{Binding Converter={StaticResource helpVis}}"
+                               TextWrapping="Wrap"
+                               FontSize="11"
+                               TextTrimming="WordEllipsis"
+                               Foreground="{StaticResource Foreground}"
+                               />
+
                     <controls:Button x:Name="CancelButton"
                                      Grid.Row="1"
-                                     
+                                     Grid.Column="1"
                                      BorderBrush="{StaticResource ButtonBorder}"
                                      Background="{StaticResource ButtonBackground}"
                                      EffectBrush="{StaticResource ButtonEffect}"
@@ -70,6 +82,7 @@
                                      Click="Exit_Click" />
                     <controls:Button x:Name="SaveButton"
                                 Grid.Row="1"
+                                Grid.Column="1"
                                 IsEnabled="{Binding Trigger.IsValid}"
                                 BorderBrush="{StaticResource ButtonBorder}"
                                 Background="{StaticResource ButtonBackground}"

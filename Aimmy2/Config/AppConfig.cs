@@ -41,7 +41,8 @@ public class AppConfig : BaseSettings
         {
             Name = "Primary Fire",
             Enabled = true,
-            TriggerKeys = [GamepadSlider.LeftTrigger],
+            TriggerKeys = [GamepadSlider.LeftTrigger, MouseButtons.Right],
+            TriggerKeysOperator = KeyOperator.Or,
             Delay = 0,
             BreakTime = 0,
             ExecutionIntersectionCheck = TriggerCheck.HeadIntersectingCenter,

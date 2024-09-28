@@ -27,6 +27,7 @@ public class ToggleState : BaseSettings
     private bool _showCapturedArea = true;
     private bool _ensureCaptureForeground;
     private bool _showSizes;
+    private bool _showHelpTexts = true;
 
     public bool EnsureCaptureForeground
     {
@@ -162,6 +163,12 @@ public class ToggleState : BaseSettings
     {
         get => _mouseBackgroundEffect;
         set => SetField(ref _mouseBackgroundEffect, value);
+    }
+
+    public bool ShowHelpTexts
+    {
+        get => _showHelpTexts;
+        set => SetField(ref _showHelpTexts, value);
     }
 
     public bool UITopMost
