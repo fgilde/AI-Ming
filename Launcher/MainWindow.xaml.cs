@@ -25,8 +25,8 @@ namespace Launcher
         private string _subTitle = "Please wait...";
         private bool _installing;
         private bool _canClose = true;
-        private string _repoOwner = "fgilde";
-        private string _repoName = "AI-Ming";
+        private string _repoOwner =Constants.RepoOwner;
+        private string _repoName = Constants.RepoName;
         private GitHubRelease _selectedRelease;
         private const string _chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
