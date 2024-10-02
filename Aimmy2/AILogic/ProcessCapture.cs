@@ -64,8 +64,11 @@ public class ProcessCapture : ICapture
         Bitmap bitmap = new Bitmap(detectionBox.Width, detectionBox.Height, PixelFormat.Format32bppArgb);
         using Graphics graphics = Graphics.FromImage(bitmap);
         graphics.CopyFromScreen(detectionBox.Left, detectionBox.Top, 0, 0, detectionBox.Size, CopyPixelOperation.SourceCopy);
+        LastCapture = new Bitmap(bitmap);
         return bitmap;
     }
+
+    public Bitmap LastCapture { get; private set; }
 
     public Task OnPause()
     {

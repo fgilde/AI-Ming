@@ -269,30 +269,35 @@ namespace InputLogic
             int xRecoil = (int)AppConfig.Current.AntiRecoilSettings.XRecoil;
             int yRecoil = (int)AppConfig.Current.AntiRecoilSettings.YRecoil;
 
+            Move(xRecoil, yRecoil);
+
+            LastAntiRecoilClickTime = DateTime.UtcNow.Millisecond;
+        }
+
+        public static void Move(int x, int y)
+        {
             switch (AppConfig.Current.DropdownState.MouseMovementMethod)
             {
                 case MouseMovementMethod.SendInput:
-                    SendInputMouse.SendMouseCommand((uint)InputEventFlags.MOUSEEVENTF_MOVE, xRecoil, yRecoil);
+                    SendInputMouse.SendMouseCommand((uint)InputEventFlags.MOUSEEVENTF_MOVE, x, y);
                     break;
 
                 case MouseMovementMethod.LGHUB:
-                    LGMouse.Move(0, xRecoil, yRecoil, 0);
+                    LGMouse.Move(0, x, y, 0);
                     break;
 
                 case MouseMovementMethod.RazerSynapse:
-                    RZMouse.mouse_move(xRecoil, yRecoil, true);
+                    RZMouse.mouse_move(x, y, true);
                     break;
 
                 case MouseMovementMethod.ddxoft:
-                    DdxoftMain.ddxoftInstance.movR!(xRecoil, yRecoil);
+                    DdxoftMain.ddxoftInstance.movR!(x, y);
                     break;
 
                 default:
-                    NativeAPIMethods.MouseEvent((uint)InputEventFlags.MOUSEEVENTF_MOVE, (uint)xRecoil, (uint)yRecoil, 0, 0);
+                    NativeAPIMethods.MouseEvent((uint)InputEventFlags.MOUSEEVENTF_MOVE, (uint)x, (uint)y, 0, 0);
                     break;
             }
-
-            LastAntiRecoilClickTime = DateTime.UtcNow.Millisecond;
         }
 
         public static void MoveCrosshair(int detectedX, int detectedY, Rectangle area)

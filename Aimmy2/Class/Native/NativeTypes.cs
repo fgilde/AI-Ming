@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using OpenCvSharp;
+using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
 
@@ -6,6 +7,35 @@ namespace Aimmy2.Class.Native;
 
 #region Structures
 
+[StructLayout(LayoutKind.Sequential)]
+internal struct MINPUT
+{
+    public MInputType type;
+    public MInputUnion U;
+    public static int Size => Marshal.SizeOf(typeof(INPUT));
+}
+
+[StructLayout(LayoutKind.Explicit)]
+internal struct MInputUnion
+{
+    [FieldOffset(0)] public MOUSEINPUT mi;
+}
+
+internal enum MInputType : uint
+{
+    INPUT_MOUSE = 0,
+}
+
+[StructLayout(LayoutKind.Sequential)]
+internal struct MMOUSEINPUT
+{
+    public int dx;
+    public int dy;
+    public uint mouseData;
+    public MouseEventFlags dwFlags;
+    public uint time;
+    public IntPtr dwExtraInfo;
+}
 
 [StructLayout(LayoutKind.Sequential)]
 internal struct INPUT

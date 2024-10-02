@@ -10,6 +10,7 @@ public interface ICapture : INotifyPropertyChanged, IDisposable
     Screen Screen { get; }
     Rectangle CaptureArea { get; }
     Bitmap Capture(Rectangle detectionBox);
+    Bitmap LastCapture { get; }
     Task OnPause();
     Task OnResume();
 }

@@ -14,6 +14,7 @@ public class ScreenCapture : ICapture
     private Bitmap? _screenCaptureBitmap;
     private Graphics? _graphics;
     public Screen Screen { get; }
+    public Bitmap LastCapture { get; private set; }
 
     public ScreenCapture(): this(Screen.PrimaryScreen!)
     {}
@@ -44,7 +45,7 @@ public class ScreenCapture : ICapture
         }
 
         _graphics.CopyFromScreen(Screen.Bounds.Left + detectionBox.Left, Screen.Bounds.Top + detectionBox.Top, 0, 0, detectionBox.Size);
-
+        LastCapture = new Bitmap(_screenCaptureBitmap);
         return _screenCaptureBitmap;
     }
 
