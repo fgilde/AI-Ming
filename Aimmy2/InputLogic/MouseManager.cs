@@ -10,7 +10,6 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using Aimmy2.Class.Native;
 using Application = System.Windows.Application;
-using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using Point = System.Drawing.Point;
 using Aimmy2.InputLogic;
 
