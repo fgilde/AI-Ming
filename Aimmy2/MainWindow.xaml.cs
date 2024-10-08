@@ -170,10 +170,11 @@ public partial class MainWindow
         }
     }
 
+    internal AIManager AIManager => AIManager.Instance;
+
     internal void FillMenus()
     {
-        if(Config != null)
-            ModelContextMenu.Header = $"{Config.LastLoadedModel} ({AIManager.Instance?.PredictionLogic?.ExecutionProvider})";
+        UpdateModelText();
         ModelContextMenu.Items.Clear();
         ModelContextMenu.Items.AddRange(ModelListBox.ToMenuItems(item =>
         {
@@ -215,6 +216,12 @@ public partial class MainWindow
         );
     }
 
+    private void UpdateModelText()
+    {
+        if (Config != null)
+            ModelContextMenu.Header = $"{Config.LastLoadedModel} ({AIManager?.PredictionLogic?.ExecutionProvider})";
+    }
+
     private void LoadModel(string? modelName = null)
     {
         FileManager.AIManager?.Dispose();
@@ -233,6 +240,7 @@ public partial class MainWindow
         {
             _ = _fileManager.LoadModel(Path.GetFileName(modelPath), modelPath);
         }
+        UpdateModelText();
     }
 
 
