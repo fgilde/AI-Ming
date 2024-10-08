@@ -44,7 +44,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <IsCuda>false</IsCuda>
+    <IsCuda>true</IsCuda>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

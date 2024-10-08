@@ -20,7 +20,7 @@ namespace Core
             client = new HttpClient();
         }
 
-        public async Task<bool> CheckForUpdate(Version? currentVersion, string repoOwner, string repoName)
+        public async Task<bool> CheckForUpdate(Version? currentVersion, string repoOwner, string repoName, bool useCudaVersion)
         {
             try
             {
@@ -29,7 +29,7 @@ namespace Core
 
                 using GithubManager githubManager = new();
                 var release = await githubManager.GetLatestReleaseInfoAsync(repoOwner, repoName);
-                var latest = SetRelease(release);
+                var latest = SetRelease(release, useCudaVersion);
 
                 if (string.IsNullOrEmpty(UpdateUrl))
                 {
@@ -41,7 +41,7 @@ namespace Core
                     return false;
                 }
 
-                
+
                 return true;
             }
             catch (Exception e)
@@ -50,9 +50,13 @@ namespace Core
             }
         }
 
-        public Version SetRelease(GitHubRelease release)
+        public Version SetRelease(GitHubRelease release, bool useCudaVersion)
         {
-            UpdateUrl = release.DownloadUrl;
+            GithubManager.Asset? releaseAsset = null;
+            if (useCudaVersion)
+                releaseAsset = release.Assets.FirstOrDefault(a => a.Name.Contains("_cuda.zip"));
+            releaseAsset ??= release.Assets.FirstOrDefault(a => a.Name.Contains(".zip"));
+            UpdateUrl = releaseAsset != null ? releaseAsset.DownloadUrl : release.DownloadUrl;
             Description = release.Description;
             var latest = Version.Parse(release.TagName);
             NewVersion = latest;
@@ -184,7 +188,7 @@ namespace Core
                 sw.WriteLine("$window.Close()");
             }
         }
-        
+
 
         private bool ShouldIgnoreFile(string relativePath, IEnumerable<string> filesToIgnore)
         {

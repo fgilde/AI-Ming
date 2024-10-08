@@ -18,7 +18,11 @@ function Build-ProjectWithCuda {
 
     # Clean and Build das Projekt mit der IsCuda Variable
     dotnet clean --configuration Release
-    dotnet publish -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None -p:IsCuda=$isCudaValue
+    if($isCuda) {
+	    dotnet publish -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None -p:IsCuda=$isCudaValue -p:DefineConstants="IsCuda"
+	} else {
+		dotnet publish -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None -p:IsCuda=$isCudaValue
+	}      
 }
 
 # Check if the output directory exists and delete it

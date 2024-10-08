@@ -8,6 +8,17 @@ namespace Aimmy2;
 
 public class ApplicationConstants: Constants
 {
+    public static bool IsCudaBuild
+    {
+        get
+        {
+#if IsCuda
+            return true;
+#endif
+            return false;
+        }
+    }
+
     private static ThemePalette _theme = ThemePalette.DarkPalette;
     public static Visibility DebugVisibility => IsDebug ? Visibility.Visible : Visibility.Collapsed;
     public static string ApplicationVersionStr => $"v{ApplicationVersion.ToString()}";

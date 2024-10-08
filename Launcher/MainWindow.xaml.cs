@@ -28,6 +28,7 @@ namespace Launcher
         private string _repoOwner =Constants.RepoOwner;
         private string _repoName = Constants.RepoName;
         private GitHubRelease _selectedRelease;
+        private bool _containsCudaRelease;
         private const string _chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
         public Visibility InstallerVisibility => IsInstallerMode ? Visibility.Visible : Visibility.Collapsed;
@@ -42,12 +43,29 @@ namespace Launcher
             }
         }
 
+        public bool ContainsCudaRelease
+        {
+            get => _containsCudaRelease;
+            set => SetField(ref _containsCudaRelease, value);
+        }
+
         public ObservableCollection<GitHubRelease> Releases { get; set; } = new();
 
         public GitHubRelease SelectedRelease
         {
             get => _selectedRelease;
-            set => SetField(ref _selectedRelease, value);
+            set
+            {
+                if (SetField(ref _selectedRelease, value))
+                {
+                    CheckCudaAvailability();
+                }
+            }
+        }
+
+        private void CheckCudaAvailability()
+        {
+            ContainsCudaRelease = SelectedRelease?.Assets.Any(a => a.Name.Contains("_cuda.zip")) == true;
         }
 
         public bool CanClose
@@ -256,6 +274,7 @@ namespace Launcher
 
         private async void Install_Click(object sender, RoutedEventArgs e)
         {
+            var useCuda = ContainsCudaRelease && CudaCheckBox.IsChecked == true;
             Installing = true;
             CanClose = false;
             FolderSelect.Visibility = Visibility.Collapsed;
@@ -275,7 +294,7 @@ namespace Launcher
                     return;
                 }
                 var installer = new UpdateManager(dir);
-                installer.SetRelease(SelectedRelease);
+                installer.SetRelease(SelectedRelease, useCuda);
                 ProgressBar.IsIndeterminate = false;
 
                 await installer.DoUpdate(new Progress<double>(p =>

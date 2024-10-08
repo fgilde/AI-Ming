@@ -90,6 +90,7 @@ public partial class MainWindow
         MainBorder.BindMouseGradientAngle(ShouldBindGradientMouse);
         //Console.WriteLine(JsonConvert.SerializeObject(Dictionary.toggleState));
         Console.WriteLine(Locale.UICompleteMessage);
+        MessageBox.Show("Cuda:" + ApplicationConstants.IsCudaBuild);
     }
     
     private void CreateUI()
@@ -1136,7 +1137,7 @@ public partial class MainWindow
             UpdateCheckStatusLabel.Content = Locale.CheckingForUpdates;
             await Task.Delay(500);
             var updateManager = new UpdateManager();
-            var hasUpdate = await updateManager.CheckForUpdate(ApplicationConstants.ApplicationVersion, ApplicationConstants.RepoOwner, ApplicationConstants.RepoName);
+            var hasUpdate = await updateManager.CheckForUpdate(ApplicationConstants.ApplicationVersion, ApplicationConstants.RepoOwner, ApplicationConstants.RepoName, ApplicationConstants.IsCudaBuild);
             UpdateCheckStatusLabel.Content = hasUpdate ? Locale.UpdateAvailable : Locale.NoUpdateAvailable;
             if (hasUpdate)
             {

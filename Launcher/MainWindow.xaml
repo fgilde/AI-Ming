@@ -16,6 +16,7 @@
                       AllowsTransparency="True"
                       Background="Transparent">
     <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="boolToVis"></BooleanToVisibilityConverter>
         <LinearGradientBrush x:Key="Background"
                              EndPoint="0.5,1"
                              StartPoint="0,0">
@@ -181,9 +182,16 @@
                                     <ColumnDefinition Width="*"></ColumnDefinition>
                                     <ColumnDefinition Width="Auto"></ColumnDefinition>
                                 </Grid.ColumnDefinitions>
-                                <Label Foreground="White" Grid.Row="0" Grid.ColumnSpan="1">Version:</Label>
-                                <ComboBox Grid.Row="1" Grid.ColumnSpan="2" Grid.Column="0" Background="Transparent" SelectedItem="{Binding SelectedRelease, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Releases}" DisplayMemberPath="TagName"></ComboBox>
-
+                                <StackPanel Grid.ColumnSpan="2">
+                                    <Label Foreground="White" Grid.Row="0" Grid.ColumnSpan="1">Version:</Label>
+                                    <ComboBox Grid.Row="1" Grid.ColumnSpan="2" Grid.Column="0" Background="Transparent" SelectedItem="{Binding SelectedRelease, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Releases}" DisplayMemberPath="TagName"></ComboBox>
+                                    <Label Visibility="{Binding ContainsCudaRelease, Converter={StaticResource boolToVis}}" Margin="0 10 0 0" Foreground="White">Executing Version:</Label>
+                                    <StackPanel Visibility="{Binding ContainsCudaRelease, Converter={StaticResource boolToVis}}" Margin="5 0 0 10" Orientation="Horizontal">
+                                        <RadioButton x:Name="CudaCheckBox"  GroupName="Executer" Foreground="White">Cuda</RadioButton>
+                                        <RadioButton GroupName="Executer" IsChecked="True" Foreground="White" Margin="20 0 0 0"> DirectML</RadioButton>
+                                    </StackPanel>
+                                </StackPanel>
+                      
                                 <Label Foreground="White" Grid.Row="2" Grid.ColumnSpan="2" Grid.Column="0">Install location:</Label>
                                 <TextBox Grid.Column="0" Grid.Row="3" Background="Transparent" BorderBrush="White" Foreground="White" Text="{Binding InstallDirectory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></TextBox>
                                 <Button Click="SelectDir_Click" Grid.Row="3" Background="Transparent" BorderBrush="White" Foreground="White" Width="20" Grid.Column="1">...</Button>
