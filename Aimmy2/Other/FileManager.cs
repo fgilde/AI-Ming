@@ -1,21 +1,10 @@
-﻿using Aimmy2.AILogic;
-using Aimmy2.Class;
-using Aimmy2.Other;
-using Class;
-using System.IO;
+﻿using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Threading;
 using Aimmy2.Config;
 using Visuality;
-using System.Windows.Input;
 using Aimmy2;
-using Aimmy2.AILogic.Actions;
-using Aimmy2.AILogic.Contracts;
 using Core;
-using Microsoft.ML.OnnxRuntime;
-using Nextended.UI;
-using System.Xml.Linq;
 using Aimmy2.Extensions;
 using Nextended.Core.Extensions;
 

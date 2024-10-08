@@ -7,6 +7,20 @@ param(
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $outputDir = Join-Path $scriptDir "Aimmy2/bin/Release"
 
+# Funktion für das Erstellen mit oder ohne CUDA
+function Build-ProjectWithCuda {
+    param(
+        [bool]$isCuda
+    )
+
+    # Setze die IsCuda Variable
+    $isCudaValue = if ($isCuda) { "true" } else { "false" }
+
+    # Clean and Build das Projekt mit der IsCuda Variable
+    dotnet clean --configuration Release
+    dotnet publish -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None -p:IsCuda=$isCudaValue
+}
+
 # Check if the output directory exists and delete it
 if (Test-Path $outputDir) {
     Remove-Item -Recurse -Force $outputDir
@@ -103,13 +117,11 @@ if ($versionUpdated) {
     Write-Host "Updated .csproj file saved with version $currentVersion"
 }
 
-# Build the project
+# Normal Build
 $buildSucceeded = $true
 try {
-    # dotnet build --configuration Release --no-incremental
-    dotnet publish -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None
-    # dotnet publish $csprojPath -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false
-
+    Write-Host "Building the project with CUDA..."
+    Build-ProjectWithCuda -isCuda:$true
 } catch {
     $buildSucceeded = $false
     Write-Host "Build failed. Reverting .csproj file to the old version."
@@ -123,9 +135,8 @@ if ($buildSucceeded) {
         $zipContent = Join-Path $zipContent $path
     }
 
-    # Define the zip file name and path
-    # $zipFileName = "$assemblyName`_$currentVersion.zip"
-    $zipFileName = "Release_$currentVersion.zip"
+    # Define the zip file name and path    
+    $zipFileName = "Release_${currentVersion}_cuda.zip"
     $zipFileName  = $zipFileName -replace '(^\s+|\s+$)','' -replace '\s+',' '
 
     $zipFilePath = Join-Path $outputDir $zipFileName
@@ -145,6 +156,21 @@ if ($buildSucceeded) {
     } else {
         Write-Host "Launcher.exe not found, skipping the copy operation."
     }
+
+    # CUDA Build
+    Write-Host "Building the project without CUDA..."
+    Build-ProjectWithCuda -isCuda:$false
+
+    # ZIP CUDA build
+    $zipFileName = "Release_${currentVersion}.zip"
+    $zipFileName  = $zipFileName -replace '(^\s+|\s+$)','' -replace '\s+',' '
+
+    $cudaZipFilePath = Join-Path $outputDir $zipFileName
+
+    # Compress the output directory into a CUDA zip file
+    Compress-Archive -Path $zipContent\* -DestinationPath $cudaZipFilePath
+
+    Write-Host "Output directory compressed into $zipFileName in the Release folder."
 
     if ($versionUpdated) {
         # Checkout to master branch

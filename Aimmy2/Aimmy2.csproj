@@ -2,19 +2,23 @@
   <PropertyGroup Label="Globals" Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <Microsoft_AI_DirectML_SkipDebugLayerCopy>True</Microsoft_AI_DirectML_SkipDebugLayerCopy>
     <Microsoft_AI_DirectML_SkipLibraryCopy>False</Microsoft_AI_DirectML_SkipLibraryCopy>
+
   </PropertyGroup>
   <PropertyGroup Label="Globals" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Microsoft_AI_DirectML_SkipDebugLayerCopy>True</Microsoft_AI_DirectML_SkipDebugLayerCopy>
     <Microsoft_AI_DirectML_SkipLibraryCopy>False</Microsoft_AI_DirectML_SkipLibraryCopy>
+
   </PropertyGroup>
   <PropertyGroup Label="Globals" Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <Microsoft_AI_DirectML_SkipDebugLayerCopy>True</Microsoft_AI_DirectML_SkipDebugLayerCopy>
     <Microsoft_AI_DirectML_SkipLibraryCopy>False</Microsoft_AI_DirectML_SkipLibraryCopy>
+
   </PropertyGroup>
   <PropertyGroup Label="Globals" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Microsoft_AI_DirectML_SkipDebugLayerCopy>True</Microsoft_AI_DirectML_SkipDebugLayerCopy>
     <Microsoft_AI_DirectML_SkipLibraryCopy>False</Microsoft_AI_DirectML_SkipLibraryCopy>
   </PropertyGroup>
+
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <ApplicationIcon>CH.ico</ApplicationIcon>
@@ -39,6 +43,9 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <IsCuda>false</IsCuda>
+  </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <Optimize>False</Optimize>
@@ -70,6 +77,15 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
+  <ItemGroup Condition="'$(IsCuda)' == 'true'">
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu" Version="1.19.2" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(IsCuda)' == 'false'">
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.19.2" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="SharpDX" Version="4.2.0" />
     <PackageReference Include="SharpDX.DirectInput" Version="4.2.0" />
@@ -80,8 +96,6 @@
     <PackageReference Include="Nextended.Core" Version="7.0.56" />
     <PackageReference Include="Nextended.UI" Version="7.0.33" />
     <PackageReference Include="MaterialDesignThemes" Version="4.9.0" />
-    <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.19.2" />
-    <!--<PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu.Windows" Version="1.19.2" />-->
     <PackageReference Include="MouseKeyHook" Version="5.7.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Supercluster.KDTree" Version="1.0.4" />
@@ -152,9 +166,6 @@
     <None Update="DirectML.dll">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
-    <None Update="onnxruntime.dll">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
     <None Update="Resources\HidHide_1.5.230_x64.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -223,4 +234,14 @@
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.csproj" />
   </ItemGroup>
+  <!--<Target Name="CopyNativeDlls" AfterTargets="Build" DependsOnTargets="Restore">
+    <ItemGroup>
+      <NativeDirectMLDlls Include="$(NuGetPackageRoot)microsoft.ml.onnxruntime.directml\1.19.2\runtimes\win-x64\native\*.dll" />
+      <NativeGpuDlls Include="$(NuGetPackageRoot)microsoft.ml.onnxruntime.gpu.windows\1.19.2\runtimes\win-x64\native\*.dll" />
+    </ItemGroup>
+
+    <Copy SourceFiles="@(NativeDirectMLDlls)" DestinationFolder="$(OutDir)onnxruntimes\DirectML" />
+    <Copy SourceFiles="@(NativeGpuDlls)" DestinationFolder="$(OutDir)onnxruntimes\Cuda" />
+  </Target>-->
+
 </Project>

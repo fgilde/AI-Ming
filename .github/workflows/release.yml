@@ -37,6 +37,16 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Upload CUDA release ZIP asset
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./Aimmy2/bin/Release/Release_${{ github.event.release.tag_name }}_cuda.zip
+        asset_name: ${{ github.event.release.tag_name }}_cuda.zip
+        asset_content_type: application/zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Upload Installer.exe asset
       uses: actions/upload-release-asset@v1
       with:

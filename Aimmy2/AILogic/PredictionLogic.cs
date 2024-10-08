@@ -3,14 +3,12 @@ using Microsoft.ML.OnnxRuntime.Tensors;
 using System.Drawing;
 using System.IO;
 using System.Windows;
-using Accord.Diagnostics;
 using Aimmy2.AILogic.Contracts;
 using Aimmy2.Extensions;
 using Visuality;
 using Other;
 using Aimmy2.Config;
 using Supercluster.KDTree;
-using Aimmy2.Types;
 
 namespace Aimmy2.AILogic;
 
@@ -23,46 +21,25 @@ public class PredictionLogic : IPredictionLogic
     private InferenceSession _onnxModel;
     private List<string> _outputNames;
     private readonly RunOptions? _modeloptions = new();
+
+    public OnnxExecutionProvider ExecutionProvider { get; private set; }
+
     public PredictionLogic(string modelPath, SessionOptions? sessionOptions = null)
     {
-        sessionOptions ??= new SessionOptions
-        {
-            EnableCpuMemArena = true,
-            EnableMemoryPattern = true,
-            GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL,
-            ExecutionMode = ExecutionMode.ORT_PARALLEL
-        };
-        _ = InitializeModel(sessionOptions, modelPath);
+        InitializeModel(sessionOptions ?? OnnxHelper.CreateDefaultSessionOptions(), modelPath);
     }
 
-    private async Task InitializeModel(SessionOptions sessionOptions, string modelPath)
+    private void InitializeModel(SessionOptions sessionOptions, string modelPath)
     {
-        try
-        {
-            await LoadModelAsync(sessionOptions, modelPath, useDirectML: true);
-        }
-        catch (Exception ex)
-        {
-            await Application.Current.Dispatcher.BeginInvoke(new Action(() => new NoticeBar($"Error starting the model via DirectML: {ex.Message}\n\nFalling back to CPU, performance may be poor.", 5000).Show()));
-            try
-            {
-                await LoadModelAsync(sessionOptions, modelPath, useDirectML: false);
-            }
-            catch (Exception e)
-            {
-                await Application.Current.Dispatcher.BeginInvoke(new Action(() => new NoticeBar($"Error starting the model via CPU: {e.Message}, you won't be able to aim assist at all.", 5000).Show()));
-            }
-        }
-
+        LoadModel(sessionOptions, modelPath, OnnxExecutionProvider.Cuda);
         FileManager.CurrentlyLoadingModel = false;
     }
 
-    private async Task LoadModelAsync(SessionOptions sessionOptions, string modelPath, bool useDirectML)
+    private void LoadModel(SessionOptions sessionOptions, string modelPath, OnnxExecutionProvider provider)
     {
         try
         {
-            if (useDirectML) sessionOptions.AppendExecutionProvider_DML();
-            else sessionOptions.AppendExecutionProvider_CPU();
+            ExecutionProvider = sessionOptions.SetExecutionProvider(provider);
 
             _onnxModel = new InferenceSession(modelPath, sessionOptions);
             _outputNames = [.._onnxModel.OutputMetadata.Keys];
@@ -72,10 +49,9 @@ public class PredictionLogic : IPredictionLogic
         }
         catch (Exception ex)
         {
-            await Application.Current.Dispatcher.BeginInvoke(new Action(() => new NoticeBar($"Error starting the model: {ex.Message}", 5000).Show()));
+            _= Application.Current.Dispatcher.BeginInvoke(new Action(() => new NoticeBar($"Error starting the model: {ex.Message}", 5000).Show()));
             _onnxModel?.Dispose();
         }
-
     }
 
     private void ValidateOnnxShape()
@@ -143,7 +119,6 @@ public class PredictionLogic : IPredictionLogic
             return allNearest;
         });
     }
-
 
 
     private async Task SaveFrameAsync(Bitmap frame, Prediction? DoLabel)

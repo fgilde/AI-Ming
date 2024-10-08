@@ -171,6 +171,8 @@ public partial class MainWindow
 
     internal void FillMenus()
     {
+        if(Config != null)
+            ModelContextMenu.Header = $"{Config.LastLoadedModel} ({AIManager.Instance?.PredictionLogic?.ExecutionProvider})";
         ModelContextMenu.Items.Clear();
         ModelContextMenu.Items.AddRange(ModelListBox.ToMenuItems(item =>
         {
