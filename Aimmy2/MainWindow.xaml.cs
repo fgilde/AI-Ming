@@ -90,7 +90,7 @@ public partial class MainWindow
         MainBorder.BindMouseGradientAngle(ShouldBindGradientMouse);
         //Console.WriteLine(JsonConvert.SerializeObject(Dictionary.toggleState));
         Console.WriteLine(Locale.UICompleteMessage);
-        MessageBox.Show("Cuda:" + ApplicationConstants.IsCudaBuild);
+        Console.WriteLine("Compiled with Cuda: " + ApplicationConstants.IsCudaBuild);
     }
     
     private void CreateUI()

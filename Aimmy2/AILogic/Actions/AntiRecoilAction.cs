@@ -194,7 +194,7 @@ namespace Aimmy2.AILogic.Actions
         private void MouseMove(int deltaX, int deltaY)
         {
             autoMoved = true;
-
+            //MouseManager.Move(deltaX, deltaY);
             var inputs = new MINPUT[1];
             inputs[0].type = (uint)MInputType.INPUT_MOUSE;
             inputs[0].U.mi = new MOUSEINPUT
