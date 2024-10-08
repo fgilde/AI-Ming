@@ -30,6 +30,8 @@ namespace InputLogic
         public event Action<string>? OnBindingPressed;
 
         public event Action<string>? OnBindingReleased;
+        public event Action<MouseEventArgs>? OnMouseMove;
+        public event Action<MouseEventExtArgs>? OnMouseMoveExt;
 
 
         public static bool IsHoldingBinding(string bindingId)
@@ -45,6 +47,8 @@ namespace InputLogic
             }
             return TimeSpan.Zero;
         }
+
+        public static bool IsHoldingBinding(StoredInputBinding binding) => IsHoldingBindingFor(binding, null);
 
         public static bool IsHoldingBindingFor(StoredInputBinding binding, TimeSpan? duration)
         {
@@ -119,6 +123,8 @@ namespace InputLogic
                 _mEvents.MouseDown += GlobalHookMouseDown!;
                 _mEvents.KeyUp += GlobalHookKeyUp!;
                 _mEvents.MouseUp += GlobalHookMouseUp!;
+                _mEvents.MouseMove += MEventsOnMouseMove;
+                _mEvents.MouseMoveExt += MEventsOnMouseMoveExt;
             }
 
             if (!_gamepadListen && GamepadManager.CanRead)
@@ -126,6 +132,16 @@ namespace InputLogic
                 _gamepadListen = true;
                 GamepadManager.GamepadReader.ButtonEvent += GamepadReader_ButtonEvent;
             }
+        }
+
+        private void MEventsOnMouseMoveExt(object? sender, MouseEventExtArgs e)
+        {
+            OnMouseMoveExt?.Invoke(e);
+        }
+
+        private void MEventsOnMouseMove(object? sender, MouseEventArgs e)
+        {
+            OnMouseMove?.Invoke(e);
         }
 
         private void GamepadReader_ButtonEvent(object? sender, GamepadEventArgs e)

@@ -97,48 +97,51 @@ public class PredictionLogic : IPredictionLogic
     }
 
 
-    public async Task<Prediction[]> Predict(Bitmap frame, Rectangle detectionBox)
+    public Task<Prediction[]> Predict(Bitmap frame, Rectangle detectionBox)
     {
-        int maxResultCount = 1;
-
-        if (frame == null || _onnxModel == null) return [];
-        
-        float[] inputArray = frame.ToFloatArray();
-        
-        Tensor<float> inputTensor = new DenseTensor<float>(inputArray, [1, 3, frame.Height, frame.Width]);
-        var inputs = new List<NamedOnnxValue> { NamedOnnxValue.CreateFromTensor("images", inputTensor) };
-        var results = _onnxModel.Run(inputs, _outputNames, _modeloptions);
-
-        var outputTensor = results[0].AsTensor<float>();
-
-        float FovSize = (float)AppConfig.Current.SliderSettings.ActualFovSize;
-        float fovMinX = (IMAGE_SIZE - FovSize) / 2.0f;
-        float fovMaxX = (IMAGE_SIZE + FovSize) / 2.0f;
-        float fovMinY = (IMAGE_SIZE - FovSize) / 2.0f;
-        float fovMaxY = (IMAGE_SIZE + FovSize) / 2.0f;
-
-        var (kdPoints, kdPredictions) = PrepareKDTreeData(outputTensor, detectionBox, fovMinX, fovMaxX, fovMinY, fovMaxY);
-
-        if (kdPoints.Count == 0 || kdPredictions.Count == 0)
+        return Task.Run(() =>
         {
-            return [];
-        }
+            int maxResultCount = 1;
 
-        var tree = new KDTree<double, Prediction>(2, kdPoints.ToArray(), kdPredictions.ToArray(), Normalizer.SquaredDouble);
+            if (frame == null || _onnxModel == null) return [];
 
-        var centerPoint = new[] { IMAGE_SIZE / 2.0, IMAGE_SIZE / 2.0 };
-        var allNearest = tree.NearestNeighbors(centerPoint, Math.Min(kdPredictions.Count, maxResultCount)).Select(n => n.Item2).ToArray();
-        
-        foreach (var prediction in allNearest)
-        {
-            float translatedXMin = prediction.Rectangle.X + detectionBox.Left;
-            float translatedYMin = prediction.Rectangle.Y + detectionBox.Top;
-            prediction.TranslatedRectangle = new RectangleF(translatedXMin, translatedYMin, prediction.Rectangle.Width, prediction.Rectangle.Height);
+            float[] inputArray = frame.ToFloatArray();
 
-            await SaveFrameAsync(frame, prediction);
-        }
+            Tensor<float> inputTensor = new DenseTensor<float>(inputArray, [1, 3, frame.Height, frame.Width]);
+            var inputs = new List<NamedOnnxValue> { NamedOnnxValue.CreateFromTensor("images", inputTensor) };
+            var results = _onnxModel.Run(inputs, _outputNames, _modeloptions);
 
-        return allNearest;
+            var outputTensor = results[0].AsTensor<float>();
+
+            float FovSize = (float)AppConfig.Current.SliderSettings.ActualFovSize;
+            float fovMinX = (IMAGE_SIZE - FovSize) / 2.0f;
+            float fovMaxX = (IMAGE_SIZE + FovSize) / 2.0f;
+            float fovMinY = (IMAGE_SIZE - FovSize) / 2.0f;
+            float fovMaxY = (IMAGE_SIZE + FovSize) / 2.0f;
+
+            var (kdPoints, kdPredictions) = PrepareKDTreeData(outputTensor, detectionBox, fovMinX, fovMaxX, fovMinY, fovMaxY);
+
+            if (kdPoints.Count == 0 || kdPredictions.Count == 0)
+            {
+                return [];
+            }
+
+            var tree = new KDTree<double, Prediction>(2, kdPoints.ToArray(), kdPredictions.ToArray(), Normalizer.SquaredDouble);
+
+            var centerPoint = new[] { IMAGE_SIZE / 2.0, IMAGE_SIZE / 2.0 };
+            var allNearest = tree.NearestNeighbors(centerPoint, Math.Min(kdPredictions.Count, maxResultCount)).Select(n => n.Item2).ToArray();
+
+            foreach (var prediction in allNearest)
+            {
+                float translatedXMin = prediction.Rectangle.X + detectionBox.Left;
+                float translatedYMin = prediction.Rectangle.Y + detectionBox.Top;
+                prediction.TranslatedRectangle = new RectangleF(translatedXMin, translatedYMin, prediction.Rectangle.Width, prediction.Rectangle.Height);
+
+                _ = SaveFrameAsync(frame, prediction);
+            }
+
+            return allNearest;
+        });
     }
 
 

@@ -16,7 +16,7 @@ public abstract class BaseAction : IAction
 
     public abstract Task ExecuteAsync(Prediction[] predictions);
 
-    protected virtual bool Active => AppConfig.Current.ToggleState.GlobalActive;
+    public virtual bool Active => AppConfig.Current.ToggleState.GlobalActive;
     public IPredictionLogic PredictionLogic => AIManager.PredictionLogic;
     public ICapture ImageCapture => AIManager.ImageCapture;
 

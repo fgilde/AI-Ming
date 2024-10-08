@@ -79,7 +79,7 @@ public class OverlayAction : BaseAction
         base.Dispose();
     }
 
-    protected override bool Active => base.Active && AppConfig.Current.ToggleState.ShowDetectedPlayer;
+    public override bool Active => base.Active && AppConfig.Current.ToggleState.ShowDetectedPlayer;
 
     private void DrawWithWpf(Prediction[] predictions)
     {

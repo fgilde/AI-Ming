@@ -7,7 +7,6 @@ using Aimmy2.AILogic.Contracts;
 using Aimmy2.Class.Native;
 using Aimmy2.Config;
 using Aimmy2.Models;
-using Class;
 using Nextended.Core.Extensions;
 using Other;
 using Visuality;
@@ -64,7 +63,11 @@ public class AIManager : IDisposable
 
         _isAiLoopRunning = true;
         _ = SetActionsState(false);
-        _aiLoopThread = new Thread(AiLoop);
+        _aiLoopThread = new Thread(AiLoop)
+        {
+            Priority = ThreadPriority.AboveNormal,
+            IsBackground = true
+        };
         _aiLoopThread.Start();
     }
 

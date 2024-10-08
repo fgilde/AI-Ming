@@ -1,13 +1,11 @@
 ﻿using System.ComponentModel;
 using Aimmy2.AILogic.Contracts;
-using Aimmy2.Extensions;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using Aimmy2.Class.Native;
-using Class;
 using Aimmy2.Config;
 using Nextended.Core;
 using Visuality;
@@ -61,11 +59,10 @@ public class ProcessCapture : ICapture
         if (detectionBox.Width <= 0)
             detectionBox.Width = windowRect.Right - windowRect.Left;
 
-        Bitmap bitmap = new Bitmap(detectionBox.Width, detectionBox.Height, PixelFormat.Format32bppArgb);
-        using Graphics graphics = Graphics.FromImage(bitmap);
+        LastCapture = new Bitmap(detectionBox.Width, detectionBox.Height, PixelFormat.Format32bppArgb);
+        using Graphics graphics = Graphics.FromImage(LastCapture);
         graphics.CopyFromScreen(detectionBox.Left, detectionBox.Top, 0, 0, detectionBox.Size, CopyPixelOperation.SourceCopy);
-        LastCapture = new Bitmap(bitmap);
-        return bitmap;
+        return LastCapture;
     }
 
     public Bitmap LastCapture { get; private set; }

@@ -1,17 +1,13 @@
 ﻿using System.ComponentModel;
 using Aimmy2.AILogic.Contracts;
-using Class;
 using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
-using Visuality;
-using Nextended.Core;
 
 namespace Aimmy2.AILogic;
 
 public class ScreenCapture : ICapture
 {
-    private Bitmap? _screenCaptureBitmap;
     private Graphics? _graphics;
     public Screen Screen { get; }
     public Bitmap LastCapture { get; private set; }
@@ -35,18 +31,18 @@ public class ScreenCapture : ICapture
         {
             detectionBox = CaptureArea;
         }
-        if (_graphics == null || _screenCaptureBitmap == null || _screenCaptureBitmap.Width != detectionBox.Width || _screenCaptureBitmap.Height != detectionBox.Height)
+        if (_graphics == null || LastCapture == null || LastCapture.Width != detectionBox.Width || LastCapture.Height != detectionBox.Height)
         {
-            _screenCaptureBitmap?.Dispose();
-            _screenCaptureBitmap = new Bitmap(detectionBox.Width, detectionBox.Height);
+            LastCapture?.Dispose();
+            LastCapture = new Bitmap(detectionBox.Width, detectionBox.Height);
 
             _graphics?.Dispose();
-            _graphics = Graphics.FromImage(_screenCaptureBitmap);
+            _graphics = Graphics.FromImage(LastCapture);
         }
 
         _graphics.CopyFromScreen(Screen.Bounds.Left + detectionBox.Left, Screen.Bounds.Top + detectionBox.Top, 0, 0, detectionBox.Size);
-        LastCapture = new Bitmap(_screenCaptureBitmap);
-        return _screenCaptureBitmap;
+        //LastCapture = new Bitmap(_screenCaptureBitmap);
+        return LastCapture;
     }
 
     public Task OnPause() => Task.CompletedTask;
@@ -64,7 +60,7 @@ public class ScreenCapture : ICapture
 
     public void Dispose()
     {
-        _screenCaptureBitmap?.Dispose();
+        LastCapture?.Dispose();
         _graphics?.Dispose();
     }
 }
