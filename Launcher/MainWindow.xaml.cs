@@ -1,13 +1,9 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Windows;
 using System.Windows.Input;
 using Core;
-using Vestris.ResourceLib;
-
 
 
 namespace Launcher
@@ -17,7 +13,6 @@ namespace Launcher
     /// </summary>
     public partial class MainWindow : BaseDialog
     {
-        private static readonly Random _random = new Random();
         private string _status;
         private bool _isInstallerMode;
         private string _version;
@@ -29,13 +24,14 @@ namespace Launcher
         private string _repoName = Constants.RepoName;
         private GitHubRelease _selectedRelease;
         private bool _containsCudaRelease;
-        private const string _chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
+        #region Properties
         public Visibility InstallerVisibility => IsInstallerMode ? Visibility.Visible : Visibility.Collapsed;
         public bool IsInstallerMode
         {
             get => _isInstallerMode;
-            set {
+            set
+            {
                 if (SetField(ref _isInstallerMode, value))
                 {
                     OnPropertyChanged(nameof(InstallerVisibility));
@@ -61,11 +57,6 @@ namespace Launcher
                     CheckCudaAvailability();
                 }
             }
-        }
-
-        private void CheckCudaAvailability()
-        {
-            ContainsCudaRelease = SelectedRelease?.Assets.Any(a => a.Name.Contains("_cuda.zip")) == true;
         }
 
         public bool CanClose
@@ -104,6 +95,9 @@ namespace Launcher
             set => SetField(ref _installDirectory, value);
         }
 
+        #endregion
+
+
         public MainWindow()
         {
             Title = "AI-M";
@@ -112,13 +106,16 @@ namespace Launcher
             DataContext = this;
             Task.Delay(400).ContinueWith(_ => Execute());
         }
-
+        private void CheckCudaAvailability()
+        {
+            ContainsCudaRelease = SelectedRelease?.Assets.Any(a => a.Name.Contains("_cuda.zip")) == true;
+        }
 
         private async Task Execute()
         {
             Status = "Search executable...";
             await Task.Delay(100);
-            var exe = FindExe();
+            var exe = ExecutableManager.FindExecutable();
             if (string.IsNullOrEmpty(exe) || !File.Exists(exe))
             {
                 IsInstallerMode = true;
@@ -128,7 +125,7 @@ namespace Launcher
             }
             else
             {
-                 ChangeResources(exe);
+                Version = ExecutableManager.LoadResourceTable(exe, s => Status = s)?.FileVersion;
                 await Task.Delay(200);
                 await RenameExe(exe);
             }
@@ -136,102 +133,17 @@ namespace Launcher
 
         private async void LoadReleases()
         {
-            try
-            {
-                var manager = new GithubManager();
-                SelectedRelease = await manager.GetLatestReleaseInfoAsync(_repoOwner, _repoName);
-                var releases = (await manager.GetAvailableReleasesAsync(_repoOwner, _repoName)).ToList();
-                Dispatcher.Invoke(() =>
-                {
-                    Releases.Clear();
-                    foreach (var release in releases)
-                    {
-                        Releases.Add(release);
-                    }
-                });
-            }
-            catch (Exception e)
-            {
-                
-            }
+            await ReleaseManager.LoadReleasesAsync(Releases);
+            SelectedRelease = Releases.FirstOrDefault();
         }
 
-        private void ChangeResources(string exe)
-        {
-            try
-            {
-                var versionResource = new VersionResource();
-                versionResource.LoadFrom(exe);
-                Version = versionResource.FileVersion;
-                //string newName = GenerateRandomString(15).ToUpper();
-                //var resource = versionResource["StringFileInfo"];
-                //var fi = resource as StringFileInfo;
-
-                //foreach (var table in fi.Strings.Select(pair => pair.Value))
-                //{
-                //    table["CompanyName"] = newName;
-                //    table["FileDescription"] = newName;
-                //    table["InternalName"] = $"{newName}.dll";
-                //    table["OriginalFilename"] = $"{newName}.dll";
-                //    table["ProductName"] = newName;
-                //}
-
-
-                //versionResource.SaveTo(exe);
-
-            }
-            catch (Exception e)
-            {
-                Status = $"Error: {e.Message}";
-            }
-        }
-
-        public static Assembly LoadAssemblyViaStream(string assemblyLocation)
-        {
-            byte[] file = null;
-            int bufferSize = 1024;
-            using (FileStream fileStream = File.Open(assemblyLocation, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {
-                using (MemoryStream memoryStream = new MemoryStream())
-                {
-                    byte[] buffer = new byte[bufferSize];
-                    int readBytesCount = 0;
-                    while ((readBytesCount = fileStream.Read(buffer, 0, bufferSize)) > 0)
-                        memoryStream.Write(buffer, 0, readBytesCount);
-                    file = memoryStream.ToArray();
-                }
-            }
-
-            return Assembly.Load(file);
-        }
-        
-
-        private string GenerateRandomString(int length = 8)
-        {
-            return new string(Enumerable.Repeat(_chars, length)
-                .Select(s => s[_random.Next(s.Length)]).ToArray());
-        }
 
         private async Task RenameExe(string exe)
         {
-            string newName = $"{GenerateRandomString()}.exe";
-            var newExe = Path.Combine(Path.GetDirectoryName(exe), newName);
-            Status = $"Shuffle name to {newName}";
-            await Task.Delay(100); 
-            File.Move(exe, newExe);
-
-            var process = new Process
+            await ExecutableManager.RenameExecutable(exe, newName =>
             {
-                StartInfo = new ProcessStartInfo(newExe)
-                {
-                    UseShellExecute = true
-                }
-            };
-
-            process.Start();
-            process.WaitForInputIdle();
-
-            await Task.Delay(3000);
+                Status = $"Shuffle name to {newName}";
+            });
 
             await Dispatcher.Invoke(() =>
             {
@@ -239,21 +151,6 @@ namespace Launcher
                 System.Windows.Application.Current.Shutdown();
                 return Task.CompletedTask;
             });
-        }
-
-
-        private string FindExe()
-        {
-            var launcherExe = Process.GetCurrentProcess().MainModule.FileName;
-            var currentDir = Path.GetDirectoryName(launcherExe);
-
-            var l = Directory.EnumerateFiles(currentDir, "*.exe").Where(x => x != launcherExe && Path.GetFileName(x) != "createdump.exe" && Path.GetFileName(x) != "Installer.exe").ToList();
-            if(l.Count == 1)
-                return l[0];
-            l = l.Where(n => Path.GetFileNameWithoutExtension(n).Length == 8).ToList();
-            if(l.Count == 1)
-                return l[0];
-            return l.FirstOrDefault();
         }
 
 

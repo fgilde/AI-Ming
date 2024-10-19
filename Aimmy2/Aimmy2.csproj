@@ -32,7 +32,7 @@
     </Product>
     <Title>
     </Title>
-    <AssemblyName>TotallyNotAimmyV2</AssemblyName>
+    <AssemblyName>MrsWineHouse</AssemblyName>
     <Version>1.0.0.4</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>False</SignAssembly>
@@ -41,6 +41,7 @@
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <IncludeNativeLibrariesForSelfExtract>false</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
 
   <PropertyGroup>
