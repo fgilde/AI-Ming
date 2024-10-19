@@ -248,9 +248,10 @@ namespace InputLogic
 
         public static async Task DoTriggerClick()
         {
-            var randomMs = GetRandomDelay();
+            var randomMs = Math.Max(_random.Next(45, 55), GetRandomDelay());
             LeftDown();
             await Task.Delay(randomMs);
+            //Console.WriteLine("Fire waited: "+randomMs);
             LeftUp();
 
             LastClickTime = DateTime.UtcNow;

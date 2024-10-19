@@ -21,7 +21,7 @@ public class SliderSettings: BaseSettings
     private double _borderThickness = 1;
     private double _opacity = 1;
     private double _fovOpacity = 1;
-    private double _firePressDelay = 0.02;
+    private double _firePressDelay = 0.1;
     private float _magnificationFactor = 2;
     private double _magnifierWindowHeight = 250;
     private double _magnifierWindowWidth = 350;

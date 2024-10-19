@@ -1,21 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Runtime.InteropServices;
-using System.Windows;
 using System.Windows.Forms;
-using System.Windows.Interop;
 using Aimmy2.AILogic;
 using Aimmy2.Config;
 using Aimmy2.Extensions;
 using Aimmy2.Types;
-using Class;
 using Color = System.Drawing.Color;
 using MediaColor = System.Windows.Media.Color;
 
 namespace Aimmy2.Other
 {
-    internal static class PredictionDrawer
+    internal static partial class PredictionDrawer
     {
         [DllImport("user32.dll")]
         private static extern IntPtr GetDC(IntPtr hWnd);
@@ -33,9 +28,14 @@ namespace Aimmy2.Other
             ReleaseDC(IntPtr.Zero, desktopDC);
         }
 
-        public static void DrawPredictions(Window window, IEnumerable<Prediction> predictions, Rectangle? targetArea = null)
+        public static void DrawPredictions(Form window, IEnumerable<Prediction> predictions, Rectangle? targetArea = null)
         {
-            var hwnd = window.Dispatcher.Invoke(() => new WindowInteropHelper(window).Handle);
+            if (window.InvokeRequired)
+            {
+                window.Invoke(() => DrawPredictions(window, predictions, targetArea));
+                return;
+            }
+            var hwnd = window.Handle;
             IntPtr hdc = GetDC(hwnd);
 
             using (Graphics graphics = Graphics.FromHdc(hdc))
@@ -49,14 +49,13 @@ namespace Aimmy2.Other
         public static void DrawPredictions(Graphics graphics, IEnumerable<Prediction> predictions, Rectangle? targetArea = null)
         {
             foreach (var prediction in predictions)
-            {
                 DrawPrediction(graphics, prediction, targetArea);
-            }
         }
+
 
         private static void Draw(Graphics graphics, RectangleF rect, float cornerRadius, MediaColor color, float opacity, float borderThickness) => Draw(graphics, rect, cornerRadius, color.ToDrawingColor(), opacity, borderThickness);
         private static void Draw(Graphics graphics, RectangleF rect, float cornerRadius, Color color, float opacity, float borderThickness) => Draw(graphics, new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Width, (int)rect.Height), cornerRadius, color, opacity, borderThickness);
-        
+
         private static void Draw(Graphics graphics, Rectangle rect, float cornerRadius, MediaColor color, float opacity, float borderThickness) => Draw(graphics, rect, cornerRadius, color.ToDrawingColor(), opacity, borderThickness);
         private static void Draw(Graphics graphics, Rectangle rect, float cornerRadius, Color color, float opacity, float borderThickness)
         {

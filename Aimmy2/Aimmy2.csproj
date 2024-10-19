@@ -45,7 +45,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <IsCuda>true</IsCuda>
+    <IsCuda>false</IsCuda>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -168,6 +168,9 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
     <None Update="Resources\HidHide_1.5.230_x64.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\SecHex-GUI.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Resources\vJoySetup.exe">

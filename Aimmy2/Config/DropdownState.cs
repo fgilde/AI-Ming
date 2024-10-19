@@ -7,7 +7,7 @@ public class DropdownState: BaseSettings
     private DetectionAreaType _detectionAreaType = DetectionAreaType.ClosestToCenter;
     private AimingBoundariesAlignment _aimingBoundariesAlignment = AimingBoundariesAlignment.Top;
     private MouseMovementMethod _mouseMovementMethod = MouseMovementMethod.MouseEvent;
-    private OverlayDrawingMethod _overlayDrawingMethod;
+    private OverlayDrawingMethod _overlayDrawingMethod = OverlayDrawingMethod.WpfWindowCanvas;
     private GamepadSendMode _gamepadSendMode = GamepadSendMode.ViGEm;
     
     public GamepadSendMode GamepadSendMode

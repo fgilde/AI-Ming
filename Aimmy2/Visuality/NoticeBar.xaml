@@ -25,15 +25,20 @@
                 HorizontalAlignment="Center"
                 Background="{StaticResource Background}"
                 Margin="0,0,0,100">
-            <Label x:Name="ContentText"
-                   Content="This feature has not been implemented yet."
-                   Foreground="#DDFFFFFF"
-                   VerticalContentAlignment="Center"
-                   HorizontalContentAlignment="Center"
-                   IsHitTestVisible="True"
-                   FontSize="14"
-                   Padding="20,10,20,10"
-                   FontFamily="{StaticResource Atkinson Hyperlegible}" />
+            <StackPanel Orientation="Horizontal">
+                <Label x:Name="ContentText"
+                       Content="This feature has not been implemented yet."
+                       Foreground="#DDFFFFFF"
+                       VerticalContentAlignment="Center"
+                       HorizontalContentAlignment="Center"
+                       IsHitTestVisible="True"
+                       FontSize="14"
+                       Padding="20,10,20,10"
+                       FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                <Button IsHitTestVisible="True" Panel.ZIndex="10" Margin="10 0 0 0" Content="&#xE8BB;" HorizontalAlignment="Right" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White" FontFamily="Segoe MDL2 Assets" Padding="15,0,15,0" BorderThickness="0,0,0,0" FontSize="10" VerticalAlignment="Center" 
+                        Click="Exit_Click" />
+
+            </StackPanel>
         </Border>
     </Grid>
 </Window>

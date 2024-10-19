@@ -22,7 +22,7 @@ namespace Visuality
         {
             base.OnSourceInitialized(e);
             this.HideForCapture();
-            this.MakeClickThrough();
+            //this.MakeClickThrough();
         }
 
         public NoticeBar(string text, int waitingTime)
@@ -72,6 +72,11 @@ namespace Visuality
                     (window as NoticeBar)?.AdjustMargin();
                 }
             });
+        }
+
+        private void Exit_Click(object sender, RoutedEventArgs e)
+        {
+            CloseNotice();
         }
     }
 }

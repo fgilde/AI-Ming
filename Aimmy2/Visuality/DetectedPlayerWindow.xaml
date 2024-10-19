@@ -21,9 +21,11 @@
         IsTabStop="False"
         SizeChanged="Window_SizeChanged"
         LocationChanged="Window_LocationChanged">
-    <Canvas x:Name="Canvas"
+    <Grid>
+        <local:PredictionVisualHost x:Name="PredictionHost" />
+        <Canvas x:Name="Canvas"
             Visibility="{Binding Path=ToggleState.ShowDetectedPlayer, Converter={StaticResource boolToVis}}">
-        <Label x:Name="DetectedPlayerConfidence"
+            <Label x:Name="DetectedPlayerConfidence"
                HorizontalAlignment="Left"
                VerticalAlignment="Top"
                FontFamily="Consolas"
@@ -34,11 +36,11 @@
                HorizontalContentAlignment="Center"
                VerticalContentAlignment="Center"
                FontSize="{Binding SliderSettings.AIConfidenceFontSize}" >
-            <Label.Foreground>
-                <SolidColorBrush Color="{Binding ColorState.DetectedPlayerColor}"></SolidColorBrush>
-            </Label.Foreground>
-        </Label>
-        <Border x:Name="DetectedPlayerFocus"
+                <Label.Foreground>
+                    <SolidColorBrush Color="{Binding ColorState.DetectedPlayerColor}"></SolidColorBrush>
+                </Label.Foreground>
+            </Label>
+            <Border x:Name="DetectedPlayerFocus"
                 Visibility="{Binding Path=ToggleState.ShowDetectedPlayer, Converter={StaticResource boolToVis}}"
                 Width="50"
                 Height="50"
@@ -47,19 +49,19 @@
                 CornerRadius="{Binding SliderSettings.CornerRadius, Converter={StaticResource doubleToRadius}}"
                 BorderThickness="{Binding SliderSettings.BorderThickness, Converter={StaticResource doubleToThickness}}"
                 Opacity="0">
-            <Border.BorderBrush>
-                <SolidColorBrush Color="{Binding ColorState.DetectedPlayerColor}"></SolidColorBrush>
-            </Border.BorderBrush>
-            <Canvas>
-                <!-- Green Head Area Border -->
-                <Border x:Name="HeadAreaBorder"
+                <Border.BorderBrush>
+                    <SolidColorBrush Color="{Binding ColorState.DetectedPlayerColor}"></SolidColorBrush>
+                </Border.BorderBrush>
+                <Canvas>
+                    <!-- Green Head Area Border -->
+                    <Border x:Name="HeadAreaBorder"
                         BorderBrush="Green"
                         BorderThickness="{Binding SliderSettings.BorderThickness, Converter={StaticResource doubleToThickness}}"
                         Background="Transparent"
                         Visibility="Collapsed"/>
-            </Canvas>
-        </Border>
-        <Line x:Name="DetectedTracers"
+                </Canvas>
+            </Border>
+            <Line x:Name="DetectedTracers"
               Visibility="{Binding Path=ToggleState.ShowTracers, Converter={StaticResource boolToVis}}"
               X1="0"
               Y1="0"
@@ -67,9 +69,10 @@
               Y2="10"
               StrokeThickness="{Binding SliderSettings.BorderThickness}"
               Opacity="0">
-            <Line.Stroke>
-                <SolidColorBrush Color="{Binding ColorState.DetectedPlayerColor}"></SolidColorBrush>
-            </Line.Stroke>
-        </Line>
-    </Canvas>
+                <Line.Stroke>
+                    <SolidColorBrush Color="{Binding ColorState.DetectedPlayerColor}"></SolidColorBrush>
+                </Line.Stroke>
+            </Line>
+        </Canvas>
+    </Grid>
 </Window>

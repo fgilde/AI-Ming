@@ -123,11 +123,11 @@ namespace Visuality
             DetectedTracers.Y2 = bottomY - 50;
         }
 
-        public void DrawPredictionOverlay(Prediction? prediction)
+        public void DrawPredictionCanvas(Prediction? prediction)
         {
             if(!Dispatcher.CheckAccess())
             {
-                Dispatcher.Invoke(() => DrawPredictionOverlay(prediction));
+                Dispatcher.Invoke(() => DrawPredictionCanvas(prediction));
                 return;
             }
             if(prediction == null)             {
@@ -137,6 +137,7 @@ namespace Visuality
                 HeadAreaBorder.Visibility = Visibility.Collapsed;
                 return;
             }
+            PredictionHost.Visibility = Visibility.Collapsed;
             var lastDetectionBox = prediction.TranslatedRectangle;
             //var captureArea = ImageCapture.CaptureArea;
             var scaleFactor = AIManager.Instance.ImageCapture.Screen.GetScalingFactor();
@@ -178,5 +179,17 @@ namespace Visuality
             SetHeadRelativeArea(AppConfig.Current.ToggleState.ShowTriggerHeadArea ? headRelativeRect : null);
         }
 
+        public void DrawPredictions(Prediction[] predictions, Rect toRect)
+        {
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.Invoke(() => DrawPredictions(predictions, toRect));
+                return;
+            }
+
+            DrawPredictionCanvas(null);
+            PredictionHost.Visibility = Visibility.Visible;
+            PredictionHost.DrawPredictions(predictions, toRect);
+        }
     }
 }

@@ -29,6 +29,12 @@
                 Background="{StaticResource Background}"
                 MouseLeftButtonDown="Border_MouseLeftButtonDown">
             <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                    <RowDefinition Height="*"></RowDefinition>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                </Grid.RowDefinitions>
                 <Grid x:Name="Topbar" VerticalAlignment="Top" Height="70">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"></RowDefinition>
@@ -36,85 +42,76 @@
                     </Grid.RowDefinitions>
                     <Grid>
                         <Label Content="&#xE896;" HorizontalAlignment="Left" Margin="15,0,0,0" VerticalAlignment="Center" Foreground="#DDFFFFFF" Padding="0,0,0,0" FontSize="14" FontFamily="Segoe MDL2 Assets" />
-                        <Label Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='UpdateAvailable'}" HorizontalAlignment="Left" Margin="38,0,0,0" VerticalAlignment="Center" Foreground="#DDFFFFFF" Padding="0,0,0,0" FontSize="14" FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                        <Label x:Name="TitleLabel"  Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='UpdateAvailable'}" HorizontalAlignment="Left" Margin="38,0,0,0" VerticalAlignment="Center" Foreground="#DDFFFFFF" Padding="0,0,0,0" FontSize="14" FontFamily="{StaticResource Atkinson Hyperlegible}" />
                         <Button IsEnabled="{Binding CanClose}" x:Name="Exit" Content="&#xE8BB;" HorizontalAlignment="Right" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White" FontFamily="Segoe MDL2 Assets" Padding="15,0,15,0" BorderThickness="0,0,0,0" FontSize="10" VerticalAlignment="Center" Click="Exit_Click" />
                     </Grid>
                     <Grid Grid.Row="1">
-                        <Label Margin="10 0 0 0" Foreground="White" Content="{Binding Header}"></Label>
+                        <Label x:Name="HeaderLabel"  Margin="10 0 0 0" Foreground="White" Content="{Binding Header}"></Label>
                     </Grid>
                 </Grid>
-                <Grid x:Name="MainArea" Margin="10,50,10,10">
+                <Grid Grid.Row="1" x:Name="ReleaseInfo"  Margin="10 10 0 0">
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Foreground="White" Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='YourVersion'}"/>
+                        <Label Foreground="White" Content="{Binding CurrentVersion}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Grid.Row="1">
+                        <Label Foreground="White" Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NewVersion'}"/>
+                        <Label Foreground="White" Content="{Binding NewVersion}"/>
+                    </StackPanel>
+
+                    <mdXaml:MarkdownScrollViewer 
+                        Grid.Row="2"
+                        Margin="-5 0 0 0"
+                        MarkdownStyle="{StaticResource MdStyle}"
+                        Markdown="{Binding Description}" Foreground="{StaticResource Foreground}" xml:space="preserve"/>
 
 
-                    <Grid Margin="0 10 0 0">
-                       <Grid.RowDefinitions>
-                           <RowDefinition Height="Auto"/>
-                           <RowDefinition Height="Auto"/>
-                           <RowDefinition Height="*"/>
-                           <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <StackPanel Orientation="Horizontal">
-                            <Label Foreground="White" Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='YourVersion'}"/>
-                            <Label Foreground="White" Content="{Binding CurrentVersion}"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Grid.Row="1">
-                            <Label Foreground="White" Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NewVersion'}"/>
-                            <Label Foreground="White" Content="{Binding NewVersion}"/>
-                        </StackPanel>
-
-                        <mdXaml:MarkdownScrollViewer 
-                            Grid.Row="2"
-                            Margin="-5 0 0 0"
-                            MarkdownStyle="{StaticResource MdStyle}"
-                            Markdown="{Binding Description}" Foreground="{StaticResource Foreground}" xml:space="preserve"/>
-
-                        <ProgressBar BorderThickness="1 0 1 0" Maximum="100" Minimum="0" IsIndeterminate="false" Visibility="Hidden" Foreground="Green" Background="Transparent" Value="0" VerticalAlignment="Top" x:Name="UpdateProgressBar" Grid.Row="3" Margin="0 6 0 10" Height="10"></ProgressBar>
-                        <Label Margin="0 0 0 10" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Bottom" Grid.Row="3" Foreground="White" Content="{Binding Status}"/>
-
-                    </Grid>
-
+                </Grid>
+                <StackPanel Grid.Row="2" Margin="10 0">
+                    <ProgressBar BorderThickness="1 0 1 0" Maximum="100" Minimum="0" IsIndeterminate="false" Visibility="Hidden" Foreground="Green" Background="Transparent" Value="0" VerticalAlignment="Top" x:Name="UpdateProgressBar" Grid.Row="3" Margin="0 6 0 10" Height="10"></ProgressBar>
+                    <Label Margin="0 0 0 10" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Bottom" Grid.Row="3" Foreground="White" Content="{Binding Status}"/>
+                </StackPanel>
+                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" >
                     <controls:Button x:Name="CancelButton"
-                                     Grid.Row="1"
                                      IsEnabled="{Binding CanClose}"
                                      BorderBrush="{StaticResource ButtonBorder}"
                                      Background="{StaticResource ButtonBackground}"
                                      EffectBrush="{StaticResource ButtonEffect}"
                                      Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Cancel'}"
-                                     HorizontalAlignment="Right"
-                                     Margin="0 0 100 0"
                                      Height="24"
                                      MinWidth="70"
                                      VerticalAlignment="Bottom"
-                                     Padding="0,0,0,0"
+                                     Padding="5 0"
                                      FontFamily="{StaticResource Atkinson Hyperlegible}"
                                      BorderThickness="0,0,0,0"
                                      FontSize="12"
+                                     Margin="0 10 20 10"
                                      Foreground="White"
                                      Click="Exit_Click" />
 
                     <controls:Button x:Name="ApplyButton"
-                                Grid.Row="1"
-                                IsEnabled="{Binding CanClose}"
-                                Grid.Column="1"
-                                BorderBrush="{StaticResource ButtonBorder}"
-                                Background="{StaticResource ButtonBackground}"
-                                EffectBrush="{StaticResource ButtonEffect}"
-                                Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='InstallUpdate'}"
-                                HorizontalAlignment="Right"
-                                Height="24"
-                                MinWidth="90"
-                                VerticalAlignment="Bottom"
-                                Padding="0,0,0,0"
-                                FontFamily="{StaticResource Atkinson Hyperlegible}"
-                                BorderThickness="0,0,0,0"
-                                FontSize="12"
-                                Foreground="White"
-                                Click="Confirm_Click" />
-                </Grid>
+                                     Margin="0 10 20 10"
+                                     IsEnabled="{Binding CanClose}"
+                                     BorderBrush="{StaticResource ButtonBorder}"
+                                     Background="{StaticResource ButtonBackground}"
+                                     EffectBrush="{StaticResource ButtonEffect}"
+                                     Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='InstallUpdate'}"
+                                     Height="24"
+                                     MinWidth="90"
+                                     VerticalAlignment="Bottom"
+                                     Padding="5 0"
+                                     FontFamily="{StaticResource Atkinson Hyperlegible}"
+                                     BorderThickness="0,0,0,0"
+                                     FontSize="12"
+                                     Foreground="White"
+                                     Click="Confirm_Click" />
+                </StackPanel>
             </Grid>
         </Border>
     </Grid>

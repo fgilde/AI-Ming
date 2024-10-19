@@ -2,12 +2,14 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
 using Aimmy2.Class;
+using Aimmy2.Class.Native;
 using Aimmy2.Config;
 using Aimmy2.Extensions;
 using Aimmy2.InputLogic;
@@ -15,6 +17,7 @@ using Aimmy2.InputLogic.HidHide;
 using Aimmy2.Localizations;
 using Aimmy2.Models;
 using Aimmy2.MouseMovementLibraries.GHubSupport;
+using Aimmy2.Other;
 using Aimmy2.Types;
 using Aimmy2.UILibrary;
 using AimmyWPF.Class;
@@ -652,7 +655,11 @@ public partial class MainWindow
         ESPConfig.AddDropdown(Locale.DrawingMethod, AppConfig.Current.DropdownState.OverlayDrawingMethod, v =>
         {
             AppConfig.Current.DropdownState.OverlayDrawingMethod = v;
-            sizeToggle.SetEnabled(v != OverlayDrawingMethod.WpfWindow);
+            sizeToggle.SetEnabled(v != OverlayDrawingMethod.WpfWindowCanvas);
+            if (v == OverlayDrawingMethod.DesktopDC)
+            {
+                new NoticeBar("WARNING: This method is the fastest, but not hidden for captures!!", 10000).Show();
+            }
         });
 
         ESPConfig.AddColorChanger(Locale.DetectedPlayerColor).BindTo(() => AppConfig.Current.ColorState.DetectedPlayerColor);
@@ -742,18 +749,7 @@ public partial class MainWindow
             {
                 GamepadSettingsConfig.AddButton(Locale.InstallVJoy, b =>
                 {
-                    b.Reader.Click += (s, e) =>
-                    {
-                        var fileName = Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "Resources", "vJoySetup.exe");
-                        if (File.Exists(fileName))
-                        {
-                            var p = Process.Start(new ProcessStartInfo
-                            {
-                                FileName = fileName,
-                            });
-                            p.Exited += (sender, args) => Reload();
-                        }
-                    };
+                    b.Reader.Click += (s, e) => WindowsHelper.RunResourceTool("vJoySetup.exe", null, _ => Reload());
                 });
             }
             else
@@ -803,17 +799,7 @@ public partial class MainWindow
             {
                 GamepadSettingsConfig.AddButton(Locale.InstallHidHide, b =>
                 {
-                    b.Reader.Click += (s, e) =>
-                    {
-                        var fileName =
-                            Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName),
-                                "Resources", "HidHide_1.5.230_x64.exe");
-                        if (File.Exists(fileName))
-                        {
-                            var p = Process.Start(fileName);
-                            p.Exited += (sender, args) => Reload();
-                        }
-                    };
+                    b.Reader.Click += (s, e) => WindowsHelper.RunResourceTool("HidHide_1.5.230_x64.exe", null, _ => Reload());
                 });
             }
             else
@@ -869,7 +855,20 @@ public partial class MainWindow
 
 
         ToolsConfig.AddSeparator();
+
+        ToolsConfig.AddTitle("HWID Spoofer", false);
+        
+        ToolsConfig.AddButton("Open HWID Spoofer").Reader.Click += (_, _) => OpenSpoofer();
+        ToolsConfig.AddCredit("", "This external tool helps to change your Hardware Id, that can help if your PC is banned");
+
+        ToolsConfig.AddSeparator();
     }
+
+    private void OpenSpoofer()
+    {
+        WindowsHelper.RunResourceToolAsAdmin("SecHex-GUI.exe", DefenderExclusionType.Folder, () => Topmost = false, _ => Topmost = AppConfig.Current.ToggleState.UITopMost);
+    }
+    
 
     private void ValidateMagnificationFactor()
     {
@@ -894,6 +893,32 @@ public partial class MainWindow
         UISettings.AddTitle(Locale.UISettings, true);
         CaptureSettings.AddTitle(Locale.CaptureSettings, true);
 
+
+        var text = ApplicationConstants.IsCudaBuild ? "Switch to DirectML Version" : "Switch to CUDA version";
+        UISettings.AddButton(text,
+            button =>
+            {
+                button.Reader.Click += async (s, e) =>
+                {
+                    var releaseManager = new GithubManager();
+                    var task =  releaseManager.GetAvailableReleasesAsync(Constants.RepoOwner, Constants.RepoName);
+                    var releases = await task;
+                    var release = releases.FirstOrDefault(x => Version.Parse(x.TagName) == ApplicationConstants.ApplicationVersion);
+                    if (release != null)
+                    {
+                        var manager = new UpdateManager();
+                        manager.SetRelease(release, !ApplicationConstants.IsCudaBuild);
+                        var dialog = new UpdateDialog(manager);
+                        dialog.ApplyButton.Content = text;
+                        dialog.TitleLabel.Content = text;
+                        dialog.HeaderLabel.Visibility = Visibility.Collapsed;
+                        dialog.Height = 170;
+                        dialog.ReleaseInfo.Visibility = Visibility.Collapsed;
+                        dialog.Owner = this;
+                        dialog.ShowDialog();
+                    }
+                };
+            });
         UISettings.AddDropdown(Locale.Language, CultureInfo.CurrentUICulture, Cultures.All, culture =>
         {
             if (_uiCreated)
