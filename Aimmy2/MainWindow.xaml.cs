@@ -48,7 +48,7 @@ public partial class MainWindow
 
     public static MainWindow? Instance => Application.Current.Dispatcher.Invoke(() => Application.Current.MainWindow as MainWindow);
 
-    
+
     private bool _uiCreated;
     private FileManager _fileManager;
     public AntiRecoilManager ArManager = new();
@@ -72,7 +72,7 @@ public partial class MainWindow
     public MainWindow()
     {
         InitializeComponent();
-        
+
         var writer = new TextBoxStreamWriter(OutputTextBox);
         Console.SetOut(writer);
         AppConfig.ConfigLoaded += (s, e) => CreateUI();
@@ -80,7 +80,7 @@ public partial class MainWindow
         Config = AppConfig.Load();
 
         DataContext = this;
-         
+
         LoadLastModel();
 
         if (!string.IsNullOrEmpty(ApplicationConstants.ShowOnly))
@@ -95,7 +95,7 @@ public partial class MainWindow
         Console.WriteLine(Locale.UICompleteMessage);
         Console.WriteLine("Compiled with Cuda: " + ApplicationConstants.IsCudaBuild);
     }
-    
+
     private void CreateUI()
     {
         string? menu = null;
@@ -103,7 +103,7 @@ public partial class MainWindow
         if (isRecreating && CurrentMenu != nameof(AimMenu))
         {
             menu = CurrentMenu;
-            _= NavigateTo(nameof(AimMenu), false);
+            _ = NavigateTo(nameof(AimMenu), false);
         }
 
         if (!isRecreating && !string.IsNullOrEmpty(AppConfig.Current?.Language))
@@ -113,7 +113,7 @@ public partial class MainWindow
 
         _uiCreated = false;
         Check.TryCatch<Exception>(GamepadManager.Init);
-        
+
         var theme = ThemePalette.All.FirstOrDefault(x => x.Name == AppConfig.Current.ThemeName) ?? ThemePalette.PurplePalette;
         ApplicationConstants.Theme = theme;
 
@@ -159,7 +159,7 @@ public partial class MainWindow
 
         BindingManager.OnBindingPressed += BindingOnKeyPressed;
         BindingManager.OnBindingReleased += BindingOnKeyReleased;
-        
+
         ModelListBox.EnsureRenderedAndInitialized();
         ConfigsListBox.EnsureRenderedAndInitialized();
         Width += 1;
@@ -188,13 +188,13 @@ public partial class MainWindow
         var downloadableMenu = new MenuItem()
         {
             Header = Locale.DownloadableModelsHeader,
-            Foreground =Brushes.Black
+            Foreground = Brushes.Black
         };
         ModelContextMenu.Items.Add(downloadableMenu);
         downloadableMenu.Items.AddRange(_availableModels.Select(s => new MenuItem()
         {
             Header = s,
-            Foreground =Brushes.Black,
+            Foreground = Brushes.Black,
             Command = new ActionCommand(() =>
             {
                 downloadableMenu.IsEnabled = false;
@@ -287,7 +287,7 @@ public partial class MainWindow
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-      //  this.HideForCapture();
+        //  this.HideForCapture();
         _ = CheckUpdate(false);
         KnownIssuesDialog.ShowIf(this);
         AboutSpecs.Content =
@@ -310,7 +310,7 @@ public partial class MainWindow
         _fileManager.Dispose();
         FileManager.AIManager?.Dispose();
         GamepadManager.Dispose();
-        
+
         FOV.Instance?.Close();
 
         if (AppConfig.Current.DropdownState.MouseMovementMethod == MouseMovementMethod.LGHUB) LGMouse.Close();
@@ -358,7 +358,7 @@ public partial class MainWindow
         var duration = animate ? 350 : 0;
         movingScrollViewer.Visibility = Visibility.Visible;
         Animator.Fade(movingScrollViewer);
-        
+
         Animator.ObjectShift(TimeSpan.FromMilliseconds(duration), movingScrollViewer, movingScrollViewer.Margin,
             new Thickness(50, 50, 0, 0));
 
@@ -546,7 +546,7 @@ public partial class MainWindow
 
 
         AimConfig.AddTitle(Locale.AimConfig, true);
- 
+
 
         AimConfig.AddDropdown(Locale.AimingBoundariesAlignment, AppConfig.Current.DropdownState.AimingBoundariesAlignment, v => AppConfig.Current.DropdownState.AimingBoundariesAlignment = v);
         AimConfig.AddSlider(Locale.MouseSensitivity, Locale.Sensitivity, 0.01, 0.01, 0.01, 1).BindTo(() => AppConfig.Current.SliderSettings.MouseSensitivity);
@@ -652,13 +652,29 @@ public partial class MainWindow
         ESPConfig.AddToggleWithKeyBind(Locale.ShowTracers, nameof(Locale.ShowTracers), BindingManager).BindTo(() => AppConfig.Current.ToggleState.ShowTracers);
         var sizeToggle = ESPConfig.AddToggleWithKeyBind(Locale.ShowSizes, nameof(Locale.ShowSizes), BindingManager).BindTo(() => AppConfig.Current.ToggleState.ShowSizes);
 
+        NoticeBar w1 = null;
+        NoticeBar w2 = null;
         ESPConfig.AddDropdown(Locale.DrawingMethod, AppConfig.Current.DropdownState.OverlayDrawingMethod, v =>
         {
             AppConfig.Current.DropdownState.OverlayDrawingMethod = v;
             sizeToggle.SetEnabled(v != OverlayDrawingMethod.WpfWindowCanvas);
             if (v == OverlayDrawingMethod.DesktopDC)
             {
-                new NoticeBar("WARNING: This method is the fastest, but not hidden for captures!!", 10000).Show();
+                w1 = new NoticeBar("WARNING: This method is the fastest, but not hidden for captures!!", 8000);
+                w1.Closed += (s, e) => w1 = null;
+                w1.Show();
+                if (AppConfig.Current.ToggleState.GlobalActive && AppConfig.Current.ToggleState.ShowDetectedPlayer)
+                {
+                    AppConfig.Current.ToggleState.GlobalActive = false;
+                    w2 = new NoticeBar("For more security we disabled the active state to prevent auto bans by capture analysis. Use this mode carefully! ", 10000);
+                    w2.Closed += (s, e) => w2 = null;
+                    w2.Show();
+                }
+            }
+            else
+            {
+                w1?.Close();
+                w2?.Close();
             }
         });
 
@@ -713,7 +729,7 @@ public partial class MainWindow
         if (!string.IsNullOrEmpty(error))
         {
             GamepadSettingsConfig.AddCredit(Locale.Status,
-                Locale.Error+": " + error, credit => credit.Description.Foreground = Brushes.Red);
+                Locale.Error + ": " + error, credit => credit.Description.Foreground = Brushes.Red);
         }
 
         if (AppConfig.Current.DropdownState.GamepadSendMode == GamepadSendMode.None)
@@ -821,7 +837,7 @@ public partial class MainWindow
             {
                 b.Reader.Click += (s, e) =>
                 {
-                   
+
                     var startInfo = new ProcessStartInfo
                     {
                         FileName = "cmd.exe",
@@ -843,7 +859,7 @@ public partial class MainWindow
         ToolsConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.MagnifierKeybind), () => AppConfig.Current.BindingSettings.MagnifierKeybind, BindingManager);
 
         ToolsConfig.AddButton(Locale.ToggleMagnifier).Reader.Click += (_, _) => ToggleMagnifier();
-        
+
         ToolsConfig.AddSlider(Locale.MagnificationValue, Locale.ZoomFactor, 0.1, 0.1, ApplicationConstants.MinMagnificationFactor, ApplicationConstants.MaxMagnificationFactor).BindTo(() => AppConfig.Current.SliderSettings.MagnificationFactor);
         ToolsConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.MagnifierZoomInKeybind), () => AppConfig.Current.BindingSettings.MagnifierZoomInKeybind, BindingManager);
         ToolsConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.MagnifierZoomOutKeybind), () => AppConfig.Current.BindingSettings.MagnifierZoomOutKeybind, BindingManager);
@@ -857,7 +873,7 @@ public partial class MainWindow
         ToolsConfig.AddSeparator();
 
         ToolsConfig.AddTitle("HWID Spoofer", false);
-        
+
         ToolsConfig.AddButton("Open HWID Spoofer").Reader.Click += (_, _) => OpenSpoofer();
         ToolsConfig.AddCredit("", "This external tool helps to change your Hardware Id, that can help if your PC is banned");
 
@@ -868,7 +884,7 @@ public partial class MainWindow
     {
         WindowsHelper.RunResourceToolAsAdmin("SecHex-GUI.exe", DefenderExclusionType.Folder, () => Topmost = false, _ => Topmost = AppConfig.Current.ToggleState.UITopMost);
     }
-    
+
 
     private void ValidateMagnificationFactor()
     {
@@ -884,7 +900,7 @@ public partial class MainWindow
 
     private void LoadSettingsMenu()
     {
-        
+
         UISettings.RemoveAll();
         CaptureSettings.RemoveAll();
         InputSettings.RemoveAll();
@@ -901,7 +917,7 @@ public partial class MainWindow
                 button.Reader.Click += async (s, e) =>
                 {
                     var releaseManager = new GithubManager();
-                    var task =  releaseManager.GetAvailableReleasesAsync(Constants.RepoOwner, Constants.RepoName);
+                    var task = releaseManager.GetAvailableReleasesAsync(Constants.RepoOwner, Constants.RepoName);
                     var releases = await task;
                     var release = releases.FirstOrDefault(x => Version.Parse(x.TagName) == ApplicationConstants.ApplicationVersion);
                     if (release != null)
@@ -1084,7 +1100,7 @@ public partial class MainWindow
 
     internal void LoadConfig(string path = AppConfig.DefaultConfigPath)
     {
-        if(path == AppConfig.Current.Path)
+        if (path == AppConfig.Current.Path)
             return;
         AppConfig.Current.Save();
         Console.WriteLine("Loading Config: " + path);
@@ -1103,7 +1119,8 @@ public partial class MainWindow
     private void LoadAntiRecoilConfig(string path = "bin\\anti_recoil_configs\\Default.cfg",
         bool loading_outside_startup = false)
     {
-        if(!string.IsNullOrEmpty(path)) {
+        if (!string.IsNullOrEmpty(path))
+        {
             AppConfig.Current.AntiRecoilSettings.Load<AntiRecoilSettings>(path);
             if (loading_outside_startup)
                 CreateUI();
@@ -1178,7 +1195,7 @@ public partial class MainWindow
             }
             if (!hasUpdate)
             {
-                if(showNotice)
+                if (showNotice)
                     new NoticeBar(Locale.YouAreAlreadyOnTheLatestVersion, 5000).Show();
             }
             else
