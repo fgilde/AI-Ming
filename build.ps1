@@ -7,6 +7,15 @@ param(
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $outputDir = Join-Path $scriptDir "Aimmy2/bin/Release"
 
+
+
+# Ausgabe detaillierter .NET-Informationen
+Write-Host "=============================="
+Write-Host "Detaillierte .NET-Informationen:"
+dotnet --info
+Write-Host "=============================="
+
+
 # Funktion für das Erstellen mit oder ohne CUDA
 function Build-ProjectWithCuda {
     param(
@@ -19,9 +28,11 @@ function Build-ProjectWithCuda {
     # Clean and Build das Projekt mit der IsCuda Variable
     dotnet clean --configuration Release
     if($isCuda) {
-	    dotnet publish -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None -p:IsCuda=$isCudaValue -p:DefineConstants="IsCuda"
+	    dotnet publish Aimmy2/Aimmy2.csproj -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None -p:IsCuda=$isCudaValue -p:DefineConstants="IsCuda"
+	    dotnet publish Launcher/Launcher.csproj -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None -p:IsCuda=$isCudaValue -p:DefineConstants="IsCuda"
 	} else {
-		dotnet publish -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None -p:IsCuda=$isCudaValue
+		dotnet publish Aimmy2/Aimmy2.csproj -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None -p:IsCuda=$isCudaValue
+		dotnet publish Launcher/Launcher.csproj -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None -p:IsCuda=$isCudaValue
 	}      
 }
 
