@@ -42,7 +42,7 @@ namespace Aimmy2.UILibrary
 
         internal static async Task<bool> DownloadAsync(string Name, string Path)
         {
-            var downloadUri = new Uri($"https://github.com/{ApplicationConstants.RepoOwner}/{ApplicationConstants.RepoName}/raw/master/{Path}/{Name}");
+            var downloadUri = new Uri($"https://github.com/{ApplicationConstants.RepoOwner}/{ApplicationConstants.RepoName}/raw/main/{Path}/{Name}");
             var downloadResult = await DownloadFileAsync(downloadUri, Path, Name);
             return downloadResult;
         }
