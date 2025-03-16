@@ -33,7 +33,7 @@
     <Title>
     </Title>
     <AssemblyName>MrsWineHouse</AssemblyName>
-    <Version>1.0.0.7</Version>
+    <Version>1.0.0.8</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>False</SignAssembly>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
