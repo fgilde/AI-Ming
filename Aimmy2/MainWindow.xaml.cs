@@ -345,6 +345,12 @@ public partial class MainWindow
 
     private async Task NavigateTo(string name, bool animate = true, Button? clickedButton = null)
     {
+        if (SectionLabel != null)
+        {
+            var section = string.Join(" ", name.Replace("Menu", "").SplitByUpperCase()).ToUpper();
+            SectionLabel.Content = section == "AIM" ? "MAIN" : section;
+        }
+
         clickedButton ??= MenuButtons.Children.OfType<Button>().FirstOrDefault(b => b.Tag?.ToString() == name);
         _currentlySwitching = true;
         var buttonIndx = MenuButtons.Children.IndexOf(clickedButton);
