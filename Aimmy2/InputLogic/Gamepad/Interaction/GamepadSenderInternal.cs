@@ -164,29 +164,29 @@ public class GamepadSenderInternal : IGamepadSender
 
             // Sync triggers
             virtualGamepad.LeftTrigger = !_pausedSliders.Contains(GamepadSlider.LeftTrigger)
-                ? _virtualSliderStates[GamepadSlider.LeftTrigger]
-                : _currentPhysicalState.Gamepad.LeftTrigger;
+                ? _currentPhysicalState.Gamepad.LeftTrigger
+                : _virtualSliderStates[GamepadSlider.LeftTrigger];
 
             virtualGamepad.RightTrigger = !_pausedSliders.Contains(GamepadSlider.RightTrigger)
-                ? _virtualSliderStates[GamepadSlider.RightTrigger]
-                : _currentPhysicalState.Gamepad.RightTrigger;
+                ? _currentPhysicalState.Gamepad.RightTrigger
+                : _virtualSliderStates[GamepadSlider.RightTrigger];
 
             // Sync axes
             virtualGamepad.LeftThumbX = !_pausedAxes.Contains(GamepadAxis.LeftThumbX)
-                ? _virtualAxisStates[GamepadAxis.LeftThumbX]
-                : _currentPhysicalState.Gamepad.LeftThumbX;
+                ? _currentPhysicalState.Gamepad.LeftThumbX
+                : _virtualAxisStates[GamepadAxis.LeftThumbX];
 
             virtualGamepad.LeftThumbY = !_pausedAxes.Contains(GamepadAxis.LeftThumbY)
-                ? _virtualAxisStates[GamepadAxis.LeftThumbY]
-                : _currentPhysicalState.Gamepad.LeftThumbY;
+                ? _currentPhysicalState.Gamepad.LeftThumbY
+                : _virtualAxisStates[GamepadAxis.LeftThumbY];
 
             virtualGamepad.RightThumbX = !_pausedAxes.Contains(GamepadAxis.RightThumbX)
-                ? _virtualAxisStates[GamepadAxis.RightThumbX]
-                : _currentPhysicalState.Gamepad.RightThumbX;
+                ? _currentPhysicalState.Gamepad.RightThumbX
+                : _virtualAxisStates[GamepadAxis.RightThumbX];
 
             virtualGamepad.RightThumbY = !_pausedAxes.Contains(GamepadAxis.RightThumbY)
-                ? _virtualAxisStates[GamepadAxis.RightThumbY]
-                : _currentPhysicalState.Gamepad.RightThumbY;
+                ? _currentPhysicalState.Gamepad.RightThumbY
+                : _virtualAxisStates[GamepadAxis.RightThumbY];
 
             // Update current virtual state
             _currentVirtualState = new State
