@@ -15,7 +15,7 @@ public class GamepadSenderInternal : IGamepadSender
     private readonly HashSet<GamepadSlider> _pausedSliders = new();
     private readonly HashSet<GamepadAxis> _pausedAxes = new();
     private readonly BlockingCollection<Action> _actions = new();
-    private readonly Gamepad _virtualGamepad = new(); // Reuse to avoid allocations
+    private SharpDX.XInput.Gamepad _virtualGamepad = new(); // Reuse to avoid allocations
 
     // Virtual controller state
     private readonly Dictionary<GamepadButton, bool> _virtualButtonStates = new();
