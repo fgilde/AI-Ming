@@ -43,7 +43,9 @@ public partial class GamepadTestWindow : Window
     private void InitializeController()
     {
         // Try to use the controller from GamepadManager if available
-        if (GamepadManager.GamepadReader != null && GamepadManager.GamepadReader.IsConnected)
+        if (GamepadManager.GamepadReader != null && 
+            GamepadManager.GamepadReader.IsConnected &&
+            GamepadManager.GamepadReader.Controller != null)
         {
             _controller = GamepadManager.GamepadReader.Controller;
             ConnectionStatus.Text = "Connected";

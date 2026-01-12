@@ -15,6 +15,7 @@ public class GamepadSenderInternal : IGamepadSender
     private readonly HashSet<GamepadSlider> _pausedSliders = new();
     private readonly HashSet<GamepadAxis> _pausedAxes = new();
     private readonly BlockingCollection<Action> _actions = new();
+    private readonly Gamepad _virtualGamepad = new(); // Reuse to avoid allocations
 
     // Virtual controller state
     private readonly Dictionary<GamepadButton, bool> _virtualButtonStates = new();
@@ -149,9 +150,16 @@ public class GamepadSenderInternal : IGamepadSender
 
     private void SyncLoop()
     {
-        while (_isRunning && (_physicalController?.IsConnected ?? false))
+        while (_isRunning)
         {
-            _currentPhysicalState = _physicalController.GetState();
+            var controller = _physicalController; // Cache for thread safety
+            if (controller == null || !controller.IsConnected)
+            {
+                Thread.Sleep(100); // Wait longer if disconnected
+                continue;
+            }
+            
+            _currentPhysicalState = controller.GetState();
 
             // Process pending actions
             int actionsProcessed = 0;
@@ -162,34 +170,31 @@ public class GamepadSenderInternal : IGamepadSender
             }
 
             // Build virtual state from physical state and overrides
-            var virtualGamepad = new Gamepad();
-
-            // Sync buttons
-            virtualGamepad.Buttons = BuildButtonFlags();
+            _virtualGamepad.Buttons = BuildButtonFlags();
 
             // Sync triggers
-            virtualGamepad.LeftTrigger = !_pausedSliders.Contains(GamepadSlider.LeftTrigger)
+            _virtualGamepad.LeftTrigger = !_pausedSliders.Contains(GamepadSlider.LeftTrigger)
                 ? _currentPhysicalState.Gamepad.LeftTrigger
                 : _virtualSliderStates[GamepadSlider.LeftTrigger];
 
-            virtualGamepad.RightTrigger = !_pausedSliders.Contains(GamepadSlider.RightTrigger)
+            _virtualGamepad.RightTrigger = !_pausedSliders.Contains(GamepadSlider.RightTrigger)
                 ? _currentPhysicalState.Gamepad.RightTrigger
                 : _virtualSliderStates[GamepadSlider.RightTrigger];
 
             // Sync axes
-            virtualGamepad.LeftThumbX = !_pausedAxes.Contains(GamepadAxis.LeftThumbX)
+            _virtualGamepad.LeftThumbX = !_pausedAxes.Contains(GamepadAxis.LeftThumbX)
                 ? _currentPhysicalState.Gamepad.LeftThumbX
                 : _virtualAxisStates[GamepadAxis.LeftThumbX];
 
-            virtualGamepad.LeftThumbY = !_pausedAxes.Contains(GamepadAxis.LeftThumbY)
+            _virtualGamepad.LeftThumbY = !_pausedAxes.Contains(GamepadAxis.LeftThumbY)
                 ? _currentPhysicalState.Gamepad.LeftThumbY
                 : _virtualAxisStates[GamepadAxis.LeftThumbY];
 
-            virtualGamepad.RightThumbX = !_pausedAxes.Contains(GamepadAxis.RightThumbX)
+            _virtualGamepad.RightThumbX = !_pausedAxes.Contains(GamepadAxis.RightThumbX)
                 ? _currentPhysicalState.Gamepad.RightThumbX
                 : _virtualAxisStates[GamepadAxis.RightThumbX];
 
-            virtualGamepad.RightThumbY = !_pausedAxes.Contains(GamepadAxis.RightThumbY)
+            _virtualGamepad.RightThumbY = !_pausedAxes.Contains(GamepadAxis.RightThumbY)
                 ? _currentPhysicalState.Gamepad.RightThumbY
                 : _virtualAxisStates[GamepadAxis.RightThumbY];
 
@@ -197,7 +202,7 @@ public class GamepadSenderInternal : IGamepadSender
             _currentVirtualState = new State
             {
                 PacketNumber = _currentPhysicalState.PacketNumber,
-                Gamepad = virtualGamepad
+                Gamepad = _virtualGamepad
             };
 
             Thread.Sleep(SYNC_LOOP_DELAY_MS);
