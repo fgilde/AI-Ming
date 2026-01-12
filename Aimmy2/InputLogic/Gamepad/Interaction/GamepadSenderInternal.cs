@@ -6,6 +6,9 @@ namespace Aimmy2.InputLogic.Gamepad.Interaction;
 
 public class GamepadSenderInternal : IGamepadSender
 {
+    private const int MAX_ACTIONS_PER_ITERATION = 100;
+    private const int SYNC_LOOP_DELAY_MS = 1; // ~1000 Hz update rate
+    
     private Controller _physicalController;
     private bool _isRunning;
     private readonly HashSet<GamepadButton> _pausedButtons = new();
@@ -152,7 +155,7 @@ public class GamepadSenderInternal : IGamepadSender
 
             // Process pending actions
             int actionsProcessed = 0;
-            while (_actions.TryTake(out var action, 0) && actionsProcessed < 100)
+            while (_actions.TryTake(out var action, 0) && actionsProcessed < MAX_ACTIONS_PER_ITERATION)
             {
                 action();
                 actionsProcessed++;
@@ -197,7 +200,7 @@ public class GamepadSenderInternal : IGamepadSender
                 Gamepad = virtualGamepad
             };
 
-            Thread.Sleep(1); // ~1000 Hz update rate
+            Thread.Sleep(SYNC_LOOP_DELAY_MS);
         }
     }
 

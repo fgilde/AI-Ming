@@ -9,6 +9,7 @@ namespace Aimmy2.Visuality;
 
 public partial class GamepadTestWindow : Window
 {
+    private const double TARGET_FPS = 60;
     private readonly DispatcherTimer _updateTimer;
     private Controller? _controller;
     private readonly SolidColorBrush _pressedBrush = new SolidColorBrush(Colors.LimeGreen);
@@ -20,7 +21,7 @@ public partial class GamepadTestWindow : Window
 
         _updateTimer = new DispatcherTimer
         {
-            Interval = TimeSpan.FromMilliseconds(16.67) // 60 FPS
+            Interval = TimeSpan.FromTicks((long)(TimeSpan.TicksPerSecond / TARGET_FPS)) // Precise 60 FPS
         };
         _updateTimer.Tick += UpdateTimer_Tick;
 
