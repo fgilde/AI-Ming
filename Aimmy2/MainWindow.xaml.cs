@@ -789,11 +789,24 @@ public partial class MainWindow
                 };
             });
         }
+        else if (AppConfig.Current.DropdownState.GamepadSendMode == GamepadSendMode.Internal)
+        {
+            GamepadSettingsConfig.AddCredit("Internal Mode", "Internal mode virtualizes the controller without requiring external drivers. The virtual controller can be manipulated via the existing interfaces and classes.");
+            if (GamepadManager.CanSend)
+            {
+                GamepadSettingsConfig.AddCredit(Locale.Status, $"{Locale.Great.ToUpper()}, {Locale.GamepadDriverSuccessMessage}");
+            }
+            else
+            {
+                GamepadSettingsConfig.AddCredit(Locale.Status, "Internal mode initialized", credit => credit.Description.Foreground = Brushes.Orange);
+            }
+        }
 
         GamepadSettingsConfig.AddSeparator();
 
         if (AppConfig.Current.DropdownState.GamepadSendMode == GamepadSendMode.VJoy ||
-            AppConfig.Current.DropdownState.GamepadSendMode == GamepadSendMode.ViGEm)
+            AppConfig.Current.DropdownState.GamepadSendMode == GamepadSendMode.ViGEm ||
+            AppConfig.Current.DropdownState.GamepadSendMode == GamepadSendMode.Internal)
         {
             GamepadSettingsConfig.AddTitle(Locale.HidePhysicalController, false);
             GamepadSettingsConfig.AddCredit(Locale.HIDHideHeader, Locale.HIDHideSubHeader);
@@ -846,6 +859,26 @@ public partial class MainWindow
                         UseShellExecute = false
                     };
                     Process.Start(startInfo);
+                };
+            });
+        }
+
+        // Add test window button for all modes (except None)
+        if (AppConfig.Current.DropdownState.GamepadSendMode != GamepadSendMode.None)
+        {
+            if (AppConfig.Current.DropdownState.GamepadSendMode != GamepadSendMode.VJoy &&
+                AppConfig.Current.DropdownState.GamepadSendMode != GamepadSendMode.ViGEm &&
+                AppConfig.Current.DropdownState.GamepadSendMode != GamepadSendMode.Internal)
+            {
+                GamepadSettingsConfig.AddSeparator();
+            }
+            
+            GamepadSettingsConfig.AddButton("Open Gamepad Test Window", b =>
+            {
+                b.Reader.Click += (s, e) =>
+                {
+                    var testWindow = new GamepadTestWindow();
+                    testWindow.Show();
                 };
             });
         }
