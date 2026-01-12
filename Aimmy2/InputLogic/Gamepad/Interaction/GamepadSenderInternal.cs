@@ -221,7 +221,7 @@ public class GamepadSenderInternal : IGamepadSender
 
             if (pressed)
             {
-                flags |= GetButtonFlag(button);
+                flags |= button.ToGamepadButtonFlags();
             }
         }
 
@@ -231,29 +231,7 @@ public class GamepadSenderInternal : IGamepadSender
     private bool IsPhysicalButtonPressed(GamepadButton button)
     {
         var physicalFlags = _currentPhysicalState.Gamepad.Buttons;
-        return physicalFlags.HasFlag(GetButtonFlag(button));
-    }
-
-    private GamepadButtonFlags GetButtonFlag(GamepadButton button)
-    {
-        return button switch
-        {
-            GamepadButton.A => GamepadButtonFlags.A,
-            GamepadButton.B => GamepadButtonFlags.B,
-            GamepadButton.X => GamepadButtonFlags.X,
-            GamepadButton.Y => GamepadButtonFlags.Y,
-            GamepadButton.LeftShoulder => GamepadButtonFlags.LeftShoulder,
-            GamepadButton.RightShoulder => GamepadButtonFlags.RightShoulder,
-            GamepadButton.Back => GamepadButtonFlags.Back,
-            GamepadButton.Start => GamepadButtonFlags.Start,
-            GamepadButton.LeftThumb => GamepadButtonFlags.LeftThumb,
-            GamepadButton.RightThumb => GamepadButtonFlags.RightThumb,
-            GamepadButton.Up => GamepadButtonFlags.DPadUp,
-            GamepadButton.Down => GamepadButtonFlags.DPadDown,
-            GamepadButton.Left => GamepadButtonFlags.DPadLeft,
-            GamepadButton.Right => GamepadButtonFlags.DPadRight,
-            _ => 0
-        };
+        return physicalFlags.HasFlag(button.ToGamepadButtonFlags());
     }
 
     public void Dispose()
