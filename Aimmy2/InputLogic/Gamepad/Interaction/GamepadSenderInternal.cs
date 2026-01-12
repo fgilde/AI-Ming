@@ -9,7 +9,7 @@ public class GamepadSenderInternal : IGamepadSender
     private const int MAX_ACTIONS_PER_ITERATION = 100;
     private const int SYNC_LOOP_DELAY_MS = 1; // ~1000 Hz update rate
     
-    private Controller _physicalController;
+    private Controller? _physicalController;
     private bool _isRunning;
     private readonly HashSet<GamepadButton> _pausedButtons = new();
     private readonly HashSet<GamepadSlider> _pausedSliders = new();

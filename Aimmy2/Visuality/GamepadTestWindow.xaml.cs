@@ -21,7 +21,7 @@ public partial class GamepadTestWindow : Window
 
         _updateTimer = new DispatcherTimer
         {
-            Interval = TimeSpan.FromTicks((long)(TimeSpan.TicksPerSecond / TARGET_FPS)) // Precise 60 FPS
+            Interval = TimeSpan.FromTicks(TimeSpan.TicksPerSecond / (long)TARGET_FPS) // Exact 60 FPS
         };
         _updateTimer.Tick += UpdateTimer_Tick;
 
@@ -60,7 +60,8 @@ public partial class GamepadTestWindow : Window
                 if (controller.IsConnected)
                 {
                     _controller = controller;
-                    ConnectionStatus.Text = $"Connected (Controller {(int)i + 1})";
+                    var controllerNumber = i - UserIndex.One + 1; // Convert enum to 1-based number
+                    ConnectionStatus.Text = $"Connected (Controller {controllerNumber})";
                     ConnectionStatus.Foreground = _pressedBrush;
                     return;
                 }
