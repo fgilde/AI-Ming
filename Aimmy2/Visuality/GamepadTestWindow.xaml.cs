@@ -175,7 +175,7 @@ public partial class GamepadTestWindow : Window
 
     private void SequenceSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (SequenceSelector.SelectedItem is ComboBoxItem item)
+        if (SequenceSelector.SelectedItem is ComboBoxItem item && SequenceDescription != null)
         {
             SequenceDescription.Text = item.Tag?.ToString() switch
             {

@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Gamepad Test Window" Height="850" Width="900"
+        Title="Gamepad Test Window" Height="1050" Width="900"
         Background="#1E1E1E" Foreground="White"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
@@ -204,7 +204,7 @@
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Test Sequence:" 
                                    Style="{StaticResource LabelText}" Margin="0,5,10,5" VerticalAlignment="Center"/>
                         <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" x:Name="SequenceSelector" 
-                                  Background="#2D2D30" Foreground="White" Margin="5" Height="30"
+                                  Margin="5" Height="30"
                                   SelectionChanged="SequenceSelector_SelectionChanged">
                             <ComboBoxItem Content="A Button Press (500ms)" Tag="A_Button"/>
                             <ComboBoxItem Content="A+B Combo (1s)" Tag="AB_Combo"/>
