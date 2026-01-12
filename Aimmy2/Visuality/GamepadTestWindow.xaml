@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Gamepad Test Window" Height="700" Width="900"
+        Title="Gamepad Test Window" Height="850" Width="900"
         Background="#1E1E1E" Foreground="White"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
@@ -173,14 +173,79 @@
             </StackPanel>
         </Grid>
 
-        <!-- Control Buttons -->
-        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
-            <Button x:Name="RefreshButton" Content="Refresh Connection" Width="150" Height="30" 
-                    Margin="5" Click="RefreshButton_Click"
-                    Background="#2D2D30" Foreground="White" BorderBrush="Gray"/>
-            <Button x:Name="CloseButton" Content="Close" Width="100" Height="30" 
-                    Margin="5" Click="CloseButton_Click"
-                    Background="#2D2D30" Foreground="White" BorderBrush="Gray"/>
+        <!-- Control Buttons and Sequence Testing -->
+        <StackPanel Grid.Row="4" Margin="10">
+            <!-- Sequence Testing Section -->
+            <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="5" Padding="10" Margin="0,0,0,10">
+                <StackPanel>
+                    <TextBlock Text="Sequence Testing" Style="{StaticResource HeaderText}" FontSize="14"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Timeout Configuration -->
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Delay before start (seconds):" 
+                                   Style="{StaticResource LabelText}" Margin="0,5,10,5" VerticalAlignment="Center"/>
+                        <Slider Grid.Row="0" Grid.Column="1" x:Name="TimeoutSlider" 
+                                Minimum="0" Maximum="10" Value="3" TickFrequency="1" 
+                                IsSnapToTickEnabled="True" Margin="5"/>
+                        <TextBlock Grid.Row="0" Grid.Column="2" x:Name="TimeoutValue" Text="3s" 
+                                   Style="{StaticResource LabelText}" Width="40" VerticalAlignment="Center"/>
+
+                        <!-- Test Sequence Selection -->
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Test Sequence:" 
+                                   Style="{StaticResource LabelText}" Margin="0,5,10,5" VerticalAlignment="Center"/>
+                        <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" x:Name="SequenceSelector" 
+                                  Background="#2D2D30" Foreground="White" Margin="5" Height="30"
+                                  SelectionChanged="SequenceSelector_SelectionChanged">
+                            <ComboBoxItem Content="A Button Press (500ms)" Tag="A_Button"/>
+                            <ComboBoxItem Content="A+B Combo (1s)" Tag="AB_Combo"/>
+                            <ComboBoxItem Content="D-Pad Circle (2s)" Tag="DPad_Circle" IsSelected="True"/>
+                            <ComboBoxItem Content="Left Stick Circle (2s)" Tag="LStick_Circle"/>
+                            <ComboBoxItem Content="Trigger Press (1s)" Tag="Trigger_Press"/>
+                            <ComboBoxItem Content="Complex Combo (3s)" Tag="Complex_Combo"/>
+                        </ComboBox>
+
+                        <!-- Sequence Description -->
+                        <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" 
+                                   x:Name="SequenceDescription" 
+                                   Text="Simulates D-Pad presses in a circular pattern: Up → Right → Down → Left"
+                                   Style="{StaticResource LabelText}" FontSize="10" 
+                                   TextWrapping="Wrap" Margin="5" Foreground="LightGray"/>
+                    </Grid>
+
+                    <!-- Start Sequence Button and Status -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+                        <Button x:Name="StartSequenceButton" Content="Start Test Sequence" Width="180" Height="35" 
+                                Margin="5" Click="StartSequenceButton_Click"
+                                Background="#0E7C0E" Foreground="White" BorderBrush="Gray" FontWeight="Bold"/>
+                        <Button x:Name="StopSequenceButton" Content="Stop" Width="80" Height="35" 
+                                Margin="5" Click="StopSequenceButton_Click" IsEnabled="False"
+                                Background="#C42B1C" Foreground="White" BorderBrush="Gray"/>
+                    </StackPanel>
+                    
+                    <TextBlock x:Name="SequenceStatus" Text="" Style="{StaticResource LabelText}" 
+                               FontSize="12" Margin="5" Foreground="Yellow"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Control Buttons -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button x:Name="RefreshButton" Content="Refresh Connection" Width="150" Height="30" 
+                        Margin="5" Click="RefreshButton_Click"
+                        Background="#2D2D30" Foreground="White" BorderBrush="Gray"/>
+                <Button x:Name="CloseButton" Content="Close" Width="100" Height="30" 
+                        Margin="5" Click="CloseButton_Click"
+                        Background="#2D2D30" Foreground="White" BorderBrush="Gray"/>
+            </StackPanel>
         </StackPanel>
     </Grid>
 </Window>
