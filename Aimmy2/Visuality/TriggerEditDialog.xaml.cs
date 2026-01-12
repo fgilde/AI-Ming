@@ -2,6 +2,7 @@
 using System.Windows.Input;
 using Aimmy2.Config;
 using Aimmy2.Extensions;
+using Aimmy2.Visuality;
 
 namespace Visuality
 {

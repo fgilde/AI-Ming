@@ -20,6 +20,7 @@ using Aimmy2.MouseMovementLibraries.GHubSupport;
 using Aimmy2.Other;
 using Aimmy2.Types;
 using Aimmy2.UILibrary;
+using Aimmy2.Visuality;
 using AimmyWPF.Class;
 using Core;
 using InputLogic;
