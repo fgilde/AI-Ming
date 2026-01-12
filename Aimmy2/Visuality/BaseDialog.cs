@@ -1,12 +1,11 @@
 ﻿using System.ComponentModel;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using Aimmy2.Config;
-using System.IO;
-using Aimmy2;
 using Aimmy2.Class.Native;
+using Aimmy2.Config;
 
-namespace Visuality;
+namespace Aimmy2.Visuality;
 
 public abstract class BaseDialog : Window, INotifyPropertyChanged
 {

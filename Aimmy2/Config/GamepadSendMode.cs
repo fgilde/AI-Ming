@@ -5,5 +5,6 @@ public enum GamepadSendMode
     ViGEm,
     VJoy,
     XInputHook,
+    Internal,
     None
 }

@@ -1,4 +1,4 @@
-﻿<local:BaseDialog x:Class="Visuality.ProcessPickerDialog"
+﻿<visuality:BaseDialog x:Class="Visuality.ProcessPickerDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -7,6 +7,7 @@
         xmlns:controls="clr-namespace:AntWpf.Controls;assembly=AntWpf"
         xmlns:converter="clr-namespace:Aimmy2.Converter"
         xmlns:uiLibrary="clr-namespace:Aimmy2.UILibrary"
+        xmlns:visuality="clr-namespace:Aimmy2.Visuality"
         mc:Ignorable="d"
         Title="Edit Head Area"
         Height="400"
@@ -103,4 +104,4 @@
             </Grid>
         </Border>
     </Grid>
-</local:BaseDialog>
+</visuality:BaseDialog>

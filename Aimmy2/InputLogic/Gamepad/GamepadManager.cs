@@ -53,6 +53,7 @@ public static class GamepadManager
             GamepadSendMode.ViGEm => new GamepadSenderViGEm(),
             GamepadSendMode.VJoy => new GamepadSenderVJoy(),
             GamepadSendMode.XInputHook => CreateXInputHook(),
+            GamepadSendMode.Internal => new GamepadSenderInternal(),
             _ => null
         };
     }

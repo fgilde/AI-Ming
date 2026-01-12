@@ -11,6 +11,7 @@ using Aimmy2.Types;
 
 using Other;
 using Aimmy2.Extensions;
+using Aimmy2.Visuality;
 
 namespace Visuality
 {
