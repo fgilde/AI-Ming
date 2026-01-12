@@ -151,9 +151,11 @@ public class GamepadSenderInternal : IGamepadSender
             _currentPhysicalState = _physicalController.GetState();
 
             // Process pending actions
-            while (_actions.TryTake(out var action, 0))
+            int actionsProcessed = 0;
+            while (_actions.TryTake(out var action, 0) && actionsProcessed < 100)
             {
                 action();
+                actionsProcessed++;
             }
 
             // Build virtual state from physical state and overrides
@@ -195,7 +197,7 @@ public class GamepadSenderInternal : IGamepadSender
                 Gamepad = virtualGamepad
             };
 
-            Thread.Sleep(1);
+            Thread.Sleep(1); // ~1000 Hz update rate
         }
     }
 

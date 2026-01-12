@@ -20,7 +20,7 @@ public partial class GamepadTestWindow : Window
 
         _updateTimer = new DispatcherTimer
         {
-            Interval = TimeSpan.FromMilliseconds(16) // ~60 FPS
+            Interval = TimeSpan.FromMilliseconds(16.67) // 60 FPS
         };
         _updateTimer.Tick += UpdateTimer_Tick;
 
@@ -50,18 +50,21 @@ public partial class GamepadTestWindow : Window
         }
         else
         {
-            // Try to connect directly
-            _controller = new Controller(UserIndex.One);
-            if (_controller.IsConnected)
+            // Try to connect to any available controller
+            for (var i = UserIndex.One; i <= UserIndex.Four; i++)
             {
-                ConnectionStatus.Text = "Connected";
-                ConnectionStatus.Foreground = _pressedBrush;
+                var controller = new Controller(i);
+                if (controller.IsConnected)
+                {
+                    _controller = controller;
+                    ConnectionStatus.Text = $"Connected (Controller {(int)i + 1})";
+                    ConnectionStatus.Foreground = _pressedBrush;
+                    return;
+                }
             }
-            else
-            {
-                ConnectionStatus.Text = "Disconnected";
-                ConnectionStatus.Foreground = new SolidColorBrush(Colors.Red);
-            }
+            
+            ConnectionStatus.Text = "Disconnected";
+            ConnectionStatus.Foreground = new SolidColorBrush(Colors.Red);
         }
     }
 
