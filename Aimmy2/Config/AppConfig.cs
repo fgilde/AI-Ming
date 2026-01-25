@@ -61,11 +61,42 @@ public class AppConfig : BaseSettings
     public ColorState ColorState { get; set; } = new ColorState();
     public AntiRecoilSettings AntiRecoilSettings { get; set; } = new AntiRecoilSettings();
     public FileLocationState FileLocationState { get; set; } = new FileLocationState();
+    public OllamaSettings OllamaSettings { get; set; } = new OllamaSettings();
 
     public ObservableCollection<ActionTrigger> Triggers
     {
         get => _triggers;
         set => SetField(ref _triggers, value);
+    }
+
+    private ObservableCollection<AutoPlayProfile> _autoPlayProfiles = new()
+    {
+        new AutoPlayProfile
+        {
+            Name = "FPS Default",
+            Enabled = false,
+            OllamaModel = "moondream",
+            DecisionInterval = 0.5,
+            GameContext = "This is a first-person shooter game. You control a player who can move, jump, aim, and shoot enemies. Enemies appear as characters/players on screen. Move towards objectives, avoid obstacles, and eliminate enemies.",
+            Actions = new ObservableCollection<AutoPlayAction>
+            {
+                new AutoPlayAction { Name = "move_forward", Description = "Move forward towards enemies or objectives", Keys = [Keys.W, GamepadButton.Up] },
+                new AutoPlayAction { Name = "move_backward", Description = "Move backward to retreat or dodge", Keys = [Keys.S, GamepadButton.Down] },
+                new AutoPlayAction { Name = "move_left", Description = "Strafe left to dodge or reposition", Keys = [Keys.A, GamepadButton.Left] },
+                new AutoPlayAction { Name = "move_right", Description = "Strafe right to dodge or reposition", Keys = [Keys.D, GamepadButton.Right] },
+                new AutoPlayAction { Name = "jump", Description = "Jump over obstacles or to reach higher ground", Keys = [Keys.Space, GamepadButton.A] },
+                new AutoPlayAction { Name = "shoot", Description = "Fire weapon at enemies when they are visible", Keys = [MouseButtons.Left, GamepadSlider.RightTrigger], Duration = 0.1 },
+                new AutoPlayAction { Name = "aim", Description = "Aim down sights for better accuracy when enemy is in view", Keys = [MouseButtons.Right, GamepadSlider.LeftTrigger], Duration = 0.3 },
+                new AutoPlayAction { Name = "reload", Description = "Reload weapon when low on ammo or between fights", Keys = [Keys.R, GamepadButton.X] },
+                new AutoPlayAction { Name = "crouch", Description = "Crouch to take cover or reduce visibility", Keys = [Keys.ControlKey, GamepadButton.B] },
+            }
+        }
+    };
+
+    public ObservableCollection<AutoPlayProfile> AutoPlayProfiles
+    {
+        get => _autoPlayProfiles;
+        set => SetField(ref _autoPlayProfiles, value);
     }
 
     public string? Language

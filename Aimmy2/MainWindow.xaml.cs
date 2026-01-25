@@ -154,6 +154,7 @@ public partial class MainWindow
         LoadTools();
         LoadSettingsMenu();
         LoadGamepadSettingsMenu();
+        LoadAutoPlayMenu();
         LoadCreditsMenu();
         LoadStoreMenuAsync();
         LoadGlobalUI();
@@ -937,6 +938,47 @@ public partial class MainWindow
             };
     }
 
+
+    private void LoadAutoPlayMenu()
+    {
+        AutoPlayConfig.RemoveAll();
+        AutoPlayProfiles.RemoveAll();
+
+        // Ollama Status Section
+        AutoPlayConfig.AddTitle("AutoPlay (AI Game Control)", true);
+        AutoPlayConfig.Add<OllamaStatusIndicator>();
+
+        // AutoPlay Toggle
+        AutoPlayConfig.AddToggleWithKeyBind("AutoPlay", "AutoPlay", BindingManager, toggle =>
+        {
+            toggle.ToolTip = "Enable AI-controlled gameplay using Ollama vision models";
+        }).BindTo(() => AppConfig.Current.ToggleState.AutoPlay);
+
+        // Ollama Settings
+        AutoPlayConfig.AddTitle("Ollama Settings");
+        AutoPlayConfig.AddSlider("Request Timeout", "seconds", 1, 5, 5, 120).BindTo(() => AppConfig.Current.OllamaSettings.TimeoutSeconds);
+        AutoPlayConfig.AddSlider("Temperature", "", 0.1, 0.1, 0.0, 1.0).BindTo(() => AppConfig.Current.OllamaSettings.Temperature);
+        AutoPlayConfig.AddSlider("Image Max Size", "px", 64, 128, 256, 1024).BindTo(() => AppConfig.Current.OllamaSettings.ImageMaxSize);
+        AutoPlayConfig.AddSlider("Image Quality", "%", 5, 10, 30, 100).BindTo(() => AppConfig.Current.OllamaSettings.ImageQuality);
+
+        AutoPlayConfig.AddSeparator();
+
+        // Profiles Section
+        AutoPlayProfiles.AddTitle("AutoPlay Profiles", true);
+        AutoPlayProfiles.Add<AutoPlayProfileList>().BindTo(() => AppConfig.Current.AutoPlayProfiles);
+
+        AutoPlayProfiles.AddSeparator();
+
+        // Help Section
+        AutoPlayProfiles.AddTitle("Quick Start");
+        AutoPlayProfiles.AddCredit("1. Install Ollama", "Visit ollama.com and install");
+        AutoPlayProfiles.AddCredit("2. Pull a Vision Model", "Run: ollama pull moondream");
+        AutoPlayProfiles.AddCredit("3. Start Ollama", "Run: ollama serve");
+        AutoPlayProfiles.AddCredit("4. Create Profile", "Add actions like 'move_left', 'jump'");
+        AutoPlayProfiles.AddCredit("5. Enable AutoPlay", "Toggle AutoPlay on");
+
+        AutoPlayProfiles.AddSeparator();
+    }
 
     private void LoadSettingsMenu()
     {

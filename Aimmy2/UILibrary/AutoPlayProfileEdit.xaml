@@ -1,0 +1,122 @@
+<UserControl x:Class="UILibrary.AutoPlayProfileEdit"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:uiLibrary="clr-namespace:Aimmy2.UILibrary"
+             xmlns:local="clr-namespace:UILibrary"
+             mc:Ignorable="d"
+             VerticalAlignment="Stretch"
+             HorizontalAlignment="Stretch"
+             d:DesignHeight="600" d:DesignWidth="500">
+    <Grid Margin="5">
+        <ScrollViewer>
+            <StackPanel HorizontalAlignment="Stretch">
+                <!-- Enabled Toggle -->
+                <Grid>
+                    <uiLibrary:AToggle Margin="0 -10 -8 0" Panel.ZIndex="10" BorderBrush="Transparent" Background="Transparent"
+                                       Text="Enabled"
+                                       VerticalAlignment="Top" HorizontalAlignment="Right"
+                                       Checked="{Binding Profile.Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <StackPanel>
+                        <!-- Profile Name -->
+                        <Label Foreground="{StaticResource Foreground}"
+                               FontSize="13"
+                               Content="Profile Name"
+                               FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                        <TextBox BorderThickness="1"
+                                 Padding="3 5 1 5"
+                                 Text="{Binding Profile.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 TextWrapping="Wrap"
+                                 Margin="2, 5"
+                                 Tag="Enter profile name..."
+                                 VerticalAlignment="Top"
+                                 FontFamily="{StaticResource Atkinson Hyperlegible}"
+                                 Style="{DynamicResource placeHolder}"
+                                 BorderBrush="#3FFFFFFF"
+                                 Background="{x:Null}"
+                                 Foreground="{StaticResource Foreground}" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- Ollama Model -->
+                <StackPanel x:Name="OllamaModelPanel" Margin="0 10 0 0">
+                    <Label Foreground="{StaticResource Foreground}"
+                           FontSize="13"
+                           Content="Ollama Model"
+                           FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                    <TextBox BorderThickness="1"
+                             Padding="3 5 1 5"
+                             Text="{Binding Profile.OllamaModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Margin="2, 5"
+                             Tag="moondream, llava:7b, qwen2.5-vl:7b..."
+                             FontFamily="{StaticResource Atkinson Hyperlegible}"
+                             Style="{DynamicResource placeHolder}"
+                             BorderBrush="#3FFFFFFF"
+                             Background="{x:Null}"
+                             Foreground="{StaticResource Foreground}" />
+                    <TextBlock Foreground="{StaticResource Foreground}"
+                               FontSize="11"
+                               Margin="2 0 0 10"
+                               TextWrapping="Wrap"
+                               Text="Recommended: moondream (fast), llava:7b (balanced), qwen2.5-vl:7b (quality)"
+                               Visibility="{Binding Converter={StaticResource helpVis}}"
+                               FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                </StackPanel>
+
+                <!-- Decision Interval -->
+                <StackPanel x:Name="DecisionIntervalPanel" Margin="0 5 0 0" />
+
+                <!-- Game Context -->
+                <StackPanel Margin="0 10 0 0">
+                    <Label Foreground="{StaticResource Foreground}"
+                           FontSize="13"
+                           Content="Game Context (for AI)"
+                           FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                    <TextBox BorderThickness="1"
+                             Padding="3 5 1 5"
+                             Text="{Binding Profile.GameContext, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             TextWrapping="Wrap"
+                             AcceptsReturn="True"
+                             MinHeight="80"
+                             MaxHeight="150"
+                             VerticalScrollBarVisibility="Auto"
+                             Margin="2, 5"
+                             Tag="Describe the game for the AI..."
+                             FontFamily="{StaticResource Atkinson Hyperlegible}"
+                             Style="{DynamicResource placeHolder}"
+                             BorderBrush="#3FFFFFFF"
+                             Background="{x:Null}"
+                             Foreground="{StaticResource Foreground}" />
+                    <TextBlock Foreground="{StaticResource Foreground}"
+                               FontSize="11"
+                               Margin="2 0 0 10"
+                               TextWrapping="Wrap"
+                               Visibility="{Binding Converter={StaticResource helpVis}}"
+                               Text="Example: This is a 2D platformer. The player needs to jump over obstacles and collect coins."
+                               FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                </StackPanel>
+
+                <uiLibrary:Line Margin="0 10 0 10" />
+
+                <!-- Actions -->
+                <StackPanel>
+                    <Label Foreground="{StaticResource Foreground}"
+                           FontSize="13"
+                           Content="Actions"
+                           FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                    <TextBlock Foreground="{StaticResource Foreground}"
+                               FontSize="11"
+                               Margin="2 0 0 10"
+                               TextWrapping="Wrap"
+                               Visibility="{Binding Converter={StaticResource helpVis}}"
+                               Text="Define actions the AI can choose from. Each action has a name (e.g., 'move_left') and keys to press."
+                               FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                    <local:AutoPlayActionList x:Name="ActionsList"
+                                              Actions="{Binding Profile.Actions, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

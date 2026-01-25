@@ -28,6 +28,13 @@ public class ToggleState : BaseSettings
     private bool _ensureCaptureForeground;
     private bool _showSizes;
     private bool _showHelpTexts = true;
+    private bool _autoPlay = false;
+
+    public bool AutoPlay
+    {
+        get => _autoPlay;
+        set => SetField(ref _autoPlay, value);
+    }
 
     public bool EnsureCaptureForeground
     {
