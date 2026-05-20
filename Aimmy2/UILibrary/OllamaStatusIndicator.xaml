@@ -6,13 +6,14 @@
              xmlns:controls="clr-namespace:AntWpf.Controls;assembly=AntWpf"
              mc:Ignorable="d"
              d:DesignHeight="120" d:DesignWidth="300">
-    <Border
-        BorderThickness="1,0,1,0"
-        BorderBrush="#3FFFFFFF"
-        Padding="10">
+    <Border Background="{DynamicResource FluentSurface2}"
+            BorderThickness="1"
+            BorderBrush="{DynamicResource FluentStroke}"
+            CornerRadius="6"
+            Margin="0,0,0,6"
+            Padding="12,10,12,10">
         <StackPanel>
-            <!-- Status Row -->
-            <Grid Margin="0 0 0 10">
+            <Grid Margin="0,0,0,8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -20,65 +21,60 @@
                 </Grid.ColumnDefinitions>
 
                 <Ellipse x:Name="StatusIndicator"
-                         Width="12" Height="12"
-                         Fill="#FF5555"
+                         Width="10" Height="10"
+                         Fill="#E81123"
                          VerticalAlignment="Center"
-                         Margin="0 0 10 0" />
+                         Margin="0,0,8,0" />
 
                 <TextBlock x:Name="StatusText"
                            Grid.Column="1"
                            Text="Ollama: Checking..."
-                           Foreground="{StaticResource Foreground}"
+                           Foreground="{DynamicResource FluentTextPrimary}"
                            VerticalAlignment="Center"
-                           FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                           FontFamily="Segoe UI Variable Text"
+                           FontSize="13" />
 
-                <controls:Button x:Name="RefreshButton"
+                <Button Style="{StaticResource FluentIconButton}" x:Name="RefreshButton"
                                  Grid.Column="2"
                                  Content="&#xE72C;"
                                  ToolTip="Refresh Status"
-                                 FontFamily="Segoe MDL2 Assets"
-                                 FontSize="14"
-                                 Background="Transparent"
+                                 FontSize="13"
                                  BorderBrush="Transparent"
-                                 Foreground="White"
-                                 Padding="5"
+                                 Foreground="{DynamicResource FluentTextPrimary}"
+                                 Padding="6"
                                  Click="RefreshButton_Click" />
             </Grid>
 
-            <!-- URL Display -->
             <TextBlock x:Name="UrlText"
                        Text="URL: http://localhost:11434"
-                       Foreground="#AAFFFFFF"
+                       Foreground="{DynamicResource FluentTextSecondary}"
                        FontSize="11"
-                       Margin="0 0 0 5"
-                       FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                       Margin="0,0,0,4"
+                       FontFamily="Segoe UI Variable Small" />
 
-            <!-- Available Models -->
             <TextBlock x:Name="ModelsText"
                        Text="Models: -"
-                       Foreground="#AAFFFFFF"
+                       Foreground="{DynamicResource FluentTextSecondary}"
                        FontSize="11"
                        TextWrapping="Wrap"
-                       Margin="0 0 0 5"
-                       FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                       Margin="0,0,0,4"
+                       FontFamily="Segoe UI Variable Small" />
 
-            <!-- Error Message -->
             <TextBlock x:Name="ErrorText"
                        Text=""
-                       Foreground="#FF8888"
+                       Foreground="#E81123"
                        FontSize="11"
                        TextWrapping="Wrap"
                        Visibility="Collapsed"
-                       FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                       FontFamily="Segoe UI Variable Small" />
 
-            <!-- Help Text -->
             <TextBlock Text="Install Ollama: ollama.com | Start: 'ollama serve'"
-                       Foreground="#888888"
+                       Foreground="{DynamicResource FluentTextTertiary}"
                        FontSize="10"
-                       Margin="0 5 0 0"
+                       Margin="0,4,0,0"
                        TextWrapping="Wrap"
                        Visibility="{Binding Converter={StaticResource helpVis}}"
-                       FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                       FontFamily="Segoe UI Variable Small" />
         </StackPanel>
     </Border>
 </UserControl>

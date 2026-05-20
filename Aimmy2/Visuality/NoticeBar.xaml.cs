@@ -1,4 +1,4 @@
-﻿using Aimmy2.Class;
+using Aimmy2.Class;
 using AimmyWPF.Class;
 using System.Windows;
 using System.Windows.Interop;
@@ -21,7 +21,7 @@ namespace Visuality
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
-            this.HideForCapture();
+            this.HideForCaptureIfEnabled();
             //this.MakeClickThrough();
         }
 

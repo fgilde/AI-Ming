@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Input;
 using System.Diagnostics;
 using System.Windows.Controls;
@@ -15,7 +15,6 @@ namespace Visuality
             InitializeComponent();
             DataContext = this;
             LoadProcesses();
-            MainBorder.BindMouseGradientAngle(ShouldBindGradientMouse);
         }
         private void LoadProcesses()
         {

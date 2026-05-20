@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="UILibrary.TriggerEdit"
+<UserControl x:Class="UILibrary.TriggerEdit"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -22,7 +22,7 @@
                         <Label Foreground="{StaticResource Foreground}"
                        FontSize="13"
                        Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Name'}"
-                       FontFamily="{StaticResource Atkinson Hyperlegible}"></Label>
+                       FontFamily="Segoe UI Variable Text"></Label>
                         <TextBox BorderThickness="1"
                                  Padding="3 5 1 5"
                          Text="{Binding Trigger.Name}"
@@ -30,10 +30,10 @@
                          Margin="2, 5"
                          Tag="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Name'}"
                          VerticalAlignment="Top"
-                         FontFamily="{StaticResource Atkinson Hyperlegible}"
+                         FontFamily="Segoe UI Variable Text"
                          Style="{DynamicResource placeHolder}"
-                         BorderBrush="#3FFFFFFF"
-                         Background="{x:Null}"
+                         BorderBrush="{DynamicResource FluentStroke}"
+                         Background="Transparent"
                          Foreground="{StaticResource Foreground}" />
                     </StackPanel>
                 </Grid>
@@ -52,7 +52,7 @@
                                        VerticalAlignment="Bottom"
                                        Margin="0 0 0 13"
                                        Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='LabelTriggerActions'}"
-                                       FontFamily="{StaticResource Atkinson Hyperlegible}"></Label>
+                                       FontFamily="Segoe UI Variable Text"></Label>
                     <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
                         <local:MultiKeyChanger AllowDuplicates="True" CanRecordSequence="True" Changed="MultiKeyChanger_OnChanged" Keys="{Binding Trigger.Actions, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}">
                         </local:MultiKeyChanger>
@@ -63,7 +63,7 @@
                                    Margin="2 5 0 10"
                                    TextWrapping="Wrap"
                                    Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DescriptionTriggerActions'}"
-                                   FontFamily="{StaticResource Atkinson Hyperlegible}"></TextBlock>
+                                   FontFamily="Segoe UI Variable Text"></TextBlock>
                     </StackPanel>
                 </Grid>
 
@@ -78,7 +78,7 @@
                        TextWrapping="Wrap"
                        Visibility="{Binding Converter={StaticResource helpVis}}"
                        Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DescriptionNeedsDetection'}"
-                       FontFamily="{StaticResource Atkinson Hyperlegible}"></TextBlock>
+                       FontFamily="Segoe UI Variable Text"></TextBlock>
                 </StackPanel>
 
                 <StackPanel Visibility="{Binding Trigger.NeedsDetection, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource boolToVis}}">
@@ -92,7 +92,7 @@
                            Margin="2 -7 0 10"
                            Visibility="{Binding Converter={StaticResource helpVis}}"
                            Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ChargeModeToolTip'}"
-                           FontFamily="{StaticResource Atkinson Hyperlegible}"></TextBlock>
+                           FontFamily="Segoe UI Variable Text"></TextBlock>
                 </StackPanel>
 
                 <StackPanel Visibility="{Binding Trigger.NeedsDetection, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource boolToVis}}">
@@ -119,13 +119,13 @@
                         <Label Foreground="{StaticResource Foreground}"
                                FontSize="13"
                                Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='LabelTriggerKeys'}"
-                               FontFamily="{StaticResource Atkinson Hyperlegible}"></Label>
+                               FontFamily="Segoe UI Variable Text"></Label>
                         <StackPanel Orientation="Horizontal" Grid.Column="1" HorizontalAlignment="Right">
                             <Label Foreground="{StaticResource Foreground}"
                                    FontSize="13"
                                    Margin="0 0 5 0"
                                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='TriggerKeysOperator'}"
-                                   FontFamily="{StaticResource Atkinson Hyperlegible}"></Label>
+                                   FontFamily="Segoe UI Variable Text"></Label>
                             <StackPanel x:Name="TriggerKeyOperator"></StackPanel>
                         </StackPanel>
                     </Grid>
@@ -137,7 +137,7 @@
                        Margin="0 5 0 10"
                        TextWrapping="Wrap"
                        Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DescriptionTriggerKeys'}"
-                       FontFamily="{StaticResource Atkinson Hyperlegible}"></TextBlock>
+                       FontFamily="Segoe UI Variable Text"></TextBlock>
                 </StackPanel>
 
                 <StackPanel>
@@ -150,13 +150,13 @@
                         <Label Foreground="{StaticResource Foreground}"
                            FontSize="13"
                            Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AntiTriggerKeys'}"
-                           FontFamily="{StaticResource Atkinson Hyperlegible}"></Label>
+                           FontFamily="Segoe UI Variable Text"></Label>
                         <StackPanel Orientation="Horizontal" Grid.Column="1" HorizontalAlignment="Right">
                             <Label Foreground="{StaticResource Foreground}"
                                FontSize="13"
                                Margin="0 0 5 0"
                                Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AntiTriggerKeysOperator'}"
-                               FontFamily="{StaticResource Atkinson Hyperlegible}"></Label>
+                               FontFamily="Segoe UI Variable Text"></Label>
                             <StackPanel x:Name="AntiTriggerKeyOperator"></StackPanel>
                         </StackPanel>
                     </Grid>
@@ -168,7 +168,7 @@
                        Margin="0 5 0 10"
                        TextWrapping="Wrap"
                        Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DescriptionAntiTriggerKeys'}"
-                       FontFamily="{StaticResource Atkinson Hyperlegible}"></TextBlock>
+                       FontFamily="Segoe UI Variable Text"></TextBlock>
                 </StackPanel>
 
                 <StackPanel x:Name="TimeSettings"></StackPanel>

@@ -1,4 +1,4 @@
-﻿<Window x:Class="Visuality.NoticeBar"
+<Window x:Class="Visuality.NoticeBar"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -11,7 +11,7 @@
         AllowsTransparency="True"
         WindowStyle="None"
         ShowInTaskbar="False"
-        Background="{x:Null}"
+        Background="Transparent"
         Foreground="{x:Null}"
         WindowState="Maximized"
         Topmost="True">
@@ -28,14 +28,14 @@
             <StackPanel Orientation="Horizontal">
                 <Label x:Name="ContentText"
                        Content="This feature has not been implemented yet."
-                       Foreground="#DDFFFFFF"
+                       Foreground="{DynamicResource FluentTextPrimary}"
                        VerticalContentAlignment="Center"
                        HorizontalContentAlignment="Center"
                        IsHitTestVisible="True"
                        FontSize="14"
                        Padding="20,10,20,10"
-                       FontFamily="{StaticResource Atkinson Hyperlegible}" />
-                <Button IsHitTestVisible="True" Panel.ZIndex="10" Margin="10 0 0 0" Content="&#xE8BB;" HorizontalAlignment="Right" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White" FontFamily="Segoe MDL2 Assets" Padding="15,0,15,0" BorderThickness="0,0,0,0" FontSize="10" VerticalAlignment="Center" 
+                       FontFamily="Segoe UI Variable Text" />
+                <Button IsHitTestVisible="True" Panel.ZIndex="10" Margin="10 0 0 0" Content="&#xE8BB;" HorizontalAlignment="Right" Background="Transparent" BorderBrush="{x:Null}" Foreground="White" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" Padding="15,0,15,0" BorderThickness="0,0,0,0" FontSize="10" VerticalAlignment="Center" 
                         Click="Exit_Click" />
 
             </StackPanel>

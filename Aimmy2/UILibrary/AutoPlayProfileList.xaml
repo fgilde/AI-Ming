@@ -7,9 +7,7 @@
              xmlns:uiLibrary="clr-namespace:Aimmy2.UILibrary"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
-    <Border
-        BorderThickness="1,0,1,0"
-        BorderBrush="#3FFFFFFF">
+    <Border BorderThickness="0" Background="Transparent">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
@@ -17,8 +15,8 @@
             </Grid.RowDefinitions>
             <ListBox
                 ItemsSource="{Binding Profiles, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                Foreground="#DDFFFFFF"
-                FontFamily="{StaticResource Atkinson Hyperlegible}"
+                Foreground="{DynamicResource FluentTextPrimary}"
+                FontFamily="Segoe UI Variable Text"
                 Margin="0"
                 Padding="2"
                 HorizontalContentAlignment="Stretch">
@@ -41,41 +39,31 @@
                                     Text="{Binding OllamaModel}"
                                     FontSize="10"
                                     Opacity="0.6"
-                                    Foreground="#AAFFFFFF"
+                                    Foreground="{DynamicResource FluentTextSecondary}"
                                     VerticalAlignment="Center"
                                     Margin="0,0,5,0" />
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                <uiLibrary:AToggle Background="Transparent" BorderBrush="Transparent" Text=""
+                                <uiLibrary:AToggle BorderBrush="Transparent" Text=""
                                                    Checked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-                                <controls:Button
+                                <Button Style="{StaticResource FluentIconButton}"
                                     ToolTip="Edit"
-                                    BorderThickness="0"
                                     Tag="{Binding}"
                                     MouseDown="UIElement_OnMouseDown"
                                     Click="EditProfile_Click"
-                                    EffectBrush="{StaticResource ButtonBackground}"
-                                    Foreground="#ffffff"
-                                    BorderBrush="#00D9D9D9"
-                                    Background="Transparent"
-                                    FontFamily="Segoe MDL2 Assets"
+                                    Foreground="{DynamicResource FluentTextPrimary}"
                                     Content="&#xEB7E;"
                                     Padding="0,0,0,0"
                                     FontSize="20"
                                     Width="50" />
 
-                                <controls:Button
+                                <Button Style="{StaticResource FluentIconButton}"
                                     ToolTip="Delete"
-                                    BorderThickness="0"
                                     Tag="{Binding}"
                                     MouseDown="UIElement_OnMouseDown"
                                     Click="DeleteProfile_Click"
-                                    EffectBrush="{StaticResource ButtonBackground}"
-                                    Foreground="#ffffff"
-                                    BorderBrush="#00D9D9D9"
-                                    Background="Transparent"
-                                    FontFamily="Segoe MDL2 Assets"
+                                    Foreground="{DynamicResource FluentTextPrimary}"
                                     Content="&#xE74D;"
                                     Padding="0,0,0,0"
                                     FontSize="20"
@@ -86,17 +74,12 @@
                 </ListBox.ItemTemplate>
             </ListBox>
             <Border Grid.Row="1">
-                <controls:Button
+                <Button Style="{StaticResource FluentIconButton}"
                     HorizontalAlignment="Right"
                     ToolTip="Add Profile"
-                    BorderThickness="0"
                     MouseDown="UIElement_OnMouseDown"
                     Click="AddProfile_Click"
-                    EffectBrush="{StaticResource ButtonBackground}"
-                    Foreground="#ffffff"
-                    BorderBrush="#00D9D9D9"
-                    Background="Transparent"
-                    FontFamily="Segoe MDL2 Assets"
+                    Foreground="{DynamicResource FluentTextPrimary}"
                     Content="&#xECC8;"
                     Padding="0,0,0,0"
                     FontSize="20"

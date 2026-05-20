@@ -3,7 +3,17 @@
     "allow": [
       "Bash(find:*)",
       "Bash(dir:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(dotnet --list-sdks)",
+      "Bash(xargs -I {} basename {})",
+      "Bash(dotnet restore *)",
+      "Bash(pwsh -NoProfile -File C:/dev/privat/github/AI-Ming/_modernize_xaml.ps1)",
+      "Bash(pwsh -NoProfile -File C:/dev/privat/github/AI-Ming/_navitem_inherit.ps1)",
+      "Bash(git checkout *)",
+      "Bash(pwsh -NoProfile -File C:/dev/privat/github/AI-Ming/_lightmode_fixes.ps1)",
+      "Bash(cd /c/dev/privat/github/AI-Ming/Aimmy2 && find . -name \"*.xaml\" -o -name \"*.cs\" | head -20)",
+      "Bash(pwsh -NoProfile -File C:/dev/privat/github/AI-Ming/_apply_capture_setting.ps1)",
+      "Bash(pwsh -NoProfile -File C:/dev/privat/github/AI-Ming/_fix_null_bg.ps1)"
     ]
   }
 }

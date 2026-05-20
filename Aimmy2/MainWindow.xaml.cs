@@ -91,7 +91,6 @@ public partial class MainWindow
             CurrentMenu = ApplicationConstants.ShowOnly;
         }
 
-        MainBorder.BindMouseGradientAngle(ShouldBindGradientMouse);
         //Console.WriteLine(JsonConvert.SerializeObject(Dictionary.toggleState));
         Console.WriteLine(Locale.UICompleteMessage);
         Console.WriteLine("Compiled with Cuda: " + ApplicationConstants.IsCudaBuild);
@@ -115,8 +114,7 @@ public partial class MainWindow
         _uiCreated = false;
         Check.TryCatch<Exception>(GamepadManager.Init);
 
-        var theme = ThemePalette.All.FirstOrDefault(x => x.Name == AppConfig.Current.ThemeName) ?? ThemePalette.PurplePalette;
-        ApplicationConstants.Theme = theme;
+        Aimmy2.Theme.ThemeManager.Apply();
 
         _currentScrollViewer = FindName(nameof(AimMenu)) as ScrollViewer;
         if (_currentScrollViewer == null) throw new NullReferenceException("CurrentScrollViewer is null");
@@ -187,16 +185,14 @@ public partial class MainWindow
         },
         (i, item) => i <= 9 ? KeyGestureConvertHelper.CreateFromString($"Ctrl + Shift + {i}") : null));
         ModelContextMenu.Items.Add(new Separator());
-        var downloadableMenu = new MenuItem()
+        var downloadableMenu = new System.Windows.Controls.MenuItem()
         {
-            Header = Locale.DownloadableModelsHeader,
-            Foreground = Brushes.Black
+            Header = Locale.DownloadableModelsHeader
         };
         ModelContextMenu.Items.Add(downloadableMenu);
-        downloadableMenu.Items.AddRange(_availableModels.Select(s => new MenuItem()
+        downloadableMenu.Items.AddRange(_availableModels.Select(s => new System.Windows.Controls.MenuItem()
         {
             Header = s,
-            Foreground = Brushes.Black,
             Command = new ActionCommand(() =>
             {
                 downloadableMenu.IsEnabled = false;
@@ -272,9 +268,7 @@ public partial class MainWindow
     public void SetActive(bool active)
     {
         AppConfig.Current.ToggleState.GlobalActive = active;
-        var theme = ThemePalette.All.FirstOrDefault(x => x.Name == AppConfig.Current.ThemeName) ?? ThemePalette.PurplePalette;
-        var themeActive = ThemePalette.ThemeForActive;
-        ApplicationConstants.Theme = active ? themeActive : theme;
+        Aimmy2.Theme.ThemeManager.Apply();
     }
 
     public Visibility GetVisibilityFor(string feature)
@@ -294,6 +288,9 @@ public partial class MainWindow
         KnownIssuesDialog.ShowIf(this);
         AboutSpecs.Content =
             $"{GetProcessorName()} • {GetVideoControllerName()} • {GetFormattedMemorySize()}GB RAM";
+
+        if (GamepadTester != null)
+            GamepadTester.BackRequested += (_, _) => _ = NavigateTo(nameof(GamepadSettings));
     }
 
     private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -304,6 +301,23 @@ public partial class MainWindow
     private void Minimize_Click(object sender, RoutedEventArgs e)
     {
         WindowState = WindowState.Minimized;
+    }
+
+    private const double SidebarCompactWidth = 48;
+    private const double SidebarExpandedWidth = 220;
+    private bool _sidebarExpanded;
+
+    private void HamburgerButton_Click(object sender, RoutedEventArgs e)
+    {
+        _sidebarExpanded = !_sidebarExpanded;
+        var target = _sidebarExpanded ? SidebarExpandedWidth : SidebarCompactWidth;
+        var anim = new System.Windows.Media.Animation.DoubleAnimation
+        {
+            To = target,
+            Duration = TimeSpan.FromMilliseconds(180),
+            EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut }
+        };
+        Sidebar.BeginAnimation(FrameworkElement.WidthProperty, anim);
     }
 
     private void Window_Closing(object sender, CancelEventArgs e)
@@ -344,6 +358,12 @@ public partial class MainWindow
         }
     }
 
+    private Button? FindNavButton(string name)
+    {
+        return MenuButtons?.Children.OfType<Button>().FirstOrDefault(b => b.Tag?.ToString() == name)
+            ?? MenuButtonsBottom?.Children.OfType<Button>().FirstOrDefault(b => b.Tag?.ToString() == name);
+    }
+
     private async Task NavigateTo(string name, bool animate = true, Button? clickedButton = null)
     {
         if (SectionLabel != null)
@@ -352,52 +372,123 @@ public partial class MainWindow
             SectionLabel.Content = section == "AIM" ? "MAIN" : section;
         }
 
-        clickedButton ??= MenuButtons.Children.OfType<Button>().FirstOrDefault(b => b.Tag?.ToString() == name);
+        clickedButton ??= FindNavButton(name);
         _currentlySwitching = true;
-        var buttonIndx = MenuButtons.Children.IndexOf(clickedButton);
-        var margin = buttonIndx * Menu1B.Height;
-        Animator.ObjectShift(TimeSpan.FromMilliseconds(animate ? 350 : 0), MenuHighlighter, MenuHighlighter.Margin, new Thickness(0, margin, 0, 0));
+        if (clickedButton != null && MenuHighlighter?.Parent is UIElement highlighterParent)
+        {
+            void Move()
+            {
+                try
+                {
+                    var transform = clickedButton.TransformToAncestor(highlighterParent);
+                    var topInParent = transform.Transform(new System.Windows.Point(0, 0)).Y;
+                    Animator.ObjectShift(TimeSpan.FromMilliseconds(animate ? 220 : 0), MenuHighlighter, MenuHighlighter.Margin, new Thickness(0, topInParent, 0, 0));
+                }
+                catch
+                {
+                }
+            }
+            if (!clickedButton.IsLoaded || clickedButton.ActualHeight <= 0)
+                clickedButton.Dispatcher.BeginInvoke(new Action(Move), System.Windows.Threading.DispatcherPriority.Loaded);
+            else
+                Move();
+        }
         await SwitchScrollPanels(FindName(name) as ScrollViewer ?? throw new NullReferenceException("Scrollpanel is null"), animate);
         CurrentMenu = name;
     }
 
     private async Task SwitchScrollPanels(ScrollViewer movingScrollViewer, bool animate = true)
     {
-        var duration = animate ? 350 : 0;
+        if (_currentScrollViewer != null && _currentScrollViewer != movingScrollViewer)
+        {
+            _currentScrollViewer.Visibility = Visibility.Collapsed;
+            _currentScrollViewer.Opacity = 1;
+            _currentScrollViewer.RenderTransform = null;
+        }
+
         movingScrollViewer.Visibility = Visibility.Visible;
-        Animator.Fade(movingScrollViewer);
 
-        Animator.ObjectShift(TimeSpan.FromMilliseconds(duration), movingScrollViewer, movingScrollViewer.Margin,
-            new Thickness(50, 50, 0, 0));
+        if (animate)
+        {
+            var translate = new System.Windows.Media.TranslateTransform(0, 8);
+            movingScrollViewer.RenderTransform = translate;
+            movingScrollViewer.Opacity = 0;
 
-        Animator.FadeOut(_currentScrollViewer!);
-        Animator.ObjectShift(TimeSpan.FromMilliseconds(duration), _currentScrollViewer!, _currentScrollViewer!.Margin,
-            new Thickness(50, 450, 0, -400));
-        await Task.Delay(350);
+            var duration = TimeSpan.FromMilliseconds(180);
+            var ease = new System.Windows.Media.Animation.CubicEase
+            {
+                EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut
+            };
 
-        _currentScrollViewer.Visibility = Visibility.Collapsed;
+            var fadeIn = new System.Windows.Media.Animation.DoubleAnimation(0, 1, duration) { EasingFunction = ease };
+            var slideIn = new System.Windows.Media.Animation.DoubleAnimation(8, 0, duration) { EasingFunction = ease };
+
+            movingScrollViewer.BeginAnimation(UIElement.OpacityProperty, fadeIn);
+            translate.BeginAnimation(System.Windows.Media.TranslateTransform.YProperty, slideIn);
+
+            await Task.Delay(duration);
+            movingScrollViewer.RenderTransform = null;
+        }
+        else
+        {
+            movingScrollViewer.Opacity = 1;
+            movingScrollViewer.RenderTransform = null;
+        }
+
         _currentScrollViewer = movingScrollViewer;
         _currentlySwitching = false;
     }
 
-    private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+    private void UnifiedSearchBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-        UpdateVisibilityBasedOnSearchText((TextBox)sender, ModelStoreScroller);
+        var searchText = ((TextBox)sender).Text?.ToLower() ?? string.Empty;
+        ApplySearchFilter(searchText);
     }
 
-    private void CSearchBox_TextChanged(object sender, TextChangedEventArgs e)
+    private void ApplySearchFilter(string searchText)
     {
-        UpdateVisibilityBasedOnSearchText((TextBox)sender, ConfigStoreScroller);
+        FilterListBox(ModelListBox, searchText);
+        FilterListBox(ConfigsListBox, searchText);
+        FilterDownloadPanel(ModelStoreScroller, searchText);
+        FilterDownloadPanel(ConfigStoreScroller, searchText);
     }
 
-    private void UpdateVisibilityBasedOnSearchText(TextBox textBox, Panel panel)
+    private static void FilterListBox(System.Windows.Controls.ListBox? list, string searchText)
     {
-        var searchText = textBox.Text.ToLower();
+        if (list == null) return;
+        foreach (var item in list.Items)
+        {
+            var container = list.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
+            if (container == null) continue;
+            var match = string.IsNullOrEmpty(searchText) || (item?.ToString()?.ToLower().Contains(searchText) ?? false);
+            container.Visibility = match ? Visibility.Visible : Visibility.Collapsed;
+        }
+    }
 
+    private static void FilterDownloadPanel(Panel? panel, string searchText)
+    {
+        if (panel == null) return;
         foreach (var item in panel.Children.OfType<ADownloadGateway>())
-            item.Visibility = item.Title.Content.ToString()?.ToLower().Contains(searchText) == true
-                ? Visibility.Visible
-                : Visibility.Collapsed;
+        {
+            var match = string.IsNullOrEmpty(searchText) || (item.Title.Content?.ToString()?.ToLower().Contains(searchText) ?? false);
+            item.Visibility = match ? Visibility.Visible : Visibility.Collapsed;
+        }
+    }
+
+    private void SegModels_Click(object sender, RoutedEventArgs e)
+    {
+        SegModels.Style = (Style)FindResource("FluentSegmentActive");
+        SegConfigs.Style = (Style)FindResource("FluentSegment");
+        ModelsGroup.Visibility = Visibility.Visible;
+        ConfigsGroup.Visibility = Visibility.Collapsed;
+    }
+
+    private void SegConfigs_Click(object sender, RoutedEventArgs e)
+    {
+        SegModels.Style = (Style)FindResource("FluentSegment");
+        SegConfigs.Style = (Style)FindResource("FluentSegmentActive");
+        ModelsGroup.Visibility = Visibility.Collapsed;
+        ConfigsGroup.Visibility = Visibility.Visible;
     }
 
 
@@ -724,7 +815,10 @@ public partial class MainWindow
         {
             error = e.Message;
         }
-        ButtonGamepadSettings.Foreground = !string.IsNullOrWhiteSpace(error) || !GamepadManager.CanSend ? Brushes.Red : Brushes.White;
+        if (!string.IsNullOrWhiteSpace(error) || !GamepadManager.CanSend)
+            ButtonGamepadSettings.Foreground = Brushes.Red;
+        else
+            ButtonGamepadSettings.ClearValue(ForegroundProperty);
         GamepadSettingsConfig.RemoveAll();
         GamepadSettingsConfig.AddTitle(Locale.GamepadSettings, false);
 
@@ -881,12 +975,11 @@ public partial class MainWindow
                 GamepadSettingsConfig.AddSeparator();
             }
             
-            GamepadSettingsConfig.AddButton("Open Gamepad Test Window", b =>
+            GamepadSettingsConfig.AddButton("Open Gamepad Tester", b =>
             {
                 b.Reader.Click += (s, e) =>
                 {
-                    var testWindow = new GamepadTestWindow();
-                    testWindow.Show();
+                    _ = NavigateTo(nameof(GamepadTestPage));
                 };
             });
         }
@@ -1008,7 +1101,7 @@ public partial class MainWindow
                         manager.SetRelease(release, !ApplicationConstants.IsCudaBuild);
                         var dialog = new UpdateDialog(manager);
                         dialog.ApplyButton.Content = text;
-                        dialog.TitleLabel.Content = text;
+                        dialog.TitleLabel.Text = text;
                         dialog.HeaderLabel.Visibility = Visibility.Collapsed;
                         dialog.Height = 170;
                         dialog.ReleaseInfo.Visibility = Visibility.Collapsed;
@@ -1028,22 +1121,54 @@ public partial class MainWindow
             }
         }, toStringFn: info => info.EnglishName);
 
-        UISettings.AddDropdown(Locale.Theme, ApplicationConstants.Theme, ThemePalette.All, palette =>
+        var darkPaletteOptions = ThemePalette.ByMode(false);
+        var currentPalette = darkPaletteOptions.FirstOrDefault(p => p.Name == AppConfig.Current.ThemeName) ?? darkPaletteOptions[0];
+        UISettings.AddDropdown(Locale.Theme, currentPalette, darkPaletteOptions, palette =>
         {
-            ApplicationConstants.Theme = palette;
             if (Config != null)
                 Config.ThemeName = palette.Name;
+            Aimmy2.Theme.ThemeManager.Apply();
         });
-        var themeOnActive = ThemePalette.ThemeForActive;
-        UISettings.AddDropdown(Locale.ThemeWhenActive, themeOnActive, ThemePalette.All, palette =>
+        var currentActive = darkPaletteOptions.FirstOrDefault(p => p.Name == AppConfig.Current.ActiveThemeName) ?? darkPaletteOptions[0];
+        UISettings.AddDropdown(Locale.ThemeWhenActive, currentActive, darkPaletteOptions, palette =>
         {
             if (Config != null)
                 Config.ActiveThemeName = palette.Name;
+            Aimmy2.Theme.ThemeManager.Apply();
+        });
+        UISettings.AddDropdown<AppThemeMode>("Theme Mode", AppConfig.Current.ThemeMode, mode =>
+        {
+            if (Config != null)
+                Config.ThemeMode = mode;
+            Aimmy2.Theme.ThemeManager.Apply();
         });
 
-        UISettings.AddToggle(Locale.MouseBackgroundEffect).BindTo(() => AppConfig.Current.ToggleState.MouseBackgroundEffect);
         UISettings.AddToggle(Locale.UITopMost).BindTo(() => AppConfig.Current.ToggleState.UITopMost);
         UISettings.AddToggle("Locale.ShowHelpTexts").BindTo(() => AppConfig.Current.ToggleState.ShowHelpTexts);
+
+        var hideCaptureToggle = UISettings.AddToggle("Hide UI from screen capture");
+        hideCaptureToggle.BindTo(() => AppConfig.Current.ToggleState.HideUIFromCapture);
+        hideCaptureToggle.Changed += (s, e) =>
+        {
+            if (!e.Value)
+            {
+                var result = System.Windows.MessageBox.Show(
+                    this,
+                    "Warning: if you disable this, the Aimmy window and all its overlays may become visible in screen recordings, streams (OBS, Discord, etc.) and other capture tools.\n\nAre you sure you want to disable capture protection?",
+                    "Disable capture protection?",
+                    System.Windows.MessageBoxButton.YesNo,
+                    System.Windows.MessageBoxImage.Warning,
+                    System.Windows.MessageBoxResult.No);
+                if (result != System.Windows.MessageBoxResult.Yes)
+                {
+                    AppConfig.Current.ToggleState.HideUIFromCapture = true;
+                    hideCaptureToggle.Checked = true;
+                    return;
+                }
+            }
+            Aimmy2.Class.Native.NativeAPIMethods.ApplyCaptureExclusionToAllWindows();
+            AppConfig.Current.Save();
+        };
         UISettings.AddSeparator();
 
         CaptureSettings.AddToggle(Locale.CollectDataWhilePlaying).BindTo(() => AppConfig.Current.ToggleState.CollectDataWhilePlaying);

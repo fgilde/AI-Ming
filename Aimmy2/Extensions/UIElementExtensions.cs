@@ -31,6 +31,20 @@ namespace Aimmy2.Extensions;
 
 public static class UIElementExtensions
 {
+    internal static SolidColorBrush LookupBrush(string key, Color fallback)
+    {
+        try
+        {
+            var app = Application.Current;
+            if (app?.Resources?[key] is SolidColorBrush b)
+                return b;
+        }
+        catch
+        {
+        }
+        return new SolidColorBrush(fallback);
+    }
+
     public static IntPtr GetHandleSafe(this Window window)
     {
         return !window.CheckAccess() 
@@ -199,89 +213,6 @@ public static class UIElementExtensions
 
 
 
-    public static void BindMouseGradientAngle(this Border sender, Func<bool>? condition = null)
-    {
-
-        LinearGradientBrush linearGradientBrush = null;
-
-        if (sender.Background is LinearGradientBrush originalBrush)
-        {
-            linearGradientBrush = originalBrush.Clone();
-            sender.Background = linearGradientBrush;
-        }
-
-        if (linearGradientBrush == null)
-        {
-            var resourceRotateTransform = sender.TryFindResource("RotaryGradient") as RotateTransform ??
-                                          App.Current.TryFindResource("RotaryGradient") as RotateTransform;
-            if (resourceRotateTransform != null)
-            {
-                var clonedRotateTransform = resourceRotateTransform.Clone();
-
-                linearGradientBrush = new LinearGradientBrush
-                {
-                    StartPoint = new Point(0, 0),
-                    EndPoint = new Point(0.5, 1),
-                    RelativeTransform = new TransformGroup
-                    {
-                        Children = new TransformCollection
-                        {
-                            new ScaleTransform { CenterX = 0.5, CenterY = 0.5 },
-                            new SkewTransform { CenterX = 0.5, CenterY = 0.5 },
-                            clonedRotateTransform,
-                            new TranslateTransform()
-                        }
-                    }
-                };
-                sender.Background = linearGradientBrush;
-            }
-        }
-
-        if (linearGradientBrush?.RelativeTransform is TransformGroup newTransformGroup)
-        {
-            foreach (var transform in newTransformGroup.Children)
-            {
-                if (transform is RotateTransform rotateTransform)
-                {
-                    sender.BindMouseGradientAngle(rotateTransform, condition);
-                    return;
-                }
-            }
-        }
-
-    }
-
-    public static void BindMouseGradientAngle(this FrameworkElement sender, RotateTransform? transform, Func<bool>? condition)
-    {
-        if (transform == null)
-            return;
-
-        double currentGradientAngle = 0;
-        sender.MouseMove += (s, e) =>
-        {
-            if (condition != null && !condition.Invoke())
-            {
-                transform.Angle = 0;
-                return;
-            }
-
-            var currentMousePos = NativeAPIMethods.GetCursorPosition();
-            var translatedMousePos = sender.PointFromScreen(new Point(currentMousePos.X, currentMousePos.Y));
-            double targetAngle = Math.Atan2(translatedMousePos.Y - (sender.ActualHeight * 0.5), translatedMousePos.X - (sender.ActualWidth * 0.5)) * (180 / Math.PI);
-
-            double angleDifference = (targetAngle - currentGradientAngle + 360) % 360;
-            if (angleDifference > 180)
-            {
-                angleDifference -= 360;
-            }
-
-            angleDifference = Math.Max(Math.Min(angleDifference, 1), -1); // Clamp the angle difference between -1 and 1 (smoothing)
-            currentGradientAngle = (currentGradientAngle + angleDifference + 360) % 360;
-            transform.Angle = currentGradientAngle;
-        };
-    }
-
-
     public static T RemoveAll<T>(this T panel) where T : Panel
     {
         panel.Children.Clear();
@@ -308,24 +239,40 @@ public static class UIElementExtensions
         var border = owner.Add<Border>(p =>
         {
             p.MinWidth = 220;
-            p.Background = new SolidColorBrush(Color.FromArgb(63, 60, 60, 60));
-            p.BorderBrush = new SolidColorBrush(Color.FromArgb(63, 255, 255, 255));
-            p.BorderThickness = new Thickness(1, 0, 1, 0);
+            p.Background = Brushes.Transparent;
+            p.BorderBrush = Brushes.Transparent;
+            p.BorderThickness = new Thickness(0);
+            p.CornerRadius = new CornerRadius(0);
+            p.Margin = new Thickness(0);
+            p.Padding = new Thickness(0);
         }).InitWith(containerCfg);
         var grid = border.Add<Grid>(p =>
         {
             p.HorizontalAlignment = HorizontalAlignment.Stretch;
         });
-        var innergrid = grid.Add<Grid>(p => p.HorizontalAlignment = HorizontalAlignment.Right);
-        var panel = innergrid.Add<StackPanel>(p => p.Orientation = Orientation.Horizontal);
-        grid.Add<TextBlock>(t =>
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        var titleBlock = grid.Add<TextBlock>(t =>
         {
             t.Text = title;
-            t.Foreground = Brushes.White;
-            t.Margin = new Thickness(10, 0, 5, 0);
+            t.Foreground = LookupBrush("FluentTextPrimary", Colors.White);
+            t.FontFamily = new System.Windows.Media.FontFamily("Segoe UI Variable Text");
+            t.FontSize = 13;
+            t.Margin = new Thickness(10, 0, 8, 0);
             t.VerticalAlignment = VerticalAlignment.Center;
             t.HorizontalAlignment = HorizontalAlignment.Left;
+            t.TextTrimming = TextTrimming.CharacterEllipsis;
         });
+        Grid.SetColumn(titleBlock, 0);
+
+        var panel = grid.Add<StackPanel>(p =>
+        {
+            p.Orientation = Orientation.Horizontal;
+            p.VerticalAlignment = VerticalAlignment.Center;
+            p.HorizontalAlignment = HorizontalAlignment.Right;
+        });
+        Grid.SetColumn(panel, 1);
         var toggle = new AToggle("");
         toggle.Background = toggle.BorderBrush = Brushes.Transparent;
         var code = AKeyChanger.CodeFor(key);
@@ -376,9 +323,9 @@ public static class UIElementExtensions
     {
         var border = panel.Add<Border>(p =>
         {
-            p.Background = new SolidColorBrush(Color.FromArgb(63, 60, 60, 60));
-            p.BorderBrush = new SolidColorBrush(Color.FromArgb(63, 255, 255, 255));
-            p.BorderThickness = new Thickness(1, 0, 1, 0);
+            p.Background = Brushes.Transparent;
+            p.BorderBrush = Brushes.Transparent;
+            p.BorderThickness = new Thickness(0);
         });
         var spanel = border.Add<StackPanel>(p =>
         {
@@ -387,25 +334,26 @@ public static class UIElementExtensions
         });
         spanel.Add<Label>(l =>
         {
-            l.Margin = new Thickness(5, 0, 0, 5);
+            l.Margin = new Thickness(2, 0, 0, 5);
             l.Content = title;
             l.FontSize = 13;
-            l.Foreground = new SolidColorBrush(ApplicationConstants.Foreground);
+            l.Padding = new Thickness(0);
+            l.Foreground = LookupBrush("FluentTextPrimary", Colors.White);
         });
         var res = spanel.Add(new MultiKeyChanger(), multiKeyChanger =>
         {
-            multiKeyChanger.Margin = new Thickness(10, 5, 10, 5);
+            multiKeyChanger.Margin = new Thickness(0, 5, 0, 5);
             cfg?.Invoke(multiKeyChanger);
         });
         if (!string.IsNullOrEmpty(description) && AppConfig.Current?.ToggleState?.ShowHelpTexts == true)
         {
             spanel.Add<TextBlock>(l =>
             {
-                l.Margin = new Thickness(10, 0, 10, 5);
+                l.Margin = new Thickness(2, 0, 2, 5);
                 l.Text = description;
                 l.TextWrapping = TextWrapping.Wrap;
                 l.FontSize = 11;
-                l.Foreground = new SolidColorBrush(ApplicationConstants.Foreground);
+                l.Foreground = LookupBrush("FluentTextSecondary", ApplicationConstants.Foreground);
             });
         }
 
@@ -501,13 +449,9 @@ public static class UIElementExtensions
 
     public static ComboBoxItem AddDropdownItem(this ADropdown dropdown, string title, Action<ComboBoxItem>? cfg = null)
     {
-        var fontName = "Atkinson Hyperlegible";
-        var fontFamily = (dropdown.TryFindResource(fontName) ?? Application.Current.TryFindResource(fontName) ?? Application.Current.MainWindow?.TryFindResource(fontName)) as FontFamily;
         var dropdownItem = new ComboBoxItem
         {
-            Content = title,
-            Foreground = new SolidColorBrush(Color.FromArgb(255, 0, 0, 0)),
-            FontFamily = fontFamily
+            Content = title
         };
 
         cfg?.Invoke(dropdownItem);

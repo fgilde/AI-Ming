@@ -19,8 +19,8 @@ public class ToggleState : BaseSettings
     private bool _collectDataWhilePlaying = false;
     private bool _autoLabelData = false;
     private bool _lgHubMouseMovement = false;
-    private bool _mouseBackgroundEffect = true;
     private bool _uiTopMost = true;
+    private bool _hideUIFromCapture = true;
     private bool _xAxisPercentageAdjustment = false;
     private bool _yAxisPercentageAdjustment = true;
     private bool _autoHideController;
@@ -166,10 +166,10 @@ public class ToggleState : BaseSettings
         set => SetField(ref _lgHubMouseMovement, value);
     }
 
-    public bool MouseBackgroundEffect
+    public bool HideUIFromCapture
     {
-        get => _mouseBackgroundEffect;
-        set => SetField(ref _mouseBackgroundEffect, value);
+        get => _hideUIFromCapture;
+        set => SetField(ref _hideUIFromCapture, value);
     }
 
     public bool ShowHelpTexts

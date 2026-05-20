@@ -22,24 +22,15 @@ namespace Aimmy2.UILibrary
     /// </summary>
     public partial class AToggle : INotifyPropertyChanged
     {
-        static AToggle()
-        {
-            FrameworkPropertyMetadata backgroundMetadata = new FrameworkPropertyMetadata(
-                new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3F3C3C3C")));
-
-            FrameworkPropertyMetadata borderBrushMetadata = new FrameworkPropertyMetadata(
-                new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3FFFFFFF")));
-
-            BackgroundProperty.OverrideMetadata(typeof(AToggle), backgroundMetadata);
-            BorderBrushProperty.OverrideMetadata(typeof(AToggle), borderBrushMetadata);
-        }
 
 
 
 
         private static Color EnableColor => ApplicationConstants.AccentColor;
-        private static Color DisableColor = (Color)ColorConverter.ConvertFromString("#FFFFFFFF");
-        private static TimeSpan AnimationDuration = TimeSpan.FromMilliseconds(500);
+        private static Color DisableColor => ApplicationConstants.Surface3Color;
+        private static readonly TimeSpan AnimationDuration = TimeSpan.FromMilliseconds(260);
+        private static readonly Thickness OnPosition = new(0, 0, 3, 0);
+        private static readonly Thickness OffPosition = new(0, 0, 22, 0);
 
         public event EventHandler<EventArgs> Activated;
         public event EventHandler<EventArgs> Deactivated;
@@ -94,12 +85,19 @@ namespace Aimmy2.UILibrary
         public AToggle()
         {
             InitializeComponent();
+            // ensure SwitchBorder Background is a mutable SolidColorBrush we can animate
+            SwitchBorder.Background = new SolidColorBrush(Checked ? EnableColor : DisableColor);
             ApplicationConstants.StaticPropertyChanged += (sender, args) =>
             {
                 if (args.PropertyName == nameof(ApplicationConstants.AccentColor) && Checked)
                 {
-                    Color currentColor = (Color)SwitchMoving.Background.GetValue(SolidColorBrush.ColorProperty);
-                    SetColorAnimation(currentColor, EnableColor, AnimationDuration);
+                    var current = ((SolidColorBrush)SwitchBorder.Background).Color;
+                    SetColorAnimation(current, EnableColor, AnimationDuration);
+                }
+                else if (args.PropertyName == nameof(ApplicationConstants.Surface3Color) && !Checked)
+                {
+                    var current = ((SolidColorBrush)SwitchBorder.Background).Color;
+                    SetColorAnimation(current, DisableColor, AnimationDuration);
                 }
             };
         }
@@ -136,8 +134,8 @@ namespace Aimmy2.UILibrary
 
         public void SetColorAnimation(Color fromColor, Color toColor, TimeSpan duration)
         {
-            ColorAnimation animation = new ColorAnimation(fromColor, toColor, duration);
-            SwitchMoving.Background.BeginAnimation(SolidColorBrush.ColorProperty, animation);
+            var animation = new ColorAnimation(fromColor, toColor, duration);
+            SwitchBorder.Background.BeginAnimation(SolidColorBrush.ColorProperty, animation);
         }
 
         public bool ToggleState()
@@ -150,9 +148,9 @@ namespace Aimmy2.UILibrary
         {
             if (!IsEnabled)
                 return;
-            Color currentColor = (Color)SwitchMoving.Background.GetValue(SolidColorBrush.ColorProperty);
+            var currentColor = ((SolidColorBrush)SwitchBorder.Background).Color;
             SetColorAnimation(currentColor, EnableColor, AnimationDuration);
-            Animator.ObjectShift(AnimationDuration, SwitchMoving, SwitchMoving.Margin, new Thickness(0, 0, -1, 0));
+            Animator.ObjectShift(AnimationDuration, SwitchMoving, SwitchMoving.Margin, OnPosition);
             Activated?.Invoke(this, EventArgs.Empty);
             Changed?.Invoke(this, new EventArgs<bool>(true));
             OnPropertyChanged(nameof(Checked));
@@ -162,9 +160,9 @@ namespace Aimmy2.UILibrary
         {
             if (!IsEnabled)
                 return;
-            Color currentColor = (Color)SwitchMoving.Background.GetValue(SolidColorBrush.ColorProperty);
+            var currentColor = ((SolidColorBrush)SwitchBorder.Background).Color;
             SetColorAnimation(currentColor, DisableColor, AnimationDuration);
-            Animator.ObjectShift(AnimationDuration, SwitchMoving, SwitchMoving.Margin, new Thickness(0, 0, 16, 0));
+            Animator.ObjectShift(AnimationDuration, SwitchMoving, SwitchMoving.Margin, OffPosition);
             Deactivated?.Invoke(this, EventArgs.Empty);
             Changed?.Invoke(this, new EventArgs<bool>(false));
             OnPropertyChanged(nameof(Checked));

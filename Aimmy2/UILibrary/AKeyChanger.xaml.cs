@@ -109,9 +109,7 @@ namespace Aimmy2.UILibrary
             if (kc == null)
                 return;
             kc.MainBorder.BorderThickness = (bool)e.NewValue ? new Thickness(1, 0, 1, 0) : new Thickness(0);
-            kc.Background = (bool)e.NewValue
-                ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3F3C3C3C"))
-                : new SolidColorBrush(Colors.Transparent);
+            kc.Background = new SolidColorBrush(Colors.Transparent);
         }
 
         public bool WithBorder
@@ -158,7 +156,6 @@ namespace Aimmy2.UILibrary
 
         public AKeyChanger()
         {
-            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3F3C3C3C"));
             InitializeComponent();
         }
 
@@ -348,7 +345,10 @@ namespace Aimmy2.UILibrary
         {
             KeyDeviceInfo.Text = icon;
             KeyDeviceInfo.FontSize = icon == "\uF8AF" ? 14 : 18;
-            KeyDeviceInfo.Foreground = fg ?? Brushes.White;
+            if (fg != null)
+                KeyDeviceInfo.Foreground = fg;
+            else
+                KeyDeviceInfo.SetResourceReference(TextBlock.ForegroundProperty, "FluentTextSecondary");
             KeyDeviceInfo.Visibility = string.IsNullOrEmpty(icon) ? Visibility.Collapsed : Visibility.Visible;
         }
 

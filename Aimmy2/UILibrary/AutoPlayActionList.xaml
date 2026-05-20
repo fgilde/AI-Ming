@@ -8,11 +8,7 @@
              mc:Ignorable="d"
              x:Name="ThisControl"
              d:DesignHeight="300" d:DesignWidth="400">
-    <Border
-        BorderThickness="1"
-        BorderBrush="#3FFFFFFF"
-        CornerRadius="3"
-        Padding="5">
+    <Border BorderThickness="0" Background="Transparent" Padding="0">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
@@ -21,8 +17,8 @@
             <ListBox
                 x:Name="ActionsListBox"
                 ItemsSource="{Binding Actions, ElementName=ThisControl}"
-                Foreground="#DDFFFFFF"
-                FontFamily="{StaticResource Atkinson Hyperlegible}"
+                Foreground="{DynamicResource FluentTextPrimary}"
+                FontFamily="Segoe UI Variable Text"
                 Margin="0"
                 Padding="2"
                 MinHeight="100"
@@ -45,36 +41,26 @@
                                     Text="{Binding DisplayText}"
                                     FontSize="10"
                                     Opacity="0.7"
-                                    Foreground="#AAFFFFFF"
+                                    Foreground="{DynamicResource FluentTextSecondary}"
                                     VerticalAlignment="Center" />
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                <controls:Button
+                                <Button Style="{StaticResource FluentIconButton}"
                                     ToolTip="Edit Action"
-                                    BorderThickness="0"
                                     Tag="{Binding}"
                                     MouseDown="UIElement_OnMouseDown"
                                     Click="EditAction_Click"
-                                    EffectBrush="{StaticResource ButtonBackground}"
-                                    Foreground="#ffffff"
-                                    BorderBrush="#00D9D9D9"
-                                    Background="Transparent"
-                                    FontFamily="Segoe MDL2 Assets"
+                                    Foreground="{DynamicResource FluentTextPrimary}"
                                     Content="&#xEB7E;"
                                     Padding="0"
                                     FontSize="16"
                                     Width="35" />
-                                <controls:Button
+                                <Button Style="{StaticResource FluentIconButton}"
                                     ToolTip="Delete Action"
-                                    BorderThickness="0"
                                     Tag="{Binding}"
                                     MouseDown="UIElement_OnMouseDown"
                                     Click="DeleteAction_Click"
-                                    EffectBrush="{StaticResource ButtonBackground}"
-                                    Foreground="#ffffff"
-                                    BorderBrush="#00D9D9D9"
-                                    Background="Transparent"
-                                    FontFamily="Segoe MDL2 Assets"
+                                    Foreground="{DynamicResource FluentTextPrimary}"
                                     Content="&#xE74D;"
                                     Padding="0"
                                     FontSize="16"
@@ -85,17 +71,12 @@
                 </ListBox.ItemTemplate>
             </ListBox>
             <Border Grid.Row="1" Margin="0 5 0 0">
-                <controls:Button
+                <Button Style="{StaticResource FluentIconButton}"
                     HorizontalAlignment="Right"
                     ToolTip="Add Action"
-                    BorderThickness="0"
                     MouseDown="UIElement_OnMouseDown"
                     Click="AddAction_Click"
-                    EffectBrush="{StaticResource ButtonBackground}"
-                    Foreground="#ffffff"
-                    BorderBrush="#00D9D9D9"
-                    Background="Transparent"
-                    FontFamily="Segoe MDL2 Assets"
+                    Foreground="{DynamicResource FluentTextPrimary}"
                     Content="&#xECC8;"
                     Padding="0"
                     FontSize="18"

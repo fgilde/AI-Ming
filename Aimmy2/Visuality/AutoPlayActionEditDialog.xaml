@@ -3,148 +3,163 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:controls="clr-namespace:AntWpf.Controls;assembly=AntWpf"
         xmlns:uiLibrary="clr-namespace:Aimmy2.UILibrary"
         xmlns:uiLibrary1="clr-namespace:UILibrary"
         xmlns:local="clr-namespace:Visuality"
         xmlns:visuality="clr-namespace:Aimmy2.Visuality"
         mc:Ignorable="d"
         Title="Edit Action"
-        Height="500"
-        Width="450"
-        MinHeight="400"
-        MinWidth="350"
+        Height="540"
+        Width="480"
+        MinHeight="420"
+        MinWidth="360"
         WindowStyle="None"
         Topmost="True"
         ResizeMode="CanResizeWithGrip"
         WindowStartupLocation="CenterScreen"
-        AllowsTransparency="True"
-        Background="Transparent">
+        AllowsTransparency="False"
+        Background="{StaticResource FluentSurface1}">
     <Grid>
-        <Border x:Name="MainBorder"
-                CornerRadius="5"
-                BorderBrush="Black"
-                BorderThickness="1"
-                Background="{StaticResource Background}"
-                MouseLeftButtonDown="Border_MouseLeftButtonDown">
-            <Grid>
-                <Grid x:Name="Topbar" VerticalAlignment="Top" Height="70">
-                    <Grid>
-                        <Label Content="&#xE7C4;" HorizontalAlignment="Left" Margin="15,0,0,0" VerticalAlignment="Center" Foreground="#DDFFFFFF" Padding="0,0,0,0" FontSize="14" FontFamily="Segoe MDL2 Assets" />
-                        <Label Content="{Binding Title, RelativeSource={RelativeSource AncestorType=local:AutoPlayActionEditDialog}}" HorizontalAlignment="Left" Margin="38,0,0,0" VerticalAlignment="Center" Foreground="#DDFFFFFF" Padding="0,0,0,0" FontSize="14" FontFamily="{StaticResource Atkinson Hyperlegible}" />
-                        <Button x:Name="Exit" Content="&#xE8BB;" HorizontalAlignment="Right" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White" FontFamily="Segoe MDL2 Assets" Padding="15,0,15,0" BorderThickness="0,0,0,0" FontSize="10" VerticalAlignment="Center" Click="Exit_Click" />
-                    </Grid>
-                </Grid>
-                <Grid x:Name="MainArea" Margin="10,50,10,10">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
 
-                    <ScrollViewer>
-                        <StackPanel>
-                            <!-- Action Name -->
-                            <Label Foreground="{StaticResource Foreground}"
-                                   FontSize="13"
-                                   Content="Action Name"
-                                   FontFamily="{StaticResource Atkinson Hyperlegible}" />
-                            <TextBox BorderThickness="1"
-                                     Padding="3 5 1 5"
-                                     Text="{Binding Action.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                     Margin="2, 5"
-                                     Tag="e.g. move_left, jump, attack..."
-                                     FontFamily="{StaticResource Atkinson Hyperlegible}"
-                                     Style="{DynamicResource placeHolder}"
-                                     BorderBrush="#3FFFFFFF"
-                                     Background="{x:Null}"
-                                     Foreground="{StaticResource Foreground}" />
-                            <TextBlock Foreground="{StaticResource Foreground}"
-                                       FontSize="11"
-                                       Margin="2 0 0 10"
-                                       TextWrapping="Wrap"
-                                       Visibility="{Binding Converter={StaticResource helpVis}}"
-                                       Text="The name the AI will use to trigger this action. Use underscores, no spaces."
-                                       FontFamily="{StaticResource Atkinson Hyperlegible}" />
+        <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="Border_MouseLeftButtonDown">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0">
+                <TextBlock Text="&#xE7C4;"
+                           FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                           Foreground="{DynamicResource FluentAccent}"
+                           FontSize="14"
+                           VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Title, RelativeSource={RelativeSource AncestorType=local:AutoPlayActionEditDialog}}"
+                           Margin="10,0,0,0"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource FluentTextPrimary}"
+                           FontFamily="Segoe UI Variable Display"
+                           FontWeight="SemiBold"
+                           FontSize="13" />
+            </StackPanel>
+            <Button x:Name="Exit"
+                    Content="&#xE8BB;"
+                    HorizontalAlignment="Right"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    BorderThickness="0"
+                    Foreground="{DynamicResource FluentTextPrimary}"
+                    FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                    Width="46"
+                    Height="40"
+                    Padding="0"
+                    FontSize="10"
+                    VerticalAlignment="Top"
+                    Click="Exit_Click">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd" Background="{TemplateBinding Background}">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#E81123" />
+                                            <Setter Property="Foreground" Value="White" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </Grid>
 
-                            <!-- Description -->
-                            <Label Foreground="{StaticResource Foreground}"
-                                   FontSize="13"
-                                   Content="Description (for AI)"
-                                   FontFamily="{StaticResource Atkinson Hyperlegible}" />
-                            <TextBox BorderThickness="1"
-                                     Padding="3 5 1 5"
-                                     Text="{Binding Action.Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                     TextWrapping="Wrap"
-                                     AcceptsReturn="True"
-                                     MinHeight="50"
-                                     Margin="2, 5"
-                                     Tag="Describe what this action does..."
-                                     FontFamily="{StaticResource Atkinson Hyperlegible}"
-                                     Style="{DynamicResource placeHolder}"
-                                     BorderBrush="#3FFFFFFF"
-                                     Background="{x:Null}"
-                                     Foreground="{StaticResource Foreground}" />
-                            <TextBlock Foreground="{StaticResource Foreground}"
-                                       FontSize="11"
-                                       Margin="2 0 0 10"
-                                       TextWrapping="Wrap"
-                                       Visibility="{Binding Converter={StaticResource helpVis}}"
-                                       Text="Help the AI understand when to use this action."
-                                       FontFamily="{StaticResource Atkinson Hyperlegible}" />
+        <ScrollViewer Grid.Row="1" Margin="14,4,14,8" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <!-- Action Name -->
+                <TextBlock Style="{StaticResource FluentSectionTitle}" Text="Action Name" />
+                <Border Background="{DynamicResource FluentSurface3}"
+                        BorderBrush="{DynamicResource FluentStroke}"
+                        BorderThickness="1"
+                        CornerRadius="6">
+                    <TextBox BorderThickness="0"
+                             Background="Transparent"
+                             Padding="10,8,10,8"
+                             Text="{Binding Action.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Tag="e.g. move_left, jump, attack..."
+                             FontFamily="Segoe UI Variable Text"
+                             FontSize="13"
+                             Style="{DynamicResource placeHolder}"
+                             Foreground="{DynamicResource FluentTextPrimary}" />
+                </Border>
+                <TextBlock Foreground="{DynamicResource FluentTextTertiary}"
+                           FontSize="11"
+                           Margin="2,4,0,12"
+                           TextWrapping="Wrap"
+                           Visibility="{Binding Converter={StaticResource helpVis}}"
+                           Text="The name the AI will use to trigger this action. Use underscores, no spaces."
+                           FontFamily="Segoe UI Variable Small" />
 
-                            <uiLibrary:Line Margin="0 5 0 10" />
+                <!-- Description -->
+                <TextBlock Style="{StaticResource FluentSectionTitle}" Text="Description (for AI)" />
+                <Border Background="{DynamicResource FluentSurface3}"
+                        BorderBrush="{DynamicResource FluentStroke}"
+                        BorderThickness="1"
+                        CornerRadius="6">
+                    <TextBox BorderThickness="0"
+                             Background="Transparent"
+                             Padding="10,8,10,8"
+                             Text="{Binding Action.Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             TextWrapping="Wrap"
+                             AcceptsReturn="True"
+                             MinHeight="60"
+                             Tag="Describe what this action does..."
+                             FontFamily="Segoe UI Variable Text"
+                             FontSize="13"
+                             Style="{DynamicResource placeHolder}"
+                             Foreground="{DynamicResource FluentTextPrimary}" />
+                </Border>
+                <TextBlock Foreground="{DynamicResource FluentTextTertiary}"
+                           FontSize="11"
+                           Margin="2,4,0,12"
+                           TextWrapping="Wrap"
+                           Visibility="{Binding Converter={StaticResource helpVis}}"
+                           Text="Help the AI understand when to use this action."
+                           FontFamily="Segoe UI Variable Small" />
 
-                            <!-- Keys -->
-                            <Label Foreground="{StaticResource Foreground}"
-                                   FontSize="13"
-                                   Content="Keys to Press"
-                                   FontFamily="{StaticResource Atkinson Hyperlegible}" />
-                            <uiLibrary1:MultiKeyChanger
-                                Margin="2 5"
-                                Keys="{Binding Action.Keys, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                            <TextBlock Foreground="{StaticResource Foreground}"
-                                       FontSize="11"
-                                       Margin="2 0 0 10"
-                                       TextWrapping="Wrap"
-                                       Visibility="{Binding Converter={StaticResource helpVis}}"
-                                       Text="The keys/buttons that will be pressed when this action is executed."
-                                       FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                <!-- Keys -->
+                <TextBlock Style="{StaticResource FluentSectionTitle}" Text="Keys to Press" />
+                <uiLibrary1:MultiKeyChanger Margin="0,4,0,0"
+                                            Keys="{Binding Action.Keys, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBlock Foreground="{DynamicResource FluentTextTertiary}"
+                           FontSize="11"
+                           Margin="2,4,0,12"
+                           TextWrapping="Wrap"
+                           Visibility="{Binding Converter={StaticResource helpVis}}"
+                           Text="The keys/buttons that will be pressed when this action is executed."
+                           FontFamily="Segoe UI Variable Small" />
 
-                            <!-- Duration -->
-                            <StackPanel x:Name="DurationPanel" Margin="0 5 0 0" />
-                        </StackPanel>
-                    </ScrollViewer>
+                <!-- Duration -->
+                <StackPanel x:Name="DurationPanel" Margin="0,4,0,0" />
+            </StackPanel>
+        </ScrollViewer>
 
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                        <controls:Button x:Name="CancelButton"
-                                         BorderBrush="{StaticResource ButtonBorder}"
-                                         Background="{StaticResource ButtonBackground}"
-                                         EffectBrush="{StaticResource ButtonEffect}"
-                                         Content="Cancel"
-                                         Margin="0 0 10 0"
-                                         Height="24"
-                                         MinWidth="70"
-                                         FontFamily="{StaticResource Atkinson Hyperlegible}"
-                                         BorderThickness="0"
-                                         FontSize="12"
-                                         Foreground="White"
-                                         Click="Exit_Click" />
-                        <controls:Button x:Name="SaveButton"
-                                         IsEnabled="{Binding Action.IsValid}"
-                                         BorderBrush="{StaticResource ButtonBorder}"
-                                         Background="{StaticResource ButtonBackground}"
-                                         EffectBrush="{StaticResource ButtonEffect}"
-                                         Content="Save"
-                                         Height="24"
-                                         Width="70"
-                                         FontFamily="{StaticResource Atkinson Hyperlegible}"
-                                         BorderThickness="0"
-                                         FontSize="12"
-                                         Foreground="White"
-                                         Click="SaveButton_Click" />
-                    </StackPanel>
-                </Grid>
-            </Grid>
-        </Border>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,14,14">
+            <Button x:Name="CancelButton"
+                    Style="{StaticResource FluentStandardButton}"
+                    Content="Cancel"
+                    Margin="0,0,8,0"
+                    MinWidth="90"
+                    Click="Exit_Click" />
+            <Button x:Name="SaveButton"
+                    IsEnabled="{Binding Action.IsValid}"
+                    Style="{StaticResource FluentAccentButton}"
+                    Content="Save"
+                    MinWidth="100"
+                    Click="SaveButton_Click" />
+        </StackPanel>
     </Grid>
 </visuality:BaseDialog>

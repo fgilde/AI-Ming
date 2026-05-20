@@ -1,44 +1,79 @@
-﻿<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:Aimmy2.UILibrary"
-             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-             xmlns:Ant="clr-namespace:AntWpf.Controls;assembly=AntWpf"
              x:Class="Aimmy2.UILibrary.ATitle"
              mc:Ignorable="d"
              d:DesignWidth="282.5"
-             d:DesignHeight="40">
-    <Grid>
-        <Border Height="40"
-                Name="Border"
-                Background="#3F3C3C3C"
-                CornerRadius="5,5,0,0"
-                BorderThickness="1,1,1,0"
-                BorderBrush="#3FFFFFFF">
-            <Grid>
-                <Label x:Name="LabelTitle"
-                       Padding="10,10,10,10"
-                       FontFamily="{StaticResource Atkinson Hyperlegible}"
+             d:DesignHeight="34">
+    <Grid Margin="0,0,0,4">
+        <Border x:Name="Border"
+                CornerRadius="4"
+                Background="Transparent"
+                Cursor="Arrow"
+                Padding="2,0,2,0"
+                MouseLeftButtonUp="HeaderBorder_MouseLeftButtonUp">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Background" Value="Transparent" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsExpander, RelativeSource={RelativeSource AncestorType=local:ATitle}}" Value="True">
+                            <Setter Property="Cursor" Value="Hand" />
+                        </DataTrigger>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding IsExpander, RelativeSource={RelativeSource AncestorType=local:ATitle}}" Value="True" />
+                                <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True" />
+                            </MultiDataTrigger.Conditions>
+                            <Setter Property="Background" Value="{DynamicResource FluentHoverOverlay}" />
+                        </MultiDataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <Grid Height="30">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0"
+                        Width="3"
+                        Height="16"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Left"
+                        CornerRadius="2"
+                        Background="{DynamicResource FluentAccent}"
+                        Margin="0,0,10,0" />
+                <Label Grid.Column="1"
+                       x:Name="LabelTitle"
+                       Padding="0"
+                       FontFamily="Segoe UI Variable Display"
                        Content="Title"
-                       Foreground="#DDFFFFFF"
+                       Foreground="{DynamicResource FluentTextPrimary}"
                        VerticalContentAlignment="Center"
-                       FontSize="15"
-                       FontWeight="Bold"
-                       Margin="0,0,30,0" />
-                <Ant:Button x:Name="Minimize"
-                        Content="&#xE921;"
-                        HorizontalAlignment="Right"
-                        BorderThickness="0"
-                        EffectBrush="{StaticResource ButtonBackground}"
-                        Foreground="#ffffff"
-                        BorderBrush="#00D9D9D9"
-                        Background="Transparent"
-                        FontFamily="Segoe MDL2 Assets"
-                        Padding="10,10,10,10"
-                        materialDesign:ButtonAssist.CornerRadius="5,0,0,5"
-                        FontSize="10"
-                        Visibility="Collapsed" Margin="0,4,3,3" />
+                       FontSize="14"
+                       FontWeight="SemiBold" />
+                <Grid Grid.Column="2"
+                      x:Name="ChevronContainer"
+                      Width="20"
+                      Height="20"
+                      Margin="0,0,2,0"
+                      VerticalAlignment="Center"
+                      Visibility="Collapsed">
+                    <TextBlock x:Name="Chevron"
+                               Text="&#xE70D;"
+                               FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                               FontSize="10"
+                               Foreground="{DynamicResource FluentTextSecondary}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               RenderTransformOrigin="0.5,0.5">
+                        <TextBlock.RenderTransform>
+                            <RotateTransform x:Name="ChevronRotate" Angle="0" />
+                        </TextBlock.RenderTransform>
+                    </TextBlock>
+                </Grid>
             </Grid>
         </Border>
     </Grid>

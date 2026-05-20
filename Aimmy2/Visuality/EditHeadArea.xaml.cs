@@ -1,4 +1,4 @@
-﻿using Class;
+using Class;
 using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
@@ -101,7 +101,6 @@ namespace Visuality
         {
             InitializeComponent();
             DataContext = this;
-            MainBorder.BindMouseGradientAngle(ShouldBindGradientMouse);
         }
 
         private void UpdateGreenRectangle()

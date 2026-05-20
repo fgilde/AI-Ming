@@ -165,6 +165,42 @@ namespace Aimmy2.Class.Native
             SetWindowDisplayAffinity(hwnd, (uint)WindowAffinity.WDA_EXCLUDEFROMCAPTURE);
         }
 
+        public static T SetCaptureExclusion<T>(this T window, bool exclude) where T : Window
+        {
+            SetCaptureExclusion(window.GetHandleSafe(), exclude);
+            return window;
+        }
+
+        public static void SetCaptureExclusion(IntPtr hwnd, bool exclude)
+        {
+            SetWindowDisplayAffinity(hwnd, (uint)(exclude ? WindowAffinity.WDA_EXCLUDEFROMCAPTURE : WindowAffinity.WDA_NONE));
+        }
+
+        public static T HideForCaptureIfEnabled<T>(this T window) where T : Window
+        {
+            if (Aimmy2.Config.AppConfig.Current?.ToggleState?.HideUIFromCapture ?? true)
+                HideForCapture(window.GetHandleSafe());
+            return window;
+        }
+
+        public static void ApplyCaptureExclusionToAllWindows()
+        {
+            var exclude = Aimmy2.Config.AppConfig.Current?.ToggleState?.HideUIFromCapture ?? true;
+            if (Application.Current == null) return;
+            foreach (Window w in Application.Current.Windows)
+            {
+                try
+                {
+                    var hwnd = w.GetHandleSafe();
+                    if (hwnd != IntPtr.Zero)
+                        SetCaptureExclusion(hwnd, exclude);
+                }
+                catch
+                {
+                }
+            }
+        }
+
         public static T MakeClickThrough<T>(this T window) where T : Window
         {
             MakeClickThrough(window.GetHandleSafe());

@@ -1,5 +1,8 @@
 ﻿using System.IO;
 using System.Reflection;
+using System.Windows;
+using Aimmy2.Config;
+using Aimmy2.Theme;
 
 namespace Aimmy2
 {
@@ -8,6 +11,12 @@ namespace Aimmy2
     /// </summary>
     public partial class App : System.Windows.Application
     {
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            base.OnStartup(e);
+            ThemeManager.Initialize();
+        }
+
         public string ReadEmbeddedResource(string resourceName)
         {
             var assembly = typeof(App).Assembly;

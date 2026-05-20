@@ -2,6 +2,7 @@
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System.Windows.Shell;
 using Aimmy2.Class.Native;
 using Aimmy2.Config;
 
@@ -12,7 +13,6 @@ public abstract class BaseDialog : Window, INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
     public IDictionary<string, string> Texts => Locale.GetAll();
     protected virtual bool SaveRestorePosition => true;
-    protected Func<bool> ShouldBindGradientMouse = () => AppConfig.Current.ToggleState.MouseBackgroundEffect;
     private WindowSettings _settings;
 
     public WindowSettings Settings
@@ -38,6 +38,7 @@ public abstract class BaseDialog : Window, INotifyPropertyChanged
     {
         base.OnInitialized(e);
         Loaded += OnLoaded;
+        EnsureWindowChrome();
         var settingsManager = new WindowSettingsManager(GetSettingsFilePath());
         Settings = settingsManager.LoadWindowSettings() ?? new WindowSettings();
         if (SaveRestorePosition)
@@ -46,9 +47,37 @@ public abstract class BaseDialog : Window, INotifyPropertyChanged
         }
     }
 
+    private void EnsureWindowChrome()
+    {
+        if (WindowStyle == WindowStyle.None && WindowChrome.GetWindowChrome(this) == null && !AllowsTransparency)
+        {
+            WindowChrome.SetWindowChrome(this, new WindowChrome
+            {
+                CaptionHeight = 0,
+                ResizeBorderThickness = ResizeMode == ResizeMode.NoResize ? new Thickness(0) : new Thickness(6),
+                GlassFrameThickness = new Thickness(-1),
+                UseAeroCaptionButtons = false,
+                CornerRadius = new CornerRadius(0)
+            });
+        }
+    }
+
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        this.HideForCapture();
+        this.HideForCaptureIfEnabled();
+        ApplyFluentBackdrop();
+    }
+
+    protected virtual void ApplyFluentBackdrop()
+    {
+        try
+        {
+            Wpf.Ui.Controls.WindowBackdrop.ApplyBackdrop(this, Wpf.Ui.Controls.WindowBackdropType.Mica);
+        }
+        catch
+        {
+            // older OS may not support Mica - fall back silently
+        }
     }
 
     protected override void OnClosed(EventArgs e)

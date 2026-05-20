@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using Aimmy2.Config;
 using System.Windows;
 using System.Windows.Input;
@@ -45,7 +45,7 @@ namespace Visuality
             if(AIManager.Instance?.ImageCapture != null)
                 AIManager.Instance.ImageCapture.PropertyChanged += ImageCaptureOnPropertyChanged;
             StartMagnification();
-            this.HideForCapture();
+            this.HideForCaptureIfEnabled();
         }
 
         private void DoCenter()

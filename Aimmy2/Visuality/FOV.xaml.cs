@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using Aimmy2.Class;
 using Class;
 using System.Windows;
@@ -65,7 +65,7 @@ namespace Visuality
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            this.HideForCapture();
+            this.HideForCaptureIfEnabled();
             AIManager.Instance.ImageCapture.PropertyChanged += ImageCaptureOnPropertyChanged;
         }
 

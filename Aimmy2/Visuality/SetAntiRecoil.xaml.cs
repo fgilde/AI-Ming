@@ -1,4 +1,4 @@
-﻿using Aimmy2;
+using Aimmy2;
 using Aimmy2.Class;
 using AimmyWPF.Class;
 using InputLogic;
@@ -44,7 +44,7 @@ namespace Visuality
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            this.HideForCapture();
+            this.HideForCaptureIfEnabled();
         }
 
         private void HoldDownTimerTicker(object? sender, EventArgs e)

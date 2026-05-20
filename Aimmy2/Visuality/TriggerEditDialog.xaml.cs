@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Input;
 using Aimmy2.Config;
 using Aimmy2.Extensions;
@@ -22,7 +22,6 @@ namespace Visuality
         {
             InitializeComponent();
             DataContext = this;
-            MainBorder.BindMouseGradientAngle(ShouldBindGradientMouse);
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)

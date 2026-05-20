@@ -1,4 +1,4 @@
-﻿<visuality1:BaseDialog x:Class="Aimmy2.MainWindow"
+<visuality1:BaseDialog x:Class="Aimmy2.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -12,877 +12,1001 @@
         xmlns:visuality1="clr-namespace:Aimmy2.Visuality"
         mc:Ignorable="d"
         Title="{x:Static aimmy2:ApplicationConstants.ApplicationName}"
-        Height="444"
-        MinHeight="444"
-        Width="670"
-        MinWidth="670"
+        Height="560"
+        MinHeight="480"
+        Width="900"
+        MinWidth="780"
         WindowStyle="None"
         Topmost="{Binding Config.ToggleState.UITopMost}"
         ResizeMode="CanResize"
         WindowStartupLocation="CenterScreen"
-        AllowsTransparency="True"
-        Background="Transparent"
+        AllowsTransparency="False"
+        Background="{StaticResource FluentSurface1}"
         MouseLeftButtonDown="Window_MouseLeftButtonDown"
         Icon="CH.ico"
         Loaded="Window_Loaded"
         Closing="Window_Closing">
     <WindowChrome.WindowChrome>
-        <WindowChrome ResizeBorderThickness="2"
-                      CaptionHeight="0" />
+        <WindowChrome ResizeBorderThickness="6"
+                      CaptionHeight="0"
+                      GlassFrameThickness="-1"
+                      UseAeroCaptionButtons="False" />
     </WindowChrome.WindowChrome>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="*"></RowDefinition>
-            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Grid.Resources>
-            <BooleanToVisibilityConverter x:Key="boolToVis"></BooleanToVisibilityConverter>
+            <BooleanToVisibilityConverter x:Key="boolToVis" />
         </Grid.Resources>
+
         <Border x:Name="MainBorder"
-                CornerRadius="5,5,0,0"
-                BorderBrush="Black"
-                Background="{StaticResource Background}"
-                BorderThickness="1,1,1,1">
-
+                Background="{StaticResource FluentSurface1}"
+                BorderBrush="{StaticResource FluentStroke}"
+                BorderThickness="0">
             <Grid>
-                
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="48" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- ================= TITLE BAR ================= -->
                 <Grid x:Name="Topbar"
-                      VerticalAlignment="Top"
-                      Height="50">
-                    <Path x:Name="AimmyLogo"
-                          Fill="White"
-                          StrokeThickness="1.33333"
-                          Stretch="Fill"
-                          HorizontalAlignment="Left"
-                          VerticalAlignment="Center"
-                          Width="20"
-                          Height="10"
-                          Margin="15,0,0,0">
-                        <Path.Data>
-                            <PathGeometry Figures="M 18.2472,490.72756 0.18686636,472.66723 153.0173,318.84293 305.84774,165.01862 l 17.74245,17.70593 17.74244,17.70592 17.0189,-16.98112 c 9.36039,-9.33961 17.60957,-16.98112 18.33151,-16.98112 0.72194,0 69.86022,68.54563 153.64061,152.32363 l 152.32798,152.32362 -18.32581,18.45368 -18.3258,18.45368 -152.3021,-153.11064 -152.3021,-153.11063 -20.36457,20.6423 C 309.83073,233.79713 241.18587,302.86906 168.4871,375.93703 L 36.307534,508.7879 Z"
-                                          FillRule="NonZero" />
-                        </Path.Data>
-                    </Path>
-                    <Menu Cursor="Hand" HorizontalAlignment="Left">
-                        <MenuItem>
-                            <MenuItem Header="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SaveAsQuickConfig'}" Click="MenuItem_OnClick" />
-                            <MenuItem Header="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SaveConfigAs'}" Click="MenuItemSaveAs_OnClick" />
-                            
-                            <Separator/>
-                            <MenuItem x:Name="MenuItemOpenCfg" Header="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='OpenQuickConfig'}"></MenuItem>
-                            <MenuItem Header="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='OpenOtherConfig'}" Click="OpenConfig_CLick"/>
-                        </MenuItem>
-                    </Menu>
-                    <Label Content="{x:Static aimmy2:ApplicationConstants.ApplicationName}"
-                           HorizontalAlignment="Left"
-                           Margin="45,0,0,0"
-                           VerticalAlignment="Center"
-                           Foreground="#DDFFFFFF"
-                           Padding="0,0,0,0"
-                           FontSize="14"
-                           FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                      Grid.Row="0"
+                      Background="{StaticResource FluentSurface1}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" x:Name="TopCenterGrid">
-
-                    </StackPanel>
-
-                    <Label Content="MAIN"
-                           x:Name="SectionLabel"
-                           HorizontalAlignment="Right"
-                           Margin="0,0,100,0"
-                           VerticalAlignment="Center"
-                           Foreground="#DDFFFFFF"
-                           Padding="0,0,0,0"
-                           FontSize="14"
-                           FontFamily="{StaticResource Atkinson Hyperlegible}" />
-
-                    <Button x:Name="Exit"
-                            Content="&#xE8BB;"
-                            HorizontalAlignment="Right"
-                            Background="{x:Null}"
-                            BorderBrush="{x:Null}"
-                            Foreground="White"
-                            FontFamily="Segoe MDL2 Assets"
-                            Padding="15,0,15,0"
-                            materialDesign:ButtonAssist.CornerRadius="0,5,5,0"
-                            BorderThickness="0,0,0,0"
-                            FontSize="10"
-                            VerticalAlignment="Center"
-                            Click="Exit_Click" />
-                    <Button x:Name="Minimize"
-                            Content="&#xE921;"
-                            HorizontalAlignment="Right"
-                            Background="{x:Null}"
-                            BorderBrush="{x:Null}"
-                            Foreground="White"
-                            FontFamily="Segoe MDL2 Assets"
-                            Padding="15,0,15,0"
-                            materialDesign:ButtonAssist.CornerRadius="5,0,0,5"
-                            BorderThickness="0,0,0,0"
-                            FontSize="10"
-                            VerticalAlignment="Center"
-                            Click="Minimize_Click"
-                            Margin="0,0,40,0" />
-                </Grid>
-                <Grid x:Name="Sidebar"
-                      HorizontalAlignment="Left"
-                      Width="50"
-                      Margin="0,50,0,0">
-                    <Grid x:Name="MenuHighlighter"
-                          Width="50"
-                          Height="50"
-                          VerticalAlignment="Top"
-                          HorizontalAlignment="Center"
-                          ClipToBounds="True">
-                        <Ellipse Width="25"
-                                 Height="25"
-                                 Fill="{StaticResource ButtonBackground}"
-                                 HorizontalAlignment="Left"
-                                 VerticalAlignment="Center"
-                                 Margin="-12.5,0,0,0">
-                            <Ellipse.Effect>
-                                <BlurEffect Radius="25" />
-                            </Ellipse.Effect>
-                        </Ellipse>
-                        <Ellipse Width="25"
-                                 Height="25"
-                                 Fill="{StaticResource ButtonBackground}"
-                                 HorizontalAlignment="Right"
-                                 VerticalAlignment="Center"
-                                 Margin="0,0,-12.5,0">
-                            <Ellipse.Effect>
-                                <BlurEffect Radius="25" />
-                            </Ellipse.Effect>
-                        </Ellipse>
-                    </Grid>
-                    <StackPanel x:Name="MenuButtons">
-                        <Ant:Button x:Name="Menu1B"
-                                    Tag="AimMenu"
-                                    VerticalAlignment="Top"
-                                    Height="50"
-                                    BorderThickness="0"
-                                    Foreground="#ffffff"
-                                    EffectBrush="{StaticResource ButtonBackground}"
-                                    BorderBrush="#00D9D9D9"
-                                    Background="Transparent"
-                                    FontFamily="Segoe MDL2 Assets"
-                                    Content="&#xE726;"
-                                    Padding="0,0,0,0"
-                                    FontSize="20"
-                                    HorizontalAlignment="Center"
-                                    Width="50"
-                                    Click="MenuSwitch" />
-                        <Ant:Button x:Name="Menu2B"
-                                    Tag="ModelMenu"
-                                    VerticalAlignment="Top"
-                                    Height="50"
-                                    BorderThickness="0"
-                                    EffectBrush="{StaticResource ButtonBackground}"
-                                    Foreground="#ffffff"
-                                    BorderBrush="#00D9D9D9"
-                                    Background="Transparent"
-                                    FontFamily="Segoe MDL2 Assets"
-                                    Content="&#xE8E5;"
-                                    Padding="0,0,0,0"
-                                    FontSize="20"
-                                    HorizontalAlignment="Center"
-                                    Width="50"
-                                    Click="MenuSwitch" />
-                        <Ant:Button x:Name="Menu3B"
-                                    Tag="SettingsMenu"
-                                    VerticalAlignment="Top"
-                                    Height="50"
-                                    BorderThickness="0"
-                                    EffectBrush="{StaticResource ButtonBackground}"
-                                    Foreground="#ffffff"
-                                    BorderBrush="#00D9D9D9"
-                                    Background="Transparent"
-                                    FontFamily="Segoe MDL2 Assets"
-                                    Content="&#xE713;"
-                                    Padding="0,0,0,0"
-                                    FontSize="20"
-                                    HorizontalAlignment="Center"
-                                    Width="50"
-                                    Click="MenuSwitch" />
-                        <Ant:Button 
-                                    x:Name="ButtonGamepadSettings"
-                                    Tag="GamepadSettings"
-                                    VerticalAlignment="Top"
-                                    Height="50"
-                                    BorderThickness="0"
-                                    EffectBrush="{StaticResource ButtonBackground}"
-                                    Foreground="#ffffff"
-                                    BorderBrush="#00D9D9D9"
-                                    Background="Transparent"
-                                    FontFamily="Segoe MDL2 Assets"
-                                    Content="&#xE7FC;"
-                                    Padding="0,0,0,0"
-                                    FontSize="20"
-                                    HorizontalAlignment="Center"
-                                    Width="50"
-                                    Click="MenuSwitch" />
-                        <Ant:Button 
-                            x:Name="ButtonTools"
-                            Tag="Tools"
-                            VerticalAlignment="Top"
-                            Height="50"
-                            BorderThickness="0"
-                            EffectBrush="{StaticResource ButtonBackground}"
-                            Foreground="#ffffff"
-                            BorderBrush="#00D9D9D9"
-                            Background="Transparent"
-                            FontFamily="Segoe MDL2 Assets"
-                            Content="&#xE90F;"
-                            Padding="0,0,0,0"
-                            FontSize="20"
-                            HorizontalAlignment="Center"
-                            Width="50"
-                            Click="MenuSwitch" />
-                        <Ant:Button x:Name="Menu5B"
-                                    Tag="Logs"
-                                    VerticalAlignment="Top"
-                                    Height="50"
-                                    BorderThickness="0"
-                                    EffectBrush="{StaticResource ButtonBackground}"
-                                    Foreground="#ffffff"
-                                    BorderBrush="#00D9D9D9"
-                                    Background="Transparent"
-                                    FontFamily="Segoe MDL2 Assets"
-                                    Content="&#xE9D5;"
-                                    Padding="0,0,0,0"
-                                    FontSize="20"
-                                    HorizontalAlignment="Center"
-                                    Width="50"
-                                    Click="MenuSwitch" />
-                        <Ant:Button x:Name="AutoPlayMenuButton"
-                                    Tag="AutoPlayMenu"
-                                    ToolTip="AutoPlay (AI Game Control)"
-                                    VerticalAlignment="Top"
-                                    Height="50"
-                                    BorderThickness="0"
-                                    EffectBrush="{StaticResource ButtonBackground}"
-                                    Foreground="#ffffff"
-                                    BorderBrush="#00D9D9D9"
-                                    Background="Transparent"
-                                    FontFamily="Segoe MDL2 Assets"
-                                    Content="&#xE768;"
-                                    Padding="0,0,0,0"
-                                    FontSize="20"
-                                    HorizontalAlignment="Center"
-                                    Width="50"
-                                    Click="MenuSwitch" />
-                        <Ant:Button x:Name="Menu4B"
-                                    Tag="AboutMenu"
-                                    Visibility="{x:Static aimmy2:ApplicationConstants.EasyModeHidden}"
-                                    VerticalAlignment="Top"
-                                    Height="50"
-                                    BorderThickness="0"
-                                    EffectBrush="{StaticResource ButtonBackground}"
-                                    Foreground="#ffffff"
-                                    BorderBrush="#00D9D9D9"
-                                    Background="Transparent"
-                                    FontFamily="Segoe MDL2 Assets"
-                                    Content="&#xE77B;"
-                                    Padding="0,0,0,0"
-                                    FontSize="20"
-                                    HorizontalAlignment="Center"
-                                    Width="50"
-                                    Click="MenuSwitch" />
-                    </StackPanel>
-
-                </Grid>
-                <ScrollViewer x:Name="AimMenu"
-                              
-                              Margin="50,50,0,0"
-                              VerticalScrollBarVisibility="Auto"
-                              PanningMode="VerticalOnly">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition></ColumnDefinition>
-                            <ColumnDefinition></ColumnDefinition>
-                        </Grid.ColumnDefinitions>
-                        <Grid Grid.ColumnSpan="2" HorizontalAlignment="Center" Visibility="{Binding Path=IsNotModelLoaded, Converter={StaticResource boolToVis }}">
-                            <TextBlock Foreground="Red" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NoModelOrNoCaptureSourceError'}" />
-                        </Grid>
-                        <StackPanel x:Name="ASP1"
-                                    Visibility="{Binding Path=IsModelLoaded, Converter={StaticResource boolToVis }}"
-                                    Grid.Column="0"
-                                    Margin="10,0,5,0">
-                            <StackPanel x:Name="AimAssist" />
-                            <StackPanel x:Name="TriggerBot" />
-                            <StackPanel x:Name="AntiRecoil" />
-                            <StackPanel x:Name="ESPConfig" />
-                        </StackPanel>
-                        <StackPanel x:Name="ASP2"
-                                    Grid.Column="1"
-                                    Visibility="{Binding Path=IsModelLoaded, Converter={StaticResource boolToVis }}"
-                                    Margin="5,0,10,0">
-                            <StackPanel x:Name="PredictionConfig" />
-                            <StackPanel x:Name="AimConfig" />
-                            <StackPanel x:Name="ARConfig" />
-                            <StackPanel x:Name="FOVConfig" />
-                        </StackPanel>
-                    </Grid>
-                </ScrollViewer>
-                <ScrollViewer x:Name="ModelMenu"
-                              Margin="50,450,0,-400"
-                              VerticalScrollBarVisibility="Disabled"
-                              PanningMode="VerticalOnly"
-                              Visibility="Collapsed">
-                    <Grid>
-                        <TabControl HorizontalContentAlignment="Left"
-                                    x:Name="ModelMenuTabControl"
-                                    Margin="10,0,10,0">
-                            <TabItem BorderThickness="0"
-                                     Padding="0"
-                                     Margin="10"
-                                     Height="33">
-                                <TabItem.Header>
-                                    <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LocalModels'}"
-                                               FontSize="11"
-                                               Foreground="White"
-                                               FontFamily="{StaticResource Atkinson Hyperlegible}" />
-                                </TabItem.Header>
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="*"/>
-                                    </Grid.RowDefinitions>
-                                    <StackPanel x:Name="ModelSettings">
-
-                                    </StackPanel>
-                                    <Border Background="#3F3C3C3C"
-                                            Grid.Row="1"
-                                            BorderBrush="#3FFFFFFF"
-                                            BorderThickness="1"
-                                            CornerRadius="5,5,0,0"
-                                            Margin="0,10,0,54">
-                                        <ListBox x:Name="ModelListBox"
-                                                 Foreground="#DDFFFFFF"
-                                                 FontFamily="{StaticResource Atkinson Hyperlegible}"
-                                                 Margin="0"
-                                                 Padding="2"
-                                                 HorizontalContentAlignment="Stretch">
-                                            <ListBox.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock
-                                                                   Text="{Binding}" 
-                                                                   VerticalAlignment="Center" 
-                                                                   Margin="0,0,5,0"/>
-                                                        <uiLibrary:AKeyChanger KeyConfigName="{Binding}"
-                                                                               Tag="{Binding}"
-                                                                               KeyConfigPrefix="MODEL"
-                                                                               BindingManager="{Binding DataContext.BindingManager, RelativeSource={RelativeSource AncestorType=aimmy2:MainWindow}}" 
-                                                                               MouseDown="UIElement_OnMouseDown" 
-                                                                               Grid.Column="1" 
-                                                                               GlobalKeyPressed="AKeyChanger_ModelOnGlobalKeyPressed"
-                                                                               WithBorder="False"
-                                                                               Text="" />
-                                                        <Ant:Button 
-                                                            Grid.Column="2"
-                                                            ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DeleteModel'}"
-                                                            BorderThickness="0"
-                                                            MouseDown="UIElement_OnMouseDown" 
-                                                            Click="DeleteModel_Click"
-                                                            Tag="{Binding}"
-                                                            EffectBrush="{StaticResource ButtonBackground}"
-                                                            Foreground="#ffffff"
-                                                            BorderBrush="#00D9D9D9"
-                                                            Background="Transparent"
-                                                            FontFamily="Segoe MDL2 Assets"
-                                                            Content="&#xE74D;"
-                                                            Padding="0,0,0,0"
-                                                            FontSize="20"
-                                                            Width="50"/>
-                                                    </Grid>
-                                                </DataTemplate>
-                                            </ListBox.ItemTemplate>
-                                        </ListBox>
-
-
-                                    </Border>
-                                    <Border Background="#3F3C3C3C"
-                                            Grid.Row="1"
-                                            BorderBrush="#3FFFFFFF"
-                                            BorderThickness="1"
-                                            CornerRadius="0,0,0,5"
-                                            Margin="0,0,44,10"
-                                            VerticalAlignment="Bottom"
-                                            Height="39">
-                                        <Label x:Name="SelectedModelNotifier"
-                                               Foreground="#DDFFFFFF"
-                                               Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LoadedModel,N/A'}"
-                                               FontFamily="{StaticResource Atkinson Hyperlegible}"
-                                               Padding="10"></Label>
-                                    </Border>
-                                    <Button x:Name="OpenFolderB_ModelWindow"
-                                            Grid.Row="1"
-                                            Background="#3F3C3C3C"
-                                            BorderBrush="#3FFFFFFF"
-                                            Content="&#xE838;"
-                                            HorizontalAlignment="Right"
-                                            Height="39"
-                                            Width="39"
-                                            Margin="0,0,0,10"
-                                            VerticalAlignment="Bottom"
-                                            Padding="0,0,0,0"
-                                            FontFamily="Segoe MDL2 Assets"
-                                            BorderThickness="1"
-                                            materialDesign:ButtonAssist.CornerRadius="0,0,5,0"
-                                            FontSize="13"
-                                            Foreground="White"
-                                            Click="OpenFolderB_Click"
-                                            Tag="models" />
-                                </Grid>
-                            </TabItem>
-                            <TabItem BorderThickness="0"
-                                     Padding="0"
-                                     Margin="10"
-                                     Height="33">
-                                <TabItem.Header>
-                                    <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LocalConfigs'}"
-                                               FontSize="11"
-                                               Foreground="White"
-                                               FontFamily="{StaticResource Atkinson Hyperlegible}" />
-                                </TabItem.Header>
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="*"/>
-                                    </Grid.RowDefinitions>
-                                    <StackPanel x:Name="ConfigSettings">
-
-                                    </StackPanel>
-                                    <Border Background="#3F3C3C3C"
-                                            Grid.Row="1"
-                                            BorderBrush="#3FFFFFFF"
-                                            BorderThickness="1"
-                                            CornerRadius="5,5,0,0"
-                                            Margin="0,10,0,54">
-                                        <ListBox x:Name="ConfigsListBox"
-                                                 Foreground="#DDFFFFFF"
-                                                 FontFamily="{StaticResource Atkinson Hyperlegible}"
-                                                 HorizontalContentAlignment="Stretch"
-                                                 Margin="0"
-                                                 Padding="2" >
-                                            <ListBox.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock
-                                                                   Text="{Binding}" 
-                                                                   VerticalAlignment="Center" 
-                                                                   Margin="0,0,5,0"/>
-                                                        <uiLibrary:AKeyChanger KeyConfigName="{Binding}"
-                                                                               Tag="{Binding}"
-                                                                               KeyConfigPrefix="CONFIG"
-                                                                               BindingManager="{Binding DataContext.BindingManager, RelativeSource={RelativeSource AncestorType=aimmy2:MainWindow}}" 
-                                                                               MouseDown="UIElement_OnMouseDown" 
-                                                                               Grid.Column="1" 
-                                                                               GlobalKeyPressed="AKeyChanger_ConfigOnGlobalKeyPressed"
-                                                                               WithBorder="False"
-                                                                               Text="" />
-                                                        <Ant:Button 
-                                                            Grid.Column="2"
-                                                            ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DeleteConfig'}"
-                                                            BorderThickness="0"
-                                                            MouseDown="UIElement_OnMouseDown" 
-                                                            Click="DeleteConfig_Click"
-                                                            Tag="{Binding}"
-                                                            EffectBrush="{StaticResource ButtonBackground}"
-                                                            Foreground="#ffffff"
-                                                            BorderBrush="#00D9D9D9"
-                                                            Background="Transparent"
-                                                            FontFamily="Segoe MDL2 Assets"
-                                                            Content="&#xE74D;"
-                                                            Padding="0,0,0,0"
-                                                            FontSize="20"
-                                                            Width="50"/>
-                                                    </Grid>
-                                                </DataTemplate>
-                                            </ListBox.ItemTemplate>
-                                        </ListBox>
-                                    </Border>
-                                    <Border Background="#3F3C3C3C"
-                                            Grid.Row="1"
-                                            BorderBrush="#3FFFFFFF"
-                                            BorderThickness="1"
-                                            CornerRadius="0,0,0,5"
-                                            Margin="0,0,44,10"
-                                            VerticalAlignment="Bottom"
-                                            Height="39">
-                                        <Label x:Name="SelectedConfigNotifier"
-                                               Foreground="#DDFFFFFF"
-                                               Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LoadedConfig,N/A'}"
-                                               FontFamily="{StaticResource Atkinson Hyperlegible}"
-                                               Padding="10"></Label>
-                                    </Border>
-                                    <Button x:Name="OpenFolderB_ConfigWindow"
-                                            Grid.Row="1"
-                                            Background="#3F3C3C3C"
-                                            BorderBrush="#3FFFFFFF"
-                                            Content="&#xE838;"
-                                            HorizontalAlignment="Right"
-                                            Height="39"
-                                            Width="39"
-                                            Margin="0,0,0,10"
-                                            VerticalAlignment="Bottom"
-                                            Padding="0,0,0,0"
-                                            FontFamily="Segoe MDL2 Assets"
-                                            BorderThickness="1"
-                                            materialDesign:ButtonAssist.CornerRadius="0,0,5,0"
-                                            FontSize="13"
-                                            Foreground="White"
-                                            Click="OpenFolderB_Click"
-                                            Tag="configs" />
-                                </Grid>
-                            </TabItem>
-                            <TabItem BorderThickness="0"
-                                     Padding="0"
-                                     Margin="10"
-                                     Visibility="{x:Static aimmy2:ApplicationConstants.EasyModeHidden}"
-                                     Height="33">
-                                <TabItem.Header>
-                                    <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DownloadableModels'}"
-                                               FontSize="11"
-                                               Foreground="White"
-                                               FontFamily="{StaticResource Atkinson Hyperlegible}" />
-                                </TabItem.Header>
-                                <Grid>
-                                    <Label x:Name="LackOfModelsText"
-                                           Visibility="Collapsed"
-                                           HorizontalContentAlignment="Center"
-                                           VerticalContentAlignment="Center"
-                                           Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NoDownloadableModelAvailable'}"
-                                           Foreground="#DDFFFFFF" />
-                                    <ScrollViewer x:Name="ModelStoreMenu"
-                                                  VerticalScrollBarVisibility="Visible"
-                                                  PanningMode="VerticalOnly"
-                                                  Margin="0,10,0,0">
-                                        <StackPanel>
-                                            <Border Background="#3F3C3C3C"
-                                            BorderBrush="#3FFFFFFF"
-                                            BorderThickness="1"
-                                            CornerRadius="5,5,0,0"
-                                            Margin="0,0,5,10"
-                                            Height="39">
-                                                <TextBox
-                                                    x:Name="SearchBox"
-                                                    FontFamily="{StaticResource Atkinson Hyperlegible}"
-                                                    Padding="5"
-                                                    Foreground="White"
-                                                    TextChanged="SearchBox_TextChanged">
-                                                </TextBox>
-                                            </Border>
-                                            <StackPanel x:Name="ModelStoreScroller" />
-                                        </StackPanel>
-                                    </ScrollViewer>
-                                </Grid>
-                            </TabItem>
-                            <TabItem BorderThickness="0"
-                                     Padding="10,0,10,0"
-                                     Margin="10"
-                                     Visibility="{x:Static aimmy2:ApplicationConstants.EasyModeHidden}"
-                                     Height="33">
-                                <TabItem.Header>
-                                    <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DownloadableConfigs'}"
-                                               FontSize="11"
-                                               Foreground="White"
-                                               FontFamily="{StaticResource Atkinson Hyperlegible}" />
-                                </TabItem.Header>
-                                <Grid>
-                                    <Label x:Name="LackOfConfigsText"
-                                           Visibility="Collapsed"
-                                           HorizontalContentAlignment="Center"
-                                           VerticalContentAlignment="Center"
-                                           Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NoDownloadableConfigAvailable'}"
-                                           Foreground="#DDFFFFFF" />
-                                    <ScrollViewer x:Name="ConfigStoreMenu"
-                                                  VerticalScrollBarVisibility="Visible"
-                                                  PanningMode="VerticalOnly"
-                                                  Margin="0,10,0,0">
-                                        <StackPanel>
-                                            <Border Background="#3F3C3C3C"
-                                            BorderBrush="#3FFFFFFF"
-                                            BorderThickness="1"
-                                            CornerRadius="5,5,0,0"
-                                            Margin="0,0,5,10"
-                                            Height="39">
-                                                <TextBox
-                                                    x:Name="CSearchBox"
-                                                    FontFamily="{StaticResource Atkinson Hyperlegible}"
-                                                    Padding="5"
-                                                    Foreground="White"
-                                                    TextChanged="CSearchBox_TextChanged">
-                                                </TextBox>
-                                            </Border>
-                                            <StackPanel x:Name="ConfigStoreScroller" />
-                                        </StackPanel>
-                                    </ScrollViewer>
-                                </Grid>
-                            </TabItem>
-                        </TabControl>
-                    </Grid>
-                </ScrollViewer>
-                <ScrollViewer x:Name="SettingsMenu"
-                              Visibility="Collapsed"
-                              Margin="50,450,0,-400"
-                              VerticalScrollBarVisibility="Auto"
-                              PanningMode="VerticalOnly">
-
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition></ColumnDefinition>
-                            <ColumnDefinition></ColumnDefinition>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0"
-                                    Margin="10,0,5,0">
-                            <StackPanel x:Name="UISettings" />
-                            <StackPanel x:Name="CaptureSettings" />
-                        </StackPanel>
-                        <StackPanel Grid.Column="1"
-                                    Margin="5,0,10,0">
-                            <StackPanel x:Name="InputSettings" />
-                        </StackPanel>
-                    </Grid>
-
-                </ScrollViewer>
-
-                <ScrollViewer x:Name="GamepadSettings"
-                              Visibility="Collapsed"
-                              Margin="50,450,0,-400"
-                              VerticalScrollBarVisibility="Auto"
-                              PanningMode="VerticalOnly">
-                    <Grid>
-                        <StackPanel
-                                    Grid.Column="0"
-                                    Margin="10,0,5,0">
-                            <StackPanel x:Name="GamepadSettingsConfig" />
-                        </StackPanel>
-                    </Grid>
-                </ScrollViewer>
-
-
-                <ScrollViewer x:Name="Tools"
-                              Visibility="Collapsed"
-                              Margin="50,450,0,-400"
-                              VerticalScrollBarVisibility="Auto"
-                              PanningMode="VerticalOnly">
-                    <Grid>
-                        <StackPanel
-                            Grid.Column="0"
-                            Margin="10,0,5,0">
-                            <StackPanel x:Name="ToolsConfig" />
-                        </StackPanel>
-                    </Grid>
-                </ScrollViewer>
-
-                <ScrollViewer x:Name="Logs"
-                              Visibility="Collapsed"
-                              Margin="50, 450, 0, -400"
-                              VerticalScrollBarVisibility="Auto"
-                              PanningMode="VerticalOnly">
-                    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"></RowDefinition>
-                            <RowDefinition Height="*"></RowDefinition>
-                        </Grid.RowDefinitions>
-                        <Grid Grid.Row="0">
-                            <DockPanel HorizontalAlignment="Stretch" >
-                                <Label Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Logs'}"
-                                       DockPanel.Dock="Left"
-                                       Foreground="White"
-                                       FontFamily="{StaticResource Atkinson Hyperlegible}"
-                                       FontSize="20"
-                                       Margin="10"
-                                       Padding="10,0,0,0" />
-                                <Ant:Button 
-                                            DockPanel.Dock="Right"
-                                            ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ClearLogs'}"
-                                            HorizontalAlignment="Right"
-                                            BorderThickness="0"
-                                            EffectBrush="{StaticResource ButtonBackground}"
-                                            Foreground="#ffffff"
-                                            BorderBrush="#00D9D9D9"
-                                            Background="Transparent"
-                                            FontFamily="Segoe MDL2 Assets"
-                                            Content="&#xE75C;"
-                                            Padding="0,0,0,0"
-                                            FontSize="20"
-                                            Width="50"
-                                            Click="ClearLogs_Click" />
-                            </DockPanel>
-                        </Grid>
-                        <TextBox x:Name="OutputTextBox" 
-                                 Grid.Row="1"
-                                 
-                                 Foreground="White"
-                                 Margin="20"
-                                 VerticalAlignment="Stretch"
-                                 HorizontalAlignment="Stretch"
-                                 VerticalScrollBarVisibility="Auto" 
-                                 TextWrapping="Wrap" 
-                                 IsReadOnly="True"/>
-                    </Grid>
-                </ScrollViewer>
-
-                <ScrollViewer x:Name="AboutMenu"
-                              Visibility="Collapsed"
-                              Margin="50, 450, 0, -400"
-                              VerticalScrollBarVisibility="Auto"
-                              PanningMode="VerticalOnly">
-                    <Grid>
-                        <StackPanel VerticalAlignment="Top"
-                                    Margin="0,20,0,0">
-                            <Grid HorizontalAlignment="Center"
-                                  VerticalAlignment="Top"
-                                  
-                                  Height="12">
-                                <Label Foreground="White"
-                                       Content="{x:Static aimmy2:ApplicationConstants.ApplicationInfo}"
-                                       FontFamily="{StaticResource Atkinson Hyperlegible}"
-                                       VerticalContentAlignment="Center"
-                                       Padding="5,0,0,0"
-                                       HorizontalAlignment="Right"
-                                       VerticalAlignment="Center"
-                                       FontSize="10" />
-                           
-                            </Grid>
-                            <Path x:Name="AboutAimmyLogo"
-                                  Fill="White"
-                                  StrokeThickness="1.33333"
-                                  Stretch="Fill"
+                    <!-- Left cluster: logo + app name + config menu -->
+                    <StackPanel Grid.Column="0"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center"
+                                Margin="14,0,0,0">
+                        <Border Width="22"
+                                Height="22"
+                                CornerRadius="6"
+                                Background="{StaticResource FluentAccent}">
+                            <Path x:Name="AimmyLogo"
+                                  Fill="{StaticResource FluentAccentForeground}"
+                                  StrokeThickness="0"
+                                  Stretch="Uniform"
                                   HorizontalAlignment="Center"
-                                  VerticalAlignment="Top"
-                                  Width="89"
-                                  Height="45"
-                                  Margin="0,10,0,0">
+                                  VerticalAlignment="Center"
+                                  Width="13"
+                                  Height="7">
                                 <Path.Data>
                                     <PathGeometry Figures="M 18.2472,490.72756 0.18686636,472.66723 153.0173,318.84293 305.84774,165.01862 l 17.74245,17.70593 17.74244,17.70592 17.0189,-16.98112 c 9.36039,-9.33961 17.60957,-16.98112 18.33151,-16.98112 0.72194,0 69.86022,68.54563 153.64061,152.32363 l 152.32798,152.32362 -18.32581,18.45368 -18.3258,18.45368 -152.3021,-153.11064 -152.3021,-153.11063 -20.36457,20.6423 C 309.83073,233.79713 241.18587,302.86906 168.4871,375.93703 L 36.307534,508.7879 Z"
                                                   FillRule="NonZero" />
                                 </Path.Data>
                             </Path>
-                            <Label x:Name="AboutName"
-                                   Foreground="White"
-                                   Content="{x:Static aimmy2:ApplicationConstants.ApplicationSlogan}"
-                                   FontFamily="{StaticResource Atkinson Hyperlegible}"
-                                   VerticalContentAlignment="Center"
-                                   Padding="0,0,0,0"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Top"
-                                   RenderTransformOrigin="0.602,0.353"
-                                   Margin="0,10,0,0"
-                                   FontSize="15" />
-                            <Label x:Name="AboutDesc"
-                                   Foreground="White"
-                                   Content="{x:Static aimmy2:ApplicationConstants.ApplicationVersionStr}"
-                                   FontFamily="{StaticResource Atkinson Hyperlegible}"
-                                   VerticalContentAlignment="Center"
-                                   Padding="0,0,0,0"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Top"
-                                   RenderTransformOrigin="0.602,0.353"
-                                   FontSize="13" />
-                            <Label x:Name="AboutSpecs"
-                                   Foreground="White"
-                                   Content="Intel I5-13400F • NVIDIA GTX 1050"
-                                   FontFamily="{StaticResource Atkinson Hyperlegible}"
-                                   VerticalContentAlignment="Center"
-                                   Padding="0,0,0,0"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Top"
-                                   RenderTransformOrigin="0.602,0.353"
-                                   FontSize="12" />
-                            
-                            <StackPanel Orientation="Vertical"
-                                        Margin="0,10,0,0"
-                                        VerticalAlignment="Top"
-                                        HorizontalAlignment="Center">
-                                    <StackPanel Orientation="Horizontal">
-                                        <Ant:Button x:Name="CheckForUpdates"
-                                                    Background="#3FFFFFFF"
-                                                    BorderBrush="#FFD3ADF7"
-                                                    Padding="0,0,0,0"
-                                                    BorderThickness="0,0,0,0"
-                                                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='CheckForUpdate'}"
-                                                    FontWeight="Normal"
-                                                    FontSize="12"
-                                                    Height="27"
-                                                    materialDesign:ButtonAssist.CornerRadius="5"
-                                                    Foreground="White"
-                                                    MinWidth="122"
-                                                    FontFamily="{StaticResource Atkinson Hyperlegible}"
-                                                    EffectBrush="#FFD3ADF7"
-                                                    Click="CheckForUpdates_Click" />
-                                        
-                                        <Ant:Button Background="#3FFFFFFF"
-                                                    BorderBrush="#FFD3ADF7"
-                                                    Margin="5 0 0 0"
-                                                    Padding="0,0,0,0"
-                                                    BorderThickness="0,0,0,0"
-                                                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ShowKnownIssues'}"
-                                                    FontWeight="Normal"
-                                                    FontSize="12"
-                                                    Height="27"
-                                                    materialDesign:ButtonAssist.CornerRadius="5"
-                                                    Foreground="White"
-                                                    MinWidth="122"
-                                                    FontFamily="{StaticResource Atkinson Hyperlegible}"
-                                                    EffectBrush="#FFD3ADF7"
-                                                    Click="ShowKnownIssues_Click" />
-                                </StackPanel>
-                                <Label HorizontalAlignment="Center" Foreground="White" x:Name="UpdateCheckStatusLabel" Content=""/>
-                            </StackPanel>
-             
-                        </StackPanel>
-                        <StackPanel x:Name="CreditsPanel"
-                                    Margin="10,215,10,0" />
-                    </Grid>
-                </ScrollViewer>
+                        </Border>
+                        <TextBlock Text="{x:Static aimmy2:ApplicationConstants.ApplicationName}"
+                                   VerticalAlignment="Center"
+                                   Margin="10,0,8,0"
+                                   FontFamily="Segoe UI Variable Display"
+                                   FontWeight="SemiBold"
+                                   FontSize="13"
+                                   Foreground="{StaticResource FluentTextPrimary}" />
+                        <Menu Cursor="Hand"
+                              Background="Transparent"
+                              VerticalAlignment="Center">
+                            <MenuItem Header="&#xE712;"
+                                      FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                                      FontSize="14"
+                                      Foreground="{StaticResource FluentTextSecondary}"
+                                      Padding="6,4,6,4"
+                                      Background="Transparent"
+                                      ToolTip="Config">
+                                <MenuItem Header="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SaveAsQuickConfig'}" Click="MenuItem_OnClick" />
+                                <MenuItem Header="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SaveConfigAs'}" Click="MenuItemSaveAs_OnClick" />
+                                <Separator />
+                                <MenuItem x:Name="MenuItemOpenCfg" Header="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='OpenQuickConfig'}" />
+                                <MenuItem Header="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='OpenOtherConfig'}" Click="OpenConfig_CLick" />
+                            </MenuItem>
+                        </Menu>
+                    </StackPanel>
 
-                <!-- AutoPlay Menu -->
-                <ScrollViewer x:Name="AutoPlayMenu"
-                              Visibility="Collapsed"
-                              Margin="50, 450, 0, -400"
-                              VerticalScrollBarVisibility="Auto"
-                              PanningMode="VerticalOnly">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel x:Name="AutoPlayConfig"
-                                    Grid.Column="0"
-                                    Margin="10,0,5,0" />
-                        <StackPanel x:Name="AutoPlayProfiles"
-                                    Grid.Column="1"
-                                    Margin="5,0,10,0" />
+                    <!-- Center cluster: quick toggle + monitor select (stays here, modernized) -->
+                    <Border Grid.Column="1"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            CornerRadius="10"
+                            Padding="8,5,8,5"
+                            MinWidth="520"
+                            MinHeight="38"
+                            BorderThickness="1"
+                            BorderBrush="{StaticResource FluentStroke}"
+                            Background="{StaticResource FluentSurface2}">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect BlurRadius="0" Opacity="0" />
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Config.ToggleState.GlobalActive}" Value="True">
+                                        <Setter Property="BorderBrush" Value="{StaticResource FluentAccent}" />
+                                        <Setter Property="Effect">
+                                            <Setter.Value>
+                                                <DropShadowEffect BlurRadius="20"
+                                                                  ShadowDepth="0"
+                                                                  Color="{Binding Path=(aimmy2:ApplicationConstants.AccentColor)}"
+                                                                  Opacity="0.6" />
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    x:Name="TopCenterGrid" />
+                    </Border>
+
+                    <!-- Right cluster: section badge + window controls -->
+                    <StackPanel Grid.Column="2"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center">
+                        <Border CornerRadius="{StaticResource PillCorner}"
+                                Background="{StaticResource FluentSurface3}"
+                                BorderBrush="{StaticResource FluentStroke}"
+                                BorderThickness="1"
+                                Padding="10,4,12,4"
+                                Margin="0,0,8,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Ellipse Width="8" Height="8" Margin="0,0,6,0">
+                                    <Ellipse.Style>
+                                        <Style TargetType="Ellipse">
+                                            <Setter Property="Fill" Value="{StaticResource FluentTextTertiary}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Config.ToggleState.GlobalActive}" Value="True">
+                                                    <Setter Property="Fill" Value="{StaticResource FluentAccent}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
+                                <Label x:Name="SectionLabel"
+                                       Content="MAIN"
+                                       Padding="0"
+                                       VerticalAlignment="Center"
+                                       FontFamily="Segoe UI Variable Small"
+                                       FontWeight="SemiBold"
+                                       FontSize="11"
+                                       Foreground="{StaticResource FluentTextSecondary}" />
+                            </StackPanel>
+                        </Border>
+                        <Button x:Name="Minimize"
+                                Content="&#xE921;"
+                                FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                                FontSize="10"
+                                Width="46"
+                                Height="48"
+                                Padding="0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="{StaticResource FluentTextPrimary}"
+                                WindowChrome.IsHitTestVisibleInChrome="True"
+                                Click="Minimize_Click" />
+                        <Button x:Name="Exit"
+                                Content="&#xE8BB;"
+                                FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                                FontSize="10"
+                                Width="46"
+                                Height="48"
+                                Padding="0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="{StaticResource FluentTextPrimary}"
+                                WindowChrome.IsHitTestVisibleInChrome="True"
+                                Click="Exit_Click">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="bd" Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="#E81123" />
+                                                        <Setter Property="Foreground" Value="White" />
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+                <!-- ================= BODY ================= -->
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Sidebar (NavigationView pattern: hamburger toggles compact/expanded) -->
+                    <Grid Grid.Column="0"
+                          x:Name="Sidebar"
+                          Width="48"
+                          Background="{StaticResource FluentSurface2}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Hamburger -->
+                        <Button Grid.Row="0"
+                                x:Name="HamburgerButton"
+                                ToolTip="Toggle navigation"
+                                Style="{StaticResource NavItemButton}"
+                                Click="HamburgerButton_Click">
+                            <TextBlock Text="&#xE700;"
+                                       FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                                       FontSize="16"
+                                       Foreground="{StaticResource FluentTextPrimary}"
+                                       Width="40"
+                                       HorizontalAlignment="Left"
+                                       TextAlignment="Center"
+                                       VerticalAlignment="Center" />
+                        </Button>
+
+                        <Grid Grid.Row="1" x:Name="NavRegion" ClipToBounds="True">
+                            <Grid x:Name="MenuHighlighter"
+                                  Height="40"
+                                  VerticalAlignment="Top"
+                                  HorizontalAlignment="Left"
+                                  ClipToBounds="True">
+                                <Border Width="3"
+                                        Height="20"
+                                        CornerRadius="2"
+                                        Background="{StaticResource FluentAccent}"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        Margin="1,0,0,0" />
+                            </Grid>
+                            <DockPanel LastChildFill="False">
+                                <StackPanel DockPanel.Dock="Bottom"
+                                            x:Name="MenuButtonsBottom"
+                                            Margin="0,8,0,8">
+                                    <Border Height="1"
+                                            Background="{StaticResource FluentStroke}"
+                                            Margin="8,0,8,6" />
+                                    <Button x:Name="ButtonGamepadSettings"
+                                            Tag="GamepadSettings"
+                                            ToolTip="Gamepad"
+                                            Style="{StaticResource NavItemButton}"
+                                            Click="MenuSwitch">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#xE7FC;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="Gamepad" FontFamily="Segoe UI Variable Text" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="6,0,8,0" />
+                                        </Grid>
+                                    </Button>
+                                    <Button x:Name="Menu5B"
+                                            Tag="Logs"
+                                            ToolTip="Logs"
+                                            Style="{StaticResource NavItemButton}"
+                                            Click="MenuSwitch">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#xE9D5;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="Logs" FontFamily="Segoe UI Variable Text" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="6,0,8,0" />
+                                        </Grid>
+                                    </Button>
+                                    <Button x:Name="Menu3B"
+                                            Tag="SettingsMenu"
+                                            ToolTip="Settings"
+                                            Style="{StaticResource NavItemButton}"
+                                            Click="MenuSwitch">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#xE713;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="Settings" FontFamily="Segoe UI Variable Text" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="6,0,8,0" />
+                                        </Grid>
+                                    </Button>
+                                    <Button x:Name="Menu4B"
+                                            Tag="AboutMenu"
+                                            ToolTip="About"
+                                            Visibility="{x:Static aimmy2:ApplicationConstants.EasyModeHidden}"
+                                            Style="{StaticResource NavItemButton}"
+                                            Click="MenuSwitch">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#xE946;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="About" FontFamily="Segoe UI Variable Text" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="6,0,8,0" />
+                                        </Grid>
+                                    </Button>
+                                </StackPanel>
+                                <StackPanel DockPanel.Dock="Top"
+                                            x:Name="MenuButtons">
+                                    <Button x:Name="Menu1B"
+                                            Tag="AimMenu"
+                                            ToolTip="Aim Tools"
+                                            Style="{StaticResource NavItemButton}"
+                                            Click="MenuSwitch">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#xE726;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="Aim Tools" FontFamily="Segoe UI Variable Text" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="6,0,8,0" />
+                                        </Grid>
+                                    </Button>
+                                    <Button x:Name="ButtonTools"
+                                            Tag="Tools"
+                                            ToolTip="Tools"
+                                            Style="{StaticResource NavItemButton}"
+                                            Click="MenuSwitch">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#xE90F;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="Tools" FontFamily="Segoe UI Variable Text" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="6,0,8,0" />
+                                        </Grid>
+                                    </Button>
+                                    <Button x:Name="AutoPlayMenuButton"
+                                            Tag="AutoPlayMenu"
+                                            ToolTip="AutoPlay (AI Game Control)"
+                                            Style="{StaticResource NavItemButton}"
+                                            Click="MenuSwitch">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#xE768;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="AutoPlay" FontFamily="Segoe UI Variable Text" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="6,0,8,0" />
+                                        </Grid>
+                                    </Button>
+                                    <Button x:Name="Menu2B"
+                                            Tag="ModelMenu"
+                                            ToolTip="Models &amp; Configs"
+                                            Style="{StaticResource NavItemButton}"
+                                            Click="MenuSwitch">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#xE8E5;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="Models &amp; Configs" FontFamily="Segoe UI Variable Text" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="6,0,8,0" />
+                                        </Grid>
+                                    </Button>
+                                </StackPanel>
+                            </DockPanel>
+                        </Grid>
                     </Grid>
-                </ScrollViewer>
+
+                    <!-- Content -->
+                    <Grid Grid.Column="1" Background="{StaticResource FluentSurface1}">
+                        <ScrollViewer x:Name="AimMenu"
+                                      Padding="20,16,20,16"
+                                      VerticalScrollBarVisibility="Auto"
+                                      PanningMode="VerticalOnly">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <Grid Grid.ColumnSpan="2"
+                                      HorizontalAlignment="Center"
+                                      Visibility="{Binding Path=IsNotModelLoaded, Converter={StaticResource boolToVis }}">
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <TextBlock Foreground="{StaticResource FluentTextSecondary}"
+                                                   Style="{StaticResource FluentBody}"
+                                                   Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NoModelOrNoCaptureSourceError'}" />
+                                    </Border>
+                                </Grid>
+                                <StackPanel x:Name="ASP1"
+                                            Visibility="{Binding Path=IsModelLoaded, Converter={StaticResource boolToVis }}"
+                                            Grid.Column="0"
+                                            Margin="0,0,8,0">
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="AimAssist" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="TriggerBot" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="AntiRecoil" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="ESPConfig" />
+                                    </Border>
+                                </StackPanel>
+                                <StackPanel x:Name="ASP2"
+                                            Grid.Column="1"
+                                            Visibility="{Binding Path=IsModelLoaded, Converter={StaticResource boolToVis }}"
+                                            Margin="8,0,0,0">
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="PredictionConfig" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="AimConfig" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="ARConfig" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="FOVConfig" />
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+                        </ScrollViewer>
+
+                        <ScrollViewer x:Name="ModelMenu"
+                                      Padding="20,16,20,16"
+                                      VerticalScrollBarVisibility="Auto"
+                                      PanningMode="VerticalOnly"
+                                      Visibility="Collapsed">
+                            <StackPanel>
+                                <!-- Segmented toggle: Models / Configs -->
+                                <Border CornerRadius="20"
+                                        Padding="4"
+                                        Background="{StaticResource FluentSurface2}"
+                                        BorderBrush="{StaticResource FluentStroke}"
+                                        BorderThickness="1"
+                                        HorizontalAlignment="Left"
+                                        Margin="0,0,0,12">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button x:Name="SegModels"
+                                                Style="{StaticResource FluentSegmentActive}"
+                                                Click="SegModels_Click"
+                                                Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LocalModels'}" />
+                                        <Button x:Name="SegConfigs"
+                                                Style="{StaticResource FluentSegment}"
+                                                Click="SegConfigs_Click"
+                                                Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LocalConfigs'}" />
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Unified search -->
+                                <Border CornerRadius="6"
+                                        Background="{StaticResource FluentSurface3}"
+                                        BorderBrush="{StaticResource FluentStrokeStrong}"
+                                        BorderThickness="1"
+                                        Padding="10,4,10,4"
+                                        Margin="0,0,0,12">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0"
+                                                   Text="&#xE721;"
+                                                   FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                                                   FontSize="14"
+                                                   Foreground="{StaticResource FluentTextSecondary}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,8,0" />
+                                        <TextBox Grid.Column="1"
+                                                 x:Name="UnifiedSearchBox"
+                                                 Tag="Search models &amp; downloads…"
+                                                 Style="{DynamicResource placeHolder}"
+                                                 FontFamily="Segoe UI Variable Text"
+                                                 FontSize="13"
+                                                 Padding="0,4,0,4"
+                                                 Background="Transparent"
+                                                 BorderThickness="0"
+                                                 MinHeight="28"
+                                                 Foreground="{StaticResource FluentTextPrimary}"
+                                                 TextChanged="UnifiedSearchBox_TextChanged" />
+                                    </Grid>
+                                </Border>
+
+                                <!-- =================== MODELS GROUP =================== -->
+                                <StackPanel x:Name="ModelsGroup">
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="ModelSettings" />
+                                    </Border>
+
+                                    <!-- Currently loaded -->
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="0"
+                                                    Width="8"
+                                                    Height="8"
+                                                    CornerRadius="4"
+                                                    Background="{StaticResource FluentAccent}"
+                                                    VerticalAlignment="Center"
+                                                    Margin="2,0,10,0" />
+                                            <Label Grid.Column="1"
+                                                   x:Name="SelectedModelNotifier"
+                                                   Foreground="{StaticResource FluentTextPrimary}"
+                                                   FontFamily="Segoe UI Variable Text"
+                                                   FontSize="13"
+                                                   Padding="0"
+                                                   VerticalContentAlignment="Center"
+                                                   Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LoadedModel,N/A'}" />
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Installed Models -->
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel>
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0"
+                                                           Style="{StaticResource FluentSectionTitle}"
+                                                           Text="Installed" />
+                                                <Button Grid.Column="1"
+                                                        x:Name="OpenFolderB_ModelWindow"
+                                                        Content="&#xE838;"
+                                                        ToolTip="Open models folder"
+                                                        Style="{StaticResource FluentIconButton}"
+                                                        Width="32"
+                                                        Height="32"
+                                                        FontSize="12"
+                                                        Click="OpenFolderB_Click"
+                                                        Tag="models" />
+                                            </Grid>
+                                            <ListBox x:Name="ModelListBox"
+                                                     Background="Transparent"
+                                                     Foreground="{StaticResource FluentTextPrimary}"
+                                                     BorderThickness="0"
+                                                     FontFamily="Segoe UI Variable Text"
+                                                     Padding="0"
+                                                     HorizontalContentAlignment="Stretch">
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Border Grid.Column="0"
+                                                                    Width="6"
+                                                                    Height="6"
+                                                                    CornerRadius="3"
+                                                                    Background="{StaticResource FluentAccent}"
+                                                                    Margin="2,0,10,0"
+                                                                    VerticalAlignment="Center" />
+                                                            <TextBlock Grid.Column="1"
+                                                                       Text="{Binding}"
+                                                                       VerticalAlignment="Center"
+                                                                       TextTrimming="CharacterEllipsis" />
+                                                            <uiLibrary:AKeyChanger Grid.Column="2"
+                                                                                   KeyConfigName="{Binding}"
+                                                                                   Tag="{Binding}"
+                                                                                   KeyConfigPrefix="MODEL"
+                                                                                   BindingManager="{Binding DataContext.BindingManager, RelativeSource={RelativeSource AncestorType=aimmy2:MainWindow}}"
+                                                                                   MouseDown="UIElement_OnMouseDown"
+                                                                                   GlobalKeyPressed="AKeyChanger_ModelOnGlobalKeyPressed"
+                                                                                   WithBorder="False"
+                                                                                   Text="" />
+                                                            <Button Grid.Column="3"
+                                                                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DeleteModel'}"
+                                                                    Style="{StaticResource FluentIconButton}"
+                                                                    Content="&#xE74D;"
+                                                                    Tag="{Binding}"
+                                                                    MouseDown="UIElement_OnMouseDown"
+                                                                    Click="DeleteModel_Click"
+                                                                    Width="32"
+                                                                    Height="32" />
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Available to download -->
+                                    <Border Style="{StaticResource FluentCard}"
+                                            Visibility="{x:Static aimmy2:ApplicationConstants.EasyModeHidden}">
+                                        <StackPanel>
+                                            <TextBlock Style="{StaticResource FluentSectionTitle}"
+                                                       Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DownloadableModels'}" />
+                                            <Label x:Name="LackOfModelsText"
+                                                   Visibility="Collapsed"
+                                                   HorizontalContentAlignment="Center"
+                                                   Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NoDownloadableModelAvailable'}"
+                                                   Foreground="{StaticResource FluentTextSecondary}" />
+                                            <StackPanel x:Name="ModelStoreScroller" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+
+                                <!-- =================== CONFIGS GROUP =================== -->
+                                <StackPanel x:Name="ConfigsGroup" Visibility="Collapsed">
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="ConfigSettings" />
+                                    </Border>
+
+                                    <!-- Currently loaded -->
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="0"
+                                                    Width="8"
+                                                    Height="8"
+                                                    CornerRadius="4"
+                                                    Background="{StaticResource FluentAccent}"
+                                                    VerticalAlignment="Center"
+                                                    Margin="2,0,10,0" />
+                                            <Label Grid.Column="1"
+                                                   x:Name="SelectedConfigNotifier"
+                                                   Foreground="{StaticResource FluentTextPrimary}"
+                                                   FontFamily="Segoe UI Variable Text"
+                                                   FontSize="13"
+                                                   Padding="0"
+                                                   VerticalContentAlignment="Center"
+                                                   Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LoadedConfig,N/A'}" />
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Installed Configs -->
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel>
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0"
+                                                           Style="{StaticResource FluentSectionTitle}"
+                                                           Text="Installed" />
+                                                <Button Grid.Column="1"
+                                                        x:Name="OpenFolderB_ConfigWindow"
+                                                        Content="&#xE838;"
+                                                        ToolTip="Open configs folder"
+                                                        Style="{StaticResource FluentIconButton}"
+                                                        Width="32"
+                                                        Height="32"
+                                                        FontSize="12"
+                                                        Click="OpenFolderB_Click"
+                                                        Tag="configs" />
+                                            </Grid>
+                                            <ListBox x:Name="ConfigsListBox"
+                                                     Background="Transparent"
+                                                     Foreground="{StaticResource FluentTextPrimary}"
+                                                     BorderThickness="0"
+                                                     FontFamily="Segoe UI Variable Text"
+                                                     HorizontalContentAlignment="Stretch"
+                                                     Padding="0">
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Border Grid.Column="0"
+                                                                    Width="6"
+                                                                    Height="6"
+                                                                    CornerRadius="3"
+                                                                    Background="{StaticResource FluentAccent}"
+                                                                    Margin="2,0,10,0"
+                                                                    VerticalAlignment="Center" />
+                                                            <TextBlock Grid.Column="1"
+                                                                       Text="{Binding}"
+                                                                       VerticalAlignment="Center"
+                                                                       TextTrimming="CharacterEllipsis" />
+                                                            <uiLibrary:AKeyChanger Grid.Column="2"
+                                                                                   KeyConfigName="{Binding}"
+                                                                                   Tag="{Binding}"
+                                                                                   KeyConfigPrefix="CONFIG"
+                                                                                   BindingManager="{Binding DataContext.BindingManager, RelativeSource={RelativeSource AncestorType=aimmy2:MainWindow}}"
+                                                                                   MouseDown="UIElement_OnMouseDown"
+                                                                                   GlobalKeyPressed="AKeyChanger_ConfigOnGlobalKeyPressed"
+                                                                                   WithBorder="False"
+                                                                                   Text="" />
+                                                            <Button Grid.Column="3"
+                                                                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DeleteConfig'}"
+                                                                    Style="{StaticResource FluentIconButton}"
+                                                                    Content="&#xE74D;"
+                                                                    Tag="{Binding}"
+                                                                    MouseDown="UIElement_OnMouseDown"
+                                                                    Click="DeleteConfig_Click"
+                                                                    Width="32"
+                                                                    Height="32" />
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Available to download -->
+                                    <Border Style="{StaticResource FluentCard}"
+                                            Visibility="{x:Static aimmy2:ApplicationConstants.EasyModeHidden}">
+                                        <StackPanel>
+                                            <TextBlock Style="{StaticResource FluentSectionTitle}"
+                                                       Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DownloadableConfigs'}" />
+                                            <Label x:Name="LackOfConfigsText"
+                                                   Visibility="Collapsed"
+                                                   HorizontalContentAlignment="Center"
+                                                   Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NoDownloadableConfigAvailable'}"
+                                                   Foreground="{StaticResource FluentTextSecondary}" />
+                                            <StackPanel x:Name="ConfigStoreScroller" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <ScrollViewer x:Name="SettingsMenu"
+                                      Visibility="Collapsed"
+                                      Padding="20,16,20,16"
+                                      VerticalScrollBarVisibility="Auto"
+                                      PanningMode="VerticalOnly">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="UISettings" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="CaptureSettings" />
+                                    </Border>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="InputSettings" />
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+                        </ScrollViewer>
+
+                        <ScrollViewer x:Name="GamepadSettings"
+                                      Visibility="Collapsed"
+                                      Padding="20,16,20,16"
+                                      VerticalScrollBarVisibility="Auto"
+                                      PanningMode="VerticalOnly">
+                            <Border Style="{StaticResource FluentCard}">
+                                <StackPanel x:Name="GamepadSettingsConfig" />
+                            </Border>
+                        </ScrollViewer>
+
+                        <ScrollViewer x:Name="Tools"
+                                      Visibility="Collapsed"
+                                      Padding="20,16,20,16"
+                                      VerticalScrollBarVisibility="Auto"
+                                      PanningMode="VerticalOnly">
+                            <Border Style="{StaticResource FluentCard}">
+                                <StackPanel x:Name="ToolsConfig" />
+                            </Border>
+                        </ScrollViewer>
+
+                        <ScrollViewer x:Name="Logs"
+                                      Visibility="Collapsed"
+                                      Padding="20,16,20,16"
+                                      VerticalScrollBarVisibility="Auto"
+                                      PanningMode="VerticalOnly">
+                            <Border Style="{StaticResource FluentCard}" Padding="14">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <DockPanel HorizontalAlignment="Stretch">
+                                        <TextBlock DockPanel.Dock="Left"
+                                                   Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Logs'}"
+                                                   Style="{StaticResource FluentSectionTitle}"
+                                                   FontSize="16"
+                                                   VerticalAlignment="Center"
+                                                   Margin="2,0,0,0" />
+                                        <Button DockPanel.Dock="Right"
+                                                ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ClearLogs'}"
+                                                HorizontalAlignment="Right"
+                                                Style="{StaticResource FluentIconButton}"
+                                                Content="&#xE75C;"
+                                                Width="36"
+                                                Click="ClearLogs_Click" />
+                                    </DockPanel>
+                                    <TextBox x:Name="OutputTextBox"
+                                             Grid.Row="1"
+                                             Background="Transparent"
+                                             BorderThickness="0"
+                                             Foreground="{StaticResource FluentTextPrimary}"
+                                             FontFamily="Cascadia Mono,Consolas"
+                                             FontSize="12"
+                                             Margin="0,10,0,0"
+                                             VerticalAlignment="Stretch"
+                                             HorizontalAlignment="Stretch"
+                                             VerticalScrollBarVisibility="Auto"
+                                             TextWrapping="Wrap"
+                                             IsReadOnly="True" />
+                                </Grid>
+                            </Border>
+                        </ScrollViewer>
+
+                        <ScrollViewer x:Name="AboutMenu"
+                                      Visibility="Collapsed"
+                                      Padding="20,16,20,16"
+                                      VerticalScrollBarVisibility="Auto"
+                                      PanningMode="VerticalOnly">
+                            <StackPanel>
+                                <Border Style="{StaticResource FluentCard}" Padding="20" HorizontalAlignment="Center">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <Border Width="80"
+                                                Height="80"
+                                                CornerRadius="20"
+                                                Background="{StaticResource FluentAccent}"
+                                                HorizontalAlignment="Center"
+                                                Margin="0,4,0,12">
+                                            <Path x:Name="AboutAimmyLogo"
+                                                  Fill="{StaticResource FluentAccentForeground}"
+                                                  Stretch="Uniform"
+                                                  Width="44"
+                                                  Height="22"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center">
+                                                <Path.Data>
+                                                    <PathGeometry Figures="M 18.2472,490.72756 0.18686636,472.66723 153.0173,318.84293 305.84774,165.01862 l 17.74245,17.70593 17.74244,17.70592 17.0189,-16.98112 c 9.36039,-9.33961 17.60957,-16.98112 18.33151,-16.98112 0.72194,0 69.86022,68.54563 153.64061,152.32363 l 152.32798,152.32362 -18.32581,18.45368 -18.3258,18.45368 -152.3021,-153.11064 -152.3021,-153.11063 -20.36457,20.6423 C 309.83073,233.79713 241.18587,302.86906 168.4871,375.93703 L 36.307534,508.7879 Z"
+                                                                  FillRule="NonZero" />
+                                                </Path.Data>
+                                            </Path>
+                                        </Border>
+                                        <Label x:Name="AboutName"
+                                               Content="{x:Static aimmy2:ApplicationConstants.ApplicationSlogan}"
+                                               Foreground="{StaticResource FluentTextPrimary}"
+                                               FontFamily="Segoe UI Variable Display"
+                                               FontWeight="SemiBold"
+                                               HorizontalAlignment="Center"
+                                               FontSize="18"
+                                               Padding="0" />
+                                        <Label x:Name="AboutDesc"
+                                               Content="{x:Static aimmy2:ApplicationConstants.ApplicationVersionStr}"
+                                               Foreground="{StaticResource FluentTextSecondary}"
+                                               FontFamily="Segoe UI Variable Text"
+                                               HorizontalAlignment="Center"
+                                               FontSize="12"
+                                               Padding="0,2,0,0" />
+                                        <Label x:Name="AboutSpecs"
+                                               Content="Intel I5-13400F • NVIDIA GTX 1050"
+                                               Foreground="{StaticResource FluentTextTertiary}"
+                                               FontFamily="Segoe UI Variable Small"
+                                               HorizontalAlignment="Center"
+                                               FontSize="11"
+                                               Padding="0,4,0,0" />
+                                        <Label Content="{x:Static aimmy2:ApplicationConstants.ApplicationInfo}"
+                                               Foreground="{StaticResource FluentTextTertiary}"
+                                               FontFamily="Segoe UI Variable Small"
+                                               HorizontalAlignment="Center"
+                                               FontSize="10"
+                                               Padding="0,2,0,0" />
+                                        <StackPanel Orientation="Horizontal"
+                                                    HorizontalAlignment="Center"
+                                                    Margin="0,14,0,0">
+                                            <Button x:Name="CheckForUpdates"
+                                                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='CheckForUpdate'}"
+                                                    Style="{StaticResource FluentAccentButton}"
+                                                    MinWidth="140"
+                                                    Click="CheckForUpdates_Click" />
+                                            <Button Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ShowKnownIssues'}"
+                                                    Style="{StaticResource FluentStandardButton}"
+                                                    MinWidth="140"
+                                                    Margin="8,0,0,0"
+                                                    Click="ShowKnownIssues_Click" />
+                                        </StackPanel>
+                                        <Label HorizontalAlignment="Center"
+                                               Foreground="{StaticResource FluentTextSecondary}"
+                                               x:Name="UpdateCheckStatusLabel"
+                                               Content="" />
+                                    </StackPanel>
+                                </Border>
+                                <StackPanel x:Name="CreditsPanel" Margin="0,10,0,0" />
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <ScrollViewer x:Name="AutoPlayMenu"
+                                      Visibility="Collapsed"
+                                      Padding="20,16,20,16"
+                                      VerticalScrollBarVisibility="Auto"
+                                      PanningMode="VerticalOnly">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="AutoPlayConfig" />
+                                    </Border>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="AutoPlayProfiles" />
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+                        </ScrollViewer>
+
+                        <ScrollViewer x:Name="GamepadTestPage"
+                                      Visibility="Collapsed"
+                                      Padding="20,16,20,16"
+                                      VerticalScrollBarVisibility="Disabled"
+                                      HorizontalScrollBarVisibility="Disabled">
+                            <uiLibrary:GamepadTesterPanel x:Name="GamepadTester" />
+                        </ScrollViewer>
+                    </Grid>
+                </Grid>
             </Grid>
         </Border>
-        <StatusBar Background="{StaticResource Background}" Grid.Row="1">
-            
-            <StatusBarItem Cursor="Hand" Foreground="White" Margin="15,5,0, 5" HorizontalAlignment="Left" >
-                <Button BorderBrush="Transparent" FontSize="11" Background="Transparent" Click="OpenConfig_CLick" Content="{Binding Config.Path}" Foreground="White" />
-            </StatusBarItem>
-            <StatusBarItem Cursor="Hand" Foreground="White" Margin="0,5,15, 5" HorizontalAlignment="Right" >
-                <Menu Cursor="Hand" HorizontalAlignment="Left" VerticalAlignment="Center" Height="20">
-                    <MenuItem MaxHeight="100" x:Name="ModelContextMenu" FontSize="11" Header="{Binding Config.LastLoadedModel}" Foreground="{StaticResource Foreground}" VerticalAlignment="Top" Height="20">
-                        <MenuItem Foreground="Black" Header="Bold"/>
+
+        <!-- ================= STATUS BAR ================= -->
+        <Border Grid.Row="1"
+                Background="{StaticResource FluentSurface2}"
+                BorderBrush="{StaticResource FluentStroke}"
+                BorderThickness="0,1,0,0"
+                Height="30">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0"
+                        Style="{StaticResource FluentSubtleButton}"
+                        HorizontalContentAlignment="Left"
+                        HorizontalAlignment="Left"
+                        Padding="14,2,12,2"
+                        FontSize="11"
+                        Foreground="{StaticResource FluentTextSecondary}"
+                        Click="OpenConfig_CLick"
+                        Content="{Binding Config.Path}" />
+                <Menu Grid.Column="1"
+                      Cursor="Hand"
+                      Background="Transparent"
+                      VerticalAlignment="Center"
+                      Margin="0,0,14,0"
+                      Height="22">
+                    <MenuItem MaxHeight="120"
+                              x:Name="ModelContextMenu"
+                              FontSize="11"
+                              FontFamily="Segoe UI Variable Small"
+                              Header="{Binding Config.LastLoadedModel}"
+                              Foreground="{StaticResource FluentTextSecondary}"
+                              Padding="6,2,6,2"
+                              VerticalAlignment="Top"
+                              Height="22">
+                        <MenuItem Header="Bold" />
                     </MenuItem>
                 </Menu>
-            </StatusBarItem>
-        </StatusBar>
+            </Grid>
+        </Border>
     </Grid>
 </visuality1:BaseDialog>

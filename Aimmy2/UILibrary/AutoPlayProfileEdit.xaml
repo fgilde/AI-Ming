@@ -23,7 +23,7 @@
                         <Label Foreground="{StaticResource Foreground}"
                                FontSize="13"
                                Content="Profile Name"
-                               FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                               FontFamily="Segoe UI Variable Text" />
                         <TextBox BorderThickness="1"
                                  Padding="3 5 1 5"
                                  Text="{Binding Profile.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -31,10 +31,10 @@
                                  Margin="2, 5"
                                  Tag="Enter profile name..."
                                  VerticalAlignment="Top"
-                                 FontFamily="{StaticResource Atkinson Hyperlegible}"
+                                 FontFamily="Segoe UI Variable Text"
                                  Style="{DynamicResource placeHolder}"
-                                 BorderBrush="#3FFFFFFF"
-                                 Background="{x:Null}"
+                                 BorderBrush="{DynamicResource FluentStroke}"
+                                 Background="Transparent"
                                  Foreground="{StaticResource Foreground}" />
                     </StackPanel>
                 </Grid>
@@ -44,16 +44,16 @@
                     <Label Foreground="{StaticResource Foreground}"
                            FontSize="13"
                            Content="Ollama Model"
-                           FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                           FontFamily="Segoe UI Variable Text" />
                     <TextBox BorderThickness="1"
                              Padding="3 5 1 5"
                              Text="{Binding Profile.OllamaModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                              Margin="2, 5"
                              Tag="moondream, llava:7b, qwen2.5-vl:7b..."
-                             FontFamily="{StaticResource Atkinson Hyperlegible}"
+                             FontFamily="Segoe UI Variable Text"
                              Style="{DynamicResource placeHolder}"
-                             BorderBrush="#3FFFFFFF"
-                             Background="{x:Null}"
+                             BorderBrush="{DynamicResource FluentStroke}"
+                             Background="Transparent"
                              Foreground="{StaticResource Foreground}" />
                     <TextBlock Foreground="{StaticResource Foreground}"
                                FontSize="11"
@@ -61,7 +61,7 @@
                                TextWrapping="Wrap"
                                Text="Recommended: moondream (fast), llava:7b (balanced), qwen2.5-vl:7b (quality)"
                                Visibility="{Binding Converter={StaticResource helpVis}}"
-                               FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                               FontFamily="Segoe UI Variable Text" />
                 </StackPanel>
 
                 <!-- Decision Interval -->
@@ -72,7 +72,7 @@
                     <Label Foreground="{StaticResource Foreground}"
                            FontSize="13"
                            Content="Game Context (for AI)"
-                           FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                           FontFamily="Segoe UI Variable Text" />
                     <TextBox BorderThickness="1"
                              Padding="3 5 1 5"
                              Text="{Binding Profile.GameContext, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -83,10 +83,10 @@
                              VerticalScrollBarVisibility="Auto"
                              Margin="2, 5"
                              Tag="Describe the game for the AI..."
-                             FontFamily="{StaticResource Atkinson Hyperlegible}"
+                             FontFamily="Segoe UI Variable Text"
                              Style="{DynamicResource placeHolder}"
-                             BorderBrush="#3FFFFFFF"
-                             Background="{x:Null}"
+                             BorderBrush="{DynamicResource FluentStroke}"
+                             Background="Transparent"
                              Foreground="{StaticResource Foreground}" />
                     <TextBlock Foreground="{StaticResource Foreground}"
                                FontSize="11"
@@ -94,7 +94,7 @@
                                TextWrapping="Wrap"
                                Visibility="{Binding Converter={StaticResource helpVis}}"
                                Text="Example: This is a 2D platformer. The player needs to jump over obstacles and collect coins."
-                               FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                               FontFamily="Segoe UI Variable Text" />
                 </StackPanel>
 
                 <uiLibrary:Line Margin="0 10 0 10" />
@@ -104,14 +104,14 @@
                     <Label Foreground="{StaticResource Foreground}"
                            FontSize="13"
                            Content="Actions"
-                           FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                           FontFamily="Segoe UI Variable Text" />
                     <TextBlock Foreground="{StaticResource Foreground}"
                                FontSize="11"
                                Margin="2 0 0 10"
                                TextWrapping="Wrap"
                                Visibility="{Binding Converter={StaticResource helpVis}}"
                                Text="Define actions the AI can choose from. Each action has a name (e.g., 'move_left') and keys to press."
-                               FontFamily="{StaticResource Atkinson Hyperlegible}" />
+                               FontFamily="Segoe UI Variable Text" />
                     <local:AutoPlayActionList x:Name="ActionsList"
                                               Actions="{Binding Profile.Actions, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 </StackPanel>

@@ -19,18 +19,6 @@ namespace Aimmy2.UILibrary
     /// </summary>
     public partial class ASlider : UserControl
     {
-        static ASlider()
-        {
-            FrameworkPropertyMetadata backgroundMetadata = new FrameworkPropertyMetadata(
-                new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3F3C3C3C")));
-
-            FrameworkPropertyMetadata borderBrushMetadata = new FrameworkPropertyMetadata(
-                new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3FFFFFFF")));
-
-            BackgroundProperty.OverrideMetadata(typeof(ASlider), backgroundMetadata);
-            BorderBrushProperty.OverrideMetadata(typeof(ASlider), borderBrushMetadata);
-        }
-
         public double Steps
         {
             get => (double)GetValue(StepsProperty);

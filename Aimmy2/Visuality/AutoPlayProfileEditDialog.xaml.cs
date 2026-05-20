@@ -22,7 +22,6 @@ namespace Visuality
         {
             InitializeComponent();
             DataContext = this;
-            MainBorder.BindMouseGradientAngle(ShouldBindGradientMouse);
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)

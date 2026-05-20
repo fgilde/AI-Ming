@@ -1,4 +1,4 @@
-﻿using Aimmy2.Class;
+using Aimmy2.Class;
 using AimmyWPF.Class;
 using Class;
 using System.IO;
@@ -36,7 +36,6 @@ namespace Visuality
         {
             InitializeComponent();
             DataContext = this;
-            MainBorder.BindMouseGradientAngle(ShouldBindGradientMouse);
         }
 
         private void WriteJSON()
