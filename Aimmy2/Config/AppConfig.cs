@@ -76,19 +76,20 @@ public class AppConfig : BaseSettings
             Name = "FPS Default",
             Enabled = false,
             OllamaModel = "moondream",
-            DecisionInterval = 0.5,
-            GameContext = "This is a first-person shooter game. You control a player who can move, jump, aim, and shoot enemies. Enemies appear as characters/players on screen. Move towards objectives, avoid obstacles, and eliminate enemies.",
+            DecisionInterval = 0.3,
+            GameContext = "First-person shooter game. Control a player: move, jump, sprint, aim, shoot enemies. Enemies are other players/characters. Move towards objectives, engage enemies when visible, take cover when needed. Be aggressive - keep moving and shooting.",
             Actions = new ObservableCollection<AutoPlayAction>
             {
-                new AutoPlayAction { Name = "move_forward", Description = "Move forward towards enemies or objectives", Keys = [Keys.W, GamepadButton.Up] },
-                new AutoPlayAction { Name = "move_backward", Description = "Move backward to retreat or dodge", Keys = [Keys.S, GamepadButton.Down] },
-                new AutoPlayAction { Name = "move_left", Description = "Strafe left to dodge or reposition", Keys = [Keys.A, GamepadButton.Left] },
-                new AutoPlayAction { Name = "move_right", Description = "Strafe right to dodge or reposition", Keys = [Keys.D, GamepadButton.Right] },
-                new AutoPlayAction { Name = "jump", Description = "Jump over obstacles or to reach higher ground", Keys = [Keys.Space, GamepadButton.A] },
-                new AutoPlayAction { Name = "shoot", Description = "Fire weapon at enemies when they are visible", Keys = [MouseButtons.Left, GamepadSlider.RightTrigger], Duration = 0.1 },
-                new AutoPlayAction { Name = "aim", Description = "Aim down sights for better accuracy when enemy is in view", Keys = [MouseButtons.Right, GamepadSlider.LeftTrigger], Duration = 0.3 },
-                new AutoPlayAction { Name = "reload", Description = "Reload weapon when low on ammo or between fights", Keys = [Keys.R, GamepadButton.X] },
-                new AutoPlayAction { Name = "crouch", Description = "Crouch to take cover or reduce visibility", Keys = [Keys.ControlKey, GamepadButton.B] },
+                new AutoPlayAction { Name = "move_forward", Description = "Move forward - use when path is clear or approaching enemies/objectives", Keys = [Keys.W, GamepadButton.Up], ActionType = AutoPlayActionType.Continuous },
+                new AutoPlayAction { Name = "move_backward", Description = "Move backward - use to retreat from danger or reposition", Keys = [Keys.S, GamepadButton.Down], ActionType = AutoPlayActionType.Continuous },
+                new AutoPlayAction { Name = "move_left", Description = "Strafe left - use to dodge or circle enemies", Keys = [Keys.A, GamepadButton.Left], ActionType = AutoPlayActionType.Continuous },
+                new AutoPlayAction { Name = "move_right", Description = "Strafe right - use to dodge or circle enemies", Keys = [Keys.D, GamepadButton.Right], ActionType = AutoPlayActionType.Continuous },
+                new AutoPlayAction { Name = "sprint", Description = "Sprint faster - combine with movement when covering distance", Keys = [Keys.ShiftKey, GamepadButton.LeftThumb], ActionType = AutoPlayActionType.Modifier },
+                new AutoPlayAction { Name = "jump", Description = "Jump - use to clear obstacles or gain height advantage", Keys = [Keys.Space, GamepadButton.A], ActionType = AutoPlayActionType.Instant },
+                new AutoPlayAction { Name = "shoot", Description = "Fire weapon - use when enemy is visible on screen", Keys = [MouseButtons.Left, GamepadSlider.RightTrigger], ActionType = AutoPlayActionType.Continuous },
+                new AutoPlayAction { Name = "aim", Description = "Aim down sights - use for precision when enemy is at medium/long range", Keys = [MouseButtons.Right, GamepadSlider.LeftTrigger], ActionType = AutoPlayActionType.Modifier },
+                new AutoPlayAction { Name = "reload", Description = "Reload weapon - use when safe and ammo might be low", Keys = [Keys.R, GamepadButton.X], ActionType = AutoPlayActionType.Instant },
+                new AutoPlayAction { Name = "crouch", Description = "Crouch - use for cover or stealth", Keys = [Keys.ControlKey, GamepadButton.B], ActionType = AutoPlayActionType.Toggle },
             }
         }
     };

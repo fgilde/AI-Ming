@@ -7,6 +7,32 @@ using Nextended.Core.Extensions;
 namespace Aimmy2.Config;
 
 /// <summary>
+/// Defines how an action should be executed
+/// </summary>
+public enum AutoPlayActionType
+{
+    /// <summary>
+    /// Action is held continuously until a different action is chosen
+    /// </summary>
+    Continuous,
+
+    /// <summary>
+    /// Action is executed once (tap) - like jump or reload
+    /// </summary>
+    Instant,
+
+    /// <summary>
+    /// Action can be combined with other actions (like sprint with movement)
+    /// </summary>
+    Modifier,
+
+    /// <summary>
+    /// Action toggles on/off - like crouch
+    /// </summary>
+    Toggle
+}
+
+/// <summary>
 /// Represents a single action that can be executed during AutoPlay.
 /// For example: "move_left", "jump", "attack"
 /// </summary>
@@ -16,6 +42,7 @@ public class AutoPlayAction : EditableNotificationObject
     private string _description;
     private ObservableCollection<StoredInputBinding> _keys = new();
     private double _duration = 0.1;
+    private AutoPlayActionType _actionType = AutoPlayActionType.Continuous;
 
     private StoredInputBinding[] _originalKeys;
 
@@ -98,12 +125,21 @@ public class AutoPlayAction : EditableNotificationObject
     }
 
     /// <summary>
-    /// How long to hold the key(s) in seconds
+    /// How long to hold the key(s) in seconds (for Instant actions)
     /// </summary>
     public double Duration
     {
         get => _duration;
         set => SetProperty(ref _duration, value);
+    }
+
+    /// <summary>
+    /// Type of action - determines how it's executed
+    /// </summary>
+    public AutoPlayActionType ActionType
+    {
+        get => _actionType;
+        set => SetProperty(ref _actionType, value);
     }
 
     /// <summary>

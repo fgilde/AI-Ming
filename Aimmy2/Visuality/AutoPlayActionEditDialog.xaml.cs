@@ -35,10 +35,26 @@ namespace Visuality
             if (Action == null) return;
 
             DurationPanel.RemoveAll();
-            DurationPanel.AddSlider("Key Hold Duration", "seconds", 0.01, 0.05, 0.01, 2).InitWith(slider =>
+
+            // Action Type dropdown
+            DurationPanel.AddDropdown("Action Type", Action.ActionType, type =>
+            {
+                Action.ActionType = type;
+            }, dropdown =>
+            {
+                dropdown.BorderBrush = dropdown.Background = Brushes.Transparent;
+                dropdown.ToolTip = "How this action behaves:\n" +
+                    "• Continuous: Held until another action is chosen\n" +
+                    "• Instant: Quick tap (jump, reload)\n" +
+                    "• Modifier: Can combine with other actions (sprint, aim)\n" +
+                    "• Toggle: Press once to toggle on/off (crouch)";
+            });
+
+            // Duration slider (mainly for Instant actions)
+            DurationPanel.AddSlider("Tap Duration", "seconds", 0.01, 0.05, 0.01, 1).InitWith(slider =>
             {
                 slider.BorderBrush = slider.Background = Brushes.Transparent;
-                slider.ToolTip = "How long to hold the key(s) down.";
+                slider.ToolTip = "How long to hold the key for instant/toggle actions.";
             }).BindTo(() => Action.Duration);
         }
 

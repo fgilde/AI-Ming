@@ -1,28 +1,47 @@
 using System.ComponentModel;
 using System.Drawing;
-using System.Text;
 using Aimmy2.AILogic.Contracts;
 using Aimmy2.Config;
 using Aimmy2.InputLogic;
+using InputLogic;
+using System.Windows.Forms;
 
 namespace Aimmy2.AILogic.Actions;
 
 /// <summary>
-/// Action that uses Ollama vision models to automatically play games.
-/// Analyzes screen captures and decides which action to execute.
+/// AutoPlay action that automatically plays FPS games.
+/// - Uses the existing AimAssist (AimingAction) for aiming at enemies
+/// - Handles movement, shooting, and camera control
+/// - Ollama is optional for smarter decisions
 /// </summary>
 public class AutoPlayGameAction : BaseAction
 {
-    private readonly IOllamaClient _ollamaClient;
-    private DateTime _lastDecisionTime = DateTime.MinValue;
-    private CancellationTokenSource? _cts;
-    private bool _isProcessing;
-    private string? _lastActionName;
+    // Keys being held
+    private readonly HashSet<StoredInputBinding> _heldKeys = new();
+    private readonly HashSet<string> _activeActionNames = new();
+
+    // Mouse state
+    private bool _isAiming = false;      // Right mouse (triggers AimAssist)
+    private bool _isShooting = false;    // Left mouse
+
+    // Exploration state
+    private DateTime _lastDirectionChange = DateTime.MinValue;
+    private DateTime _lastLookChange = DateTime.MinValue;
+    private string _exploreDirection = "forward";
+    private int _lookDirection = 0;
+    private int _ticksWithoutEnemy = 0;
+    private Random _random = new();
+
+    private static void Log(string message)
+    {
+        var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
+        System.Diagnostics.Debug.WriteLine($"[AutoPlay {timestamp}] {message}");
+    }
 
     public AutoPlayGameAction()
     {
-        _ollamaClient = new OllamaClient();
         AppConfig.Current.ToggleState.PropertyChanged += OnToggleStateChanged;
+        Log("AutoPlayGameAction initialized - using AimAssist for aiming");
     }
 
     private void OnToggleStateChanged(object? sender, PropertyChangedEventArgs e)
@@ -31,7 +50,12 @@ public class AutoPlayGameAction : BaseAction
         {
             if (!AppConfig.Current.ToggleState.AutoPlay)
             {
-                CancelCurrentOperation();
+                Log("AutoPlay disabled");
+                ReleaseEverything();
+            }
+            else
+            {
+                Log("AutoPlay enabled - LET'S PLAY!");
             }
         }
     }
@@ -40,71 +64,254 @@ public class AutoPlayGameAction : BaseAction
 
     public override async Task ExecuteAsync(Prediction[] predictions)
     {
-        if (!Active || _isProcessing)
-            return;
-
-        var activeProfile = GetActiveProfile();
-        if (activeProfile == null)
-            return;
-
-        // Rate limiting based on DecisionInterval
-        var timeSinceLastDecision = (DateTime.Now - _lastDecisionTime).TotalSeconds;
-        if (timeSinceLastDecision < activeProfile.DecisionInterval)
-            return;
-
-        // Check if Ollama is available
-        if (!_ollamaClient.IsAvailable)
+        if (!Active)
         {
-            var available = await _ollamaClient.IsAvailableAsync();
-            if (!available)
-                return;
+            ReleaseEverything();
+            return;
         }
 
-        _isProcessing = true;
-        _lastDecisionTime = DateTime.Now;
+        var profile = GetActiveProfile();
+        if (profile == null)
+            return;
 
-        try
+        var screen = Screen.PrimaryScreen;
+        if (screen == null) return;
+
+        var centerX = screen.Bounds.Width / 2f;
+        var centerY = screen.Bounds.Height / 2f;
+
+        var actions = new List<string>();
+
+        if (predictions.Length > 0)
         {
-            _cts = new CancellationTokenSource();
+            // ====== ENEMY DETECTED! ======
+            _ticksWithoutEnemy = 0;
 
-            // Get current screen capture
-            var capture = ImageCapture?.LastCapture;
-            if (capture == null)
-                return;
+            // Find closest enemy to crosshair
+            var closest = predictions
+                .OrderBy(p => GetDistanceToCenter(p, centerX, centerY))
+                .First();
 
-            // Build prompt
-            var prompt = BuildPrompt(activeProfile, predictions);
+            var distance = GetDistanceToCenter(closest, centerX, centerY);
 
-            // Get decision from Ollama
-            var response = await _ollamaClient.AnalyzeImageAsync(
-                capture,
-                prompt,
-                activeProfile.OllamaModel);
-
-            if (_cts.IsCancellationRequested)
-                return;
-
-            // Parse and execute action
-            var actionToExecute = ParseActionFromResponse(response, activeProfile);
-            if (actionToExecute != null)
+            // HOLD RIGHT MOUSE - This triggers AimAssist to aim at the enemy!
+            if (!_isAiming)
             {
-                _lastActionName = actionToExecute.Name;
-                await ExecuteAutoPlayActionAsync(actionToExecute);
+                StartAiming();
+                Log(">>> AIM - Enemy detected, AimAssist will track");
+            }
+
+            // If enemy is close to crosshair - SHOOT!
+            if (distance < 180)
+            {
+                if (!_isShooting)
+                {
+                    StartShooting();
+                    Log(">>> FIRE! Enemy in crosshair");
+                }
+            }
+            else
+            {
+                // Enemy visible but not quite in crosshair yet
+                // AimAssist is moving the crosshair, just wait or strafe
+                if (_isShooting && distance > 250)
+                {
+                    StopShooting();
+                }
+
+                // Strafe towards enemy if needed
+                var distX = closest.CenterXTranslated - centerX;
+                if (Math.Abs(distX) > 200)
+                {
+                    actions.Add(distX < 0 ? "move_left" : "move_right");
+                }
+
+                // Move closer if enemy is far
+                if (distance > 500)
+                {
+                    actions.Add("move_forward");
+                    actions.Add("sprint");
+                }
             }
         }
-        catch (OperationCanceledException)
+        else
         {
-            // Cancelled, ignore
+            // ====== NO ENEMIES - EXPLORE! ======
+            _ticksWithoutEnemy++;
+
+            // Stop combat actions
+            if (_isAiming)
+            {
+                StopAiming();
+            }
+            if (_isShooting)
+            {
+                StopShooting();
+            }
+
+            // Change direction every few seconds
+            if ((DateTime.Now - _lastDirectionChange).TotalSeconds > 2.0 || _ticksWithoutEnemy > 40)
+            {
+                _lastDirectionChange = DateTime.Now;
+                _ticksWithoutEnemy = 0;
+
+                var patterns = new[] { "forward", "forward", "forward", "forward_left", "forward_right", "left", "right" };
+                _exploreDirection = patterns[_random.Next(patterns.Length)];
+                Log($">>> Exploring: {_exploreDirection}");
+            }
+
+            // Look around to find enemies (move camera)
+            if ((DateTime.Now - _lastLookChange).TotalSeconds > 0.8)
+            {
+                _lastLookChange = DateTime.Now;
+
+                // Random look direction with bias forward
+                var lookOptions = new[] { -1, -1, 0, 0, 0, 1, 1 };
+                _lookDirection = lookOptions[_random.Next(lookOptions.Length)];
+
+                if (_lookDirection != 0)
+                {
+                    int moveX = _lookDirection * _random.Next(40, 100);
+                    int moveY = _random.Next(-20, 20);
+                    MouseManager.Move(moveX, moveY);
+                }
+            }
+
+            // Movement
+            actions.Add("move_forward");
+            actions.Add("sprint");
+
+            if (_exploreDirection.Contains("left"))
+                actions.Add("move_left");
+            else if (_exploreDirection.Contains("right"))
+                actions.Add("move_right");
+            else if (_exploreDirection == "left")
+            {
+                actions.Remove("move_forward");
+                actions.Add("move_left");
+            }
+            else if (_exploreDirection == "right")
+            {
+                actions.Remove("move_forward");
+                actions.Add("move_right");
+            }
+
+            // Occasional jump
+            if (_random.Next(100) < 2)
+            {
+                actions.Add("jump");
+            }
         }
-        catch (Exception ex)
+
+        // Apply movement actions (keyboard only, mouse handled separately)
+        await ApplyMovementActions(actions, profile);
+    }
+
+    private double GetDistanceToCenter(Prediction p, float centerX, float centerY)
+    {
+        var dx = p.CenterXTranslated - centerX;
+        var dy = p.CenterYTranslated - centerY;
+        return Math.Sqrt(dx * dx + dy * dy);
+    }
+
+    private void StartAiming()
+    {
+        if (!_isAiming)
         {
-            System.Diagnostics.Debug.WriteLine($"AutoPlay error: {ex.Message}");
+            _isAiming = true;
+            // Hold right mouse button - AimAssist checks this!
+            MouseManager.SendMouseEvent(MouseButtons.Right, 0, 0, 0, KeyPressState.Down);
         }
-        finally
+    }
+
+    private void StopAiming()
+    {
+        if (_isAiming)
         {
-            _isProcessing = false;
-            _cts?.Dispose();
-            _cts = null;
+            _isAiming = false;
+            MouseManager.SendMouseEvent(MouseButtons.Right, 0, 0, 0, KeyPressState.Up);
+        }
+    }
+
+    private void StartShooting()
+    {
+        if (!_isShooting)
+        {
+            _isShooting = true;
+            MouseManager.LeftDown();
+        }
+    }
+
+    private void StopShooting()
+    {
+        if (_isShooting)
+        {
+            _isShooting = false;
+            MouseManager.LeftUp();
+        }
+    }
+
+    private async Task ApplyMovementActions(List<string> actionNames, AutoPlayProfile profile)
+    {
+        var newActionSet = new HashSet<string>(actionNames);
+
+        // Find actions to stop
+        var toStop = _activeActionNames.Where(a => !newActionSet.Contains(a)).ToList();
+
+        // Find actions to start
+        var toStart = actionNames.Where(a => !_activeActionNames.Contains(a)).ToList();
+
+        // Release stopped actions
+        foreach (var actionName in toStop)
+        {
+            var action = profile.Actions.FirstOrDefault(a => a.Name == actionName);
+            if (action != null)
+            {
+                foreach (var key in action.Keys.Where(k => k.IsValid && k.MouseEventArgs == null))
+                {
+                    if (_heldKeys.Remove(key))
+                    {
+                        await InputSender.SendKeyAsync(key, KeyPressState.Up);
+                    }
+                }
+            }
+            _activeActionNames.Remove(actionName);
+        }
+
+        // Press new actions
+        foreach (var actionName in toStart)
+        {
+            var action = profile.Actions.FirstOrDefault(a => a.Name == actionName);
+            if (action == null) continue;
+
+            _activeActionNames.Add(actionName);
+
+            // Handle based on action type
+            if (action.ActionType == AutoPlayActionType.Instant || action.ActionType == AutoPlayActionType.Toggle)
+            {
+                // Quick tap
+                foreach (var key in action.Keys.Where(k => k.IsValid && k.MouseEventArgs == null))
+                {
+                    await InputSender.SendKeyAsync(key, KeyPressState.Down);
+                }
+                await Task.Delay(TimeSpan.FromSeconds(Math.Max(action.Duration, 0.05)));
+                foreach (var key in action.Keys.Where(k => k.IsValid && k.MouseEventArgs == null))
+                {
+                    await InputSender.SendKeyAsync(key, KeyPressState.Up);
+                }
+                _activeActionNames.Remove(actionName);
+            }
+            else
+            {
+                // Hold down
+                foreach (var key in action.Keys.Where(k => k.IsValid && k.MouseEventArgs == null))
+                {
+                    if (_heldKeys.Add(key))
+                    {
+                        await InputSender.SendKeyAsync(key, KeyPressState.Down);
+                    }
+                }
+            }
         }
     }
 
@@ -113,120 +320,32 @@ public class AutoPlayGameAction : BaseAction
         return AppConfig.Current.AutoPlayProfiles.FirstOrDefault(p => p.IsActive);
     }
 
-    private string BuildPrompt(AutoPlayProfile profile, Prediction[] predictions)
+    private void ReleaseEverything()
     {
-        var sb = new StringBuilder();
-
-        sb.AppendLine("You are an AI game assistant controlling a game character.");
-        sb.AppendLine();
-
-        if (!string.IsNullOrWhiteSpace(profile.GameContext))
+        // Release all keyboard keys
+        foreach (var key in _heldKeys.ToList())
         {
-            sb.AppendLine("Game context:");
-            sb.AppendLine(profile.GameContext);
-            sb.AppendLine();
+            _ = InputSender.SendKeyAsync(key, KeyPressState.Up);
         }
+        _heldKeys.Clear();
+        _activeActionNames.Clear();
 
-        sb.AppendLine("Available actions:");
-        foreach (var action in profile.Actions.Where(a => a.IsValid))
-        {
-            var description = string.IsNullOrWhiteSpace(action.Description)
-                ? $"Execute {action.Name}"
-                : action.Description;
-            sb.AppendLine($"- {action.Name}: {description}");
-        }
-        sb.AppendLine("- idle: Do nothing");
-        sb.AppendLine();
+        // Release mouse buttons
+        StopAiming();
+        StopShooting();
 
-        // Include detection info if available
-        if (predictions.Length > 0)
-        {
-            sb.AppendLine($"Detected {predictions.Length} object(s) in the scene.");
-        }
-
-        sb.AppendLine();
-        sb.AppendLine("Look at the screenshot and decide what action to take.");
-        sb.AppendLine("IMPORTANT: Respond with ONLY the action name, nothing else.");
-        sb.AppendLine("Example response: move_left");
-
-        return sb.ToString();
-    }
-
-    private AutoPlayAction? ParseActionFromResponse(string response, AutoPlayProfile profile)
-    {
-        if (string.IsNullOrWhiteSpace(response))
-            return null;
-
-        var cleanResponse = response.Trim().ToLowerInvariant();
-
-        // Remove common prefixes that models might add
-        cleanResponse = cleanResponse
-            .Replace("action:", "")
-            .Replace("answer:", "")
-            .Replace("response:", "")
-            .Trim();
-
-        // Check for "idle" first
-        if (cleanResponse == "idle" || cleanResponse.Contains("do nothing") || cleanResponse.Contains("wait"))
-            return null;
-
-        // Try exact match first
-        var exactMatch = profile.Actions.FirstOrDefault(a =>
-            a.IsValid && a.Name.Equals(cleanResponse, StringComparison.OrdinalIgnoreCase));
-        if (exactMatch != null)
-            return exactMatch;
-
-        // Try contains match
-        var containsMatch = profile.Actions.FirstOrDefault(a =>
-            a.IsValid && (cleanResponse.Contains(a.Name.ToLowerInvariant()) ||
-                         a.Name.ToLowerInvariant().Contains(cleanResponse)));
-        if (containsMatch != null)
-            return containsMatch;
-
-        // Try word match (response contains action name as a word)
-        var words = cleanResponse.Split([' ', ',', '.', '\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
-        var wordMatch = profile.Actions.FirstOrDefault(a =>
-            a.IsValid && words.Any(w => w.Equals(a.Name.ToLowerInvariant(), StringComparison.OrdinalIgnoreCase)));
-
-        return wordMatch;
-    }
-
-    private async Task ExecuteAutoPlayActionAsync(AutoPlayAction action)
-    {
-        var duration = TimeSpan.FromSeconds(Math.Max(action.Duration, 0.05));
-
-        foreach (var key in action.Keys.Where(k => k.IsValid))
-        {
-            // Press down
-            await InputSender.SendKeyAsync(key, KeyPressState.Down);
-        }
-
-        // Hold for duration
-        await Task.Delay(duration);
-
-        foreach (var key in action.Keys.Where(k => k.IsValid))
-        {
-            // Release
-            await InputSender.SendKeyAsync(key, KeyPressState.Up);
-        }
-    }
-
-    private void CancelCurrentOperation()
-    {
-        _cts?.Cancel();
-        _isProcessing = false;
+        Log("Released everything");
     }
 
     public override Task OnPause()
     {
-        CancelCurrentOperation();
+        ReleaseEverything();
         return base.OnPause();
     }
 
     public override void Dispose()
     {
-        CancelCurrentOperation();
-        _ollamaClient.Dispose();
+        ReleaseEverything();
         AppConfig.Current.ToggleState.PropertyChanged -= OnToggleStateChanged;
         base.Dispose();
     }
