@@ -597,6 +597,50 @@ public partial class MainWindow
     private void TriggerEditCancel_Click(object sender, RoutedEventArgs e) => CloseTriggerEditor(false);
     private void TriggerEditSave_Click(object sender, RoutedEventArgs e) => CloseTriggerEditor(true);
 
+    private async Task RunBenchmarkClick()
+    {
+        var modelFile = AppConfig.Current?.LastLoadedModel;
+        if (string.IsNullOrWhiteSpace(modelFile) || modelFile == "N/A")
+        {
+            Aimmy2.Visuality.MessageDialog.Warn(Locale.BenchmarkNoModel, Locale.RunBenchmark, owner: this);
+            return;
+        }
+        var modelPath = Path.Combine("bin/models", modelFile);
+        if (!File.Exists(modelPath))
+        {
+            Aimmy2.Visuality.MessageDialog.Warn(Locale.BenchmarkNoModel, Locale.RunBenchmark, owner: this);
+            return;
+        }
+
+        var notice = new NoticeBar(Locale.BenchmarkRunning, 60000);
+        notice.Show();
+        try
+        {
+            var result = await Aimmy2.AILogic.PerformanceBenchmark.RunAsync(modelPath);
+            notice.Close();
+
+            var msg = Locale.BenchmarkRecommendedSize.FormatWith(result.RecommendedImageSize) + "\n\n";
+            foreach (var s in result.Samples)
+            {
+                msg += $"• {s.ImageSize}px → {s.AvgFps:F1} fps ({s.AvgInferenceMs:F1} ms";
+                if (s.GpuUtilizationPct > 0) msg += $", GPU {s.GpuUtilizationPct:F0}%";
+                msg += ")\n";
+            }
+            if (!string.IsNullOrWhiteSpace(result.Notes)) msg += "\n" + result.Notes;
+
+            Aimmy2.Visuality.MessageDialog.Show(
+                msg, Locale.BenchmarkResult,
+                Aimmy2.Visuality.MessageDialog.DialogButtons.OK,
+                Aimmy2.Visuality.MessageDialog.DialogIcon.Info,
+                owner: this);
+        }
+        catch (Exception ex)
+        {
+            notice.Close();
+            Aimmy2.Visuality.MessageDialog.Error(ex.Message, Locale.RunBenchmark, owner: this);
+        }
+    }
+
 
     private void BindingOnKeyReleased(string bindingId)
     {
@@ -728,6 +772,15 @@ public partial class MainWindow
         ModelSettings.AddTitle(Locale.ModelSettings);
         ModelSettings.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.ModelSwitchKeybind), () => keybind.ModelSwitchKeybind, BindingManager);
         ModelSettings.AddCredit("", Locale.ModelKeyBindHelp);
+
+        // Image-size override (only used for dynamic-shape models)
+        ModelSettings.AddSlider(Locale.ImageSizeOverride, Locale.Pixels, 32, 32, 192, 1280)
+            .InitWith(s => s.ToolTip = Locale.ImageSizeOverrideHelp)
+            .BindTo(() => AppConfig.Current.SliderSettings.ImageSize);
+
+        // Run Performance Benchmark
+        ModelSettings.AddButton(Locale.RunBenchmark).Reader.Click += async (_, _) => await RunBenchmarkClick();
+
         ModelSettings.AddSeparator();
 
         #endregion
@@ -746,6 +799,15 @@ public partial class MainWindow
         PredictionConfig.AddTitle(Locale.PredictionConfig, true);
         PredictionConfig.AddDropdown(Locale.PredictionMethod, AppConfig.Current.DropdownState.PredictionMethod, v => AppConfig.Current.DropdownState.PredictionMethod = v);
         PredictionConfig.AddDropdown(Locale.DetectionAreaType, AppConfig.Current.DropdownState.DetectionAreaType, v => AppConfig.Current.DropdownState.DetectionAreaType = v);
+        PredictionConfig.AddSlider(Locale.MaxInferenceFPS, Locale.FPS, 1, 5, 0, 240)
+            .InitWith(s => s.ToolTip = Locale.MaxInferenceFPSHelp)
+            .BindTo(() => AppConfig.Current.SliderSettings.MaxInferenceFPS);
+        PredictionConfig.AddButton(Locale.TargetClassesButton).Reader.Click += (_, _) =>
+        {
+            var classes = FileManager.AIManager?.PredictionLogic?.ModelClasses
+                          ?? new Dictionary<int, string>();
+            new Aimmy2.Visuality.TargetClassDialog(classes) { Owner = this }.ShowDialog();
+        };
         PredictionConfig.AddSeparator();
         PredictionConfig.Visibility = GetVisibilityFor(nameof(AimConfig));
 
@@ -754,6 +816,7 @@ public partial class MainWindow
 
 
         AimConfig.AddDropdown(Locale.AimingBoundariesAlignment, AppConfig.Current.DropdownState.AimingBoundariesAlignment, v => AppConfig.Current.DropdownState.AimingBoundariesAlignment = v);
+        AimConfig.AddDropdown(Locale.MovementPath, AppConfig.Current.DropdownState.MovementPathType, v => AppConfig.Current.DropdownState.MovementPathType = v);
         AimConfig.AddSlider(Locale.MouseSensitivity, Locale.Sensitivity, 0.01, 0.01, 0.01, 1).BindTo(() => AppConfig.Current.SliderSettings.MouseSensitivity);
 
         AimConfig.AddSlider(Locale.MouseJitter, Locale.Jitter, 1, 1, 0, 15).BindTo(() => AppConfig.Current.SliderSettings.MouseJitter);
@@ -765,6 +828,13 @@ public partial class MainWindow
         AimConfig.AddSlider(Locale.XOffsetPercentage, Locale.Percent, 1, 1, 0, 100).BindTo(() => AppConfig.Current.SliderSettings.XOffsetPercentage);
 
         AimConfig.AddSlider(Locale.EMASmoothening, Locale.Amount, 0.01, 0.01, 0.01, 1).BindTo(() => AppConfig.Current.SliderSettings.EMASmoothening);
+
+        // ----- Sticky Aim -----
+        AimConfig.AddToggle(Locale.StickyAimEnabled).BindTo(() => AppConfig.Current.AISettings.StickyAimEnabled);
+        AimConfig.AddSlider(Locale.StickyAimThreshold, Locale.Pixels, 1, 5, 10, 300)
+            .BindTo(() => AppConfig.Current.AISettings.StickyAimThreshold);
+        AimConfig.AddSlider(Locale.StickyAimMaxLockScore, Locale.Amount, 1, 5, 10, 300)
+            .BindTo(() => AppConfig.Current.AISettings.StickyAimMaxLockScore);
 
         AimConfig.AddSeparator();
         AimConfig.Visibility = GetVisibilityFor(nameof(AimConfig));

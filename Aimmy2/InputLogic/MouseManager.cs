@@ -316,9 +316,29 @@ namespace InputLogic
 
             Point start = new(0, 0);
             Point end = new(targetX, targetY);
-            Point control1 = new(start.X + (end.X - start.X) / 3, start.Y + (end.Y - start.Y) / 3);
-            Point control2 = new(start.X + 2 * (end.X - start.X) / 3, start.Y + 2 * (end.Y - start.Y) / 3);
-            Point newPosition = CubicBezier(start, end, control1, control2, 1 - AppConfig.Current.SliderSettings.MouseSensitivity);
+            double t = 1 - AppConfig.Current.SliderSettings.MouseSensitivity;
+            Point newPosition;
+            switch (AppConfig.Current.DropdownState.MovementPathType)
+            {
+                case MovementPathType.Lerp:
+                    newPosition = Aimmy2.InputLogic.MovementPaths.Lerp(start, end, t);
+                    break;
+                case MovementPathType.Exponential:
+                    newPosition = Aimmy2.InputLogic.MovementPaths.Exponential(start, end, t);
+                    break;
+                case MovementPathType.Adaptive:
+                    newPosition = Aimmy2.InputLogic.MovementPaths.Adaptive(start, end, t);
+                    break;
+                case MovementPathType.PerlinNoise:
+                    newPosition = Aimmy2.InputLogic.MovementPaths.PerlinNoise(start, end, t);
+                    break;
+                case MovementPathType.Bezier:
+                default:
+                    Point control1 = new(start.X + (end.X - start.X) / 3, start.Y + (end.Y - start.Y) / 3);
+                    Point control2 = new(start.X + 2 * (end.X - start.X) / 3, start.Y + 2 * (end.Y - start.Y) / 3);
+                    newPosition = CubicBezier(start, end, control1, control2, t);
+                    break;
+            }
 
             targetX = Math.Clamp(targetX, -150, 150);
             targetY = Math.Clamp(targetY, -150, 150);

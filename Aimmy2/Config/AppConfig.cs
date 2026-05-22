@@ -63,6 +63,7 @@ public class AppConfig : BaseSettings
     public AntiRecoilSettings AntiRecoilSettings { get; set; } = new AntiRecoilSettings();
     public FileLocationState FileLocationState { get; set; } = new FileLocationState();
     public OllamaSettings OllamaSettings { get; set; } = new OllamaSettings();
+    public AISettings AISettings { get; set; } = new AISettings();
 
     public ObservableCollection<ActionTrigger> Triggers
     {

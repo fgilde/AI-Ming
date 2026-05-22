@@ -9,6 +9,13 @@ public class DropdownState: BaseSettings
     private MouseMovementMethod _mouseMovementMethod = MouseMovementMethod.MouseEvent;
     private OverlayDrawingMethod _overlayDrawingMethod = OverlayDrawingMethod.WpfWindowCanvas;
     private GamepadSendMode _gamepadSendMode = GamepadSendMode.ViGEm;
+    private MovementPathType _movementPathType = MovementPathType.Bezier;
+
+    public MovementPathType MovementPathType
+    {
+        get => _movementPathType;
+        set => SetField(ref _movementPathType, value);
+    }
     
     public GamepadSendMode GamepadSendMode
     {

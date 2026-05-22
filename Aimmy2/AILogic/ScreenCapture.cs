@@ -1,66 +1,83 @@
-﻿using System.ComponentModel;
-using Aimmy2.AILogic.Contracts;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
+using Aimmy2.AILogic.Contracts;
 
 namespace Aimmy2.AILogic;
 
+/// <summary>
+/// Public screen-capture entry point. Internally delegates to either the DXGI Desktop
+/// Duplication backend (<see cref="DxgiScreenCapture"/>) when supported by the running
+/// hardware, or falls back to the original GDI implementation (<see cref="GdiScreenCapture"/>).
+/// <para>
+/// Existing call-sites (<c>new ScreenCapture()</c>, <c>new ScreenCapture(screen)</c>,
+/// <c>new ScreenCapture(index)</c>) keep working unchanged — the <see cref="ICapture"/>
+/// contract is preserved verbatim.
+/// </para>
+/// </summary>
 public class ScreenCapture : ICapture
 {
-    private Graphics? _graphics;
-    public Screen Screen { get; }
-    public Bitmap LastCapture { get; private set; }
+    /// <summary>
+    /// One-shot result of probing DXGI on this machine. We avoid probing per instance because
+    /// instantiating a DXGI device is expensive.
+    /// </summary>
+    private static readonly Lazy<bool> _dxgiSupported = new(DxgiScreenCapture.IsSupported);
 
-    public ScreenCapture(): this(Screen.PrimaryScreen!)
-    {}
+    private readonly ICapture _inner;
+
+    public Screen Screen => _inner.Screen;
+
+    public Rectangle CaptureArea => _inner.CaptureArea;
+
+    public Bitmap LastCapture => _inner.LastCapture;
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    public ScreenCapture() : this(Screen.PrimaryScreen!) { }
+
+    public ScreenCapture(int screenIndex) : this(Screen.AllScreens[screenIndex]) { }
 
     public ScreenCapture(Screen screen)
     {
-        Screen = screen;
+        _inner = CreateBackend(screen);
+        _inner.PropertyChanged += (_, e) => PropertyChanged?.Invoke(this, e);
         OnPropertyChanged(nameof(Screen));
         OnPropertyChanged(nameof(CaptureArea));
     }
 
-    public ScreenCapture(int screenIndex): this(Screen.AllScreens[screenIndex])
-    {}
-
-    public Bitmap Capture(Rectangle detectionBox)
+    private static ICapture CreateBackend(Screen screen)
     {
-        if (detectionBox == Rectangle.Empty)
+        if (_dxgiSupported.Value)
         {
-            detectionBox = CaptureArea;
+            try
+            {
+                return new DxgiScreenCapture(screen);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[ScreenCapture] DXGI backend creation failed, falling back to GDI: {ex.Message}");
+            }
         }
-        if (_graphics == null || LastCapture == null || LastCapture.Width != detectionBox.Width || LastCapture.Height != detectionBox.Height)
+        else
         {
-            LastCapture?.Dispose();
-            LastCapture = new Bitmap(detectionBox.Width, detectionBox.Height);
-
-            _graphics?.Dispose();
-            _graphics = Graphics.FromImage(LastCapture);
+            Debug.WriteLine("[ScreenCapture] DXGI not supported on this machine — using GDI capture.");
         }
 
-        _graphics.CopyFromScreen(Screen.Bounds.Left + detectionBox.Left, Screen.Bounds.Top + detectionBox.Top, 0, 0, detectionBox.Size);
-        //LastCapture = new Bitmap(_screenCaptureBitmap);
-        return LastCapture;
+        return new GdiScreenCapture(screen);
     }
 
-    public Task OnPause() => Task.CompletedTask;
+    public Bitmap Capture(Rectangle detectionBox) => _inner.Capture(detectionBox);
 
-    public Task OnResume() => Task.CompletedTask;
+    public Task OnPause() => _inner.OnPause();
 
-    public Rectangle CaptureArea => Screen.Bounds;
-
-    public event PropertyChangedEventHandler? PropertyChanged;
+    public Task OnResume() => _inner.OnResume();
 
     protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
-    public void Dispose()
-    {
-        LastCapture?.Dispose();
-        _graphics?.Dispose();
-    }
+    public void Dispose() => _inner.Dispose();
 }

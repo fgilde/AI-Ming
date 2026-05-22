@@ -1,5 +1,4 @@
 ﻿using System.Drawing;
-using AILogic;
 using Aimmy2.AILogic.Contracts;
 using Aimmy2.Config;
 using Class;
@@ -17,14 +16,38 @@ public class AimingAction : BaseAction
     private KalmanPrediction kalmanPrediction = new();
     private WiseTheFoxPrediction wtfpredictionManager = new();
 
+    // Sticky-aim state. Lives on the action instance (i.e. across frames) so the selector can
+    // accumulate lock-score and velocity. The trigger / overlay actions intentionally do not share
+    // this — they consume the unfiltered prediction set so the user still sees every detection.
+    private readonly StickyAimSelector _stickyAim = new();
+
     public override Task ExecuteAsync(Prediction[] predictions)
     {
-        var closestPrediction = predictions.MinBy(p => p.Confidence);
-        if (closestPrediction != null)
+        // Existing behaviour: pick the entry returned by MinBy(Confidence) (preserved for the
+        // sticky-disabled fallback so we don't silently change targeting semantics).
+        var fallback = predictions.MinBy(p => p.Confidence);
+
+        var ai = AppConfig.Current.AISettings;
+        var selected = _stickyAim.SelectTarget(
+            predictions,
+            fallback,
+            ai.StickyAimEnabled,
+            ai.StickyAimThreshold,
+            ai.StickyAimMaxLockScore);
+
+        if (selected != null)
         {
-            HandleAim(closestPrediction);
+            HandleAim(selected);
         }
         return Task.CompletedTask;
+    }
+
+    public override Task OnPause()
+    {
+        // Don't carry a stale lock across pause/resume — the player might re-aim somewhere else
+        // before turning the assist back on.
+        _stickyAim.Reset();
+        return base.OnPause();
     }
 
     private void CalculateCoordinates(Prediction closestPrediction, float scaleX, float scaleY)
@@ -121,13 +144,8 @@ public class AimingAction : BaseAction
                 break;
 
             case PredictionMethod.Shall0:
-                ShalloePredictionV2.xValues.Add(detectedX - PrevX);
-                ShalloePredictionV2.yValues.Add(detectedY - PrevY);
-
-                ShalloePredictionV2.xValues = ShalloePredictionV2.xValues.TakeLast(5).ToList();
-                ShalloePredictionV2.yValues = ShalloePredictionV2.yValues.TakeLast(5).ToList();
-
-                MouseManager.MoveCrosshair(ShalloePredictionV2.GetSPX(), detectedY, area);
+                ShalloePredictionV2.UpdatePosition(detectedX, detectedY);
+                MouseManager.MoveCrosshair(ShalloePredictionV2.GetSPX(), ShalloePredictionV2.GetSPY(), area);
 
                 PrevX = detectedX;
                 PrevY = detectedY;
@@ -144,7 +162,7 @@ public class AimingAction : BaseAction
                 wtfpredictionManager.UpdateDetection(wtfdetection);
                 var wtfpredictedPosition = wtfpredictionManager.GetEstimatedPosition();
 
-                MouseManager.MoveCrosshair(wtfpredictedPosition.X, detectedY, area);
+                MouseManager.MoveCrosshair(wtfpredictedPosition.X, wtfpredictedPosition.Y, area);
                 break;
         }
     }

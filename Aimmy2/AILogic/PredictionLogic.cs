@@ -1,5 +1,6 @@
-﻿using Microsoft.ML.OnnxRuntime;
+using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
+using Newtonsoft.Json.Linq;
 using System.Drawing;
 using System.IO;
 using System.Windows;
@@ -12,63 +13,196 @@ using Supercluster.KDTree;
 
 namespace Aimmy2.AILogic;
 
-
+/// <summary>
+///     ONNX inference pipeline. Detects the model's input resolution and class count at load time,
+///     so the same code path now supports both fixed-shape YOLOv8 exports (e.g. 1×5×8400 for a
+///     single-class 640px model) and dynamic-axis exports plus multi-class models
+///     (<c>[1, 4+numClasses, numDetections]</c>).
+///     Adapted from upstream Babyhamsta/Aimmy (dynamic model size: 21d8121, 3e153bc, a87ce22,
+///     632cab6; multi-class: 113cebe, c249de6) into the fork's
+///     <see cref="IPredictionLogic"/> contract.
+/// </summary>
 public class PredictionLogic : IPredictionLogic
 {
+    /// <summary>
+    ///     Last instance's negotiated image size — mirrored as a static so legacy call sites
+    ///     (<c>AIManager.cs</c> capture box, <c>Prediction.IsIntersectingCenter</c>) can keep
+    ///     using <c>PredictionLogic.CurrentImageSize</c> without taking a hard dependency on the
+    ///     instance. Falls back to <see cref="DefaultImageSize"/> until a model is loaded.
+    /// </summary>
+    public static int CurrentImageSize { get; private set; } = DefaultImageSize;
+
+    /// <summary>Conventional YOLOv8 default before any model is loaded.</summary>
+    public const int DefaultImageSize = 640;
+
+    // Preserved for backwards compatibility with any external code still reading the old constant.
+    // Surfaces the same value as <see cref="CurrentImageSize"/>.
+    public static int IMAGE_SIZE => CurrentImageSize;
+
     private DateTime lastSavedTime = DateTime.MinValue;
-    public const int IMAGE_SIZE = 640;
-    private const int NUM_DETECTIONS = 8400; // Standard for OnnxV8 model (Shape: 1x5x8400)
-    private InferenceSession _onnxModel;
-    private List<string> _outputNames;
+    private InferenceSession? _onnxModel;
+    private List<string> _outputNames = new();
     private readonly RunOptions? _modeloptions = new();
+
+    private int _imageSize = DefaultImageSize;
+    private int _numDetections = MathUtil.CalculateNumDetections(DefaultImageSize);
+    private int _numClasses = 1;
+    private bool _isDynamicModel;
+    private readonly Dictionary<int, string> _modelClasses = new() { { 0, "Enemy" } };
 
     public OnnxExecutionProvider ExecutionProvider { get; private set; }
 
+    /// <inheritdoc />
+    public int ImageSize => _imageSize;
+
+    /// <inheritdoc />
+    public int NumClasses => _numClasses;
+
+    /// <inheritdoc />
+    public IReadOnlyDictionary<int, string> ModelClasses => _modelClasses;
+
+    /// <summary>
+    ///     Indicates that the loaded model declares symbolic input dimensions and therefore relies
+    ///     on the configured <see cref="SliderSettings.ImageSize"/> value at runtime.
+    /// </summary>
+    public bool IsDynamicModel => _isDynamicModel;
+
     public PredictionLogic(string modelPath, SessionOptions? sessionOptions = null)
     {
-        InitializeModel(sessionOptions ?? OnnxHelper.CreateDefaultSessionOptions(), modelPath);
+        InitializeModel(sessionOptions, modelPath);
     }
 
-    private void InitializeModel(SessionOptions sessionOptions, string modelPath)
+    private void InitializeModel(SessionOptions? sessionOptions, string modelPath)
     {
-        LoadModel(sessionOptions, modelPath, OnnxExecutionProvider.Cuda);
+        // Try CUDA first (preferred), then the OnnxHelper fallback chain inside the factory will
+        // walk down to DirectML / CPU. If CUDA negotiation itself throws we retry once with
+        // DirectML as the explicit preference so we don't spuriously fail on AMD machines.
+        try
+        {
+            LoadModel(sessionOptions, modelPath, OnnxExecutionProvider.Cuda);
+        }
+        catch (Exception cudaEx)
+        {
+            try
+            {
+                Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+                    new NoticeBar($"CUDA load failed ({cudaEx.Message}), retrying with DirectML.", 4000).Show()));
+                LoadModel(sessionOptions, modelPath, OnnxExecutionProvider.DirectML);
+            }
+            catch (Exception dmlEx)
+            {
+                Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+                    new NoticeBar($"Error starting the model: {dmlEx.Message}", 5000).Show()));
+                _onnxModel?.Dispose();
+                _onnxModel = null;
+            }
+        }
         FileManager.CurrentlyLoadingModel = false;
     }
 
-    private void LoadModel(SessionOptions sessionOptions, string modelPath, OnnxExecutionProvider provider)
+    private void LoadModel(SessionOptions? sessionOptions, string modelPath, OnnxExecutionProvider provider)
     {
+        // Dispose any prior session so model-switching at runtime doesn't leak ORT handles.
+        _onnxModel?.Dispose();
+        _onnxModel = null;
+
+        var loaded = OnnxModelSessionFactory.Load(modelPath, provider, sessionOptions);
+        _onnxModel = loaded.Session;
+        _outputNames = loaded.OutputNames;
+        ExecutionProvider = loaded.ExecutionProvider;
+        _isDynamicModel = loaded.IsDynamicInput;
+
+        // Determine the runtime image size: prefer model metadata for fixed models; use the
+        // configured override (SliderSettings.ImageSize) for dynamic-axis ONNX models.
+        int configuredSize = AppConfig.Current?.SliderSettings?.ImageSize ?? DefaultImageSize;
+        int detected = loaded.InputImageSize;
+        _imageSize = (detected > 0 && !_isDynamicModel) ? detected : (configuredSize > 0 ? configuredSize : DefaultImageSize);
+        CurrentImageSize = _imageSize;
+
+        // Keep the persisted config in sync when we auto-adopted a fixed model size, so the
+        // capture path (which sizes the detection box from the config / static IMAGE_SIZE) and
+        // the AI both agree.
+        if (!_isDynamicModel && detected > 0 && AppConfig.Current?.SliderSettings != null
+            && AppConfig.Current.SliderSettings.ImageSize != detected)
+        {
+            AppConfig.Current.SliderSettings.ImageSize = detected;
+        }
+
+        LoadClasses();
+
+        _numDetections = MathUtil.CalculateNumDetections(_imageSize);
+
+        ValidateOnnxShape();
+    }
+
+    /// <summary>
+    ///     Parse the YOLOv8 <c>names</c> custom metadata into <see cref="_modelClasses"/> and
+    ///     update <see cref="NumClasses"/>. Falls back to the legacy single-class
+    ///     <c>{ 0: "Enemy" }</c> table when the metadata is absent or malformed.
+    /// </summary>
+    private void LoadClasses()
+    {
+        if (_onnxModel == null) return;
+
+        _modelClasses.Clear();
+
         try
         {
-            ExecutionProvider = sessionOptions.SetExecutionProvider(provider);
-
-            _onnxModel = new InferenceSession(modelPath, sessionOptions);
-            _outputNames = [.._onnxModel.OutputMetadata.Keys];
-
-            // Validate the onnx model output shape (ensure model is OnnxV8)
-            ValidateOnnxShape();
+            var metadata = _onnxModel.ModelMetadata;
+            if (metadata != null
+                && metadata.CustomMetadataMap.TryGetValue("names", out string? value)
+                && !string.IsNullOrEmpty(value))
+            {
+                JObject data = JObject.Parse(value);
+                foreach (var item in data)
+                {
+                    if (int.TryParse(item.Key, out int classId) && item.Value?.Type == JTokenType.String)
+                    {
+                        _modelClasses[classId] = item.Value.ToString();
+                    }
+                }
+            }
         }
-        catch (Exception ex)
+        catch
         {
-            _= Application.Current.Dispatcher.BeginInvoke(new Action(() => new NoticeBar($"Error starting the model: {ex.Message}", 5000).Show()));
-            _onnxModel?.Dispose();
+            // Ignore — model just doesn't expose a class table. We'll treat it as single-class.
+        }
+
+        if (_modelClasses.Count == 0)
+        {
+            _modelClasses[0] = "Enemy";
+            _numClasses = 1;
+        }
+        else
+        {
+            _numClasses = _modelClasses.Keys.Max() + 1;
         }
     }
 
+    /// <summary>
+    ///     Validates that the model's output tensor matches what the parser expects. Fixed models
+    ///     are required to declare <c>[1, 4+numClasses, numDetections]</c>; dynamic models are
+    ///     accepted unconditionally because their shape is only known at run time.
+    /// </summary>
     private void ValidateOnnxShape()
     {
-        var expectedShape = new int[] { 1, 5, NUM_DETECTIONS };
-        if (_onnxModel != null)
+        if (_onnxModel == null) return;
+        if (_isDynamicModel) return;
+
+        var expectedShape = new int[] { 1, 4 + _numClasses, _numDetections };
+        var outputMetadata = _onnxModel.OutputMetadata;
+        bool ok = outputMetadata.Values.All(metadata => metadata.Dimensions.SequenceEqual(expectedShape));
+        if (!ok)
         {
-            var outputMetadata = _onnxModel.OutputMetadata;
-            if (!outputMetadata.Values.All(metadata => metadata.Dimensions.SequenceEqual(expectedShape)))
-            {
-                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-                    new NoticeBar(
-                            $"Output shape does not match the expected shape of {string.Join("x", expectedShape)}.\n\nThis model will not work with Aimmy, please use an YOLOv8 model converted to ONNXv8."
-                            , 15000)
-                        .Show()
-                ));
-            }
+            // Permit the legacy single-class shape [1,5,N] as well, even if our derived numClasses
+            // came back as 1 (the formula yields the same expected shape — this branch is for
+            // models whose metadata advertises a different anchor count we didn't predict).
+            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+                new NoticeBar(
+                        $"Output shape does not match the expected shape of {string.Join("x", expectedShape)}.\n\nPlease use a YOLOv8 model converted to ONNXv8.",
+                        15000)
+                    .Show()
+            ));
         }
     }
 
@@ -79,7 +213,16 @@ public class PredictionLogic : IPredictionLogic
         {
             int maxResultCount = 1;
 
-            if (frame == null || _onnxModel == null) return [];
+            if (frame == null || _onnxModel == null) return Array.Empty<Prediction>();
+
+            // Dynamic models may need to re-fit if the user changed the image size at runtime.
+            int configuredSize = AppConfig.Current?.SliderSettings?.ImageSize ?? _imageSize;
+            if (_isDynamicModel && configuredSize > 0 && configuredSize != _imageSize)
+            {
+                _imageSize = configuredSize;
+                _numDetections = MathUtil.CalculateNumDetections(_imageSize);
+                CurrentImageSize = _imageSize;
+            }
 
             float[] inputArray = frame.ToFloatArray();
 
@@ -90,21 +233,39 @@ public class PredictionLogic : IPredictionLogic
             var outputTensor = results[0].AsTensor<float>();
 
             float FovSize = (float)AppConfig.Current.SliderSettings.ActualFovSize;
-            float fovMinX = (IMAGE_SIZE - FovSize) / 2.0f;
-            float fovMaxX = (IMAGE_SIZE + FovSize) / 2.0f;
-            float fovMinY = (IMAGE_SIZE - FovSize) / 2.0f;
-            float fovMaxY = (IMAGE_SIZE + FovSize) / 2.0f;
+            float fovMinX = (_imageSize - FovSize) / 2.0f;
+            float fovMaxX = (_imageSize + FovSize) / 2.0f;
+            float fovMinY = (_imageSize - FovSize) / 2.0f;
+            float fovMaxY = (_imageSize + FovSize) / 2.0f;
 
-            var (kdPoints, kdPredictions) = PrepareKDTreeData(outputTensor, detectionBox, fovMinX, fovMaxX, fovMinY, fovMaxY);
+            float minConfidence = (float)AppConfig.Current.SliderSettings.AIMinimumConfidence / 100.0f;
+            IReadOnlyCollection<int>? allowedClassIds = ResolveAllowedClassIds();
 
+            var filtered = PredictionFilter.CreatePredictions(
+                outputTensor,
+                detectionBox,
+                _imageSize,
+                _numDetections,
+                _numClasses,
+                _modelClasses,
+                minConfidence,
+                allowedClassIds,
+                fovMinX, fovMaxX, fovMinY, fovMaxY);
+
+            if (filtered.Count == 0)
+            {
+                return Array.Empty<Prediction>();
+            }
+
+            var (kdPoints, kdPredictions) = PrepareKDTreeData(filtered);
             if (kdPoints.Count == 0 || kdPredictions.Count == 0)
             {
-                return [];
+                return Array.Empty<Prediction>();
             }
 
             var tree = new KDTree<double, Prediction>(2, kdPoints.ToArray(), kdPredictions.ToArray(), Normalizer.SquaredDouble);
 
-            var centerPoint = new[] { IMAGE_SIZE / 2.0, IMAGE_SIZE / 2.0 };
+            var centerPoint = new[] { _imageSize / 2.0, _imageSize / 2.0 };
             var allNearest = tree.NearestNeighbors(centerPoint, Math.Min(kdPredictions.Count, maxResultCount)).Select(n => n.Item2).ToArray();
 
             foreach (var prediction in allNearest)
@@ -118,6 +279,18 @@ public class PredictionLogic : IPredictionLogic
 
             return allNearest;
         });
+    }
+
+    /// <summary>
+    ///     Read the AI settings and return either <c>null</c> (accept every class) or a snapshot of
+    ///     the allow-list. A snapshot is taken so the hot path doesn't race with config edits.
+    /// </summary>
+    private static IReadOnlyCollection<int>? ResolveAllowedClassIds()
+    {
+        var ai = AppConfig.Current?.AISettings;
+        if (ai == null || ai.TargetClassFilterMode == TargetClassFilterMode.AllClasses) return null;
+        if (ai.TargetClassIds == null || ai.TargetClassIds.Count == 0) return null;
+        return ai.TargetClassIds.ToArray();
     }
 
 
@@ -145,7 +318,8 @@ public class PredictionLogic : IPredictionLogic
                             float width = DoLabel.Rectangle.Width / frame.Width;
                             float height = DoLabel.Rectangle.Height / frame.Height;
 
-                            File.WriteAllText(labelPath, $"0 {x} {y} {width} {height}");
+                            // YOLO label format: <class-id> <x> <y> <w> <h>
+                            File.WriteAllText(labelPath, $"{DoLabel.ClassId} {x} {y} {width} {height}");
                         }
                     });
                 }
@@ -157,43 +331,15 @@ public class PredictionLogic : IPredictionLogic
         }
     }
 
-    private (List<double[]>, List<Prediction>) PrepareKDTreeData(Tensor<float> outputTensor, Rectangle detectionBox, float fovMinX, float fovMaxX, float fovMinY, float fovMaxY)
+    private static (List<double[]>, List<Prediction>) PrepareKDTreeData(List<Prediction> predictions)
     {
-        float minConfidence = (float)AppConfig.Current.SliderSettings.AIMinimumConfidence / 100.0f; // Pre-compute minimum confidence
-
-        var KDpoints = new List<double[]>();
-        var KDpredictions = new List<Prediction>();
-
-        for (int i = 0; i < NUM_DETECTIONS; i++)
+        var kdPoints = new List<double[]>(predictions.Count);
+        foreach (var p in predictions)
         {
-            float objectness = outputTensor[0, 4, i];
-            if (objectness < minConfidence) continue;
-
-            float x_center = outputTensor[0, 0, i];
-            float y_center = outputTensor[0, 1, i];
-            float width = outputTensor[0, 2, i];
-            float height = outputTensor[0, 3, i];
-
-            float x_min = x_center - width / 2;
-            float y_min = y_center - height / 2;
-            float x_max = x_center + width / 2;
-            float y_max = y_center + height / 2;
-
-            if (x_min < fovMinX || x_max > fovMaxX || y_min < fovMinY || y_max > fovMaxY) continue;
-
-            RectangleF rect = new(x_min, y_min, width, height);
-            Prediction prediction = new()
-            {
-                Rectangle = rect,
-                Confidence = objectness,
-                CenterXTranslated = (x_center - detectionBox.Left) / IMAGE_SIZE,
-                CenterYTranslated = (y_center - detectionBox.Top) / IMAGE_SIZE
-            };
-
-            KDpoints.Add(new double[] { x_center, y_center });
-            KDpredictions.Add(prediction);
+            float xCenter = p.Rectangle.X + p.Rectangle.Width / 2f;
+            float yCenter = p.Rectangle.Y + p.Rectangle.Height / 2f;
+            kdPoints.Add(new double[] { xCenter, yCenter });
         }
-
-        return (KDpoints, KDpredictions);
+        return (kdPoints, predictions);
     }
 }

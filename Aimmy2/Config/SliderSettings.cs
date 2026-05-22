@@ -26,6 +26,32 @@ public class SliderSettings: BaseSettings
     private double _magnifierWindowHeight = 250;
     private double _magnifierWindowWidth = 350;
     private float _magnificationStepFactor = 0.5f;
+    private int _imageSize = 640;
+    private double _maxInferenceFps = 0;
+
+    /// <summary>
+    ///     Maximum inference frames-per-second the AI loop is allowed to run at. <c>0</c> means
+    ///     unlimited (the loop runs as fast as <see cref="PredictionLogic"/> will let it). Useful
+    ///     for capping GPU/CPU load and pairing well with the
+    ///     <see cref="Aimmy2.AILogic.PerformanceBenchmark"/> recommendations.
+    /// </summary>
+    public double MaxInferenceFPS
+    {
+        get => _maxInferenceFps;
+        set => SetField(ref _maxInferenceFps, value);
+    }
+
+    /// <summary>
+    ///     Square ONNX input size the AI runs at. For fixed-size models this is auto-detected from
+    ///     the model's input metadata at load time and snapped to the model's declared dimension.
+    ///     For dynamic-axis ONNX models this is the user-selected runtime resolution
+    ///     (160/256/320/416/512/640 are the supported strides for YOLOv8 anchor-free).
+    /// </summary>
+    public int ImageSize
+    {
+        get => _imageSize;
+        set => SetField(ref _imageSize, value);
+    }
 
     public string SuggestedModel
     {

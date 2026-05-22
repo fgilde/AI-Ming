@@ -19,6 +19,7 @@ public class AIManager : IDisposable
     private bool _isAiLoopRunning;
     private Thread _aiLoopThread;
     private bool _pausedNotified = false;
+    private readonly FpsCapHelper _fpsCap = new();
     public bool IsRunning => _isAiLoopRunning;
     public bool IsModelLoaded { get; private set; }
 
@@ -116,13 +117,19 @@ public class AIManager : IDisposable
                     FileManager.AIManager = null;
                     MainWindow.Instance?.OnPropertyChanged(nameof(IsModelLoaded));
                 }
+
+                // Optional inference FPS cap — when SliderSettings.MaxInferenceFPS > 0 the helper
+                // sleeps just long enough to keep the loop at-or-below the configured rate. When
+                // the cap is 0 (the default) this is a no-op that just resets the stopwatch, so
+                // the existing 1ms Task.Delay below still governs idle pacing.
+                await _fpsCap.WaitForNextFrameAsync(AppConfig.Current.SliderSettings.MaxInferenceFPS);
             }
             else if (!_pausedNotified)
             {
                 _pausedNotified = true;
                 await SetActionsState(true);
                 await ImageCapture.OnPause();
-
+                _fpsCap.Reset();
             }
             await Task.Delay(1);
         }

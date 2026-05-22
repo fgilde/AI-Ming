@@ -40,7 +40,10 @@
                                            Foreground="{DynamicResource FluentTextSecondary}"
                                            Text="{Binding CaptureSource}" />
                             </StackPanel>
-                            <Image Width="200" Height="200" Source="{Binding CapturePreview}" />
+                            <Border CornerRadius="6" Margin="0,8,0,0" ClipToBounds="True"
+                                    Background="{DynamicResource FluentSurface3}">
+                                <Image Width="320" Height="180" Stretch="Uniform" Source="{Binding CapturePreview}" />
+                            </Border>
                         </StackPanel>
                     </ToolTip>
                 </Button.ToolTip>
@@ -93,7 +96,10 @@
                                            Foreground="{DynamicResource FluentTextSecondary}"
                                            Text="{Binding CaptureSource}" />
                             </StackPanel>
-                            <Image Width="200" Height="200" Source="{Binding CapturePreview}" />
+                            <Border CornerRadius="6" Margin="0,8,0,0" ClipToBounds="True"
+                                    Background="{DynamicResource FluentSurface3}">
+                                <Image Width="320" Height="180" Stretch="Uniform" Source="{Binding CapturePreview}" />
+                            </Border>
                         </StackPanel>
                     </ToolTip>
                 </Button.ToolTip>

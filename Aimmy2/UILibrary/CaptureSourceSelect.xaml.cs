@@ -102,10 +102,40 @@ namespace Aimmy2.UILibrary
         {
             try
             {
-                var capture = CaptureSource?.Capture();
-                CapturePreview = capture.ToImageSource();
+                // Use the same reliable thumbnail path that the picker tiles use — CaptureSource.Capture()
+                // sometimes returns null/garbage when invoked outside of an active inference loop.
+                if (CaptureSource == null)
+                {
+                    CapturePreview = null!;
+                    return;
+                }
+
+                BitmapSource? thumb = null;
+                if (CaptureSource.TargetType == CaptureTargetType.Screen)
+                {
+                    var screens = Screen.AllScreens;
+                    var idx = CaptureSource.ProcessOrScreenId ?? -1;
+                    var monitor = (idx >= 0 && idx < screens.Length) ? screens[idx] : Screen.PrimaryScreen;
+                    if (monitor != null) thumb = CaptureScreenThumbnail(monitor);
+                }
+                else if (CaptureSource.TargetType == CaptureTargetType.Process)
+                {
+                    var pid = CaptureSource.ProcessOrScreenId ?? 0;
+                    var proc = pid > 0 ? ProcessModel.FindProcessById(pid) : ProcessModel.FindProcessByTitle(CaptureSource.Title);
+                    if (proc != null && proc.MainWindowHandle != IntPtr.Zero)
+                        thumb = CaptureWindowThumbnail(proc.MainWindowHandle);
+                }
+
+                if (thumb != null) CapturePreview = thumb;
+                else
+                {
+                    // Fall back to the legacy path only if the reliable one yielded nothing.
+                    var capture = CaptureSource.Capture();
+                    if (capture != null) CapturePreview = capture.ToImageSource();
+                }
             }
-            catch{
+            catch
+            {
                 Console.WriteLine("Error updating preview");
             }
         }
@@ -245,7 +275,7 @@ namespace Aimmy2.UILibrary
                 Child = card,
                 IsOpen = true
             };
-            _processPopup.Closed += (_, _) => _processPopup = null;
+            _processPopup.Closed += (_, _) => { _processPopup = null; Aimmy2.Visuality.CaptureHighlightOverlay.HideOverlay(); };
         }
 
         private void CloseProcessPopup()
@@ -369,6 +399,10 @@ namespace Aimmy2.UILibrary
             tile.SetResourceReference(Button.BorderBrushProperty, isSelected ? "FluentAccent" : "FluentStroke");
             tile.SetResourceReference(Button.ForegroundProperty, "FluentTextPrimary");
             tile.ToolTip = process.MainWindowTitle;
+
+            // Live highlight on the actual window while hovering this tile.
+            tile.MouseEnter += (_, _) => Aimmy2.Visuality.CaptureHighlightOverlay.ShowFor(process.MainWindowHandle);
+            tile.MouseLeave += (_, _) => Aimmy2.Visuality.CaptureHighlightOverlay.HideOverlay();
             return tile;
         }
 
@@ -487,7 +521,7 @@ namespace Aimmy2.UILibrary
                 Child = card,
                 IsOpen = true
             };
-            _monitorPopup.Closed += (_, _) => _monitorPopup = null;
+            _monitorPopup.Closed += (_, _) => { _monitorPopup = null; Aimmy2.Visuality.CaptureHighlightOverlay.HideOverlay(); };
         }
 
         private void CloseMonitorPopup()
@@ -622,6 +656,10 @@ namespace Aimmy2.UILibrary
             tile.SetResourceReference(Button.BackgroundProperty, "FluentSurface3");
             tile.SetResourceReference(Button.BorderBrushProperty, isSelected ? "FluentAccent" : "FluentStroke");
             tile.SetResourceReference(Button.ForegroundProperty, "FluentTextPrimary");
+
+            // Live highlight on the actual monitor while hovering this tile.
+            tile.MouseEnter += (_, _) => Aimmy2.Visuality.CaptureHighlightOverlay.ShowFor(monitor);
+            tile.MouseLeave += (_, _) => Aimmy2.Visuality.CaptureHighlightOverlay.HideOverlay();
             return tile;
         }
 
