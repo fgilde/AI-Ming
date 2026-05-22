@@ -40,7 +40,7 @@ namespace MouseMovementLibraries.ddxoftSupport
             {
                 if (new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator) == false)
                 {
-                    MessageBox.Show("The ddxoft Virtual Input Driver requires Aimmy to be run as an administrator, please close Aimmy and run it as administrator to use this movement method.", "Aimmy");
+                    Aimmy2.Visuality.MessageDialog.Show("The ddxoft Virtual Input Driver requires Aimmy to be run as an administrator, please close Aimmy and run it as administrator to use this movement method.", "Aimmy", Aimmy2.Visuality.MessageDialog.DialogButtons.OK, Aimmy2.Visuality.MessageDialog.DialogIcon.Warning);
                     return false;
                 }
 
@@ -52,7 +52,7 @@ namespace MouseMovementLibraries.ddxoftSupport
 
                 if (ddxoftInstance.Load(ddxoftpath) != 1 || ddxoftInstance.btn!(0) != 1)
                 {
-                    MessageBox.Show("The ddxoft virtual input driver is not compatible with your PC, please try a different Mouse Movement Method.", "Aimmy");
+                    Aimmy2.Visuality.MessageDialog.Show("The ddxoft virtual input driver is not compatible with your PC, please try a different Mouse Movement Method.", "Aimmy", Aimmy2.Visuality.MessageDialog.DialogButtons.OK, Aimmy2.Visuality.MessageDialog.DialogIcon.Warning);
                     return false;
                 }
 
@@ -60,7 +60,7 @@ namespace MouseMovementLibraries.ddxoftSupport
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Failed to load ddxoft virtual input driver.\n\n" + ex.ToString(), "Aimmy");
+                Aimmy2.Visuality.MessageDialog.Show("Failed to load ddxoft virtual input driver.\n\n" + ex.ToString(), "Aimmy", Aimmy2.Visuality.MessageDialog.DialogButtons.OK, Aimmy2.Visuality.MessageDialog.DialogIcon.Error);
                 return false;
             }
         }

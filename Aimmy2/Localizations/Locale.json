@@ -279,5 +279,22 @@
   "RecordSequence": "Record Sequence",
   "StopRecording": "Stop Recording",
   "AntiTriggerKeysOperator": "Anti Trigger Keys Operator",
-  "TriggerKeysOperator": "Trigger Keys Operator"
+  "TriggerKeysOperator": "Trigger Keys Operator",
+  "Yes": "Yes",
+  "No": "No",
+  "Back": "Back",
+  "Title": "Title",
+  "AddTrigger": "Add Trigger",
+  "UnsavedChanges": "Unsaved changes",
+  "UnsavedChangesMessage": "You have unsaved changes. Save them now?",
+  "TriggerSubtitle": "Name and active state",
+  "ActionsSubtitle": "Keys or buttons to send when triggered",
+  "Detection": "Detection",
+  "DetectionSubtitle": "Whether and how detection gates the trigger",
+  "WhenChargingBegins": "When charging begins",
+  "WhenTriggerFires": "When trigger fires",
+  "TriggerKeysSubtitle": "Keys that must be pressed for the trigger to run",
+  "AntiTriggerKeysSubtitle": "Keys that block the trigger when pressed",
+  "Timing": "Timing",
+  "TimingSubtitle": "Delays and pauses between fires"
 }

@@ -64,8 +64,9 @@ namespace UILibrary
         private void DeleteProfile_Click(object sender, RoutedEventArgs e)
         {
             if ((sender as FrameworkElement)?.Tag is AutoPlayProfile profile &&
-                MessageBox.Show($"Delete profile '{profile.Name}'?", "Delete Profile",
-                    MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes)
+                Aimmy2.Visuality.MessageDialog.Show($"Delete profile '{profile.Name}'?", "Delete Profile",
+                    Aimmy2.Visuality.MessageDialog.DialogButtons.YesNo, Aimmy2.Visuality.MessageDialog.DialogIcon.Question,
+                    owner: Window.GetWindow(this), defaultResult: Aimmy2.Visuality.MessageDialog.DialogResult.No) == Aimmy2.Visuality.MessageDialog.DialogResult.Yes)
             {
                 Profiles.Remove(profile);
             }

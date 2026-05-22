@@ -479,11 +479,11 @@
                                         <Button x:Name="SegModels"
                                                 Style="{StaticResource FluentSegmentActive}"
                                                 Click="SegModels_Click"
-                                                Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LocalModels'}" />
+                                                Content="Models" />
                                         <Button x:Name="SegConfigs"
                                                 Style="{StaticResource FluentSegment}"
                                                 Click="SegConfigs_Click"
-                                                Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LocalConfigs'}" />
+                                                Content="Configs" />
                                     </StackPanel>
                                 </Border>
 
@@ -963,6 +963,81 @@
                                       HorizontalScrollBarVisibility="Disabled">
                             <uiLibrary:GamepadTesterPanel x:Name="GamepadTester" />
                         </ScrollViewer>
+
+                        <Grid x:Name="TriggerEditPage" Visibility="Collapsed">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Border Grid.Row="0"
+                                    Background="{StaticResource FluentSurface1}"
+                                    BorderBrush="{StaticResource FluentStroke}"
+                                    BorderThickness="0,0,0,1"
+                                    Padding="20,12,20,12">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Button Grid.Column="0"
+                                            Style="{StaticResource FluentStandardButton}"
+                                            Click="TriggerEditBack_Click"
+                                            Padding="10,6,12,6">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" />
+                                            <TextBlock Text="Back" Margin="6,0,0,0" VerticalAlignment="Center" FontFamily="Segoe UI Variable Text" FontSize="13" />
+                                        </StackPanel>
+                                    </Button>
+                                    <StackPanel Grid.Column="1"
+                                                Orientation="Horizontal"
+                                                Margin="14,0,0,0"
+                                                VerticalAlignment="Center">
+                                        <TextBlock x:Name="TriggerEditTitle"
+                                                   Text="Edit Trigger"
+                                                   Foreground="{DynamicResource FluentTextPrimary}"
+                                                   FontFamily="Segoe UI Variable Display"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="18" />
+                                        <TextBlock x:Name="TriggerEditName"
+                                                   Margin="8,0,0,0"
+                                                   Foreground="{DynamicResource FluentAccent}"
+                                                   FontFamily="Segoe UI Variable Display"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="18"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   MaxWidth="380" />
+                                        <TextBlock x:Name="TriggerEditDirty"
+                                                   Text=" *"
+                                                   Foreground="{DynamicResource FluentAccent}"
+                                                   FontFamily="Segoe UI Variable Display"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="18"
+                                                   Visibility="Collapsed" />
+                                    </StackPanel>
+                                    <Button Grid.Column="2"
+                                            x:Name="TriggerEditCancel"
+                                            Style="{StaticResource FluentStandardButton}"
+                                            Content="Cancel"
+                                            MinWidth="90"
+                                            Margin="0,0,8,0"
+                                            Click="TriggerEditCancel_Click" />
+                                    <Button Grid.Column="3"
+                                            x:Name="TriggerEditSave"
+                                            Style="{StaticResource FluentAccentButton}"
+                                            Content="Save"
+                                            MinWidth="100"
+                                            Click="TriggerEditSave_Click" />
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1"
+                                          Padding="20,16,20,16"
+                                          VerticalScrollBarVisibility="Auto"
+                                          PanningMode="VerticalOnly">
+                                <ContentControl x:Name="TriggerEditorHost" />
+                            </ScrollViewer>
+                        </Grid>
                     </Grid>
                 </Grid>
             </Grid>

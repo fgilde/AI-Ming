@@ -277,6 +277,24 @@
   "RecordSequence": "Sıra Kaydet",
   "StopRecording": "Kaydı Durdur",
   "AntiTriggerKeysOperator": "Anti Tetik Tuşları Operatörü",
-  "TriggerKeysOperator": "Tetik Tuşları Operatörü"
-
+  "TriggerKeysOperator": "Tetik Tuşları Operatörü",
+  "DeleteTrigger": "Tetiği sil",
+  "ConfirmDeleteTrigger": "{0} otomatik tetiğini silmek istediğinizden emin misiniz?",
+  "Yes": "Evet",
+  "No": "Hayır",
+  "Back": "Geri",
+  "Title": "Başlık",
+  "AddTrigger": "Tetik Ekle",
+  "UnsavedChanges": "Kaydedilmemiş değişiklikler",
+  "UnsavedChangesMessage": "Kaydedilmemiş değişiklikler var. Şimdi kaydedilsin mi?",
+  "TriggerSubtitle": "İsim ve etkin durum",
+  "ActionsSubtitle": "Tetiklendiğinde gönderilecek tuşlar veya düğmeler",
+  "Detection": "Algılama",
+  "DetectionSubtitle": "Algılamanın tetiği nasıl kontrol ettiği",
+  "WhenChargingBegins": "Şarj başladığında",
+  "WhenTriggerFires": "Tetik tetiklendiğinde",
+  "TriggerKeysSubtitle": "Tetiğin çalışması için basılması gereken tuşlar",
+  "AntiTriggerKeysSubtitle": "Basıldığında tetiği engelleyen tuşlar",
+  "Timing": "Zamanlama",
+  "TimingSubtitle": "Atışlar arası gecikmeler ve duraklamalar"
 }

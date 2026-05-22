@@ -56,7 +56,7 @@ public partial class MainWindow
 
 
     private bool _currentlySwitching;
-    private ScrollViewer? _currentScrollViewer;
+    private FrameworkElement? _currentScrollViewer;
 
     private readonly HashSet<string> _availableModels = new();
     private readonly HashSet<string> _availableConfigs = new();
@@ -116,7 +116,7 @@ public partial class MainWindow
 
         Aimmy2.Theme.ThemeManager.Apply();
 
-        _currentScrollViewer = FindName(nameof(AimMenu)) as ScrollViewer;
+        _currentScrollViewer = FindName(nameof(AimMenu)) as FrameworkElement;
         if (_currentScrollViewer == null) throw new NullReferenceException("CurrentScrollViewer is null");
 
         _fileManager?.Dispose();
@@ -393,11 +393,11 @@ public partial class MainWindow
             else
                 Move();
         }
-        await SwitchScrollPanels(FindName(name) as ScrollViewer ?? throw new NullReferenceException("Scrollpanel is null"), animate);
+        await SwitchScrollPanels(FindName(name) as FrameworkElement ?? throw new NullReferenceException("Page is null"), animate);
         CurrentMenu = name;
     }
 
-    private async Task SwitchScrollPanels(ScrollViewer movingScrollViewer, bool animate = true)
+    private async Task SwitchScrollPanels(FrameworkElement movingScrollViewer, bool animate = true)
     {
         if (_currentScrollViewer != null && _currentScrollViewer != movingScrollViewer)
         {
@@ -490,6 +490,112 @@ public partial class MainWindow
         ModelsGroup.Visibility = Visibility.Collapsed;
         ConfigsGroup.Visibility = Visibility.Visible;
     }
+
+    private string? _triggerEditReturnTo;
+    private Aimmy2.Config.ActionTrigger? _triggerEditTarget;
+    private bool _triggerEditIsNew;
+    private Action<Aimmy2.Config.ActionTrigger?>? _triggerEditCommit;
+    private global::UILibrary.TriggerEdit? _triggerEditor;
+    private bool _triggerEditDirty;
+    private System.ComponentModel.PropertyChangedEventHandler? _triggerDirtyHandler;
+
+    public void OpenTriggerEditor(Aimmy2.Config.ActionTrigger target, bool isNew, Action<Aimmy2.Config.ActionTrigger?> commit)
+    {
+        _triggerEditReturnTo = CurrentMenu;
+        _triggerEditTarget = target;
+        _triggerEditIsNew = isNew;
+        _triggerEditCommit = commit;
+        if (!isNew) target.BeginEdit();
+        TriggerEditTitle.Text = isNew ? Locale.AddTrigger : Locale.EditTrigger;
+        TriggerEditName.Text = target.Name ?? "";
+        _triggerEditDirty = false;
+        TriggerEditDirty.Visibility = Visibility.Collapsed;
+        if (_triggerEditor == null)
+        {
+            _triggerEditor = new global::UILibrary.TriggerEdit();
+            TriggerEditorHost.Content = _triggerEditor;
+        }
+        _triggerEditor.Trigger = target;
+
+        // Subscribe to property changes for dirty-tracking and live name update.
+        // Use BeginInvoke so initial binding fan-out doesn't mark the form as dirty.
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            if (!ReferenceEquals(_triggerEditTarget, target)) return;
+            _triggerDirtyHandler = (s, e) =>
+            {
+                _triggerEditDirty = true;
+                TriggerEditDirty.Visibility = Visibility.Visible;
+                if (e.PropertyName == nameof(Aimmy2.Config.ActionTrigger.Name))
+                {
+                    TriggerEditName.Text = target.Name ?? "";
+                }
+            };
+            target.PropertyChanged += _triggerDirtyHandler;
+        }), System.Windows.Threading.DispatcherPriority.Background);
+
+        SetSidebarLocked(true);
+        _ = NavigateTo(nameof(TriggerEditPage));
+    }
+
+    private void CloseTriggerEditor(bool save)
+    {
+        var target = _triggerEditTarget;
+        var isNew = _triggerEditIsNew;
+        var commit = _triggerEditCommit;
+        var returnTo = _triggerEditReturnTo ?? nameof(AimMenu);
+
+        // If trying to leave without saving, warn about unsaved changes.
+        if (!save && _triggerEditDirty)
+        {
+            var res = Aimmy2.Visuality.MessageDialog.Show(
+                Locale.UnsavedChangesMessage,
+                Locale.UnsavedChanges,
+                Aimmy2.Visuality.MessageDialog.DialogButtons.YesNoCancel,
+                Aimmy2.Visuality.MessageDialog.DialogIcon.Warning,
+                owner: this,
+                defaultResult: Aimmy2.Visuality.MessageDialog.DialogResult.Yes);
+            if (res == Aimmy2.Visuality.MessageDialog.DialogResult.Cancel) return; // stay on editor
+            if (res == Aimmy2.Visuality.MessageDialog.DialogResult.Yes) save = true; // proceed as if Save was clicked
+            // No → discard (continue with save=false)
+        }
+
+        // Detach dirty handler
+        if (target != null && _triggerDirtyHandler != null)
+        {
+            target.PropertyChanged -= _triggerDirtyHandler;
+        }
+        _triggerDirtyHandler = null;
+        _triggerEditDirty = false;
+        TriggerEditDirty.Visibility = Visibility.Collapsed;
+
+        if (target != null && !isNew)
+        {
+            if (save) target.EndEdit();
+            else target.CancelEdit();
+        }
+
+        SetSidebarLocked(false);
+        _triggerEditTarget = null;
+        _triggerEditCommit = null;
+        if (_triggerEditor != null) _triggerEditor.Trigger = null!;
+        commit?.Invoke(save ? target : null);
+        _ = NavigateTo(returnTo);
+    }
+
+    private void SetSidebarLocked(bool locked)
+    {
+        if (Sidebar != null)
+        {
+            Sidebar.IsHitTestVisible = !locked;
+            Sidebar.Opacity = locked ? 0.4 : 1.0;
+        }
+        if (HamburgerButton != null) HamburgerButton.IsEnabled = !locked;
+    }
+
+    private void TriggerEditBack_Click(object sender, RoutedEventArgs e) => CloseTriggerEditor(false);
+    private void TriggerEditCancel_Click(object sender, RoutedEventArgs e) => CloseTriggerEditor(false);
+    private void TriggerEditSave_Click(object sender, RoutedEventArgs e) => CloseTriggerEditor(true);
 
 
     private void BindingOnKeyReleased(string bindingId)
@@ -1152,14 +1258,14 @@ public partial class MainWindow
         {
             if (!e.Value)
             {
-                var result = System.Windows.MessageBox.Show(
-                    this,
+                var result = Aimmy2.Visuality.MessageDialog.Show(
                     "Warning: if you disable this, the Aimmy window and all its overlays may become visible in screen recordings, streams (OBS, Discord, etc.) and other capture tools.\n\nAre you sure you want to disable capture protection?",
                     "Disable capture protection?",
-                    System.Windows.MessageBoxButton.YesNo,
-                    System.Windows.MessageBoxImage.Warning,
-                    System.Windows.MessageBoxResult.No);
-                if (result != System.Windows.MessageBoxResult.Yes)
+                    Aimmy2.Visuality.MessageDialog.DialogButtons.YesNo,
+                    Aimmy2.Visuality.MessageDialog.DialogIcon.Warning,
+                    owner: this,
+                    defaultResult: Aimmy2.Visuality.MessageDialog.DialogResult.No);
+                if (result != Aimmy2.Visuality.MessageDialog.DialogResult.Yes)
                 {
                     AppConfig.Current.ToggleState.HideUIFromCapture = true;
                     hideCaptureToggle.Checked = true;
@@ -1315,7 +1421,12 @@ public partial class MainWindow
         OnPropertyChanged(nameof(Config));
 
         if (!string.IsNullOrEmpty(AppConfig.Current.SuggestedModelName) && AppConfig.Current.SuggestedModelName != "N/A")
-            MessageBox.Show($"{Locale.ModelSuggestionText}:\n" + AppConfig.Current.SuggestedModelName, Locale.SuggestedModel);
+            Aimmy2.Visuality.MessageDialog.Show(
+                $"{Locale.ModelSuggestionText}:\n" + AppConfig.Current.SuggestedModelName,
+                Locale.SuggestedModel,
+                Aimmy2.Visuality.MessageDialog.DialogButtons.OK,
+                Aimmy2.Visuality.MessageDialog.DialogIcon.Info,
+                owner: this);
         LoadModel();
     }
 
@@ -1534,9 +1645,13 @@ public partial class MainWindow
         {
             if (!confirmed)
             {
-                var res = MessageBox.Show(Locale.ConfirmModelDelete.FormatWith(model), Locale.DeleteModel,
-                    MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
-                if (res == MessageBoxResult.No)
+                var res = Aimmy2.Visuality.MessageDialog.Show(
+                    Locale.ConfirmModelDelete.FormatWith(model), Locale.DeleteModel,
+                    Aimmy2.Visuality.MessageDialog.DialogButtons.YesNo,
+                    Aimmy2.Visuality.MessageDialog.DialogIcon.Question,
+                    owner: this,
+                    defaultResult: Aimmy2.Visuality.MessageDialog.DialogResult.No);
+                if (res == Aimmy2.Visuality.MessageDialog.DialogResult.No)
                     return;
             }
             File.Delete(path);
@@ -1557,9 +1672,13 @@ public partial class MainWindow
         {
             if (!confirmed)
             {
-                var res = MessageBox.Show(Locale.ConfirmConfigDelete.FormatWith(cfg), Locale.DeleteConfig,
-                    MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
-                if (res == MessageBoxResult.No)
+                var res = Aimmy2.Visuality.MessageDialog.Show(
+                    Locale.ConfirmConfigDelete.FormatWith(cfg), Locale.DeleteConfig,
+                    Aimmy2.Visuality.MessageDialog.DialogButtons.YesNo,
+                    Aimmy2.Visuality.MessageDialog.DialogIcon.Question,
+                    owner: this,
+                    defaultResult: Aimmy2.Visuality.MessageDialog.DialogResult.No);
+                if (res == Aimmy2.Visuality.MessageDialog.DialogResult.No)
                     return;
             }
             File.Delete(path);

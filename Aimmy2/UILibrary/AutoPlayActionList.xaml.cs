@@ -58,8 +58,9 @@ namespace UILibrary
         private void DeleteAction_Click(object sender, RoutedEventArgs e)
         {
             if ((sender as FrameworkElement)?.Tag is AutoPlayAction action &&
-                MessageBox.Show($"Delete action '{action.Name}'?", "Delete Action",
-                    MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes)
+                Aimmy2.Visuality.MessageDialog.Show($"Delete action '{action.Name}'?", "Delete Action",
+                    Aimmy2.Visuality.MessageDialog.DialogButtons.YesNo, Aimmy2.Visuality.MessageDialog.DialogIcon.Question,
+                    owner: Window.GetWindow(this), defaultResult: Aimmy2.Visuality.MessageDialog.DialogResult.No) == Aimmy2.Visuality.MessageDialog.DialogResult.Yes)
             {
                 Actions.Remove(action);
             }

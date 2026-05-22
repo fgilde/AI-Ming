@@ -81,9 +81,9 @@ namespace Other
 
         private static void ShowLGHubNotRunningMessage()
         {
-            if (MessageBox.Show("LG HUB is not running, is it installed?", "Aimmy - LG HUB Mouse Movement", MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.No)
+            if (Aimmy2.Visuality.MessageDialog.Show("LG HUB is not running, is it installed?", "Aimmy - LG HUB Mouse Movement", Aimmy2.Visuality.MessageDialog.DialogButtons.YesNo, Aimmy2.Visuality.MessageDialog.DialogIcon.Error) == Aimmy2.Visuality.MessageDialog.DialogResult.No)
             {
-                if (MessageBox.Show("Would you like to install it?", "Aimmy - LG HUB Mouse Movement", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                if (Aimmy2.Visuality.MessageDialog.Show("Would you like to install it?", "Aimmy - LG HUB Mouse Movement", Aimmy2.Visuality.MessageDialog.DialogButtons.YesNo) == Aimmy2.Visuality.MessageDialog.DialogResult.Yes)
                 {
                     new LGDownloader().Show();
                 }
@@ -92,7 +92,7 @@ namespace Other
 
         private static void ShowLGHubImproperInstallMessage()
         {
-            if (MessageBox.Show("LG HUB install is improper, would you like to install it?", "Aimmy - LG HUB Mouse Movement", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            if (Aimmy2.Visuality.MessageDialog.Show("LG HUB install is improper, would you like to install it?", "Aimmy - LG HUB Mouse Movement", Aimmy2.Visuality.MessageDialog.DialogButtons.YesNo) == Aimmy2.Visuality.MessageDialog.DialogResult.Yes)
             {
                 new LGDownloader().Show();
             }

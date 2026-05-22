@@ -47,31 +47,28 @@ namespace UILibrary
         {
             if ((sender as FrameworkElement)?.Tag is ActionTrigger trigger)
             {
-                var dlg = new TriggerEditDialog()
-                {
-                    Title = "Edit Trigger",
-                    Trigger = trigger
-                };
-                dlg.ShowDialog();
+                MainWindow.Instance.OpenTriggerEditor(trigger, isNew: false, commit: _ => { });
             }
         }
 
         private void AddTrigger_Click(object sender, RoutedEventArgs e)
         {
-            var dlg = new TriggerEditDialog()
+            var draft = new ActionTrigger();
+            MainWindow.Instance.OpenTriggerEditor(draft, isNew: true, commit: saved =>
             {
-                Title = "Add Trigger",
-                Trigger = new ActionTrigger()
-            };
-            if(dlg.ShowDialog() ?? false)
-            {
-                Triggers.Add(dlg.Trigger);
-            }
+                if (saved != null) Triggers.Add(saved);
+            });
         }
 
         private void DeleteTrigger_Click(object sender, RoutedEventArgs e)
         {
-            if ((sender as FrameworkElement)?.Tag is ActionTrigger trigger && MessageBox.Show(Locale.ConfirmDeleteTrigger.FormatWith(trigger.Name), Locale.DeleteModel, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes)
+            if ((sender as FrameworkElement)?.Tag is ActionTrigger trigger
+                && Aimmy2.Visuality.MessageDialog.Confirm(
+                    Locale.ConfirmDeleteTrigger.FormatWith(trigger.Name),
+                    Locale.DeleteTrigger,
+                    owner: Window.GetWindow(this),
+                    icon: Aimmy2.Visuality.MessageDialog.DialogIcon.Warning,
+                    defaultResult: Aimmy2.Visuality.MessageDialog.DialogResult.No))
                 Triggers.Remove(trigger);
         }
 

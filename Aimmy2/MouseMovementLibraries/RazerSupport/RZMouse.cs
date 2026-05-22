@@ -44,8 +44,8 @@ namespace MouseMovementLibraries.RazerSupport
             var razerSynapseProcesses = Process.GetProcessesByName("Razer Synapse");
             if (razerSynapseProcesses.Length == 0)
             {
-                var result = MessageBox.Show("Razer Synapse is not running, do you have it installed?", "Aimmy - Razer Synapse", MessageBoxButton.YesNo);
-                if (result == MessageBoxResult.No)
+                var result = Aimmy2.Visuality.MessageDialog.Show("Razer Synapse is not running, do you have it installed?", "Aimmy - Razer Synapse", Aimmy2.Visuality.MessageDialog.DialogButtons.YesNo);
+                if (result == Aimmy2.Visuality.MessageDialog.DialogResult.No)
                 {
                     await InstallRazerSynapse();
                     return false;
@@ -116,7 +116,7 @@ namespace MouseMovementLibraries.RazerSupport
             }
             if (!CheckForRazerDevices())
             {
-                MessageBox.Show("No Razer Peripheral is detected, this Mouse Movement Method is unusable.", "Aimmy");
+                Aimmy2.Visuality.MessageDialog.Show("No Razer Peripheral is detected, this Mouse Movement Method is unusable.", "Aimmy", Aimmy2.Visuality.MessageDialog.DialogButtons.OK, Aimmy2.Visuality.MessageDialog.DialogIcon.Warning);
                 return false;
             }
             try
@@ -125,7 +125,7 @@ namespace MouseMovementLibraries.RazerSupport
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Unfortunately, Razer Synapse mode cannot be ran sufficiently.\n{ex}", "Aimmy");
+                Aimmy2.Visuality.MessageDialog.Show($"Unfortunately, Razer Synapse mode cannot be ran sufficiently.\n{ex}", "Aimmy", Aimmy2.Visuality.MessageDialog.DialogButtons.OK, Aimmy2.Visuality.MessageDialog.DialogIcon.Error);
                 return false;
             }
         }

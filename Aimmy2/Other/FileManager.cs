@@ -63,7 +63,7 @@ namespace Other
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error creating a required directory: {ex}");
+                Aimmy2.Visuality.MessageDialog.Show($"Error creating a required directory: {ex}", icon: Aimmy2.Visuality.MessageDialog.DialogIcon.Error);
                 Application.Current.Shutdown();
             }
         }

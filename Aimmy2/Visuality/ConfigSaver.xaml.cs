@@ -66,8 +66,8 @@ namespace Visuality
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             if (!File.Exists($"bin/configs/{ConfigNameTextbox.Text}.cfg") ||
-                MessageBox.Show("A config already exists with the same name, would you like to overwrite it?",
-                    $"{Title} - Configuration Saver", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                Aimmy2.Visuality.MessageDialog.Show("A config already exists with the same name, would you like to overwrite it?",
+                    $"{Title} - Configuration Saver", Aimmy2.Visuality.MessageDialog.DialogButtons.YesNo, Aimmy2.Visuality.MessageDialog.DialogIcon.Question, owner: this) == Aimmy2.Visuality.MessageDialog.DialogResult.Yes)
             {
                 WriteJSON();
             }
