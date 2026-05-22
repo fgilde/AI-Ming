@@ -1,0 +1,128 @@
+<UserControl x:Class="PowerAim.UILibrary.CaptureSourceSelect"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignWidth="282.5"
+             d:DesignHeight="36">
+    <Grid Margin="2">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <Button Margin="0,0,4,0"
+                    Background="{DynamicResource FluentSurface3}"
+                    BorderBrush="{DynamicResource FluentStroke}"
+                    BorderThickness="1"
+                    Foreground="{DynamicResource FluentTextPrimary}"
+                    Padding="10,4,12,4"
+                    Cursor="Hand"
+                    Click="MonitorBtnClick">
+                <Button.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="14" />
+                    </Style>
+                </Button.Resources>
+                <Button.ToolTip>
+                    <ToolTip Background="{DynamicResource FluentSurface2}"
+                             Opened="ToolTip_OnOpened">
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock TextDecorations="Underline"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource FluentTextPrimary}">Select Monitor to Capture</TextBlock>
+                            <StackPanel Margin="0,5,0,0" Orientation="Horizontal">
+                                <TextBlock FontSize="10" Foreground="{DynamicResource FluentTextSecondary}">Current: </TextBlock>
+                                <TextBlock FontSize="10"
+                                           Margin="3,0,0,0"
+                                           Foreground="{DynamicResource FluentTextSecondary}"
+                                           Text="{Binding CaptureSource}" />
+                            </StackPanel>
+                            <Border CornerRadius="6" Margin="0,8,0,0" ClipToBounds="True"
+                                    Background="{DynamicResource FluentSurface3}">
+                                <Image Width="320" Height="180" Stretch="Uniform" Source="{Binding CapturePreview}" />
+                            </Border>
+                        </StackPanel>
+                    </ToolTip>
+                </Button.ToolTip>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                               Foreground="{Binding ScreenForeground}"
+                               Text="&#xE7F4;"
+                               FontSize="14"
+                               VerticalAlignment="Center" />
+                    <TextBlock Margin="6,0,2,0"
+                               Foreground="{Binding ScreenForeground}"
+                               FontFamily="Segoe UI Variable Small"
+                               FontSize="12"
+                               Text="Monitor"
+                               VerticalAlignment="Center" />
+                    <TextBlock FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                               Foreground="{Binding ScreenForeground}"
+                               Text="&#xE70D;"
+                               FontSize="8"
+                               Margin="4,0,0,0"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+
+            <Button Grid.Column="1"
+                    Margin="0,0,0,0"
+                    Background="{DynamicResource FluentSurface3}"
+                    BorderBrush="{DynamicResource FluentStroke}"
+                    BorderThickness="1"
+                    Foreground="{DynamicResource FluentTextPrimary}"
+                    Padding="10,4,12,4"
+                    Cursor="Hand"
+                    Click="ProcessBtnClick">
+                <Button.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="14" />
+                    </Style>
+                </Button.Resources>
+                <Button.ToolTip>
+                    <ToolTip Background="{DynamicResource FluentSurface2}"
+                             Opened="ToolTip_OnOpened">
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock TextDecorations="Underline"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource FluentTextPrimary}">Select Application Window to Capture</TextBlock>
+                            <StackPanel Margin="0,5,0,0" Orientation="Horizontal">
+                                <TextBlock FontSize="10" Foreground="{DynamicResource FluentTextSecondary}">Current:</TextBlock>
+                                <TextBlock FontSize="10"
+                                           Margin="3,0,0,0"
+                                           Foreground="{DynamicResource FluentTextSecondary}"
+                                           Text="{Binding CaptureSource}" />
+                            </StackPanel>
+                            <Border CornerRadius="6" Margin="0,8,0,0" ClipToBounds="True"
+                                    Background="{DynamicResource FluentSurface3}">
+                                <Image Width="320" Height="180" Stretch="Uniform" Source="{Binding CapturePreview}" />
+                            </Border>
+                        </StackPanel>
+                    </ToolTip>
+                </Button.ToolTip>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                               Foreground="{Binding ProcessForeground}"
+                               Text="&#xE737;"
+                               FontSize="14"
+                               VerticalAlignment="Center" />
+                    <TextBlock Margin="6,0,2,0"
+                               Foreground="{Binding ProcessForeground}"
+                               FontFamily="Segoe UI Variable Small"
+                               FontSize="12"
+                               Text="Window"
+                               VerticalAlignment="Center" />
+                    <TextBlock FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                               Foreground="{Binding ProcessForeground}"
+                               Text="&#xE70D;"
+                               FontSize="8"
+                               Margin="4,0,0,0"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,199 @@
+<visuality:BaseDialog x:Class="Visuality.ConfigSaver"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Visuality"
+        xmlns:visuality="clr-namespace:PowerAim.Visuality"
+        mc:Ignorable="d"
+        Title="Save Configuration"
+        Height="230"
+        Width="460"
+        WindowStyle="None"
+        Topmost="True"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        AllowsTransparency="False"
+        Background="{StaticResource FluentSurface1}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Titlebar -->
+        <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="Border_MouseLeftButtonDown">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0">
+                <TextBlock Text="&#xE74E;"
+                           FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                           Foreground="{DynamicResource FluentAccent}"
+                           FontSize="14"
+                           VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SaveConfiguration'}"
+                           Margin="10,0,0,0"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource FluentTextPrimary}"
+                           FontFamily="Segoe UI Variable Display"
+                           FontWeight="SemiBold"
+                           FontSize="13" />
+            </StackPanel>
+            <Button x:Name="Exit"
+                    Content="&#xE8BB;"
+                    HorizontalAlignment="Right"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    BorderThickness="0"
+                    Foreground="{DynamicResource FluentTextPrimary}"
+                    FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                    Width="46"
+                    Height="40"
+                    Padding="0"
+                    FontSize="10"
+                    VerticalAlignment="Top"
+                    Click="Exit_Click">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd" Background="{TemplateBinding Background}">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#E81123" />
+                                            <Setter Property="Foreground" Value="White" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </Grid>
+
+        <!-- Body -->
+        <StackPanel Grid.Row="1" Margin="14,4,14,4">
+            <!-- config name row -->
+            <Grid Margin="0,4,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="48" />
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0"
+                        Background="{DynamicResource FluentSurface3}"
+                        BorderBrush="{DynamicResource FluentStroke}"
+                        BorderThickness="1,1,0,1"
+                        CornerRadius="6,0,0,6">
+                    <TextBox x:Name="ConfigNameTextbox"
+                             BorderThickness="0"
+                             Background="Transparent"
+                             Padding="10,0,10,0"
+                             VerticalContentAlignment="Center"
+                             Tag="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='InsertConfigNameHere'}"
+                             FontFamily="Segoe UI Variable Text"
+                             FontSize="13"
+                             Style="{DynamicResource placeHolder}"
+                             Foreground="{DynamicResource FluentTextPrimary}" />
+                </Border>
+                <Border Grid.Column="1"
+                        Background="{DynamicResource FluentSurface2}"
+                        BorderBrush="{DynamicResource FluentStroke}"
+                        BorderThickness="0,1,1,1"
+                        CornerRadius="0,6,6,0">
+                    <TextBlock Text=".cfg"
+                               Foreground="{DynamicResource FluentTextTertiary}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontFamily="Segoe UI Variable Text"
+                               FontSize="12" />
+                </Border>
+            </Grid>
+
+            <!-- recommended model name row -->
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="56" />
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0"
+                        Background="{DynamicResource FluentSurface3}"
+                        BorderBrush="{DynamicResource FluentStroke}"
+                        BorderThickness="1,1,0,1"
+                        CornerRadius="6,0,0,6">
+                    <TextBox x:Name="RecommendedModelNameTextBox"
+                             BorderThickness="0"
+                             Background="Transparent"
+                             Padding="10,0,10,0"
+                             VerticalContentAlignment="Center"
+                             Tag="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='InsertRecommendedModelNameHere'}"
+                             FontFamily="Segoe UI Variable Text"
+                             FontSize="13"
+                             Style="{DynamicResource placeHolder}"
+                             Foreground="{DynamicResource FluentTextPrimary}" />
+                </Border>
+                <Border Grid.Column="1"
+                        Background="{DynamicResource FluentSurface2}"
+                        BorderBrush="{DynamicResource FluentStroke}"
+                        BorderThickness="0,1,1,1"
+                        CornerRadius="0,6,6,0">
+                    <TextBlock Text=".onnx"
+                               Foreground="{DynamicResource FluentTextTertiary}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontFamily="Segoe UI Variable Text"
+                               FontSize="12" />
+                </Border>
+            </Grid>
+
+            <!-- downloadable toggle row -->
+            <Grid>
+                <Border x:Name="SwitchBorder"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Width="40"
+                        Height="20"
+                        CornerRadius="10"
+                        BorderThickness="1"
+                        BorderBrush="{DynamicResource FluentStrokeStrong}"
+                        Background="{DynamicResource FluentSurface3}">
+                    <Border x:Name="SwitchMoving"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Width="14"
+                            Height="14"
+                            Background="#FFFFFFFF"
+                            CornerRadius="7"
+                            Margin="0,0,22,0" />
+                </Border>
+                <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='CheckBoxIsDownloadable'}"
+                           Margin="50,0,0,0"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource FluentTextPrimary}"
+                           FontFamily="Segoe UI Variable Text"
+                           FontSize="13" />
+                <Button x:Name="DownloadableModelChecker"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Height="22"
+                        Width="280"
+                        Background="Transparent"
+                        BorderBrush="Transparent"
+                        BorderThickness="0"
+                        Cursor="Hand"
+                        Click="DownloadableModelChecker_Click" />
+            </Grid>
+        </StackPanel>
+
+        <!-- Action buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,14,14">
+            <Button x:Name="SaveButton"
+                    Style="{StaticResource FluentAccentButton}"
+                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Save'}"
+                    MinWidth="100"
+                    Click="SaveButton_Click" />
+        </StackPanel>
+    </Grid>
+</visuality:BaseDialog>

@@ -3,11 +3,11 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
-    <ApplicationIcon>CH.ico</ApplicationIcon>
+    <ApplicationIcon>PowerAim.ico</ApplicationIcon>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <BaseOutputPath>../Aimmy2/bin/</BaseOutputPath>
+    <BaseOutputPath>../PowerAim/bin/</BaseOutputPath>
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
     <UseWindowsForms>true</UseWindowsForms>
@@ -15,7 +15,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="CH.ico" />
+    <None Remove="PowerAim.ico" />
+    <None Remove="PowerAim.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,7 +26,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="CH.ico" />
+    <Resource Include="PowerAim.ico" />
+    <Resource Include="PowerAim.png" />
   </ItemGroup>
 
   <ItemGroup>
