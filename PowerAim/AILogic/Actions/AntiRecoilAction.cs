@@ -24,7 +24,12 @@ namespace PowerAim.AILogic.Actions
         private double dynamicThreshold = 0.9; // Dynamic confidence threshold for matching
         private Point[] recentPositions = new Point[5]; // Buffer for averaging positions
 
-        public override bool Active => active && base.Active;
+        // Legacy pattern-based anti-recoil. Disabled when the user has switched on the
+        // experimental image-based path — then ImageBasedAntiRecoilAction takes over.
+        public override bool Active =>
+            active &&
+            base.Active &&
+            !PowerAim.Config.AppConfig.Current.AntiRecoilSettings.UseImageBasedAntiRecoil;
 
         private bool userMovedMouse = false;
         private bool mouseMoveAttached = false;

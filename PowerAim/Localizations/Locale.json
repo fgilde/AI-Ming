@@ -319,5 +319,9 @@
   "TargetClassFilterMode": "Filter mode",
   "AllClasses": "All Classes",
   "SpecificClasses": "Only selected",
-  "NoModelLoaded": "No model loaded."
+  "NoModelLoaded": "No model loaded.",
+  "AntiRecoilStrength": "Image-Based Strength",
+  "AntiRecoilStrengthHelp": "0 = off, 1 = full compensation, 0.85 = natural feel. Only used when the BETA image-based mode is enabled.",
+  "UseImageBasedAntiRecoil": "Image-Based Anti-Recoil (BETA)",
+  "UseImageBasedAntiRecoilHelp": "Experimental: compensate recoil via screen-pixel drift detection. Disables the manual X/Y sliders below. Quality depends on game sensitivity / FOV — tune the strength slider if the view drifts."
 }

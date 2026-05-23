@@ -861,11 +861,54 @@ public partial class MainWindow
         AntiRecoil.AddToggleWithKeyBind(Locale.AntiRecoil, nameof(Locale.AntiRecoil), BindingManager).BindTo(() => AppConfig.Current.ToggleState.AntiRecoil).BindActiveStateColor(AntiRecoil);
         AntiRecoil.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind), () => keybind.AntiRecoilKeybind, BindingManager);
         AntiRecoil.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.DisableAntiRecoilKeybind), () => keybind.DisableAntiRecoilKeybind, BindingManager);
-        AntiRecoil.AddSlider(Locale.HoldTime, Locale.Milliseconds, 1, 1, 1, 1000, true).BindTo(() => AppConfig.Current.AntiRecoilSettings.HoldTime);
-        AntiRecoil.AddButton(Locale.RecordFireRate).Reader.Click += (s, e) => new SetAntiRecoil(this).Show();
-        AntiRecoil.AddSlider(Locale.FireRate, Locale.Milliseconds, 1, 1, 1, 5000, true).BindTo(() => AppConfig.Current.AntiRecoilSettings.FireRate);
-        AntiRecoil.AddSlider(Locale.YRecoilUpDown, Locale.Move, 1, 1, -1000, 1000, true).BindTo(() => AppConfig.Current.AntiRecoilSettings.YRecoil);
-        AntiRecoil.AddSlider(Locale.XRecoilLeftRight, Locale.Move, 1, 1, -1000, 1000, true).BindTo(() => AppConfig.Current.AntiRecoilSettings.XRecoil);
+
+        // BETA toggle for the experimental image-based mode. When on, the manual sliders below
+        // are disabled and only the Image-Based Strength slider applies.
+        var betaToggle = AntiRecoil.AddToggle(Locale.UseImageBasedAntiRecoil);
+        betaToggle.ToolTip = Locale.UseImageBasedAntiRecoilHelp;
+        betaToggle.BindTo(() => AppConfig.Current.AntiRecoilSettings.UseImageBasedAntiRecoil);
+
+        // Image-based strength (only relevant when BETA is on).
+        var strengthSlider = AntiRecoil.AddSlider(Locale.AntiRecoilStrength, Locale.Amount, 0.05, 0.05, 0, 1.5)
+            .InitWith(s => s.ToolTip = Locale.AntiRecoilStrengthHelp)
+            .BindTo(() => AppConfig.Current.AntiRecoilSettings.AutoStrength);
+
+        // Legacy manual sliders (disabled when BETA is on).
+        var holdTimeSlider = AntiRecoil.AddSlider(Locale.HoldTime, Locale.Milliseconds, 1, 1, 1, 1000, true)
+            .BindTo(() => AppConfig.Current.AntiRecoilSettings.HoldTime);
+        var recordFireRateBtn = AntiRecoil.AddButton(Locale.RecordFireRate);
+        recordFireRateBtn.Reader.Click += (s, e) => new SetAntiRecoil(this).Show();
+        var fireRateSlider = AntiRecoil.AddSlider(Locale.FireRate, Locale.Milliseconds, 1, 1, 1, 5000, true)
+            .BindTo(() => AppConfig.Current.AntiRecoilSettings.FireRate);
+        var yRecoilSlider = AntiRecoil.AddSlider(Locale.YRecoilUpDown, Locale.Move, 1, 1, -1000, 1000, true)
+            .BindTo(() => AppConfig.Current.AntiRecoilSettings.YRecoil);
+        var xRecoilSlider = AntiRecoil.AddSlider(Locale.XRecoilLeftRight, Locale.Move, 1, 1, -1000, 1000, true)
+            .BindTo(() => AppConfig.Current.AntiRecoilSettings.XRecoil);
+
+        // Show whichever block of controls is relevant for the engine the user selected.
+        // BETA on → only the strength slider is visible; legacy sliders + ARConfig card are
+        // collapsed entirely. BETA off → strength slider hidden, legacy + ARConfig visible.
+        void UpdateAntiRecoilVisibility()
+        {
+            bool beta = AppConfig.Current.AntiRecoilSettings.UseImageBasedAntiRecoil;
+            strengthSlider.Visibility    = beta ? Visibility.Visible : Visibility.Collapsed;
+            holdTimeSlider.Visibility    = beta ? Visibility.Collapsed : Visibility.Visible;
+            recordFireRateBtn.Visibility = beta ? Visibility.Collapsed : Visibility.Visible;
+            fireRateSlider.Visibility    = beta ? Visibility.Collapsed : Visibility.Visible;
+            yRecoilSlider.Visibility     = beta ? Visibility.Collapsed : Visibility.Visible;
+            xRecoilSlider.Visibility     = beta ? Visibility.Collapsed : Visibility.Visible;
+            // Collapse the entire "Anti Recoil Config" card too (the FluentCard Border that
+            // wraps the ARConfig StackPanel).
+            if (ARConfig.Parent is FrameworkElement arCard)
+                arCard.Visibility = beta ? Visibility.Collapsed : Visibility.Visible;
+        }
+        AppConfig.Current.AntiRecoilSettings.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName == nameof(AntiRecoilSettings.UseImageBasedAntiRecoil))
+                Dispatcher.Invoke(UpdateAntiRecoilVisibility);
+        };
+        UpdateAntiRecoilVisibility();
+
         AntiRecoil.AddSeparator();
         AntiRecoil.Visibility = GetVisibilityFor(nameof(AntiRecoil));
 
@@ -873,7 +916,8 @@ public partial class MainWindow
 
         #region Anti Recoil Config
 
-        // Anti-Recoil Config
+        // Anti-Recoil Config — per-gun manual recoil patterns. Only meaningful when the legacy
+        // (non-BETA) pattern-based path is active.
         ARConfig.AddTitle(Locale.AntiRecoilConfig, true);
         ARConfig.AddToggleWithKeyBind(Locale.EnableGunSwitchingKeybind, nameof(Locale.EnableGunSwitchingKeybind), BindingManager).BindTo(() => AppConfig.Current.ToggleState.EnableGunSwitchingKeybind).BindActiveStateColor(ARConfig);
         ARConfig.AddButton(Locale.SaveAntiRecoilConfig).Reader.Click += (s, e) =>
