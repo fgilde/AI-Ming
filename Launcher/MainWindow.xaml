@@ -148,10 +148,145 @@
                                        FontFamily="Segoe UI Variable Small"
                                        FontSize="11"
                                        Margin="0,0,0,4" />
-                            <ComboBox Grid.Row="1" Grid.ColumnSpan="2"
-                                      SelectedItem="{Binding SelectedRelease, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                      ItemsSource="{Binding Releases}"
-                                      DisplayMemberPath="TagName" />
+                            <!-- Custom version picker: ToggleButton + Popup + ListBox (no WPF ComboBox shenanigans) -->
+                            <Grid Grid.Row="1" Grid.ColumnSpan="2">
+                                <ToggleButton x:Name="VersionDropToggle"
+                                              MinHeight="34"
+                                              Background="{StaticResource FluentSurface3}"
+                                              BorderBrush="{StaticResource FluentStroke}"
+                                              BorderThickness="1"
+                                              Foreground="{StaticResource FluentTextPrimary}"
+                                              Cursor="Hand"
+                                              HorizontalContentAlignment="Stretch">
+                                    <ToggleButton.Template>
+                                        <ControlTemplate TargetType="ToggleButton">
+                                            <Border x:Name="bd"
+                                                    Background="{TemplateBinding Background}"
+                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                                    CornerRadius="6"
+                                                    Padding="12,0,12,0">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0"
+                                                               Text="{Binding SelectedReleaseLabel}"
+                                                               VerticalAlignment="Center"
+                                                               Foreground="{TemplateBinding Foreground}"
+                                                               FontFamily="Segoe UI Variable Text"
+                                                               FontSize="13" />
+                                                    <Path Grid.Column="1"
+                                                          x:Name="Chevron"
+                                                          Data="M 0,0 L 4,4 L 8,0 Z"
+                                                          Width="8" Height="4"
+                                                          Fill="{StaticResource FluentTextSecondary}"
+                                                          VerticalAlignment="Center"
+                                                          Margin="6,0,0,0" />
+                                                </Grid>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource FluentAccent}" />
+                                                </Trigger>
+                                                <Trigger Property="IsChecked" Value="True">
+                                                    <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource FluentAccent}" />
+                                                    <Setter TargetName="Chevron" Property="Fill" Value="{StaticResource FluentAccent}" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </ToggleButton.Template>
+                                </ToggleButton>
+                                <Popup IsOpen="{Binding IsChecked, ElementName=VersionDropToggle, Mode=TwoWay}"
+                                       PlacementTarget="{Binding ElementName=VersionDropToggle}"
+                                       Placement="Bottom"
+                                       StaysOpen="False"
+                                       AllowsTransparency="True"
+                                       PopupAnimation="Fade"
+                                       MinWidth="{Binding ActualWidth, ElementName=VersionDropToggle}">
+                                    <Border Background="{StaticResource FluentSurface2}"
+                                            BorderBrush="{StaticResource FluentStroke}"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            Padding="4"
+                                            Margin="0,4,0,8"
+                                            MinHeight="60">
+                                        <Border.Effect>
+                                            <DropShadowEffect BlurRadius="14" ShadowDepth="2" Opacity="0.4" />
+                                        </Border.Effect>
+                                        <Grid>
+                                            <TextBlock Text="No versions available"
+                                                       Foreground="{StaticResource FluentTextTertiary}"
+                                                       FontFamily="Segoe UI Variable Text"
+                                                       FontSize="12"
+                                                       Margin="10"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Releases.Count}" Value="0">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <ListBox x:Name="VersionList"
+                                                     MaxHeight="220"
+                                                     Background="Transparent"
+                                                     BorderThickness="0"
+                                                     Foreground="{StaticResource FluentTextPrimary}"
+                                                     FontFamily="Segoe UI Variable Text"
+                                                     FontSize="13"
+                                                     ItemsSource="{Binding Releases}"
+                                                     SelectedItem="{Binding SelectedRelease, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                                     SelectionChanged="VersionList_SelectionChanged">
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding TagName}" Padding="10,6,10,6" />
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                                <ListBox.ItemContainerStyle>
+                                                    <Style TargetType="ListBoxItem">
+                                                        <Setter Property="Background" Value="Transparent" />
+                                                        <Setter Property="BorderThickness" Value="0" />
+                                                        <Setter Property="Padding" Value="0" />
+                                                        <Setter Property="Cursor" Value="Hand" />
+                                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                                        <Setter Property="Template">
+                                                            <Setter.Value>
+                                                                <ControlTemplate TargetType="ListBoxItem">
+                                                                    <Border x:Name="bd"
+                                                                            Background="{TemplateBinding Background}"
+                                                                            CornerRadius="4"
+                                                                            Margin="0,1,0,1">
+                                                                        <ContentPresenter HorizontalAlignment="Stretch"
+                                                                                          VerticalAlignment="Center" />
+                                                                    </Border>
+                                                                    <ControlTemplate.Triggers>
+                                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                                            <Setter TargetName="bd" Property="Background" Value="{StaticResource FluentHoverOverlay}" />
+                                                                        </Trigger>
+                                                                        <Trigger Property="IsSelected" Value="True">
+                                                                            <Setter TargetName="bd" Property="Background" Value="{StaticResource FluentAccent}" />
+                                                                            <Setter Property="Foreground" Value="{StaticResource FluentAccentForeground}" />
+                                                                        </Trigger>
+                                                                    </ControlTemplate.Triggers>
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Style>
+                                                </ListBox.ItemContainerStyle>
+                                            </ListBox>
+                                        </Grid>
+                                    </Border>
+                                </Popup>
+                            </Grid>
 
                             <TextBlock Grid.Row="2" Grid.ColumnSpan="2"
                                        Text="Execution mode"
@@ -218,7 +353,7 @@
                                 MinWidth="100"
                                 Margin="0,0,8,0"
                                 Visibility="{Binding InstallVisibility}" />
-                        <Button IsEnabled="{Binding CanClose}"
+                        <Button IsEnabled="{Binding CanInstall}"
                                 Style="{StaticResource FluentAccentButton}"
                                 Click="Install_Click"
                                 Content="Install"

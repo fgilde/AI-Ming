@@ -1,31 +1,79 @@
-﻿using System.Collections.ObjectModel;
-using System.Windows.Threading;
+using System.Collections.ObjectModel;
 using Core;
 
 public class ReleaseManager
 {
+    /// <summary>
+    ///     Last error message from the most recent <see cref="LoadReleasesAsync"/> call.
+    ///     <c>null</c> on success. Useful to surface to the user when the dropdown ends up empty.
+    /// </summary>
+    public static string? LastError { get; private set; }
+
+    /// <summary>
+    ///     Loads release tags into <paramref name="releases"/>. Tries the fork first, then falls
+    ///     back to the upstream Babyhamsta/Aimmy repo if the fork has no releases or the call
+    ///     failed (e.g. GitHub rate limit). The collection is updated on the UI thread.
+    /// </summary>
     public static async Task LoadReleasesAsync(ObservableCollection<GitHubRelease> releases)
     {
+        LastError = null;
+        var sources = new (string Owner, string Name)[]
+        {
+            (Constants.RepoOwner, Constants.RepoName),
+            (Constants.UpstreamRepoOwner, Constants.UpstreamRepoName)
+        };
+
+        var manager = new GithubManager();
         try
         {
-            var manager = new GithubManager();
-            var repoOwner = Constants.RepoOwner;
-            var repoName = Constants.RepoName;
+            List<GitHubRelease> all = new();
+            Exception? lastException = null;
 
-            var availableReleases = (await manager.GetAvailableReleasesAsync(repoOwner, repoName)).ToList();
+            foreach (var (owner, name) in sources)
+            {
+                try
+                {
+                    var fetched = (await manager.GetAvailableReleasesAsync(owner, name)).ToList();
+                    if (fetched.Count > 0)
+                    {
+                        all = fetched;
+                        break; // first source with releases wins (fork preferred)
+                    }
+                }
+                catch (Exception ex)
+                {
+                    lastException = ex;
+                }
+            }
+
+            if (all.Count == 0 && lastException != null)
+            {
+                LastError = ShortError(lastException);
+            }
 
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
                 releases.Clear();
-                foreach (var release in availableReleases)
-                {
-                    releases.Add(release);
-                }
+                foreach (var release in all) releases.Add(release);
             });
         }
         catch (Exception e)
         {
-            // Log error
+            LastError = ShortError(e);
         }
+        finally
+        {
+            manager.Dispose();
+        }
+    }
+
+    private static string ShortError(Exception e)
+    {
+        var msg = e.Message ?? string.Empty;
+        if (msg.Contains("API rate limit", StringComparison.OrdinalIgnoreCase))
+            return "GitHub API rate limit reached. Try again later.";
+        if (msg.Contains("403"))
+            return "GitHub denied the request (rate limit?). Try again later.";
+        return msg.Length > 160 ? msg.Substring(0, 160) + "…" : msg;
     }
 }
