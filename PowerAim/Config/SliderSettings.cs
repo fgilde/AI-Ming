@@ -2,44 +2,18 @@
 
 namespace PowerAim.Config;
 
-public class SliderSettings: BaseSettings
+public class SliderSettings : BaseSettings
 {
-    private string _suggestedModel = "";
     private double _fovSize = 640;
     private double _dynamicFovSize = 200;
-    private double _mouseSensitivity = 0.90;
-    private double _mouseJitter = 6;
-    private double _yOffset = 0;
-    private double _yOffsetPercentage = 90;
-    private double _xOffsetPercentage = 50;
-    private double _emaSmoothening = 0.5;
-    private double _aiMinimumConfidence = 45;
-    private double _gamepadMinimumLt = 0.7;
-    private double _gamepadMinimumRt = 0.7;
-    private int _aiConfidenceFontSize = 20;
-    private double _cornerRadius = 0;
-    private double _borderThickness = 1;
-    private double _opacity = 1;
-    private double _fovOpacity = 1;
-    private double _firePressDelay = 0.1;
-    private float _magnificationFactor = 2;
-    private double _magnifierWindowHeight = 250;
-    private double _magnifierWindowWidth = 350;
-    private float _magnificationStepFactor = 0.5f;
-    private int _imageSize = 640;
-    private double _maxInferenceFps = 0;
 
     /// <summary>
     ///     Maximum inference frames-per-second the AI loop is allowed to run at. <c>0</c> means
-    ///     unlimited (the loop runs as fast as <see cref="PredictionLogic"/> will let it). Useful
+    ///     unlimited (the loop runs as fast as <see cref="PredictionLogic" /> will let it). Useful
     ///     for capping GPU/CPU load and pairing well with the
-    ///     <see cref="PowerAim.AILogic.PerformanceBenchmark"/> recommendations.
+    ///     <see cref="PowerAim.AILogic.PerformanceBenchmark" /> recommendations.
     /// </summary>
-    public double MaxInferenceFPS
-    {
-        get => _maxInferenceFps;
-        set => SetField(ref _maxInferenceFps, value);
-    }
+    public double MaxInferenceFPS { get; set => SetField(ref field, value); } = 0;
 
     /// <summary>
     ///     Square ONNX input size the AI runs at. For fixed-size models this is auto-detected from
@@ -47,153 +21,65 @@ public class SliderSettings: BaseSettings
     ///     For dynamic-axis ONNX models this is the user-selected runtime resolution
     ///     (160/256/320/416/512/640 are the supported strides for YOLOv8 anchor-free).
     /// </summary>
-    public int ImageSize
-    {
-        get => _imageSize;
-        set => SetField(ref _imageSize, value);
-    }
+    public int ImageSize { get; set => SetField(ref field, value); } = 640;
 
-    public string SuggestedModel
-    {
-        get => _suggestedModel;
-        set => SetField(ref _suggestedModel, value);
-    }
+    public string SuggestedModel { get; set => SetField(ref field, value); } = "";
 
-    public double ActualFovSize => AppConfig.Current.ToggleState.DynamicFOV && InputBindingManager.IsHoldingBinding(nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind)) ? _dynamicFovSize : _fovSize;
+    public double ActualFovSize =>
+        AppConfig.Current.ToggleState.DynamicFOV &&
+        InputBindingManager.IsHoldingBinding(nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind))
+            ? _dynamicFovSize
+            : _fovSize;
 
-    public double FOVSize
-    {
-        get => _fovSize;
-        set => SetField(ref _fovSize, value);
-    }
+    public double FOVSize { get => _fovSize; set => SetField(ref _fovSize, value); }
 
-    public double DynamicFOVSize
-    {
-        get => _dynamicFovSize;
-        set => SetField(ref _dynamicFovSize, value);
-    }
+    public double DynamicFOVSize { get => _dynamicFovSize; set => SetField(ref _dynamicFovSize, value); }
 
-    public double MouseSensitivity  
-    {
-        get => _mouseSensitivity;
-        set => SetField(ref _mouseSensitivity, value);
-    }
+    public double MouseSensitivity { get; set => SetField(ref field, value); } = 0.90;
 
-    public double MouseJitter
-    {
-        get => _mouseJitter;
-        set => SetField(ref _mouseJitter, value);
-    }
+    public double MouseJitter { get; set => SetField(ref field, value); } = 6;
 
-    public double YOffset
-    {
-        get => _yOffset;
-        set => SetField(ref _yOffset, value);
-    }
+    public double YOffset { get; set => SetField(ref field, value); } = 0;
 
-    public double YOffsetPercentage
-    {
-        get => _yOffsetPercentage;
-        set => SetField(ref _yOffsetPercentage, value);
-    }
+    public double YOffsetPercentage { get; set => SetField(ref field, value); } = 90;
 
     public double XOffset { get; set; } = 0;
 
-    public double XOffsetPercentage
-    {
-        get => _xOffsetPercentage;
-        set => SetField(ref _xOffsetPercentage, value);
-    }
+    public double XOffsetPercentage { get; set => SetField(ref field, value); } = 50;
 
-    public double EMASmoothening
-    {
-        get => _emaSmoothening;
-        set => SetField(ref _emaSmoothening, value);
-    }
+    public double EMASmoothening { get; set => SetField(ref field, value); } = 0.5;
 
-    public double FirePressDelay
-    {
-        get => _firePressDelay;
-        set => SetField(ref _firePressDelay, value);
-    }
+    public double FirePressDelay { get; set => SetField(ref field, value); } = 0.1;
 
-    public double AIMinimumConfidence
-    {
-        get => _aiMinimumConfidence;
-        set => SetField(ref _aiMinimumConfidence, value);
-    }
+    public double AIMinimumConfidence { get; set => SetField(ref field, value); } = 45;
 
-    public float MagnificationStepFactor    
-    {
-        get => _magnificationStepFactor;
-        set => SetField(ref _magnificationStepFactor, value);
-    }
+    public float MagnificationStepFactor { get; set => SetField(ref field, value); } = 0.5f;
 
-    public float MagnificationFactor
-    {
-        get => _magnificationFactor;
-        set => SetField(ref _magnificationFactor, value);
-    }
+    public float MagnificationFactor { get; set => SetField(ref field, value); } = 2;
 
-    public double MagnifierWindowHeight
-    {
-        get => _magnifierWindowHeight;
-        set => SetField(ref _magnifierWindowHeight, value);
-    }
+    public double MagnifierWindowHeight { get; set => SetField(ref field, value); } = 250;
 
-    public double MagnifierWindowWidth
-    {
-        get => _magnifierWindowWidth;
-        set => SetField(ref _magnifierWindowWidth, value);
-    }
+    public double MagnifierWindowWidth { get; set => SetField(ref field, value); } = 350;
 
-    public double GamepadMinimumLT
-    {
-        get => _gamepadMinimumLt;
-        set => SetField(ref _gamepadMinimumLt, value);
-    }
+    public double GamepadMinimumLT { get; set => SetField(ref field, value); } = 0.7;
 
-    public double GamepadMinimumRT
-    {
-        get => _gamepadMinimumRt;
-        set => SetField(ref _gamepadMinimumRt, value);
-    }
+    public double GamepadMinimumRT { get; set => SetField(ref field, value); } = 0.7;
 
-    public int AIConfidenceFontSize
-    {
-        get => _aiConfidenceFontSize;
-        set => SetField(ref _aiConfidenceFontSize, value);
-    }
+    public int AIConfidenceFontSize { get; set => SetField(ref field, value); } = 20;
 
-    public double CornerRadius
-    {
-        get => _cornerRadius;
-        set => SetField(ref _cornerRadius, value);
-    }
+    public double CornerRadius { get; set => SetField(ref field, value); }
 
-    public double BorderThickness
-    {
-        get => _borderThickness;
-        set => SetField(ref _borderThickness, value);
-    }
+    public double BorderThickness { get; set => SetField(ref field, value); } = 1;
 
-    public double Opacity
-    {
-        get => _opacity;
-        set => SetField(ref _opacity, value);
-    }
+    public double Opacity { get; set => SetField(ref field, value); } = 1;
 
-    public double FOVOpacity
-    {
-        get => _fovOpacity;
-        set => SetField(ref _fovOpacity, value);
-    }
+    public double FOVOpacity { get; set => SetField(ref field, value); } = 1;
 
     internal override void OnPropertyChanged(string? propertyName = null)
     {
         if (propertyName is nameof(FOVSize) or nameof(DynamicFOVSize))
             OnPropertyChanged(nameof(ActualFovSize));
-        
+
         base.OnPropertyChanged(propertyName);
     }
 }

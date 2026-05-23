@@ -19,7 +19,6 @@ namespace InputLogic
     {
 
         private static DateTime LastClickTime = DateTime.MinValue;
-        private static int LastAntiRecoilClickTime = 0;
         private static Random _random = new Random();
         private const int WHEEL_DELTA = 120; 
         private static double previousX = 0;
@@ -257,23 +256,6 @@ namespace InputLogic
             LastClickTime = DateTime.UtcNow;
         }
 
-        public static void DoAntiRecoil()
-        {
-            int timeSinceLastClick = Math.Abs(DateTime.UtcNow.Millisecond - LastAntiRecoilClickTime);
-
-            if (timeSinceLastClick < AppConfig.Current.AntiRecoilSettings.FireRate)
-            {
-                return;
-            }
-
-            int xRecoil = (int)AppConfig.Current.AntiRecoilSettings.XRecoil;
-            int yRecoil = (int)AppConfig.Current.AntiRecoilSettings.YRecoil;
-
-            Move(xRecoil, yRecoil);
-
-            LastAntiRecoilClickTime = DateTime.UtcNow.Millisecond;
-        }
-
         public static void Move(int x, int y)
         {
             switch (AppConfig.Current.DropdownState.MouseMovementMethod)
@@ -302,75 +284,43 @@ namespace InputLogic
 
         public static void MoveCrosshair(int detectedX, int detectedY, Rectangle area)
         {
-            int halfScreenWidth = area.Width / 2;
+            int halfScreenWidth  = area.Width  / 2;
             int halfScreenHeight = area.Height / 2;
 
             int targetX = detectedX - halfScreenWidth;
             int targetY = detectedY - halfScreenHeight;
 
-            double aspectRatioCorrection = area.Width / area.Height;
-
-            int MouseJitter = (int)AppConfig.Current.SliderSettings.MouseJitter;
-            int jitterX = MouseRandom.Next(-MouseJitter, MouseJitter);
-            int jitterY = MouseRandom.Next(-MouseJitter, MouseJitter);
-
-            Point start = new(0, 0);
-            Point end = new(targetX, targetY);
-            double t = 1 - AppConfig.Current.SliderSettings.MouseSensitivity;
-            Point newPosition;
-            switch (AppConfig.Current.DropdownState.MovementPathType)
-            {
-                case MovementPathType.Lerp:
-                    newPosition = PowerAim.InputLogic.MovementPaths.Lerp(start, end, t);
-                    break;
-                case MovementPathType.Exponential:
-                    newPosition = PowerAim.InputLogic.MovementPaths.Exponential(start, end, t);
-                    break;
-                case MovementPathType.Adaptive:
-                    newPosition = PowerAim.InputLogic.MovementPaths.Adaptive(start, end, t);
-                    break;
-                case MovementPathType.PerlinNoise:
-                    newPosition = PowerAim.InputLogic.MovementPaths.PerlinNoise(start, end, t);
-                    break;
-                case MovementPathType.Bezier:
-                default:
-                    Point control1 = new(start.X + (end.X - start.X) / 3, start.Y + (end.Y - start.Y) / 3);
-                    Point control2 = new(start.X + 2 * (end.X - start.X) / 3, start.Y + 2 * (end.Y - start.Y) / 3);
-                    newPosition = CubicBezier(start, end, control1, control2, t);
-                    break;
-            }
+            double aspectRatioCorrection = area.Height > 0 ? (double)area.Width / area.Height : 1.0;
+            targetY = (int)(targetY * aspectRatioCorrection);
 
             targetX = Math.Clamp(targetX, -150, 150);
             targetY = Math.Clamp(targetY, -150, 150);
 
-            targetY = (int)(targetY * aspectRatioCorrection);
-
-            targetX += jitterX;
-            targetY += jitterY;
-
-            switch (AppConfig.Current.DropdownState.MouseMovementMethod)
+            int mouseJitter = (int)AppConfig.Current.SliderSettings.MouseJitter;
+            if (mouseJitter > 0)
             {
-                case MouseMovementMethod.SendInput:
-                    SendInputMouse.SendMouseCommand((uint)InputEventFlags.MOUSEEVENTF_MOVE, newPosition.X, newPosition.Y);
-                    break;
-
-                case MouseMovementMethod.LGHUB:
-                    LGMouse.Move(0, newPosition.X, newPosition.Y, 0);
-                    break;
-
-                case MouseMovementMethod.RazerSynapse:
-                    RZMouse.mouse_move(newPosition.X, newPosition.Y, true);
-                    break;
-
-                case MouseMovementMethod.ddxoft:
-                    DdxoftMain.ddxoftInstance.movR!(newPosition.X, newPosition.Y);
-                    break;
-
-                default:
-                    NativeAPIMethods.MouseEvent((uint)InputEventFlags.MOUSEEVENTF_MOVE, (uint)newPosition.X, (uint)newPosition.Y, 0, 0);
-                    break;
+                targetX += MouseRandom.Next(-mouseJitter, mouseJitter + 1);
+                targetY += MouseRandom.Next(-mouseJitter, mouseJitter + 1);
             }
 
+            Point start = new(0, 0);
+            Point end   = new(targetX, targetY);
+            double t    = 1 - AppConfig.Current.SliderSettings.MouseSensitivity;
+            Point newPosition = AppConfig.Current.DropdownState.MovementPathType switch
+            {
+                MovementPathType.Lerp        => MovementPaths.Lerp(start, end, t),
+                MovementPathType.Exponential => MovementPaths.Exponential(start, end, t),
+                MovementPathType.Adaptive    => MovementPaths.Adaptive(start, end, t),
+                MovementPathType.PerlinNoise => MovementPaths.PerlinNoise(start, end, t),
+                _ /* Bezier */               => CubicBezier(
+                    start, end,
+                    new Point(start.X + (end.X - start.X) / 3,     start.Y + (end.Y - start.Y) / 3),
+                    new Point(start.X + 2 * (end.X - start.X) / 3, start.Y + 2 * (end.Y - start.Y) / 3),
+                    t)
+            };
+
+            // 6) Dispatch through the same backend switch as Move().
+            Move(newPosition.X, newPosition.Y);
         }
     }
 }

@@ -52,7 +52,9 @@ public partial class MainWindow
 
     private bool _uiCreated;
     private FileManager _fileManager;
-    public AntiRecoilManager ArManager = new();
+    // AntiRecoilManager (UI-thread DispatcherTimer that called MouseManager.DoAntiRecoil)
+    // has been removed — the legacy anti-recoil now lives in AntiRecoilAction so it
+    // honours GlobalActive / the BETA toggle / pausing like every other action.
 
 
     private bool _currentlySwitching;
@@ -126,8 +128,6 @@ public partial class MainWindow
 
         // Needed to import annotations into MakeSense
         if (!File.Exists("bin\\labels\\labels.txt")) File.WriteAllText("bin\\labels\\labels.txt", "Enemy");
-
-        ArManager.HoldDownLoad();
 
         if (BindingManager != null)
         {
@@ -656,15 +656,6 @@ public partial class MainWindow
                     Animator.HeightShift(TimeSpan.FromMilliseconds(500), FOV.Instance.Circle, FOV.Instance.Circle.ActualHeight, AppConfig.Current.SliderSettings.FOVSize);
                 }
                 break;
-            // Anti Recoil
-            case nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind):
-                if (AppConfig.Current.ToggleState.AntiRecoil)
-                {
-                    ArManager.HoldDownTimer.Stop();
-                    ArManager.IndependentMousePress = 0;
-                }
-
-                break;
         }
     }
 
@@ -706,15 +697,6 @@ public partial class MainWindow
 
                 break;
 
-
-            case nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind):
-                if (AppConfig.Current.ToggleState.AntiRecoil)
-                {
-                    ArManager.IndependentMousePress = 0;
-                    ArManager.HoldDownTimer.Start();
-                }
-
-                break;
 
             case nameof(AppConfig.Current.BindingSettings.DisableAntiRecoilKeybind):
                 if (AppConfig.Current.ToggleState.AntiRecoil)

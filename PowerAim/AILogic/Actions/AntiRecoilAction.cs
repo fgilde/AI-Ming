@@ -1,237 +1,84 @@
-﻿using System.Diagnostics;
-using System.Drawing;
-using System.IO;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using PowerAim.Class.Native;
-using Gma.System.MouseKeyHook;
+using PowerAim.Config;
+using PowerAim.InputLogic;
 using InputLogic;
-using OpenCvSharp;
-using Point = System.Drawing.Point;
 
-namespace PowerAim.AILogic.Actions
+namespace PowerAim.AILogic.Actions;
+
+/// <summary>
+///     Legacy "manual" anti-recoil: while the configured trigger key (default Left Mouse
+///     Button) is held, applies a fixed per-tick (<see cref="AntiRecoilSettings.XRecoil"/>,
+///     <see cref="AntiRecoilSettings.YRecoil"/>) mouse-delta on a timer.
+///     <para>
+///     <see cref="AntiRecoilSettings.HoldTime"/> is the delay (ms) before the first correction
+///     fires after the key first goes down — gives the gun a moment of natural recoil before
+///     the compensator kicks in. <see cref="AntiRecoilSettings.FireRate"/> is the cooldown (ms)
+///     between corrections.
+///     </para>
+///     <para>
+///     Disabled (no-op) when:
+///     <list type="bullet">
+///       <item><see cref="ToggleState.GlobalActive"/> is off</item>
+///       <item><see cref="ToggleState.AntiRecoil"/> is off</item>
+///       <item>The user has enabled the experimental <see cref="ImageBasedAntiRecoilAction"/>
+///             via <see cref="AntiRecoilSettings.UseImageBasedAntiRecoil"/></item>
+///     </list>
+///     Previously this logic lived in a parallel <c>DispatcherTimer</c> on the UI thread
+///     (<c>AntiRecoilManager</c> + <c>MouseManager.DoAntiRecoil</c>) which ignored every gate
+///     above — that's been deleted; the action-class lifecycle is now the single source of truth.
+///     </para>
+/// </summary>
+public class AntiRecoilAction : BaseAction
 {
-    public class AntiRecoilAction : BaseAction
+    private DateTime _keyDownAt = DateTime.MinValue;
+    private DateTime _lastApplyAt = DateTime.MinValue;
+    private bool _wasHolding = false;
+
+    public override bool Active =>
+        base.Active &&
+        AppConfig.Current.ToggleState.AntiRecoil &&
+        !AppConfig.Current.AntiRecoilSettings.UseImageBasedAntiRecoil;
+
+    public override Task ExecuteAsync(Prediction[] predictions)
     {
-        bool active = false;
-
-        private Point? lastCrosshairPosition = null;
-        private bool isShooting = false;
-        private Mat crosshairTemplate = null;
-        private int frameCounter = 0;
-        private const int updateInterval = 10; // Update the template every 10 frames
-        private const int movementThreshold = 3; // Threshold for mouse movement
-        private double dynamicThreshold = 0.9; // Dynamic confidence threshold for matching
-        private Point[] recentPositions = new Point[5]; // Buffer for averaging positions
-
-        // Legacy pattern-based anti-recoil. Disabled when the user has switched on the
-        // experimental image-based path — then ImageBasedAntiRecoilAction takes over.
-        public override bool Active =>
-            active &&
-            base.Active &&
-            !PowerAim.Config.AppConfig.Current.AntiRecoilSettings.UseImageBasedAntiRecoil;
-
-        private bool userMovedMouse = false;
-        private bool mouseMoveAttached = false;
-        private bool autoMoved;
-
-        public override async Task ExecuteAsync(Prediction[] predictions)
+        if (!Active)
         {
-            if (!Active)
-                return;
-
-            if (!mouseMoveAttached)
-            {
-                InputBindingManager.Instance.OnMouseMoveExt += InstanceOnOnMouseMoveExt;
-                mouseMoveAttached = true;
-            }
-
-            var currentCapture = ImageCapture.Capture(ImageCapture.CaptureArea);
-
-            if (InputBindingManager.IsHoldingBinding(MouseButtons.Left))
-            {
-                frameCounter++;
-                if (/*frameCounter % updateInterval == 0 ||*/ !isShooting || userMovedMouse)
-                {
-                    isShooting = true;
-                    lastCrosshairPosition = ExtractCrosshairPosition(currentCapture); // Update template
-                    Debug.WriteLine("Crosshair template updated." + lastCrosshairPosition);
-                }
-
-                Point currentCrosshairPosition = FindCrosshairPosition(currentCapture);
-
-                // Buffer positions to average across frames
-                AddToRecentPositions(currentCrosshairPosition);
-                Point averagedPosition = GetAveragePosition();
-
-                Point smoothedPosition = ApplySmoothing(averagedPosition, lastCrosshairPosition.Value);
-
-                int deltaX = smoothedPosition.X - lastCrosshairPosition?.X ?? 0;
-                int deltaY = smoothedPosition.Y - lastCrosshairPosition?.Y ?? 0;
-
-                if (Math.Abs(deltaX) > movementThreshold || Math.Abs(deltaY) > movementThreshold)
-                {
-                    MouseMove(-deltaX, -deltaY); // Move only when there's significant difference
-                }
-
-                lastCrosshairPosition = smoothedPosition;
-            }
-            else
-            {
-                if (isShooting)
-                {
-                    isShooting = false;
-                    lastCrosshairPosition = null;
-                    crosshairTemplate?.Dispose();
-                    crosshairTemplate = null;
-                    frameCounter = 0;
-                }
-            }
-
-            await Task.CompletedTask;
-        }
-
-        // Buffer positions for averaging
-        private void AddToRecentPositions(Point newPosition)
-        {
-            for (int i = recentPositions.Length - 1; i > 0; i--)
-            {
-                recentPositions[i] = recentPositions[i - 1];
-            }
-            recentPositions[0] = newPosition;
-        }
-
-        private Point GetAveragePosition()
-        {
-            int totalX = 0;
-            int totalY = 0;
-            int count = 0;
-
-            foreach (var pos in recentPositions)
-            {
-                if (pos != null)
-                {
-                    totalX += pos.X;
-                    totalY += pos.Y;
-                    count++;
-                }
-            }
-
-            if (count == 0)
-                return new Point(0, 0);
-
-            return new Point(totalX / count, totalY / count);
-        }
-
-        private void InstanceOnOnMouseMoveExt(MouseEventExtArgs obj)
-        {
-            if (!autoMoved && obj.X != lastX && obj.Y != lastY)
-            {
-                lastX = obj.X;
-                lastY = obj.Y;
-                userMovedMouse = true;
-            }
-            else
-            {
-                userMovedMouse = false;
-            }
-        }
-
-        private Point ExtractCrosshairPosition(Bitmap capture)
-        {
-            int centerX = capture.Width / 2;
-            int centerY = capture.Height / 2;
-            int crosshairSize = 300;
-
-            Rectangle crosshairArea = new Rectangle(centerX - crosshairSize / 2, centerY - crosshairSize / 2, crosshairSize, crosshairSize);
-            Bitmap crosshairBitmap = capture.Clone(crosshairArea, capture.PixelFormat);
-            crosshairTemplate = BitmapToMat(crosshairBitmap);
-
-            return new Point(centerX, centerY);
-        }
-
-        private Point FindCrosshairPosition(Bitmap currentCapture)
-        {
-            if (crosshairTemplate == null)
-            {
-                throw new InvalidOperationException("Crosshair template has not been initialized.");
-            }
-
-            using (var captureMat = BitmapToMat(currentCapture))
-            {
-                Mat result = new Mat();
-                Cv2.MatchTemplate(captureMat, crosshairTemplate, result, TemplateMatchModes.CCoeffNormed);
-                Cv2.MinMaxLoc(result, out _, out double maxVal, out OpenCvSharp.Point maxLoc, out _);
-
-                Debug.WriteLine($"Template match confidence: {maxVal}");
-                if (maxVal >= dynamicThreshold)
-                {
-                    Debug.WriteLine($"Crosshair found at: {maxLoc.X}, {maxLoc.Y}");
-                    return new Point(maxLoc.X, maxLoc.Y);
-                }
-                else
-                {
-                    Debug.WriteLine("Template match failed. Using last known position.");
-                    return lastCrosshairPosition ?? new Point(0, 0);
-                }
-            }
-        }
-
-        private Point ApplySmoothing(Point currentCrosshairPosition, Point lastCrosshairPosition)
-        {
-            double alpha = 0.5;
-            int smoothedX = (int)(alpha * currentCrosshairPosition.X + (1 - alpha) * lastCrosshairPosition.X);
-            int smoothedY = (int)(alpha * currentCrosshairPosition.Y + (1 - alpha) * lastCrosshairPosition.Y);
-
-            return new Point(smoothedX, smoothedY);
-        }
-
-        private Mat BitmapToMat(Bitmap bitmap)
-        {
-            using (MemoryStream ms = new MemoryStream())
-            {
-                bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
-                byte[] imageData = ms.ToArray();
-                return Cv2.ImDecode(imageData, ImreadModes.Color);
-            }
-        }
-
-        private void MouseMove(int deltaX, int deltaY)
-        {
-            autoMoved = true;
-            //MouseManager.Move(deltaX, deltaY);
-            var inputs = new MINPUT[1];
-            inputs[0].type = (uint)MInputType.INPUT_MOUSE;
-            inputs[0].U.mi = new MOUSEINPUT
-            {
-                dx = deltaX, // Relative movement
-                dy = deltaY, // Relative movement
-                dwFlags = (uint)(InputEventFlags.MOUSEEVENTF_MOVE | InputEventFlags.MOUSEEVENTF_MOVE_NOCOALESCE)
-            };
-
-            NativeAPIMethods.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
-
-            autoMoved = false;
-        }
-
-        public override Task OnPause()
-        {
+            _wasHolding = false;
             return Task.CompletedTask;
         }
 
-        public override Task OnResume()
+        var keybind = AppConfig.Current.BindingSettings.AntiRecoilKeybind;
+        bool isHolding = keybind != null && keybind.IsValid
+            ? InputBindingManager.IsHoldingBindingFor(keybind, TimeSpan.Zero)
+            : InputBindingManager.IsHoldingBinding(MouseButtons.Left);
+
+        if (!isHolding)
         {
+            _wasHolding = false;
             return Task.CompletedTask;
         }
 
-        public override void Dispose()
+        var now = DateTime.UtcNow;
+
+        // First tick after the key goes down — start the hold-time clock.
+        if (!_wasHolding)
         {
-            crosshairTemplate?.Dispose();
+            _keyDownAt = now;
+            _lastApplyAt = now;
+            _wasHolding = true;
+            return Task.CompletedTask;
         }
 
-        private int lastX = 0;
-        private int lastY = 0;
-        private int ScreenWidth = 5120;
-        private int ScreenHeight = 1440;
+        var settings = AppConfig.Current.AntiRecoilSettings;
+        if ((now - _keyDownAt).TotalMilliseconds < settings.HoldTime) return Task.CompletedTask;
+        if ((now - _lastApplyAt).TotalMilliseconds < settings.FireRate) return Task.CompletedTask;
+
+        MouseManager.Move(settings.XRecoil, settings.YRecoil);
+        _lastApplyAt = now;
+        return Task.CompletedTask;
     }
+
+    public override Task OnPause()  { _wasHolding = false; return Task.CompletedTask; }
+    public override Task OnResume() => Task.CompletedTask;
+    public override void Dispose() { /* no resources to release */ }
 }

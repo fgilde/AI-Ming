@@ -2,168 +2,142 @@
 
 public class ToggleState : BaseSettings
 {
-    private bool _globalActive = false;
-    private bool _aimAssist = false;
-    private bool _predictions = false;
-    private bool _emaSmoothening = false;
-    private bool _enableGunSwitchingKeybind = false;
-    private bool _autoTrigger = true;
-    private bool _antiRecoil = false;
-    private bool _fov = false;
-    private bool _dynamicFov = false;
-    private bool _masking = false;
-    private bool _showDetectedPlayer = false;
-    private bool _showTriggerHeadArea = true;
-    private bool _showAiConfidence = true;
-    private bool _showTracers = true;
-    private bool _collectDataWhilePlaying = false;
-    private bool _autoLabelData = false;
-    private bool _lgHubMouseMovement = false;
-    private bool _uiTopMost = true;
     private bool _hideUIFromCapture = true;
-    private bool _xAxisPercentageAdjustment = false;
-    private bool _yAxisPercentageAdjustment = true;
-    private bool _autoHideController;
-    private bool _showCapturedArea = true;
-    private bool _ensureCaptureForeground;
-    private bool _showSizes;
-    private bool _showHelpTexts = true;
-    private bool _autoPlay = false;
 
     public bool AutoPlay
     {
-        get => _autoPlay;
-        set => SetField(ref _autoPlay, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public bool EnsureCaptureForeground
     {
-        get => _ensureCaptureForeground;
-        set => SetField(ref _ensureCaptureForeground, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public bool ShowCapturedArea
     {
-        get => _showCapturedArea;
+        get;
         set
         {
-            if(SetField(ref _showCapturedArea, value))
+            if (SetField(ref field, value))
                 AppConfig.Current?.ColorState?.OnPropertyChanged(nameof(ColorState.ActiveCapturedAreaBorderBrush));
         }
-    }
+    } = true;
 
     public bool AutoHideController
     {
-        get => _autoHideController;
-        set => SetField(ref _autoHideController, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public bool GlobalActive
     {
-        get => _globalActive;
-        set => SetField(ref _globalActive, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = false;
 
     public bool AimAssist
     {
-        get => _aimAssist;
-        set => SetField(ref _aimAssist, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public bool Predictions
     {
-        get => _predictions;
-        set => SetField(ref _predictions, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public bool EMASmoothening
     {
-        get => _emaSmoothening;
-        set => SetField(ref _emaSmoothening, value);
+        get;
+        set => SetField(ref field, value);
     }
-    
+
     public bool EnableGunSwitchingKeybind
     {
-        get => _enableGunSwitchingKeybind;
-        set => SetField(ref _enableGunSwitchingKeybind, value);
+        get;
+        set => SetField(ref field, value);
     }
-    
+
     public bool AutoTrigger
     {
-        get => _autoTrigger;
-        set => SetField(ref _autoTrigger, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = true;
 
     public bool AntiRecoil
     {
-        get => _antiRecoil;
-        set => SetField(ref _antiRecoil, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public bool FOV
     {
-        get => _fov;
-        set => SetField(ref _fov, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public bool DynamicFOV
     {
-        get => _dynamicFov;
-        set => SetField(ref _dynamicFov, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public bool Masking
     {
-        get => _masking;
-        set => SetField(ref _masking, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public bool ShowDetectedPlayer
     {
-        get => _showDetectedPlayer;
-        set => SetField(ref _showDetectedPlayer, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public bool ShowSizes
     {
-        get => _showSizes;
-        set => SetField(ref _showSizes, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public bool ShowTriggerHeadArea
     {
-        get => _showTriggerHeadArea;
-        set => SetField(ref _showTriggerHeadArea, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = true;
 
     public bool ShowAIConfidence
     {
-        get => _showAiConfidence;
-        set => SetField(ref _showAiConfidence, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = true;
 
     public bool ShowTracers
     {
-        get => _showTracers;
-        set => SetField(ref _showTracers, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = true;
 
     public bool CollectDataWhilePlaying
     {
-        get => _collectDataWhilePlaying;
-        set => SetField(ref _collectDataWhilePlaying, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public bool AutoLabelData
     {
-        get => _autoLabelData;
-        set => SetField(ref _autoLabelData, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public bool LGHubMouseMovement
     {
-        get => _lgHubMouseMovement;
-        set => SetField(ref _lgHubMouseMovement, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public bool HideUIFromCapture
@@ -174,25 +148,25 @@ public class ToggleState : BaseSettings
 
     public bool ShowHelpTexts
     {
-        get => _showHelpTexts;
-        set => SetField(ref _showHelpTexts, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = true;
 
     public bool UITopMost
     {
-        get => _uiTopMost;
-        set => SetField(ref _uiTopMost, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = true;
 
     public bool XAxisPercentageAdjustment
     {
-        get => _xAxisPercentageAdjustment;
-        set => SetField(ref _xAxisPercentageAdjustment, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public bool YAxisPercentageAdjustment
     {
-        get => _yAxisPercentageAdjustment;
-        set => SetField(ref _yAxisPercentageAdjustment, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = true;
 }
