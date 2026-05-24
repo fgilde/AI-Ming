@@ -400,7 +400,7 @@ namespace PowerAim.UILibrary
             tile.SetResourceReference(Button.ForegroundProperty, "FluentTextPrimary");
             tile.ToolTip = process.MainWindowTitle;
 
-            // Live highlight on the actual window while hovering this tile.
+
             tile.MouseEnter += (_, _) => PowerAim.Visuality.CaptureHighlightOverlay.ShowFor(process.MainWindowHandle);
             tile.MouseLeave += (_, _) => PowerAim.Visuality.CaptureHighlightOverlay.HideOverlay();
             return tile;

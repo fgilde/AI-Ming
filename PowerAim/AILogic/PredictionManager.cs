@@ -115,6 +115,25 @@ internal class KalmanPrediction
 
         double leadTime = PredictionSettings.KalmanLeadTime;
 
+        // ---------- Adaptive lead-time ----------
+        // Recoil is irrelevant here — we're predicting the *target* not our own gun. The lead
+        // time we need depends on how fast the target is currently moving across the screen:
+        //   • slow / stationary target → very little lead, otherwise we shoot ahead of empty air
+        //   • fast strafing target     → more lead, otherwise we shoot behind them
+        // The Kalman state already tracks (vx, vy) in pixels/sec, so we can scale lead between
+        // a configured min and max based on the magnitude. The slider value
+        // (PredictionSettings.KalmanLeadTime) is taken as the *median* / centre point of the
+        // adaptive range, keeping backwards-compatibility with user calibration.
+        if (PredictionSettings.AdaptiveKalmanLead)
+        {
+            double speed = Math.Sqrt(_vx * _vx + _vy * _vy); // pixels per second
+            // 0 px/s → multiplier 0.4 (less lead than baseline)
+            // 200 px/s → 1.0 (baseline)
+            // 800+ px/s → up to 1.6 (more lead)
+            double mult = Math.Clamp(0.4 + speed / 250.0, 0.4, 1.6);
+            leadTime *= mult;
+        }
+
         if (mouseSpeed > 0.0)
         {
             // Estimate animation completion time from mouse speed.
@@ -344,6 +363,13 @@ internal static class PredictionSettings
 {
     /// <summary>Lead time used by the Kalman predictor, in seconds.</summary>
     public static double KalmanLeadTime { get; set; } = 0.10;
+
+    /// <summary>
+    ///     When true, the Kalman predictor scales lead-time based on the observed target speed:
+    ///     stationary targets get ~40 % of the baseline (less over-shoot), fast strafing targets
+    ///     get up to 160 % (more anticipation). Default <c>true</c>.
+    /// </summary>
+    public static bool AdaptiveKalmanLead { get; set; } = true;
 
     /// <summary>Lead time used by the WiseTheFox predictor, in seconds.</summary>
     public static double WiseTheFoxLeadTime { get; set; } = 0.15;

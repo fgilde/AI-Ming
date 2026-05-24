@@ -32,6 +32,9 @@
                       GlassFrameThickness="-1"
                       UseAeroCaptionButtons="False" />
     </WindowChrome.WindowChrome>
+    <Window.InputBindings>
+        <KeyBinding Key="F" Modifiers="Control" Command="{x:Static poweraim:MainWindow.OpenSearchCommand}" />
+    </Window.InputBindings>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
@@ -137,10 +140,72 @@
                                     x:Name="TopCenterGrid" />
                     </Border>
 
-                    <!-- Right cluster: section badge + window controls -->
+                    <!-- Right cluster: search + section badge + window controls -->
                     <StackPanel Grid.Column="2"
                                 Orientation="Horizontal"
                                 VerticalAlignment="Center">
+                        <!-- Global search lupe -->
+                        <Button x:Name="GlobalSearchButton"
+                                Content="&#xE721;"
+                                FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                                FontSize="14"
+                                Width="36" Height="36"
+                                Padding="0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="{StaticResource FluentTextPrimary}"
+                                ToolTip="Find a setting (Ctrl+F)"
+                                WindowChrome.IsHitTestVisibleInChrome="True"
+                                Click="GlobalSearchButton_Click"
+                                Margin="0,0,8,0" />
+                        <Popup x:Name="GlobalSearchPopup"
+                               Placement="Bottom"
+                               PlacementTarget="{Binding ElementName=GlobalSearchButton}"
+                               HorizontalOffset="-340"
+                               VerticalOffset="4"
+                               AllowsTransparency="True"
+                               PopupAnimation="Fade"
+                               StaysOpen="False">
+                            <Border Background="{StaticResource FluentSurface2}"
+                                    BorderBrush="{StaticResource FluentStroke}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Width="400"
+                                    Padding="8">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="16" ShadowDepth="2" Opacity="0.4" />
+                                </Border.Effect>
+                                <StackPanel>
+                                    <TextBox x:Name="GlobalSearchBox"
+                                             MinHeight="32"
+                                             FontFamily="Segoe UI Variable Text"
+                                             FontSize="13"
+                                             Padding="8,4,8,4"
+                                             Background="{StaticResource FluentSurface3}"
+                                             BorderBrush="{StaticResource FluentStroke}"
+                                             Foreground="{StaticResource FluentTextPrimary}"
+                                             Tag="Search settings…"
+                                             Style="{DynamicResource placeHolder}"
+                                             TextChanged="GlobalSearchBox_TextChanged"
+                                             KeyDown="GlobalSearchBox_KeyDown" />
+                                    <Border Height="1"
+                                            Background="{StaticResource FluentStroke}"
+                                            Margin="0,6,0,6" />
+                                    <ScrollViewer MaxHeight="360"
+                                                  VerticalScrollBarVisibility="Auto"
+                                                  PanningMode="VerticalOnly">
+                                        <ItemsControl x:Name="GlobalSearchResults" />
+                                    </ScrollViewer>
+                                    <TextBlock x:Name="GlobalSearchHint"
+                                               Foreground="{StaticResource FluentTextTertiary}"
+                                               FontFamily="Segoe UI Variable Small"
+                                               FontSize="11"
+                                               Margin="2,6,2,0"
+                                               Text="Type to filter. Enter = jump to first result." />
+                                </StackPanel>
+                            </Border>
+                        </Popup>
+
                         <Border CornerRadius="{StaticResource PillCorner}"
                                 Background="{StaticResource FluentSurface3}"
                                 BorderBrush="{StaticResource FluentStroke}"
@@ -770,10 +835,28 @@
                                     <Border Style="{StaticResource FluentCard}">
                                         <StackPanel x:Name="CaptureSettings" />
                                     </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="ActiveProcessesSettings" />
+                                    </Border>
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" Margin="8,0,0,0">
                                     <Border Style="{StaticResource FluentCard}">
                                         <StackPanel x:Name="InputSettings" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="OverlaySettings" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="StatsCard" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="HudOcrCard" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="ReplayCard" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="LearningCard" />
                                     </Border>
                                 </StackPanel>
                             </Grid>

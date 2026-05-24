@@ -54,8 +54,27 @@ namespace Visuality
 
         private void ProcessListBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            SelectedProcess = e.AddedItems[0] as Process ?? null;
+            SelectedProcess = e.AddedItems.Count > 0 ? e.AddedItems[0] as Process : null;
             ApplyButton.IsEnabled = SelectedProcess != null;
+
+            // Highlight + foreground the picked process so the user can see exactly which window
+            // they're about to wire into PowerAim. HideOverlay fires from OnClosed.
+            if (SelectedProcess != null)
+            {
+                try
+                {
+                    var hwnd = SelectedProcess.MainWindowHandle;
+                    if (hwnd != IntPtr.Zero)
+                        PowerAim.Visuality.CaptureHighlightOverlay.ShowFor(hwnd, bringToFront: true);
+                }
+                catch { /* the process may have died between enumeration and click */ }
+            }
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            PowerAim.Visuality.CaptureHighlightOverlay.HideOverlay();
+            base.OnClosed(e);
         }
     }
 

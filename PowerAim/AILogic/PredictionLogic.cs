@@ -240,6 +240,7 @@ public class PredictionLogic : IPredictionLogic
 
             float minConfidence = (float)AppConfig.Current.SliderSettings.AIMinimumConfidence / 100.0f;
             IReadOnlyCollection<int>? allowedClassIds = ResolveAllowedClassIds();
+            IReadOnlyList<DetectionMaskRegion>? ignoreRegions = ResolveIgnoreRegions();
 
             var filtered = PredictionFilter.CreatePredictions(
                 outputTensor,
@@ -250,7 +251,8 @@ public class PredictionLogic : IPredictionLogic
                 _modelClasses,
                 minConfidence,
                 allowedClassIds,
-                fovMinX, fovMaxX, fovMinY, fovMaxY);
+                fovMinX, fovMaxX, fovMinY, fovMaxY,
+                ignoreRegions);
 
             if (filtered.Count == 0)
             {
@@ -291,6 +293,22 @@ public class PredictionLogic : IPredictionLogic
         if (ai == null || ai.TargetClassFilterMode == TargetClassFilterMode.AllClasses) return null;
         if (ai.TargetClassIds == null || ai.TargetClassIds.Count == 0) return null;
         return ai.TargetClassIds.ToArray();
+    }
+
+    /// <summary>
+    ///     Snapshot the enabled ignore-regions so the hot path doesn't race with UI edits. Returns
+    ///     <c>null</c> when no enabled regions exist, which keeps the parser on its fast path.
+    /// </summary>
+    private static IReadOnlyList<DetectionMaskRegion>? ResolveIgnoreRegions()
+    {
+        var ai = AppConfig.Current?.AISettings;
+        if (ai?.IgnoreRegions == null || ai.IgnoreRegions.Count == 0) return null;
+        var snapshot = new List<DetectionMaskRegion>(ai.IgnoreRegions.Count);
+        foreach (var r in ai.IgnoreRegions)
+        {
+            if (r != null && r.Enabled) snapshot.Add(r);
+        }
+        return snapshot.Count == 0 ? null : snapshot;
     }
 
 

@@ -78,6 +78,12 @@
     <None Include="bin\models\default.onnx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <!--<None Include="bin\configs\Default.cfg" Condition="Exists('bin\configs\Default.cfg')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="bin\models\default.onnx" Condition="Exists('bin\models\default.onnx')">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>-->
   </ItemGroup>
 
   <ItemGroup Condition="'$(IsCuda)' == 'true'">
@@ -111,6 +117,7 @@
     <PackageReference Include="MdXaml" Version="1.27.0" />
     <PackageReference Include="OpenCvSharp4" Version="4.10.0.20240616" />
     <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.10.0.20240616" />
+    <PackageReference Include="Tesseract" Version="5.2.0" />
   </ItemGroup>
 
   <ItemGroup>

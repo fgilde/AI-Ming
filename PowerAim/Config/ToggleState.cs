@@ -10,6 +10,36 @@ public class ToggleState : BaseSettings
         set => SetField(ref field, value);
     }
 
+    /// <summary>Show the topmost <see cref="Visuality.DebugOverlay"/> with live stats.</summary>
+    public bool ShowDebugOverlay
+    {
+        get;
+        set
+        {
+            if (SetField(ref field, value))
+            {
+                // Toggle the overlay on/off. Dispatched to UI thread because the WPF Window
+                // constructor needs to run there.
+                System.Windows.Application.Current?.Dispatcher?.BeginInvoke(new Action(() =>
+                    PowerAim.Visuality.DebugOverlay.ShowOrHide(value)));
+            }
+        }
+    }
+
+    /// <summary>Show the topmost <see cref="Visuality.CrosshairOverlay"/>.</summary>
+    public bool ShowCrosshairOverlay
+    {
+        get;
+        set
+        {
+            if (SetField(ref field, value))
+            {
+                System.Windows.Application.Current?.Dispatcher?.BeginInvoke(new Action(() =>
+                    PowerAim.Visuality.CrosshairOverlay.ShowOrHide(value)));
+            }
+        }
+    }
+
     public bool EnsureCaptureForeground
     {
         get;

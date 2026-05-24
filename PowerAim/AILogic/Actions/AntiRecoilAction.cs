@@ -37,7 +37,16 @@ public class AntiRecoilAction : BaseAction
     public override bool Active =>
         base.Active &&
         AppConfig.Current.ToggleState.AntiRecoil &&
-        !AppConfig.Current.AntiRecoilSettings.UseImageBasedAntiRecoil;
+        !AppConfig.Current.AntiRecoilSettings.UseImageBasedAntiRecoil &&
+        // Pattern playback owns the recoil entirely when armed — overlaying the fixed-step
+        // legacy compensation on top of recorded strokes just double-counts and feels wrong.
+        !IsPatternPlaybackArmed();
+
+    private static bool IsPatternPlaybackArmed()
+    {
+        var s = AppConfig.Current?.AntiRecoilSettings;
+        return s != null && s.UsePatternRecoil && !string.IsNullOrEmpty(s.ActivePatternName);
+    }
 
     public override Task ExecuteAsync(Prediction[] predictions)
     {

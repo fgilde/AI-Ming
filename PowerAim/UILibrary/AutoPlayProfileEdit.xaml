@@ -64,6 +64,31 @@
                                FontFamily="Segoe UI Variable Text" />
                 </StackPanel>
 
+                <!-- Match Process (per-game auto-switch) -->
+                <StackPanel Margin="0 10 0 0">
+                    <Label Foreground="{StaticResource Foreground}"
+                           FontSize="13"
+                           Content="Match process (optional)"
+                           FontFamily="Segoe UI Variable Text" />
+                    <TextBox BorderThickness="1"
+                             Padding="3 5 1 5"
+                             Text="{Binding Profile.MatchProcess, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Margin="2, 5"
+                             Tag="cs2*, valorant, *fortnite*"
+                             FontFamily="Segoe UI Variable Text"
+                             Style="{DynamicResource placeHolder}"
+                             BorderBrush="{DynamicResource FluentStroke}"
+                             Background="Transparent"
+                             Foreground="{StaticResource Foreground}" />
+                    <TextBlock Foreground="{StaticResource Foreground}"
+                               FontSize="11"
+                               Margin="2 0 0 10"
+                               TextWrapping="Wrap"
+                               Visibility="{Binding Converter={StaticResource helpVis}}"
+                               Text="When set, this profile only fires while a process matching the pattern is focused. Supports wildcards (*, ?) and pipes (cs2|valorant). Leave empty for always-on."
+                               FontFamily="Segoe UI Variable Text" />
+                </StackPanel>
+
                 <!-- Decision Interval -->
                 <StackPanel x:Name="DecisionIntervalPanel" Margin="0 5 0 0" />
 

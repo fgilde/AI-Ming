@@ -16,6 +16,7 @@ public class ActionTrigger : EditableNotificationObject
     private string _name;
     private bool _enabled;
     private bool _chargeMode;
+    private string _matchProcess = "";
 
     private ObservableCollection<StoredInputBinding> _actions = [MouseButtons.Left, GamepadSlider.RightTrigger];
     private ObservableCollection<StoredInputBinding> _antiTriggerKeys = new();
@@ -243,7 +244,36 @@ public class ActionTrigger : EditableNotificationObject
     }
 
     public bool IsValid => !string.IsNullOrWhiteSpace(Name) && Actions.Any(a => a is { IsValid: true });
-    public bool IsActive => IsValid && Enabled && /*AppConfig.Current.ToggleState.GlobalActive &&*/ AppConfig.Current.ToggleState.AutoTrigger;
+    /// <summary>
+    ///     Optional process-name pattern (wildcard / pipe-separated) that scopes this trigger
+    ///     to a specific game. Empty (default) = active in every process. Matched via
+    ///     <see cref="PowerAim.Class.ProcessMatcher"/> against the currently focused process.
+    ///     Only consulted when <see cref="ActiveProcessSettings.AutoSwitchProfile"/> is on.
+    /// </summary>
+    public string MatchProcess
+    {
+        get => _matchProcess;
+        set => SetProperty(ref _matchProcess, value ?? "");
+    }
+
+    /// <summary>
+    ///     True when the trigger should fire right now: must be valid, enabled, AutoTrigger
+    ///     toggle on, and (if Auto-Switch-Profile is enabled) the foreground process must
+    ///     match <see cref="MatchProcess"/>.
+    /// </summary>
+    public bool IsActive =>
+        IsValid &&
+        Enabled &&
+        AppConfig.Current.ToggleState.AutoTrigger &&
+        ProcessMatchesIfFilterEnabled();
+
+    private bool ProcessMatchesIfFilterEnabled()
+    {
+        var settings = AppConfig.Current.ActiveProcessSettings;
+        if (settings == null || !settings.AutoSwitchProfile) return true;
+        if (string.IsNullOrWhiteSpace(_matchProcess)) return true; // no filter on this entry
+        return PowerAim.Class.ProcessMatcher.Matches(_matchProcess, PowerAim.Class.WindowFocusWatcher.Instance.CurrentProcessName);
+    }
     public string Description => this.GetDescription();
 
 }

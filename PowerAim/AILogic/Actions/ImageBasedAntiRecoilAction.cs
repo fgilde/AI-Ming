@@ -44,7 +44,11 @@ public class ImageBasedAntiRecoilAction : BaseAction
     public override bool Active =>
         base.Active &&
         AppConfig.Current.ToggleState.AntiRecoil &&
-        AppConfig.Current.AntiRecoilSettings.UseImageBasedAntiRecoil;
+        AppConfig.Current.AntiRecoilSettings.UseImageBasedAntiRecoil &&
+        // If pattern playback is armed, that path owns the recoil compensation entirely. Running
+        // the BETA EMA-baseline on top would just fight the recorded strokes.
+        !(AppConfig.Current.AntiRecoilSettings.UsePatternRecoil
+          && !string.IsNullOrEmpty(AppConfig.Current.AntiRecoilSettings.ActivePatternName));
 
     public override Task ExecuteAsync(Prediction[] predictions)
     {

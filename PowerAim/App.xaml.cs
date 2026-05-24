@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Reflection;
 using System.Windows;
+using PowerAim.AILogic;
 using PowerAim.Config;
 using PowerAim.Theme;
 
@@ -15,6 +16,19 @@ namespace PowerAim
         {
             base.OnStartup(e);
             ThemeManager.Initialize();
+            // Boot the OCR sampler — it ticks whenever OcrSettings.Enabled is true and
+            // gracefully no-ops when no regions are configured or eng.traineddata is missing.
+            OcrService.Instance.Start();
+            // Best-effort load of the persisted AutoPlay learning model. Failures are silent —
+            // the model just starts empty and the recorder fills it over time.
+            try { AutoPlayLearningModel.Instance.Load(AppConfig.Current?.AutoPlayLearningSettings?.ModelPath); }
+            catch { /* ignored */ }
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            OcrService.Instance.Stop();
+            base.OnExit(e);
         }
 
         public string ReadEmbeddedResource(string resourceName)

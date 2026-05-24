@@ -76,6 +76,10 @@ public class AutoPlayGameAction : BaseAction
     // ------ Tactical cooldown ----
     private DateTime _nextTacticalUse = DateTime.MinValue;
 
+    // ------ OCR-driven cues ----
+    private DateTime _lastReloadAt = DateTime.MinValue;
+    private DateTime _healthRetreatUntil = DateTime.MinValue;
+
     // ------ Strategic layer ----
     private CancellationTokenSource? _strategicCts;
     private Task? _strategicTask;
@@ -159,6 +163,12 @@ public class AutoPlayGameAction : BaseAction
 
         StrategicIntent intent;
         lock (_intentLock) intent = _intent;
+
+        // OCR cues override the Ollama-driven intent: low-health triggers a short retreat window
+        // that overrides whatever the strategic layer last decided.
+        MaybeReactToOcrCues();
+        if (DateTime.UtcNow < _healthRetreatUntil)
+            intent = intent with { Mode = "retreat" };
 
         if (predictions.Length > 0)
         {
@@ -353,6 +363,12 @@ public class AutoPlayGameAction : BaseAction
             }
         }
 
+        // Learning-model bias: when ApplyModel is on and we have recorded the user's habit for
+        // the current explore state, prefer their direction. BiasStrength acts as the probability
+        // we accept the suggestion vs. fall through to the default random walk.
+        var direction = TryLearnedExploreDirection();
+        if (direction != null) return direction;
+
         var patterns = new[]
         {
             "forward", "forward", "forward", "forward",
@@ -360,6 +376,35 @@ public class AutoPlayGameAction : BaseAction
             "left", "right",
         };
         return patterns[_rng.Next(patterns.Length)];
+    }
+
+    /// <summary>
+    ///     Consult <see cref="AutoPlayLearningModel"/> with the current discretized state and map
+    ///     the user's most-frequent movement action to one of our direction labels. Returns
+    ///     <c>null</c> when learning is off, when no preference is recorded, or when the dice roll
+    ///     against <see cref="AutoPlayLearningSettings.BiasStrength"/> says "use random instead".
+    /// </summary>
+    private string? TryLearnedExploreDirection()
+    {
+        var settings = AppConfig.Current?.AutoPlayLearningSettings;
+        if (settings == null || !settings.ApplyModel) return null;
+
+        string state = LearningModelStateForCurrentTick(inCombat: false);
+        string? preferred = AutoPlayLearningModel.Instance.Preferred(state);
+        if (string.IsNullOrEmpty(preferred)) return null;
+
+        double bias = Math.Clamp(settings.BiasStrength, 0, 1);
+        if (_rng.NextDouble() >= bias) return null;
+
+        return preferred switch
+        {
+            "move_forward"  => "forward",
+            "move_backward" => "back",
+            "move_left"     => "left",
+            "move_right"    => "right",
+            "jump"          => "forward",   // jump implies user was advancing
+            _               => null
+        };
     }
 
     private void ScheduleNextYawScan(DateTime now)
@@ -443,6 +488,25 @@ public class AutoPlayGameAction : BaseAction
                 a.Name.Contains(intent.ActionHint, StringComparison.OrdinalIgnoreCase));
         }
 
+        // Learning model bias: if the recorder has been used and ApplyModel is on, ask the model
+        // what the user typically does in this state and pick a tactical action whose name matches
+        // it (substring). Loss-free fallback to the random selector when no match.
+        if (action == null && AppConfig.Current.AutoPlayLearningSettings?.ApplyModel == true)
+        {
+            string state = LearningModelStateForCurrentTick(inCombat);
+            string? preferred = AutoPlayLearningModel.Instance.Preferred(state);
+            if (!string.IsNullOrEmpty(preferred))
+            {
+                var match = _tacticalActions.FirstOrDefault(a =>
+                    !_heldActions.Contains(a) && a.Name != null &&
+                    a.Name.Contains(preferred, StringComparison.OrdinalIgnoreCase));
+                // Probabilistic acceptance based on BiasStrength so the learned hint can be
+                // partially overridden by exploration.
+                double bias = AppConfig.Current.AutoPlayLearningSettings.BiasStrength;
+                if (match != null && _rng.NextDouble() < bias) action = match;
+            }
+        }
+
         if (action == null)
         {
             var candidates = _tacticalActions.Where(a => !_heldActions.Contains(a)).ToList();
@@ -457,6 +521,95 @@ public class AutoPlayGameAction : BaseAction
             ? _rng.NextDouble() * 4 + 3
             : _rng.NextDouble() * 8 + 6);
     }
+
+    /// <summary>
+    ///     Coarse state label used to look the user's preference up in
+    ///     <see cref="AutoPlayLearningModel"/>. Intentionally low-cardinality so even small
+    ///     recording sessions produce a useful prior.
+    /// </summary>
+    private string LearningModelStateForCurrentTick(bool inCombat)
+        => inCombat
+            ? (_burstOn ? "combat_burst" : "combat_aim")
+            : (_ticksWithoutEnemy < 30 ? "explore_recent" : "explore_idle");
+
+    // ============================================================================ OCR CUES ====
+
+    /// <summary>
+    ///     Inspects the OCR HUD-reader output (<see cref="OcrService.Instance.Latest"/>) and reacts
+    ///     to two well-known cues:
+    ///     <list type="bullet">
+    ///       <item><b>Ammo low</b> (region named ammo / mag / bullets, value &lt; <see cref="LowAmmoThreshold"/>):
+    ///             triggers the profile's reload action, with a cooldown so we don't spam.</item>
+    ///       <item><b>Health low</b> (region named health / hp / armor, value &lt; <see cref="LowHealthThreshold"/>):
+    ///             sets a brief retreat window that overrides the Ollama intent.</item>
+    ///     </list>
+    ///     Both cues are <i>opt-in</i> — they only fire if the user actually configured a matching
+    ///     OCR region. No region = no behaviour change.
+    /// </summary>
+    private void MaybeReactToOcrCues()
+    {
+        // OCR can be disabled entirely (engine off) — bail cheaply.
+        if (AppConfig.Current?.OcrSettings?.Enabled != true) return;
+
+        var now = DateTime.UtcNow;
+        var ocr = OcrService.Instance.Latest;
+        if (ocr.Count == 0) return;
+
+        // ---- Ammo cue ----
+        double? ammo = TryReadOcrNumber(ocr, _ammoAliases);
+        if (ammo.HasValue && ammo.Value <= LowAmmoThreshold
+            && (now - _lastReloadAt).TotalSeconds > ReloadCooldownSec)
+        {
+            if (_aReload != null && _aReload.IsValid)
+            {
+                Activate(_aReload);
+                _lastReloadAt = now;
+                Log($"OCR: ammo={ammo.Value:0} → reload");
+            }
+        }
+
+        // ---- Health cue ----
+        double? health = TryReadOcrNumber(ocr, _healthAliases);
+        if (health.HasValue && health.Value <= LowHealthThreshold)
+        {
+            // Extend (or open) the retreat window. Letting the timer slide forward as long as
+            // health stays low avoids the bot bouncing between retreat and engage.
+            _healthRetreatUntil = now + TimeSpan.FromSeconds(HealthRetreatSeconds);
+        }
+    }
+
+    /// <summary>
+    ///     Look up the first OCR region whose name (case-insensitive) matches one of the
+    ///     <paramref name="aliases"/> and return its parsed numeric value, if any.
+    /// </summary>
+    private static double? TryReadOcrNumber(IReadOnlyDictionary<string, OcrResult> latest, string[] aliases)
+    {
+        foreach (var kv in latest)
+        {
+            foreach (var alias in aliases)
+            {
+                if (kv.Key.Equals(alias, StringComparison.OrdinalIgnoreCase)
+                    || kv.Key.Contains(alias, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Only accept readings with a sane confidence — Tesseract's confidence is
+                    // 0..1 here (already normalized in OcrService) and below 0.3 is usually noise.
+                    if (kv.Value.Confidence >= 0.3f && kv.Value.Number.HasValue)
+                        return kv.Value.Number;
+                }
+            }
+        }
+        return null;
+    }
+
+    // Region name conventions the OCR cue layer recognizes. Users can name their regions any of
+    // these (case-insensitive, substring match).
+    private static readonly string[] _ammoAliases   = { "ammo", "mag", "bullets", "magazine", "rounds" };
+    private static readonly string[] _healthAliases = { "health", "hp", "armor", "armour", "shield" };
+
+    private const double LowAmmoThreshold    = 6;
+    private const double LowHealthThreshold  = 30;
+    private const double ReloadCooldownSec   = 4.0;
+    private const double HealthRetreatSeconds = 2.5;
 
     // ============================================================================ STRATEGIC (Ollama) ====
 

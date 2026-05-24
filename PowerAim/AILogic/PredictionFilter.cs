@@ -47,9 +47,11 @@ internal static class PredictionFilter
         float fovMinX,
         float fovMaxX,
         float fovMinY,
-        float fovMaxY)
+        float fovMaxY,
+        IReadOnlyList<DetectionMaskRegion>? ignoreRegions = null)
     {
         bool classFilter = allowedClassIds != null && allowedClassIds.Count > 0;
+        bool maskFilter = ignoreRegions != null && ignoreRegions.Count > 0;
         var predictions = new List<Prediction>(Math.Min(numDetections, 64));
 
         for (int i = 0; i < numDetections; i++)
@@ -90,6 +92,22 @@ internal static class PredictionFilter
             float yMax = yCenter + height / 2f;
 
             if (xMin < fovMinX || xMax > fovMaxX || yMin < fovMinY || yMax > fovMaxY) continue;
+
+            // Ignore-region mask: drop detections whose centre falls inside any active mask. The
+            // user uses these to suppress YOLO false-positives on HUDs (ammo / minimap / kill-feed).
+            if (maskFilter)
+            {
+                bool masked = false;
+                for (int m = 0; m < ignoreRegions!.Count; m++)
+                {
+                    if (ignoreRegions[m].Contains(xCenter, yCenter, imageSize))
+                    {
+                        masked = true;
+                        break;
+                    }
+                }
+                if (masked) continue;
+            }
 
             // Match the fork's existing translation convention (see PredictionLogic prior to the
             // multi-class refactor): centers are stored as image-space coords offset by the

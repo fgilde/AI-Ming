@@ -64,6 +64,11 @@ public class AppConfig : BaseSettings
     public FileLocationState FileLocationState { get; set; } = new FileLocationState();
     public OllamaSettings OllamaSettings { get; set; } = new OllamaSettings();
     public AISettings AISettings { get; set; } = new AISettings();
+    public ActiveProcessSettings ActiveProcessSettings { get; set; } = new ActiveProcessSettings();
+    public CrosshairSettings CrosshairSettings { get; set; } = new CrosshairSettings();
+    public OcrSettings OcrSettings { get; set; } = new OcrSettings();
+    public ReplaySettings ReplaySettings { get; set; } = new ReplaySettings();
+    public AutoPlayLearningSettings AutoPlayLearningSettings { get; set; } = new AutoPlayLearningSettings();
 
     public ObservableCollection<ActionTrigger> Triggers
     {

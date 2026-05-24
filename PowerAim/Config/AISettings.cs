@@ -14,6 +14,7 @@ public class AISettings : BaseSettings
     private bool _stickyAimEnabled = true;
     private float _stickyAimMaxLockScore = 100f;
     private float _stickyAimThreshold = 80f;
+    private ObservableCollection<DetectionMaskRegion> _ignoreRegions = new();
 
     /// <summary>
     ///     When <see cref="TargetClassFilterMode"/> is <see cref="TargetClassFilterMode.SpecificIds"/>,
@@ -66,6 +67,18 @@ public class AISettings : BaseSettings
     {
         get => _stickyAimThreshold;
         set => SetField(ref _stickyAimThreshold, value);
+    }
+
+    /// <summary>
+    ///     Rectangular regions in normalized image-space whose contents are ignored by the prediction
+    ///     pipeline. Used to blank out HUDs (ammo counters, minimaps) that some models hallucinate
+    ///     enemies into. Individual regions can be toggled via <see cref="DetectionMaskRegion.Enabled"/>
+    ///     without removing them from the list.
+    /// </summary>
+    public ObservableCollection<DetectionMaskRegion> IgnoreRegions
+    {
+        get => _ignoreRegions;
+        set => SetField(ref _ignoreRegions, value);
     }
 }
 

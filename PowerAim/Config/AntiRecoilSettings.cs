@@ -1,4 +1,6 @@
-﻿namespace PowerAim.Config;
+﻿using System.Collections.ObjectModel;
+
+namespace PowerAim.Config;
 
 public class AntiRecoilSettings : BaseSettings
 {
@@ -8,6 +10,10 @@ public class AntiRecoilSettings : BaseSettings
     private int _xRecoil = 0;
     private double _autoStrength = 0.85;
     private bool _useImageBasedAntiRecoil = false;
+    private ObservableCollection<RecoilPattern> _patterns = new();
+    private string _activePatternName = "";
+    private double _patternStrength = 1.0;
+    private bool _usePatternRecoil = false;
 
     public int HoldTime
     {
@@ -56,5 +62,46 @@ public class AntiRecoilSettings : BaseSettings
     {
         get => _useImageBasedAntiRecoil;
         set => SetField(ref _useImageBasedAntiRecoil, value);
+    }
+
+    /// <summary>
+    ///     Library of recorded recoil patterns. Names should be unique — playback resolves by
+    ///     <see cref="ActivePatternName"/>.
+    /// </summary>
+    public ObservableCollection<RecoilPattern> Patterns
+    {
+        get => _patterns;
+        set => SetField(ref _patterns, value);
+    }
+
+    /// <summary>
+    ///     Name of the pattern that <c>RecoilPatternPlaybackAction</c> should replay while the user
+    ///     fires. Empty string disables pattern playback.
+    /// </summary>
+    public string ActivePatternName
+    {
+        get => _activePatternName;
+        set => SetField(ref _activePatternName, value);
+    }
+
+    /// <summary>
+    ///     Scale factor applied to each playback sample. <c>1.0</c> = exact recorded compensation,
+    ///     lower values dampen the correction, higher values amplify it. Useful when sharing
+    ///     patterns between players with different in-game sensitivities.
+    /// </summary>
+    public double PatternStrength
+    {
+        get => _patternStrength;
+        set => SetField(ref _patternStrength, value);
+    }
+
+    /// <summary>
+    ///     Master switch for pattern-based recoil playback. Independent of
+    ///     <see cref="UseImageBasedAntiRecoil"/> — when both are enabled, pattern playback wins.
+    /// </summary>
+    public bool UsePatternRecoil
+    {
+        get => _usePatternRecoil;
+        set => SetField(ref _usePatternRecoil, value);
     }
 }

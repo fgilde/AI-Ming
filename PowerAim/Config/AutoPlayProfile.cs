@@ -14,6 +14,7 @@ public class AutoPlayProfile : EditableNotificationObject
 {
     private string _name;
     private bool _enabled;
+    private string _matchProcess = "";
     private string _gameContext;
     private string _ollamaModel = "moondream";
     private double _decisionInterval = 1.0;
@@ -158,7 +159,32 @@ public class AutoPlayProfile : EditableNotificationObject
     /// <summary>
     /// Whether this profile is currently active (valid, enabled, and AutoPlay is on)
     /// </summary>
-    public bool IsActive => IsValid && Enabled && AppConfig.Current.ToggleState.AutoPlay;
+    /// <summary>
+    ///     Optional process-name pattern (wildcard / pipe-separated) that scopes this profile
+    ///     to a specific game. Empty (default) = active in every process. Matched via
+    ///     <see cref="PowerAim.Class.ProcessMatcher"/> against the currently focused process.
+    ///     Only consulted when <see cref="ActiveProcessSettings.AutoSwitchProfile"/> is on.
+    /// </summary>
+    public string MatchProcess
+    {
+        get => _matchProcess;
+        set => SetProperty(ref _matchProcess, value ?? "");
+    }
+
+    /// <summary>True iff the profile should drive AutoPlay right now.</summary>
+    public bool IsActive =>
+        IsValid &&
+        Enabled &&
+        AppConfig.Current.ToggleState.AutoPlay &&
+        ProcessMatchesIfFilterEnabled();
+
+    private bool ProcessMatchesIfFilterEnabled()
+    {
+        var settings = AppConfig.Current.ActiveProcessSettings;
+        if (settings == null || !settings.AutoSwitchProfile) return true;
+        if (string.IsNullOrWhiteSpace(_matchProcess)) return true;
+        return PowerAim.Class.ProcessMatcher.Matches(_matchProcess, PowerAim.Class.WindowFocusWatcher.Instance.CurrentProcessName);
+    }
 
     /// <summary>
     /// Display description for UI

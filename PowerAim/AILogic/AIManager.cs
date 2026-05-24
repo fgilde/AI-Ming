@@ -88,7 +88,10 @@ public class AIManager : IDisposable
     {
         while (_isAiLoopRunning)
         {
-            if (AppConfig.Current.ToggleState.GlobalActive)
+            // Effective active = user wants it on AND Auto-Pause says we're focused on a game.
+            // AutoPauseManager is a query-only helper; pausing here gates every action equally,
+            // exactly like flipping GlobalActive off.
+            if (AppConfig.Current.ToggleState.GlobalActive && PowerAim.Class.AutoPauseManager.ShouldBeActive())
             {
                 if (_pausedNotified)
                 {
@@ -106,8 +109,29 @@ public class AIManager : IDisposable
                 Rectangle detectionBox = new(targetX - PowerAim.AILogic.PredictionLogic.IMAGE_SIZE / 2, targetY - PowerAim.AILogic.PredictionLogic.IMAGE_SIZE / 2, PowerAim.AILogic.PredictionLogic.IMAGE_SIZE, PowerAim.AILogic.PredictionLogic.IMAGE_SIZE);
                 try
                 {
+                    var sw = System.Diagnostics.Stopwatch.StartNew();
                     var frame = ImageCapture.Capture(detectionBox);
                     var predictions = (await PredictionLogic.Predict(frame, detectionBox)).ToArray();
+                    sw.Stop();
+
+                    // Telemetry: feed the Stats / Debug-Overlay layer. Cheap, lock-free counters.
+                    var stats = PowerAim.Class.SessionStats.Instance;
+                    stats.LastInferenceMs = sw.Elapsed.TotalMilliseconds;
+                    stats.LastDetectionCount = predictions.Length;
+                    stats.AddDetections(predictions.Length);
+                    stats.IncrementFrames();
+                    // Rolling FPS: smoothed via simple EMA so the overlay number stops jittering.
+                    var instMs = sw.Elapsed.TotalMilliseconds;
+                    if (instMs > 0.01)
+                    {
+                        var instFps = 1000.0 / instMs;
+                        stats.InstantFps = stats.InstantFps * 0.85 + instFps * 0.15;
+                    }
+
+                    // Push into the rolling replay buffer. The buffer self-gates on
+                    // ReplaySettings.Enabled so this is a cheap no-op when disabled.
+                    PowerAim.AILogic.ReplayBuffer.Instance.Push(frame, predictions);
+
                     await Task.WhenAll(_actions.Select(a => a.Execute(predictions)));
                 }
                 catch (Exception e)

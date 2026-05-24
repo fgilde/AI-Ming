@@ -75,6 +75,33 @@
             </StackPanel>
         </Border>
 
+        <!-- ====== Per-Game Match (optional) ====== -->
+        <Border Style="{StaticResource FluentCard}">
+            <StackPanel>
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Style="{StaticResource SectionIcon}">
+                        <TextBlock Text="&#xE7C8;" Style="{StaticResource SectionIconGlyph}" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource SectionTitleBig}" Text="Match process (optional)" />
+                        <TextBlock Style="{StaticResource SectionSubtitle}" Text="Only fire while a process matching the pattern is focused" />
+                    </StackPanel>
+                </Grid>
+                <TextBox Text="{Binding Trigger.MatchProcess, UpdateSourceTrigger=PropertyChanged}"
+                         Tag="cs2*, valorant, *fortnite*"
+                         Style="{DynamicResource placeHolder}" />
+                <TextBlock Style="{StaticResource FluentCaption}"
+                           Margin="2,8,0,0"
+                           TextWrapping="Wrap"
+                           Visibility="{Binding Converter={StaticResource helpVis}}"
+                           Text="Supports wildcards (*, ?) and pipes (cs2|valorant). Leave empty for always-on. Requires 'Auto-switch profile by game' in Settings → Active Processes." />
+            </StackPanel>
+        </Border>
+
         <!-- ====== Actions ====== -->
         <Border Style="{StaticResource FluentCard}">
             <StackPanel>

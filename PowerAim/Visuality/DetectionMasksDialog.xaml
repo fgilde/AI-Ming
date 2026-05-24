@@ -1,0 +1,246 @@
+<visuality:BaseDialog x:Class="PowerAim.Visuality.DetectionMasksDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:visuality="clr-namespace:PowerAim.Visuality"
+        mc:Ignorable="d"
+        Title="Detection Region Masks"
+        Height="640"
+        Width="960"
+        WindowStyle="None"
+        Topmost="True"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        AllowsTransparency="False"
+        Background="{DynamicResource FluentSurface1}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Titlebar -->
+        <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="Titlebar_MouseLeftButtonDown">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0">
+                <TextBlock Text="&#xE7B3;"
+                           FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                           Foreground="{DynamicResource FluentAccent}"
+                           FontSize="14"
+                           VerticalAlignment="Center" />
+                <TextBlock x:Name="TitleText"
+                           Margin="10,0,0,0"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource FluentTextPrimary}"
+                           FontFamily="Segoe UI Variable Display"
+                           FontWeight="SemiBold"
+                           FontSize="13"
+                           Text="Detection Region Masks" />
+            </StackPanel>
+            <Button HorizontalAlignment="Right"
+                    Background="Transparent" BorderBrush="Transparent" BorderThickness="0"
+                    Foreground="{DynamicResource FluentTextPrimary}"
+                    FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                    Content="&#xE8BB;" Width="46" Height="40" Padding="0" FontSize="10"
+                    VerticalAlignment="Top"
+                    Click="Cancel_Click">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd" Background="{TemplateBinding Background}">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#E81123" />
+                                            <Setter Property="Foreground" Value="White" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </Grid>
+
+        <!-- Help -->
+        <TextBlock Grid.Row="1"
+                   Margin="16,0,16,10"
+                   Foreground="{DynamicResource FluentTextSecondary}"
+                   FontFamily="Segoe UI Variable Small"
+                   FontSize="12"
+                   TextWrapping="Wrap"
+                   Text="Draw rectangles inside the detection area to suppress false positives (HUD, ammo, minimap). The Y-axis is flipped so 0,0 is top-left — same orientation as your screen. Toggle individual masks to disable without deleting." />
+
+        <!-- Body -->
+        <Grid Grid.Row="2" Margin="16,0,16,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="320" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Mask list -->
+            <Border Grid.Column="0"
+                    Background="{DynamicResource FluentSurface2}"
+                    BorderBrush="{DynamicResource FluentStroke}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Margin="0,0,8,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Padding="6,6,6,6">
+                        <ItemsControl x:Name="MaskItems" />
+                    </ScrollViewer>
+                    <Grid Grid.Row="1" Margin="8,4,8,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="Add mask"
+                                Style="{DynamicResource FluentAccentButton}"
+                                MinHeight="32"
+                                Click="AddMask_Click" />
+                        <Button Grid.Column="1" Margin="6,0,0,0"
+                                Content="Clear all"
+                                Style="{DynamicResource FluentStandardButton}"
+                                MinHeight="32"
+                                Click="ClearAll_Click" />
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Preview + sliders -->
+            <Grid Grid.Column="1" Margin="8,0,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Preview canvas -->
+                <Border Grid.Row="0"
+                        Background="{DynamicResource FluentSurface2}"
+                        BorderBrush="{DynamicResource FluentStroke}"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Padding="14">
+                    <Grid>
+                        <Border x:Name="PreviewHost"
+                                BorderBrush="{DynamicResource FluentAccent}"
+                                BorderThickness="2"
+                                CornerRadius="4"
+                                Background="{DynamicResource FluentSurface3}"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Width="400" Height="400">
+                            <Canvas x:Name="PreviewCanvas"
+                                    Background="Transparent"
+                                    ClipToBounds="True"
+                                    MouseLeftButtonDown="Preview_MouseDown"
+                                    MouseMove="Preview_MouseMove"
+                                    MouseLeftButtonUp="Preview_MouseUp" />
+                        </Border>
+                        <TextBlock VerticalAlignment="Top"
+                                   HorizontalAlignment="Left"
+                                   Margin="6,2,0,0"
+                                   FontFamily="Segoe UI Variable Small"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource FluentTextTertiary}"
+                                   Text="(drag inside to draw / move selected mask)" />
+                    </Grid>
+                </Border>
+
+                <!-- Sliders for selected mask -->
+                <Border Grid.Row="1"
+                        Background="{DynamicResource FluentSurface2}"
+                        BorderBrush="{DynamicResource FluentStroke}"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Margin="0,10,0,0"
+                        Padding="14">
+                    <StackPanel x:Name="SliderPanel">
+                        <TextBlock x:Name="SelectedHeader"
+                                   Text="No mask selected"
+                                   Foreground="{DynamicResource FluentTextPrimary}"
+                                   FontFamily="Segoe UI Variable Display"
+                                   FontWeight="SemiBold"
+                                   FontSize="13"
+                                   Margin="0,0,0,8" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="X"
+                                       Foreground="{DynamicResource FluentTextSecondary}"
+                                       FontFamily="Segoe UI Variable Text" FontSize="12" Margin="0,0,8,2" />
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="Y"
+                                       Foreground="{DynamicResource FluentTextSecondary}"
+                                       FontFamily="Segoe UI Variable Text" FontSize="12" Margin="8,0,0,2" />
+                            <Slider x:Name="XSlider" Grid.Row="1" Grid.Column="0"
+                                    Minimum="0" Maximum="1" TickFrequency="0.01"
+                                    IsSnapToTickEnabled="True" Margin="0,0,8,8"
+                                    ValueChanged="OnSliderChanged" />
+                            <Slider x:Name="YSlider" Grid.Row="1" Grid.Column="1"
+                                    Minimum="0" Maximum="1" TickFrequency="0.01"
+                                    IsSnapToTickEnabled="True" Margin="8,0,0,8"
+                                    ValueChanged="OnSliderChanged" />
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Width"
+                                       Foreground="{DynamicResource FluentTextSecondary}"
+                                       FontFamily="Segoe UI Variable Text" FontSize="12" Margin="0,0,8,2" />
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="Height"
+                                       Foreground="{DynamicResource FluentTextSecondary}"
+                                       FontFamily="Segoe UI Variable Text" FontSize="12" Margin="8,0,0,2" />
+                            <Slider x:Name="WSlider" Grid.Row="3" Grid.Column="0"
+                                    Minimum="0.01" Maximum="1" TickFrequency="0.01"
+                                    IsSnapToTickEnabled="True" Margin="0,0,8,0"
+                                    ValueChanged="OnSliderChanged" />
+                            <Slider x:Name="HSlider" Grid.Row="3" Grid.Column="1"
+                                    Minimum="0.01" Maximum="1" TickFrequency="0.01"
+                                    IsSnapToTickEnabled="True" Margin="8,0,0,0"
+                                    ValueChanged="OnSliderChanged" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- Footer -->
+        <Grid Grid.Row="3" Margin="16,0,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0"
+                       Foreground="{DynamicResource FluentTextTertiary}"
+                       FontFamily="Segoe UI Variable Small" FontSize="11"
+                       VerticalAlignment="Center"
+                       TextWrapping="Wrap"
+                       Text="Predictions whose centre lands inside an enabled mask are dropped before reaching the targeting/trigger pipeline." />
+            <Button Grid.Column="1" x:Name="CancelButton" Content="Cancel"
+                    MinWidth="96" MinHeight="34"
+                    Margin="0,0,8,0" Padding="14,6,14,6"
+                    Style="{DynamicResource FluentStandardButton}"
+                    Click="Cancel_Click" />
+            <Button Grid.Column="2" x:Name="SaveButton" Content="Save"
+                    MinWidth="100" MinHeight="34"
+                    Padding="14,6,14,6"
+                    Style="{DynamicResource FluentAccentButton}"
+                    Click="Save_Click" />
+        </Grid>
+    </Grid>
+</visuality:BaseDialog>

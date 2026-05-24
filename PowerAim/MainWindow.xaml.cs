@@ -78,6 +78,10 @@ public partial class MainWindow
     {
         InitializeComponent();
 
+        // Ctrl+F → open global search. The KeyBinding in XAML references this command; we have
+        // to provide the binding here so the input gesture actually dispatches.
+        CommandBindings.Add(new System.Windows.Input.CommandBinding(OpenSearchCommand, OpenSearch_Executed));
+
         var writer = new TextBoxStreamWriter(OutputTextBox);
         Console.SetOut(writer);
         AppConfig.ConfigLoaded += (s, e) => CreateUI();
@@ -303,6 +307,133 @@ public partial class MainWindow
     private void Minimize_Click(object sender, RoutedEventArgs e)
     {
         WindowState = WindowState.Minimized;
+    }
+
+    // ===================================================================== GLOBAL SEARCH ====
+
+    /// <summary>Bound to Ctrl+F via Window.InputBindings in XAML.</summary>
+    public static readonly System.Windows.Input.RoutedUICommand OpenSearchCommand =
+        new("Open Search", nameof(OpenSearchCommand), typeof(MainWindow));
+
+    private List<PowerAim.Class.SearchEntry>? _searchIndex;
+
+    private void GlobalSearchButton_Click(object sender, RoutedEventArgs e)
+    {
+        OpenGlobalSearch();
+    }
+
+    private void OpenSearch_Executed(object sender, System.Windows.Input.ExecutedRoutedEventArgs e)
+    {
+        OpenGlobalSearch();
+    }
+
+    private void OpenGlobalSearch()
+    {
+        // Rebuild on each open — UI may have grown (e.g. profiles added, dialogs hosted).
+        _searchIndex = PowerAim.Class.GlobalSearch.BuildIndex(this);
+        GlobalSearchPopup.IsOpen = true;
+        GlobalSearchBox.Text = "";
+        RenderSearchResults("");
+        Dispatcher.BeginInvoke(new Action(() => GlobalSearchBox.Focus()),
+            System.Windows.Threading.DispatcherPriority.Render);
+    }
+
+    private void GlobalSearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        => RenderSearchResults(GlobalSearchBox.Text);
+
+    private void GlobalSearchBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key == System.Windows.Input.Key.Escape)
+        {
+            GlobalSearchPopup.IsOpen = false;
+            e.Handled = true;
+        }
+        else if (e.Key == System.Windows.Input.Key.Enter)
+        {
+            // Activate the first result if there is one.
+            if (GlobalSearchResults.Items.Count > 0
+                && GlobalSearchResults.Items[0] is FrameworkElement first
+                && first.Tag is PowerAim.Class.SearchEntry entry)
+            {
+                _ = ActivateSearchResult(entry);
+            }
+            e.Handled = true;
+        }
+    }
+
+    private void RenderSearchResults(string query)
+    {
+        GlobalSearchResults.Items.Clear();
+        if (_searchIndex == null) return;
+        var matches = PowerAim.Class.GlobalSearch.Filter(_searchIndex, query);
+        if (matches.Count == 0)
+        {
+            GlobalSearchHint.Text = "No matches.";
+            return;
+        }
+        GlobalSearchHint.Text = $"{matches.Count} match{(matches.Count == 1 ? "" : "es")} · Enter = open first";
+        foreach (var entry in matches)
+            GlobalSearchResults.Items.Add(BuildResultRow(entry));
+    }
+
+    private FrameworkElement BuildResultRow(PowerAim.Class.SearchEntry entry)
+    {
+        var border = new System.Windows.Controls.Border
+        {
+            Padding = new Thickness(10, 8, 10, 8),
+            Margin = new Thickness(0, 0, 0, 2),
+            CornerRadius = new CornerRadius(4),
+            Cursor = System.Windows.Input.Cursors.Hand,
+            Tag = entry,
+            Background = System.Windows.Media.Brushes.Transparent,
+            ToolTip = string.IsNullOrEmpty(entry.Description) ? null : entry.Description
+        };
+        var grid = new System.Windows.Controls.Grid();
+        grid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = GridLength.Auto });
+
+        var sp = new System.Windows.Controls.StackPanel();
+        sp.Children.Add(new TextBlock
+        {
+            Text = entry.Label,
+            FontFamily = new System.Windows.Media.FontFamily("Segoe UI Variable Text"),
+            FontSize = 13,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = (System.Windows.Media.Brush)FindResource("FluentTextPrimary")
+        });
+        var sub = new TextBlock
+        {
+            FontFamily = new System.Windows.Media.FontFamily("Segoe UI Variable Small"),
+            FontSize = 11,
+            Foreground = (System.Windows.Media.Brush)FindResource("FluentTextTertiary"),
+            Text = string.IsNullOrEmpty(entry.MenuTag)
+                ? entry.Category
+                : $"{entry.Category}  ·  {entry.MenuTag.Replace("Menu", "")}"
+        };
+        sp.Children.Add(sub);
+        System.Windows.Controls.Grid.SetColumn(sp, 0);
+        grid.Children.Add(sp);
+        border.Child = grid;
+
+        border.MouseEnter += (_, _) => border.Background = (System.Windows.Media.Brush)FindResource("FluentSurface3");
+        border.MouseLeave += (_, _) => border.Background = System.Windows.Media.Brushes.Transparent;
+        border.MouseLeftButtonDown += async (_, _) => await ActivateSearchResult(entry);
+        return border;
+    }
+
+    private async Task ActivateSearchResult(PowerAim.Class.SearchEntry entry)
+    {
+        GlobalSearchPopup.IsOpen = false;
+        // Switch pages if the entry lives on a different one.
+        if (!string.IsNullOrEmpty(entry.MenuTag) && CurrentMenu != entry.MenuTag)
+        {
+            try { await NavigateTo(entry.MenuTag, animate: true); }
+            catch { /* navigation failure isn't fatal — flash will still try */ }
+            // Give the section layout one render cycle before measuring scroll positions.
+            await Task.Delay(220);
+        }
+        try { PowerAim.Class.GlobalSearch.RevealAndFlash(entry.Target); }
+        catch { /* visual tree could be in a transient state — best-effort */ }
     }
 
     private const double SidebarCompactWidth = 48;
@@ -792,6 +923,10 @@ public partial class MainWindow
                           ?? new Dictionary<int, string>();
             new PowerAim.Visuality.TargetClassDialog(classes) { Owner = this }.ShowDialog();
         };
+        PredictionConfig.AddButton("Detection masks…").Reader.Click += (_, _) =>
+        {
+            new PowerAim.Visuality.DetectionMasksDialog { Owner = this }.ShowDialog();
+        };
         PredictionConfig.AddSeparator();
         PredictionConfig.Visibility = GetVisibilityFor(nameof(AimConfig));
 
@@ -802,6 +937,10 @@ public partial class MainWindow
         AimConfig.AddDropdown(Locale.AimingBoundariesAlignment, AppConfig.Current.DropdownState.AimingBoundariesAlignment, v => AppConfig.Current.DropdownState.AimingBoundariesAlignment = v);
         AimConfig.AddDropdown(Locale.MovementPath, AppConfig.Current.DropdownState.MovementPathType, v => AppConfig.Current.DropdownState.MovementPathType = v);
         AimConfig.AddSlider(Locale.MouseSensitivity, Locale.Sensitivity, 0.01, 0.01, 0.01, 1).BindTo(() => AppConfig.Current.SliderSettings.MouseSensitivity);
+        AimConfig.AddButton("Calibrate sensitivity…").Reader.Click += (_, _) =>
+        {
+            new PowerAim.Visuality.CalibrationWizardDialog { Owner = this }.ShowDialog();
+        };
 
         AimConfig.AddSlider(Locale.MouseJitter, Locale.Jitter, 1, 1, 0, 15).BindTo(() => AppConfig.Current.SliderSettings.MouseJitter);
 
@@ -850,6 +989,28 @@ public partial class MainWindow
         betaToggle.ToolTip = Locale.UseImageBasedAntiRecoilHelp;
         betaToggle.BindTo(() => AppConfig.Current.AntiRecoilSettings.UseImageBasedAntiRecoil);
 
+        // Pattern recorder + playback. Mutually exclusive with both the legacy and the BETA paths
+        // — when this is on and a pattern is selected, the other two skip themselves in their
+        // .Active getters.
+        var patternToggle = AntiRecoil.AddToggle("Use recoil pattern playback");
+        patternToggle.ToolTip = "When armed, plays back a previously recorded recoil pattern while you fire. Overrides the legacy / BETA paths.";
+        patternToggle.BindTo(() => AppConfig.Current.AntiRecoilSettings.UsePatternRecoil);
+
+        var patternStatus = new System.Windows.Controls.Label
+        {
+            Foreground = (System.Windows.Media.Brush)FindResource("FluentTextSecondary"),
+            FontFamily = new System.Windows.Media.FontFamily("Segoe UI Variable Text"),
+            FontSize = 12,
+            Padding = new Thickness(0),
+            Margin = new Thickness(8, 0, 8, 6),
+        };
+        AntiRecoil.Children.Add(patternStatus);
+
+        AntiRecoil.AddButton("Recoil patterns…").Reader.Click += (_, _) =>
+        {
+            new PowerAim.Visuality.RecoilPatternsDialog { Owner = this }.ShowDialog();
+        };
+
         // Image-based strength (only relevant when BETA is on).
         var strengthSlider = AntiRecoil.AddSlider(Locale.AntiRecoilStrength, Locale.Amount, 0.05, 0.05, 0, 1.5)
             .InitWith(s => s.ToolTip = Locale.AntiRecoilStrengthHelp)
@@ -868,25 +1029,44 @@ public partial class MainWindow
             .BindTo(() => AppConfig.Current.AntiRecoilSettings.XRecoil);
 
         // Show whichever block of controls is relevant for the engine the user selected.
-        // BETA on → only the strength slider is visible; legacy sliders + ARConfig card are
-        // collapsed entirely. BETA off → strength slider hidden, legacy + ARConfig visible.
+        // Precedence: pattern playback > BETA image-based > legacy fixed X/Y.
+        //   pattern armed → hide everything else (legacy sliders, BETA strength) plus status hint
+        //   BETA on       → only the strength slider visible; legacy sliders + ARConfig collapsed
+        //   default       → strength slider hidden, legacy sliders + ARConfig visible
         void UpdateAntiRecoilVisibility()
         {
-            bool beta = AppConfig.Current.AntiRecoilSettings.UseImageBasedAntiRecoil;
+            var s = AppConfig.Current.AntiRecoilSettings;
+            bool pattern = s.UsePatternRecoil && !string.IsNullOrEmpty(s.ActivePatternName);
+            bool beta = s.UseImageBasedAntiRecoil && !pattern;
+            bool legacy = !pattern && !beta;
+
             strengthSlider.Visibility    = beta ? Visibility.Visible : Visibility.Collapsed;
-            holdTimeSlider.Visibility    = beta ? Visibility.Collapsed : Visibility.Visible;
-            recordFireRateBtn.Visibility = beta ? Visibility.Collapsed : Visibility.Visible;
-            fireRateSlider.Visibility    = beta ? Visibility.Collapsed : Visibility.Visible;
-            yRecoilSlider.Visibility     = beta ? Visibility.Collapsed : Visibility.Visible;
-            xRecoilSlider.Visibility     = beta ? Visibility.Collapsed : Visibility.Visible;
+            holdTimeSlider.Visibility    = legacy ? Visibility.Visible : Visibility.Collapsed;
+            recordFireRateBtn.Visibility = legacy ? Visibility.Visible : Visibility.Collapsed;
+            fireRateSlider.Visibility    = legacy ? Visibility.Visible : Visibility.Collapsed;
+            yRecoilSlider.Visibility     = legacy ? Visibility.Visible : Visibility.Collapsed;
+            xRecoilSlider.Visibility     = legacy ? Visibility.Visible : Visibility.Collapsed;
             // Collapse the entire "Anti Recoil Config" card too (the FluentCard Border that
-            // wraps the ARConfig StackPanel).
+            // wraps the ARConfig StackPanel) — it's only meaningful for the legacy path.
             if (ARConfig.Parent is FrameworkElement arCard)
-                arCard.Visibility = beta ? Visibility.Collapsed : Visibility.Visible;
+                arCard.Visibility = legacy ? Visibility.Visible : Visibility.Collapsed;
+
+            // Status line right under the pattern toggle.
+            if (pattern)
+                patternStatus.Content = $"Active pattern: {s.ActivePatternName}  ·  strength {s.PatternStrength:0.00}";
+            else if (s.UsePatternRecoil)
+                patternStatus.Content = "Pattern playback armed but no pattern selected. Open 'Recoil patterns…' and click one in the list.";
+            else if (beta)
+                patternStatus.Content = "Mode: image-based (BETA, phase correlation).";
+            else
+                patternStatus.Content = "Mode: legacy (fixed X/Y per fire rate). Record Fire Rate measures the cadence for this mode only.";
         }
         AppConfig.Current.AntiRecoilSettings.PropertyChanged += (s, e) =>
         {
-            if (e.PropertyName == nameof(AntiRecoilSettings.UseImageBasedAntiRecoil))
+            if (e.PropertyName == nameof(AntiRecoilSettings.UseImageBasedAntiRecoil)
+                || e.PropertyName == nameof(AntiRecoilSettings.UsePatternRecoil)
+                || e.PropertyName == nameof(AntiRecoilSettings.ActivePatternName)
+                || e.PropertyName == nameof(AntiRecoilSettings.PatternStrength))
                 Dispatcher.Invoke(UpdateAntiRecoilVisibility);
         };
         UpdateAntiRecoilVisibility();
@@ -1216,6 +1396,223 @@ public partial class MainWindow
         ToolsConfig.AddCredit("", "This external tool helps to change your Hardware Id, that can help if your PC is banned");
 
         ToolsConfig.AddSeparator();
+
+        BuildSettingsExtras();
+    }
+
+    /// <summary>
+    ///     Builds the new Settings-page cards added by the feature batch:
+    ///     <list type="bullet">
+    ///       <item>Active Processes — Auto-Pause + per-game profile switching</item>
+    ///       <item>Overlays — Debug + Crosshair overlay toggles &amp; crosshair config</item>
+    ///       <item>Stats — live session metrics + reset</item>
+    ///     </list>
+    /// </summary>
+    private void BuildSettingsExtras()
+    {
+        // ===== Active Processes (Auto-Pause + per-game profile switch) =====
+        ActiveProcessesSettings.AddTitle("Active Processes", true);
+        ActiveProcessesSettings.AddToggle("Auto-pause when game loses focus")
+            .InitWith(t => t.ToolTip = "Pauses AI actions when the foreground window is a known non-game (browser, terminal, PowerAim itself, …).")
+            .BindTo(() => AppConfig.Current.ActiveProcessSettings.AutoPauseOnFocusLoss);
+        ActiveProcessesSettings.AddToggle("Auto-switch profile by game")
+            .InitWith(t => t.ToolTip = "When a Trigger / AutoPlay profile has a Match-Process pattern, it's only active while the matching game is in the foreground.")
+            .BindTo(() => AppConfig.Current.ActiveProcessSettings.AutoSwitchProfile);
+        ActiveProcessesSettings.AddCredit("", "Match patterns support wildcards (cs2*) and pipes (cs2|valorant). Configure them on each Trigger / AutoPlay profile.");
+
+        // Inline editor for the optional "game whitelist". Comma-separated text-box is the
+        // simplest path that round-trips cleanly through the ObservableCollection<string>.
+        var whitelistInput = new System.Windows.Controls.TextBox
+        {
+            FontFamily = new System.Windows.Media.FontFamily("Segoe UI Variable Text"),
+            FontSize = 13,
+            MinHeight = 32,
+            Margin = new Thickness(2, 4, 2, 4),
+            TextWrapping = TextWrapping.Wrap,
+            AcceptsReturn = false,
+            ToolTip = "Comma- or pipe-separated process patterns considered \"games\". Empty = use the built-in non-game blacklist.",
+        };
+        whitelistInput.Text = string.Join(", ", AppConfig.Current.ActiveProcessSettings.GameProcessPatterns);
+        whitelistInput.LostFocus += (_, _) =>
+        {
+            var list = AppConfig.Current.ActiveProcessSettings.GameProcessPatterns;
+            list.Clear();
+            foreach (var part in whitelistInput.Text.Split(new[] { ',', '|' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                list.Add(part);
+        };
+        ActiveProcessesSettings.Children.Add(whitelistInput);
+        ActiveProcessesSettings.AddSeparator();
+
+        // ===== Overlays (Debug + Crosshair) =====
+        OverlaySettings.AddTitle("Overlays", true);
+        OverlaySettings.AddToggle("Show debug overlay")
+            .InitWith(t => t.ToolTip = "Tiny topmost panel showing FPS, inference time, detection count, current intent and active profile.")
+            .BindTo(() => AppConfig.Current.ToggleState.ShowDebugOverlay);
+
+        OverlaySettings.AddToggle("Show custom crosshair")
+            .InitWith(t => t.ToolTip = "Render a configurable crosshair at the centre of the primary screen. Useful for games without a built-in crosshair.")
+            .BindTo(() => AppConfig.Current.ToggleState.ShowCrosshairOverlay);
+
+        OverlaySettings.AddDropdown("Crosshair shape",
+            AppConfig.Current.CrosshairSettings.Shape,
+            v => AppConfig.Current.CrosshairSettings.Shape = v);
+        OverlaySettings.AddSlider("Crosshair size", "px", 1, 1, 4, 80)
+            .BindTo(() => AppConfig.Current.CrosshairSettings.Size);
+        OverlaySettings.AddSlider("Crosshair thickness", "px", 1, 1, 1, 10)
+            .BindTo(() => AppConfig.Current.CrosshairSettings.Thickness);
+        OverlaySettings.AddSlider("Crosshair gap", "px", 1, 1, 0, 30)
+            .BindTo(() => AppConfig.Current.CrosshairSettings.Gap);
+        OverlaySettings.AddSlider("Crosshair outline", "px", 1, 1, 0, 4)
+            .BindTo(() => AppConfig.Current.CrosshairSettings.OutlineThickness);
+        OverlaySettings.AddSeparator();
+
+        // ===== Stats =====
+        StatsCard.AddTitle("Session Stats", true);
+        var fpsLabel       = new System.Windows.Controls.Label { Padding = new Thickness(0) };
+        var msLabel        = new System.Windows.Controls.Label { Padding = new Thickness(0) };
+        var detLabel       = new System.Windows.Controls.Label { Padding = new Thickness(0) };
+        var shotsLabel     = new System.Windows.Controls.Label { Padding = new Thickness(0) };
+        var framesLabel    = new System.Windows.Controls.Label { Padding = new Thickness(0) };
+        var tacticalLabel  = new System.Windows.Controls.Label { Padding = new Thickness(0) };
+        var durationLabel  = new System.Windows.Controls.Label { Padding = new Thickness(0) };
+
+        foreach (var l in new[] { fpsLabel, msLabel, detLabel, shotsLabel, framesLabel, tacticalLabel, durationLabel })
+        {
+            l.Foreground = (System.Windows.Media.Brush)FindResource("FluentTextSecondary");
+            l.FontFamily = new System.Windows.Media.FontFamily("Cascadia Mono,Consolas");
+            l.FontSize = 12;
+            l.Margin = new Thickness(2, 1, 2, 1);
+            StatsCard.Children.Add(l);
+        }
+
+        var statsTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
+        statsTimer.Tick += (_, _) =>
+        {
+            var s = PowerAim.Class.SessionStats.Instance;
+            fpsLabel.Content      = $"FPS                 {s.InstantFps:0.0}";
+            msLabel.Content       = $"Inference time      {s.LastInferenceMs:0.0} ms";
+            detLabel.Content      = $"Detections (last)   {s.LastDetectionCount}";
+            shotsLabel.Content    = $"Shots fired         {s.ShotsFired}";
+            framesLabel.Content   = $"Frames processed    {s.FramesProcessed}";
+            tacticalLabel.Content = $"Tactical actions    {s.TacticalActionsUsed}";
+            durationLabel.Content = $"Session             {s.Duration:hh\\:mm\\:ss}";
+        };
+        statsTimer.Start();
+
+        StatsCard.AddButton("Reset stats").Reader.Click += (_, _) => PowerAim.Class.SessionStats.Instance.Reset();
+        StatsCard.AddToggle("Adaptive Kalman lead-time")
+            .InitWith(t => t.ToolTip = "Scales the predictor's lead-time based on target velocity — less lead on stationary targets, more on fast strafing ones.")
+            .Checked = PowerAim.AILogic.PredictionSettings.AdaptiveKalmanLead;
+        StatsCard.AddSeparator();
+
+        // ===== HUD OCR =====
+        HudOcrCard.AddTitle("HUD OCR", true);
+        HudOcrCard.AddToggle("Enable HUD OCR engine")
+            .InitWith(t => t.ToolTip = "Periodically samples screen regions (ammo, health, score) with Tesseract. Results are exposed to AutoPlay via OcrService.Instance.Latest.")
+            .BindTo(() => AppConfig.Current.OcrSettings.Enabled);
+        HudOcrCard.AddSlider("OCR interval", "ms", 50, 50, 100, 5000, true)
+            .BindTo(() => AppConfig.Current.OcrSettings.IntervalMs);
+        HudOcrCard.AddButton("Configure OCR regions…").Reader.Click += (_, _) =>
+        {
+            new PowerAim.Visuality.OcrRegionsDialog { Owner = this }.ShowDialog();
+        };
+        HudOcrCard.AddSeparator();
+
+        // ===== Replay Buffer =====
+        ReplayCard.AddTitle("Replay Buffer", true);
+        ReplayCard.AddToggle("Record rolling buffer")
+            .InitWith(t => t.ToolTip = "Keeps the last N seconds of frames + detections in RAM. Click 'Save replay' to flush to disk as a PNG sequence + annotations.json.")
+            .BindTo(() => AppConfig.Current.ReplaySettings.Enabled);
+        ReplayCard.AddSlider("Buffer length", "s", 1, 1, 1, 30, true)
+            .BindTo(() => AppConfig.Current.ReplaySettings.BufferSeconds);
+        ReplayCard.AddSlider("JPEG quality", "", 1, 5, 10, 100, true)
+            .BindTo(() => AppConfig.Current.ReplaySettings.JpegQuality);
+
+        var replayStatus = new System.Windows.Controls.Label
+        {
+            Foreground = (System.Windows.Media.Brush)FindResource("FluentTextSecondary"),
+            FontFamily = new System.Windows.Media.FontFamily("Cascadia Mono,Consolas"),
+            FontSize = 12,
+            Padding = new Thickness(0),
+            Margin = new Thickness(2, 4, 2, 4),
+            Content = "0 frames buffered"
+        };
+        ReplayCard.Children.Add(replayStatus);
+        PowerAim.AILogic.ReplayBuffer.Instance.PropertyChanged += (_, _) =>
+            Dispatcher.BeginInvoke(new Action(() =>
+                replayStatus.Content = $"{PowerAim.AILogic.ReplayBuffer.Instance.FrameCount} frames buffered"));
+
+        ReplayCard.AddButton("Save replay buffer").Reader.Click += async (_, _) =>
+        {
+            replayStatus.Content = "Exporting…";
+            var folder = await PowerAim.AILogic.ReplayBuffer.Instance.ExportAsync();
+            replayStatus.Content = folder == null
+                ? "Nothing to export — buffer is empty."
+                : $"Saved to {folder}";
+        };
+        ReplayCard.AddButton("Clear buffer").Reader.Click += (_, _) =>
+            PowerAim.AILogic.ReplayBuffer.Instance.Clear();
+        ReplayCard.AddSeparator();
+
+        // ===== AutoPlay learning =====
+        LearningCard.AddTitle("AutoPlay Learning", true);
+        LearningCard.AddToggle("Record my playstyle")
+            .InitWith(t => t.ToolTip = "While on, samples (state, action) tuples from your input and current detections. Stored in an in-memory model that can be saved to disk.")
+            .BindTo(() => AppConfig.Current.AutoPlayLearningSettings.Recording);
+        LearningCard.AddToggle("Apply learned bias in AutoPlay")
+            .InitWith(t => t.ToolTip = "When AutoPlay picks a tactical action, the learned model can nudge the choice toward what you typically did in similar situations.")
+            .BindTo(() => AppConfig.Current.AutoPlayLearningSettings.ApplyModel);
+        LearningCard.AddSlider("Bias strength", "", 0.01, 0.01, 0, 1)
+            .BindTo(() => AppConfig.Current.AutoPlayLearningSettings.BiasStrength);
+        LearningCard.AddSlider("Sample interval", "ms", 50, 50, 50, 1000, true)
+            .BindTo(() => AppConfig.Current.AutoPlayLearningSettings.SampleIntervalMs);
+
+        var learnStatus = new System.Windows.Controls.Label
+        {
+            Foreground = (System.Windows.Media.Brush)FindResource("FluentTextSecondary"),
+            FontFamily = new System.Windows.Media.FontFamily("Cascadia Mono,Consolas"),
+            FontSize = 12,
+            Padding = new Thickness(0),
+            Margin = new Thickness(2, 4, 2, 4)
+        };
+        UpdateLearnStatus(learnStatus);
+        LearningCard.Children.Add(learnStatus);
+        PowerAim.AILogic.AutoPlayLearningModel.Instance.PropertyChanged += (_, _) =>
+            Dispatcher.BeginInvoke(new Action(() => UpdateLearnStatus(learnStatus)));
+
+        LearningCard.AddButton("Save model").Reader.Click += (_, _) =>
+        {
+            try
+            {
+                PowerAim.AILogic.AutoPlayLearningModel.Instance.Save(AppConfig.Current?.AutoPlayLearningSettings?.ModelPath);
+                learnStatus.Content = $"Saved · {PowerAim.AILogic.AutoPlayLearningModel.Instance.TotalSamples} samples";
+            }
+            catch (Exception ex) { learnStatus.Content = $"Save failed: {ex.Message}"; }
+        };
+        LearningCard.AddButton("Load model").Reader.Click += (_, _) =>
+        {
+            bool ok = PowerAim.AILogic.AutoPlayLearningModel.Instance.Load(AppConfig.Current?.AutoPlayLearningSettings?.ModelPath);
+            learnStatus.Content = ok ? "Model loaded." : "No model file found at the configured path.";
+            UpdateLearnStatus(learnStatus);
+        };
+        LearningCard.AddButton("Clear model").Reader.Click += (_, _) =>
+        {
+            PowerAim.AILogic.AutoPlayLearningModel.Instance.Clear();
+            UpdateLearnStatus(learnStatus);
+        };
+        LearningCard.AddSeparator();
+
+        // Apply current state of overlays in case the config was loaded with them already enabled.
+        if (AppConfig.Current.ToggleState.ShowDebugOverlay)
+            PowerAim.Visuality.DebugOverlay.ShowOrHide(true);
+        if (AppConfig.Current.ToggleState.ShowCrosshairOverlay)
+            PowerAim.Visuality.CrosshairOverlay.ShowOrHide(true);
+    }
+
+    private static void UpdateLearnStatus(System.Windows.Controls.Label label)
+    {
+        var model = PowerAim.AILogic.AutoPlayLearningModel.Instance;
+        label.Content = $"{model.TotalSamples} samples · {model.StateCount} states";
     }
 
     private void OpenSpoofer()

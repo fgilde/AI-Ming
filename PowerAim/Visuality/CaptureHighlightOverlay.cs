@@ -22,6 +22,13 @@ internal sealed class CaptureHighlightOverlay : Window
     [DllImport("user32.dll")]
     private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
+    // Foreground helpers — used by ShowFor(hwnd, bringToFront:true) so the user can see the live
+    // game window while hovering the picker tile / selecting in the ProcessPickerDialog.
+    [DllImport("user32.dll")] private static extern bool SetForegroundWindow(IntPtr hWnd);
+    [DllImport("user32.dll")] private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+    [DllImport("user32.dll")] private static extern bool IsIconic(IntPtr hWnd);
+    private const int SW_RESTORE = 9;
+
     [StructLayout(LayoutKind.Sequential)]
     private struct RECT { public int left, top, right, bottom; }
 
@@ -90,9 +97,10 @@ internal sealed class CaptureHighlightOverlay : Window
         if (!ov.IsVisible) ov.Show();
     }
 
-    public static void ShowFor(IntPtr hwnd)
+    public static void ShowFor(IntPtr hwnd, bool bringToFront = false)
     {
         if (hwnd == IntPtr.Zero) return;
+        if (bringToFront) BringToFront(hwnd);
         if (!GetWindowRect(hwnd, out var r)) return;
         int w = r.right - r.left;
         int h = r.bottom - r.top;
@@ -106,6 +114,24 @@ internal sealed class CaptureHighlightOverlay : Window
         ov.Width = w / dpiScale;
         ov.Height = h / dpiScale;
         if (!ov.IsVisible) ov.Show();
+    }
+
+    /// <summary>
+    ///     Restore (un-minimise) and foreground the target window. Safe to call on a zero handle.
+    ///     Windows imposes restrictions on cross-process foreground attempts — they only succeed
+    ///     when the calling process currently owns the foreground or has been granted permission;
+    ///     since the user is actively clicking inside PowerAim when this fires, the call is
+    ///     permitted and works reliably.
+    /// </summary>
+    public static void BringToFront(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero) return;
+        try
+        {
+            if (IsIconic(hwnd)) ShowWindow(hwnd, SW_RESTORE);
+            SetForegroundWindow(hwnd);
+        }
+        catch { /* P/Invoke failures aren't actionable here — just don't crash the hover */ }
     }
 
     public static void HideOverlay()
