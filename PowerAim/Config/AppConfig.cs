@@ -69,6 +69,7 @@ public class AppConfig : BaseSettings
     public OcrSettings OcrSettings { get; set; } = new OcrSettings();
     public ReplaySettings ReplaySettings { get; set; } = new ReplaySettings();
     public AutoPlayLearningSettings AutoPlayLearningSettings { get; set; } = new AutoPlayLearningSettings();
+    public LayoutConfiguration LayoutConfiguration { get; set; } = new LayoutConfiguration();
 
     public ObservableCollection<ActionTrigger> Triggers
     {

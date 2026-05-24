@@ -173,6 +173,14 @@ public partial class MainWindow
         // ModelMenuTabControl.SelectedIndex = 0;
         _uiCreated = true;
 
+        // Instrument every page with drag-reorder + hide-X chrome and apply persisted layout.
+        // Deferred so XAML+CreateUI children have finished landing in the visual tree.
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            AttachLayoutManagers();
+            BindHiddenBoxesPillForCurrentPage();
+        }), System.Windows.Threading.DispatcherPriority.Loaded);
+
         if (isRecreating && menu != null)
         {
             _ = NavigateTo(menu, false);
@@ -301,12 +309,108 @@ public partial class MainWindow
 
     private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        DragMove();
+        // The window-wide "click anywhere to drag" behaviour eats events bound for interactive
+        // controls that live inside the window (Buttons in Popups, Sliders, TextBoxes, the drag
+        // Thumbs on the layout boxes, …) — DragMove blocks the message loop synchronously, so
+        // the inner control never sees its MouseUp and Click never fires.
+        // Walk up the visual tree from the click source and skip DragMove if we find anything
+        // interactive between us and the Window.
+        if (e.OriginalSource is DependencyObject d && IsInsideInteractiveControl(d))
+            return;
+        try { DragMove(); }
+        catch { /* DragMove can throw if mouse-state shifted under us; nothing actionable */ }
+    }
+
+    private static bool IsInsideInteractiveControl(DependencyObject node)
+    {
+        for (int i = 0; i < 32 && node != null; i++)
+        {
+            switch (node)
+            {
+                case System.Windows.Controls.Primitives.ButtonBase:        // Button, ToggleButton, RepeatButton…
+                case System.Windows.Controls.Primitives.Thumb:             // layout-drag handles
+                case System.Windows.Controls.Primitives.Popup:             // search popup, hidden-sections popup
+                case System.Windows.Controls.Primitives.TextBoxBase:       // TextBox, RichTextBox
+                case System.Windows.Controls.Slider:
+                case System.Windows.Controls.ComboBox:
+                case System.Windows.Controls.ComboBoxItem:
+                case System.Windows.Controls.ListBox:
+                case System.Windows.Controls.ListBoxItem:
+                case System.Windows.Controls.MenuItem:
+                case System.Windows.Controls.PasswordBox:
+                case System.Windows.Controls.Primitives.ScrollBar:
+                    return true;
+            }
+            // Climb both visual and logical parents — popups live in the logical tree of the
+            // placement target but their content tree is detached from the window visually.
+            node = (node is System.Windows.Media.Visual or System.Windows.Media.Media3D.Visual3D)
+                ? System.Windows.Media.VisualTreeHelper.GetParent(node)
+                : System.Windows.LogicalTreeHelper.GetParent(node);
+        }
+        return false;
     }
 
     private void Minimize_Click(object sender, RoutedEventArgs e)
     {
         WindowState = WindowState.Minimized;
+    }
+
+    // ===================================================================== LAYOUT MANAGER ====
+
+    private readonly Dictionary<string, PowerAim.Visuality.PageLayoutManager> _pageLayouts = new();
+    private PowerAim.Visuality.HiddenBoxesPill? _hiddenBoxesPill;
+
+    private static readonly string[] _layoutManagedPages =
+    {
+        "AimMenu", "ModelMenu", "SettingsMenu", "AutoPlayMenu",
+        "Tools", "Logs", "AboutMenu", "GamepadSettings"
+    };
+
+    /// <summary>
+    ///     Attach a <see cref="PowerAim.Visuality.PageLayoutManager"/> to whichever pages already
+    ///     have a fully-realised visual tree. Collapsed pages still lazy-attach on first nav via
+    ///     <see cref="EnsurePageAttached"/>. Called after <see cref="CreateUI"/> finishes.
+    /// </summary>
+    private void AttachLayoutManagers()
+    {
+        _pageLayouts.Clear();
+        foreach (var name in _layoutManagedPages)
+            EnsurePageAttached(name);
+    }
+
+    /// <summary>
+    ///     Lazy attach for a single page. Idempotent in the success case.
+    ///     <para>
+    ///     A collapsed ScrollViewer hasn't been measured yet, so its template isn't applied
+    ///     and its visual tree is empty — the initial bulk pass in <see cref="AttachLayoutManagers"/>
+    ///     therefore inserts an empty PageLayoutManager for every off-screen page. When the user
+    ///     later navigates to that page (it goes Visible, WPF realises the template), we need to
+    ///     re-attach. So: if the existing entry has zero boxes, drop it and try again. Pages that
+    ///     genuinely have no boxes will just keep ending up with an empty manager — harmless.
+    ///     </para>
+    /// </summary>
+    private void EnsurePageAttached(string name)
+    {
+        if (_pageLayouts.TryGetValue(name, out var existing) && existing.Boxes.Count > 0)
+            return;
+        if (FindName(name) is not FrameworkElement page) return;
+        _pageLayouts[name] = PowerAim.Visuality.PageLayoutManager.Attach(name, page);
+    }
+
+    private void EnsureHiddenBoxesPill()
+    {
+        if (_hiddenBoxesPill != null) return;
+        // Inject the pill into the outermost Grid that hosts the page area. The first child of
+        // MainWindow is a Grid (the row/column layout); we put the pill there with high Z-index.
+        if (Content is Grid root)
+            _hiddenBoxesPill = new PowerAim.Visuality.HiddenBoxesPill(root);
+    }
+
+    private void BindHiddenBoxesPillForCurrentPage()
+    {
+        EnsureHiddenBoxesPill();
+        _pageLayouts.TryGetValue(CurrentMenu ?? "", out var mgr);
+        _hiddenBoxesPill?.Bind(mgr);
     }
 
     // ===================================================================== GLOBAL SEARCH ====
@@ -528,6 +632,14 @@ public partial class MainWindow
         }
         await SwitchScrollPanels(FindName(name) as FrameworkElement ?? throw new NullReferenceException("Page is null"), animate);
         CurrentMenu = name;
+        // First-visit attachment: pages that started Collapsed need their visual tree walked
+        // *after* they've been made visible. Wait one render tick so templates have applied.
+        Dispatcher.BeginInvoke(new Action(() => EnsurePageAttached(name)),
+            System.Windows.Threading.DispatcherPriority.Loaded);
+        // Rebind the floating "hidden sections" pill to the new page's layout manager so it shows
+        // counts for the page the user is actually looking at.
+        Dispatcher.BeginInvoke(new Action(BindHiddenBoxesPillForCurrentPage),
+            System.Windows.Threading.DispatcherPriority.Loaded);
     }
 
     private async Task SwitchScrollPanels(FrameworkElement movingScrollViewer, bool animate = true)
