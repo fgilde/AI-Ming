@@ -1,0 +1,168 @@
+using System.Windows.Forms;
+using PowerAim.Config;
+
+namespace PowerAim.InputLogic.Mapping;
+
+/// <summary>
+///     Factory for built-in starter profiles. The "FPS" preset wires the canonical FPS layout
+///     (WASD strafe, mouse look, LMB shoot, RMB ADS, R reload, Space jump, Ctrl crouch, Shift
+///     sprint) into the right gamepad equivalents — so a KB+M user can play gamepad-only titles
+///     out of the box.
+/// </summary>
+public static class MappingPresets
+{
+    /// <summary>
+    ///     Generic FPS preset: keyboard+mouse → virtual Xbox controller. Mirrors what most
+    ///     modern FPS gamepad bindings expect (Call of Duty, Battlefield, Apex Legends, etc.).
+    /// </summary>
+    public static ControllerMappingProfile NewFpsKbToPad()
+    {
+        var p = new ControllerMappingProfile
+        {
+            Name = "FPS (KB+M → Pad)",
+            Enabled = false,
+            MatchProcess = "",
+            MouseToStickSensitivity = 1.0,
+        };
+        var m = p.Mappings;
+
+        // Movement: WASD → Left stick.
+        m.Add(MakeKbToStick(Keys.W, GamepadStickDirection.LeftStickUp));
+        m.Add(MakeKbToStick(Keys.S, GamepadStickDirection.LeftStickDown));
+        m.Add(MakeKbToStick(Keys.A, GamepadStickDirection.LeftStickLeft));
+        m.Add(MakeKbToStick(Keys.D, GamepadStickDirection.LeftStickRight));
+
+        // Mouse → Right stick (look). Single sentinel mapping enables the engine's mouse-to-stick
+        // pump; X/Y wiring is implicit inside the engine.
+        m.Add(new InputMapping
+        {
+            SourceKind = MappingInputKind.MouseButton, SourceCode = 0xFFFF,
+            TargetKind = MappingInputKind.GamepadStickDirection,
+            TargetCode = (int)GamepadStickDirection.RightStickRight,
+        });
+
+        // Combat.
+        m.Add(MakeMouseToTrigger(MouseButtons.Left,  /* right trigger */ 1)); // shoot
+        m.Add(MakeMouseToTrigger(MouseButtons.Right, /* left trigger  */ 0)); // ADS
+
+        // Standard FPS buttons.
+        m.Add(MakeKbToButton(Keys.Space,    XboxButtonId.A));
+        m.Add(MakeKbToButton(Keys.ControlKey, XboxButtonId.B));     // crouch
+        m.Add(MakeKbToButton(Keys.R,        XboxButtonId.X));        // reload
+        m.Add(MakeKbToButton(Keys.E,        XboxButtonId.Y));        // use / interact
+        m.Add(MakeKbToButton(Keys.ShiftKey, XboxButtonId.LeftThumb));// sprint
+        m.Add(MakeKbToButton(Keys.G,        XboxButtonId.LeftShoulder)); // grenade
+        m.Add(MakeKbToButton(Keys.F,        XboxButtonId.RightShoulder));// melee
+        m.Add(MakeKbToButton(Keys.Escape,   XboxButtonId.Start));
+        m.Add(MakeKbToButton(Keys.Tab,      XboxButtonId.Back));
+
+        // Weapon select.
+        m.Add(MakeKbToButton(Keys.D1, XboxButtonId.Up));
+        m.Add(MakeKbToButton(Keys.D2, XboxButtonId.Right));
+        m.Add(MakeKbToButton(Keys.D3, XboxButtonId.Down));
+        m.Add(MakeKbToButton(Keys.D4, XboxButtonId.Left));
+
+        return p;
+    }
+
+    /// <summary>
+    ///     Reverse: gamepad → keyboard+mouse. Useful when a title insists on KB only.
+    /// </summary>
+    public static ControllerMappingProfile NewFpsPadToKb()
+    {
+        var p = new ControllerMappingProfile
+        {
+            Name = "FPS (Pad → KB+M)",
+            Enabled = false,
+            MatchProcess = "",
+            StickToMouseSensitivity = 12.0,
+        };
+        var m = p.Mappings;
+
+        // Left stick → WASD.
+        m.Add(MakeStickToKb(GamepadStickDirection.LeftStickUp,    Keys.W));
+        m.Add(MakeStickToKb(GamepadStickDirection.LeftStickDown,  Keys.S));
+        m.Add(MakeStickToKb(GamepadStickDirection.LeftStickLeft,  Keys.A));
+        m.Add(MakeStickToKb(GamepadStickDirection.LeftStickRight, Keys.D));
+
+        // Right stick → mouse motion (sentinel, like in the other direction).
+        m.Add(new InputMapping
+        {
+            SourceKind = MappingInputKind.GamepadStickDirection,
+            SourceCode = (int)GamepadStickDirection.RightStickRight,
+            TargetKind = MappingInputKind.MouseButton, TargetCode = 0xFFFF,
+        });
+
+        // Triggers → mouse buttons.
+        m.Add(MakeTriggerToMouse(/* RT */ unchecked((int)0x80000002), MouseButtons.Left));
+        m.Add(MakeTriggerToMouse(/* LT */ unchecked((int)0x80000001), MouseButtons.Right));
+
+        // Face buttons.
+        m.Add(MakeButtonToKb(XboxButtonId.A,             Keys.Space));
+        m.Add(MakeButtonToKb(XboxButtonId.B,             Keys.ControlKey));
+        m.Add(MakeButtonToKb(XboxButtonId.X,             Keys.R));
+        m.Add(MakeButtonToKb(XboxButtonId.Y,             Keys.E));
+        m.Add(MakeButtonToKb(XboxButtonId.LeftThumb,     Keys.ShiftKey));
+        m.Add(MakeButtonToKb(XboxButtonId.LeftShoulder,  Keys.G));
+        m.Add(MakeButtonToKb(XboxButtonId.RightShoulder, Keys.F));
+        m.Add(MakeButtonToKb(XboxButtonId.Start,         Keys.Escape));
+        m.Add(MakeButtonToKb(XboxButtonId.Back,          Keys.Tab));
+        m.Add(MakeButtonToKb(XboxButtonId.Up,            Keys.D1));
+        m.Add(MakeButtonToKb(XboxButtonId.Right,         Keys.D2));
+        m.Add(MakeButtonToKb(XboxButtonId.Down,          Keys.D3));
+        m.Add(MakeButtonToKb(XboxButtonId.Left,          Keys.D4));
+
+        return p;
+    }
+
+    // ---------- helpers ----------
+
+    private static InputMapping MakeKbToStick(Keys key, GamepadStickDirection dir) => new()
+    {
+        SourceKind = MappingInputKind.KeyboardKey, SourceCode = (int)key,
+        TargetKind = MappingInputKind.GamepadStickDirection, TargetCode = (int)dir,
+    };
+
+    private static InputMapping MakeMouseToTrigger(MouseButtons btn, int triggerCode) => new()
+    {
+        SourceKind = MappingInputKind.MouseButton, SourceCode = (int)btn,
+        TargetKind = MappingInputKind.GamepadTrigger, TargetCode = triggerCode,
+    };
+
+    private static InputMapping MakeKbToButton(Keys key, XboxButtonId button) => new()
+    {
+        SourceKind = MappingInputKind.KeyboardKey, SourceCode = (int)key,
+        TargetKind = MappingInputKind.GamepadButton, TargetCode = (int)button,
+    };
+
+    private static InputMapping MakeStickToKb(GamepadStickDirection dir, Keys key) => new()
+    {
+        SourceKind = MappingInputKind.GamepadStickDirection, SourceCode = (int)dir,
+        TargetKind = MappingInputKind.KeyboardKey, TargetCode = (int)key,
+    };
+
+    private static InputMapping MakeButtonToKb(XboxButtonId button, Keys key) => new()
+    {
+        SourceKind = MappingInputKind.GamepadButton, SourceCode = (int)button,
+        TargetKind = MappingInputKind.KeyboardKey, TargetCode = (int)key,
+    };
+
+    private static InputMapping MakeTriggerToMouse(int triggerCode, MouseButtons btn) => new()
+    {
+        SourceKind = MappingInputKind.GamepadTrigger, SourceCode = triggerCode,
+        TargetKind = MappingInputKind.MouseButton, TargetCode = (int)btn,
+    };
+}
+
+/// <summary>
+///     Stable persistence-friendly indices into the canonical Xbox360Button list used by the
+///     engine's <c>Xbox360ButtonIdToFlag</c> mapping. Order must stay aligned with that method.
+/// </summary>
+public enum XboxButtonId
+{
+    Up = 0, Down = 1, Left = 2, Right = 3,
+    Start = 4, Back = 5,
+    LeftThumb = 6, RightThumb = 7,
+    LeftShoulder = 8, RightShoulder = 9,
+    A = 10, B = 11, X = 12, Y = 13,
+}

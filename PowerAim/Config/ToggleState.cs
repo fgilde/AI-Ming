@@ -98,6 +98,31 @@ public class ToggleState : BaseSettings
         set => SetField(ref field, value);
     } = true;
 
+    /// <summary>
+    ///     When true, the aim/move pipeline drives the virtual Xbox controller's right-stick
+    ///     instead of synthesising mouse motion. Only effective when <see cref="PowerAim.InputLogic.GamepadManager.CanSend"/>
+    ///     is true (i.e. the user has set up the ViGEm bus and a sender is connected). Reflected
+    ///     in the AimConfig UI with auto-gating so the toggle stays disabled until the user has
+    ///     a working gamepad sender configured.
+    /// </summary>
+    public bool UseControllerForAim
+    {
+        get;
+        set => SetField(ref field, value);
+    } = false;
+
+    /// <summary>
+    ///     Master switch for the controller/keyboard mapping engine. When false, the engine
+    ///     resolves no profile (no input is read or synthesized). Bound to a toggle on the
+    ///     Mapping page that supports a global hotkey — so the user can flip mapping on/off
+    ///     mid-game without alt-tabbing to PowerAim.
+    /// </summary>
+    public bool MappingActive
+    {
+        get;
+        set => SetField(ref field, value);
+    } = false;
+
     public bool AntiRecoil
     {
         get;

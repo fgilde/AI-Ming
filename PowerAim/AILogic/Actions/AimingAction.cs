@@ -3,6 +3,7 @@ using PowerAim.AILogic.Contracts;
 using PowerAim.Config;
 using Class;
 using InputLogic;
+using PowerAim.InputLogic; // InputSender (Move/MoveCrosshair) lives here after the MoveInputManager fold-in
 
 namespace PowerAim.AILogic.Actions;
 
@@ -119,7 +120,7 @@ public class AimingAction : BaseAction
             }
             else
             {
-                MouseManager.MoveCrosshair(detectedX, detectedY, area);
+                InputSender.MoveCrosshair(detectedX, detectedY, area);
             }
         }
     }
@@ -140,12 +141,12 @@ public class AimingAction : BaseAction
                 kalmanPrediction.UpdateKalmanFilter(detection);
                 var predictedPosition = kalmanPrediction.GetKalmanPosition();
 
-                MouseManager.MoveCrosshair(predictedPosition.X, predictedPosition.Y, area);
+                InputSender.MoveCrosshair(predictedPosition.X, predictedPosition.Y, area);
                 break;
 
             case PredictionMethod.Shall0:
                 ShalloePredictionV2.UpdatePosition(detectedX, detectedY);
-                MouseManager.MoveCrosshair(ShalloePredictionV2.GetSPX(), ShalloePredictionV2.GetSPY(), area);
+                InputSender.MoveCrosshair(ShalloePredictionV2.GetSPX(), ShalloePredictionV2.GetSPY(), area);
 
                 PrevX = detectedX;
                 PrevY = detectedY;
@@ -162,7 +163,7 @@ public class AimingAction : BaseAction
                 wtfpredictionManager.UpdateDetection(wtfdetection);
                 var wtfpredictedPosition = wtfpredictionManager.GetEstimatedPosition();
 
-                MouseManager.MoveCrosshair(wtfpredictedPosition.X, wtfpredictedPosition.Y, area);
+                InputSender.MoveCrosshair(wtfpredictedPosition.X, wtfpredictedPosition.Y, area);
                 break;
         }
     }

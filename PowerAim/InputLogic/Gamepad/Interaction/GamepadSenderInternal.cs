@@ -47,7 +47,7 @@ public class GamepadSenderInternal : IGamepadSender
 
     public State CurrentVirtualState => _currentVirtualState;
 
-    public IGamepadSender SyncWith(Controller physicalController)
+    public IGamepadSender SyncWith(Controller? physicalController)
     {
         _physicalController = physicalController;
         _isRunning = true;

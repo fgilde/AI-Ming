@@ -22,7 +22,7 @@ public class GamepadSenderXInputEmu : IGamepadSender
 
     public bool CanWork => true; // Assuming the UDP connection always works for simplicity
 
-    public IGamepadSender SyncWith(Controller physicalController)
+    public IGamepadSender SyncWith(Controller? physicalController)
     {
         _physicalController = physicalController;
         _isRunning = true;

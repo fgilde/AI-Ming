@@ -144,6 +144,23 @@
                     <StackPanel Grid.Column="2"
                                 Orientation="Horizontal"
                                 VerticalAlignment="Center">
+                        <!-- "Restart as admin" — visible only when PowerAim isn't already elevated.
+                             Needed for DeviceHide / HidHide to actually be able to disable devices. -->
+                        <Button x:Name="RestartAsAdminButton"
+                                Content="&#xE7EF;"
+                                FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                                FontSize="14"
+                                Width="36" Height="36"
+                                Padding="0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Visibility="Collapsed"
+                                Foreground="{StaticResource FluentAccent}"
+                                ToolTip="Restart PowerAim as administrator (needed to hide gamepad devices)"
+                                WindowChrome.IsHitTestVisibleInChrome="True"
+                                Click="RestartAsAdminButton_Click"
+                                Margin="0,0,4,0" />
+
                         <!-- Global search lupe -->
                         <Button x:Name="GlobalSearchButton"
                                 Content="&#xE721;"
@@ -436,6 +453,20 @@
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="&#xE768;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             <TextBlock Grid.Column="1" Text="AutoPlay" FontFamily="Segoe UI Variable Text" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="6,0,8,0" />
+                                        </Grid>
+                                    </Button>
+                                    <Button x:Name="MappingMenuButton"
+                                            Tag="MappingMenu"
+                                            ToolTip="Controller / Keyboard Mapping"
+                                            Style="{StaticResource NavItemButton}"
+                                            Click="MenuSwitch">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#xE765;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="Mapping" FontFamily="Segoe UI Variable Text" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="6,0,8,0" />
                                         </Grid>
                                     </Button>
                                     <Button x:Name="Menu2B"
@@ -1023,6 +1054,8 @@
                                       HorizontalScrollBarVisibility="Disabled">
                             <uiLibrary:GamepadTesterPanel x:Name="GamepadTester" />
                         </ScrollViewer>
+
+                        <visuality1:MappingPage x:Name="MappingMenu" Visibility="Collapsed" />
 
                         <Grid x:Name="TriggerEditPage" Visibility="Collapsed">
                             <Grid.RowDefinitions>

@@ -23,11 +23,16 @@ namespace PowerAim
             // the model just starts empty and the recorder fills it over time.
             try { AutoPlayLearningModel.Instance.Load(AppConfig.Current?.AutoPlayLearningSettings?.ModelPath); }
             catch { /* ignored */ }
+            // Controller-mapping engine: KB↔Pad cross-mapping. Self-gates on profile presence,
+            // so booting always is cheap. ViGEm bus driver is only required if the user enables
+            // a profile with gamepad targets.
+            PowerAim.InputLogic.Mapping.MappingEngine.Instance.Start();
         }
 
         protected override void OnExit(ExitEventArgs e)
         {
             OcrService.Instance.Stop();
+            PowerAim.InputLogic.Mapping.MappingEngine.Instance.Dispose();
             base.OnExit(e);
         }
 

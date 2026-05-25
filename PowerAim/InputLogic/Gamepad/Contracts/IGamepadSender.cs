@@ -5,7 +5,7 @@ namespace PowerAim.InputLogic.Contracts;
 public interface IGamepadSender: IDisposable
 {
     bool CanWork { get; }
-    IGamepadSender SyncWith(Controller physicalController);
+    IGamepadSender SyncWith(Controller? physicalController);
     IGamepadSender StopSync();
     IGamepadSender PauseSync(GamepadButton button);
     IGamepadSender PauseSync(GamepadSlider slider);

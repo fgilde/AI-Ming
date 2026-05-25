@@ -71,6 +71,25 @@ public class AppConfig : BaseSettings
     public AutoPlayLearningSettings AutoPlayLearningSettings { get; set; } = new AutoPlayLearningSettings();
     public LayoutConfiguration LayoutConfiguration { get; set; } = new LayoutConfiguration();
 
+    private ObservableCollection<ControllerMappingProfile> _controllerMappingProfiles = new();
+    public ObservableCollection<ControllerMappingProfile> ControllerMappingProfiles
+    {
+        get => _controllerMappingProfiles;
+        set => SetField(ref _controllerMappingProfiles, value);
+    }
+
+    private MappingDirection _mappingDirection = MappingDirection.Both;
+    /// <summary>
+    ///     Which direction the mapping engine should apply right now. Independent of profile
+    ///     contents — a single profile can declare button↔key pairs and the user toggles which
+    ///     side drives without re-editing the profile.
+    /// </summary>
+    public MappingDirection MappingDirection
+    {
+        get => _mappingDirection;
+        set => SetField(ref _mappingDirection, value);
+    }
+
     public ObservableCollection<ActionTrigger> Triggers
     {
         get => _triggers;
@@ -122,6 +141,8 @@ public class AppConfig : BaseSettings
 
     public static AppConfig Load(string? path = null)
     {
+        //Current = new AppConfig();
+        //return Current;
         if (path == null)
         {
             path = GetLastConfigPath();

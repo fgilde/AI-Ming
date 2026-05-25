@@ -41,6 +41,28 @@ public static class HidHideHelper
         HidHideHelper.ExecuteHidHideCommand("--cloak-off");
     }
 
+    /// <summary>
+    ///     Hard-reset: turn HidHide's master cloak off AND clear its app whitelist + blacklist.
+    ///     Used when the user thinks past PowerAim runs accidentally cloaked devices they want
+    ///     back. Calls the CLI three times; each is a no-op if HidHide isn't installed.
+    /// </summary>
+    public static bool ResetAll()
+    {
+        try
+        {
+            HidHideHelper.ExecuteHidHideCommand("--cloak-off");
+            HidHideHelper.ExecuteHidHideCommand("--dev-unhide-all");
+            HidHideHelper.ExecuteHidHideCommand("--app-clean");
+            _deviceCache.Clear();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[HidHide] ResetAll failed: {ex.Message}");
+            return false;
+        }
+    }
+
     public static HidHideDeviceResult? DeviceFor(string id)
     {
         if (_deviceCache.TryGetValue(id, out var res))

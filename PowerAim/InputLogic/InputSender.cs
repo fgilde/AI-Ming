@@ -1,4 +1,5 @@
 ﻿using PowerAim.InputLogic.Contracts;
+using PowerAim.Config;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Accord.Diagnostics;
@@ -19,6 +20,106 @@ namespace PowerAim.InputLogic
     {
         private static InputSimulator _inputSimulator = new InputSimulator();
 
+        // ===========================================================================
+        //  Crosshair / aim movement — routes either through MouseManager (synth mouse)
+        //  or through the active gamepad sender's right-stick. This used to live in a
+        //  separate MoveInputManager class; folded in here so the codebase only has
+        //  one "send input" entry-point.
+        // ===========================================================================
+
+        private const int StickReleaseAfterMs = 80;
+        private static DateTime _lastStickPush = DateTime.MinValue;
+        private static System.Threading.Timer? _releaseTimer;
+
+        /// <summary>
+        ///     True if a working gamepad sender exists. When false, all aim-via-gamepad calls
+        ///     silently fall back to the mouse path.
+        /// </summary>
+        public static bool GamepadAimAvailable =>
+            GamepadManager.CanSend && GamepadManager.GamepadSender != null;
+
+        /// <summary>True when the aim pipeline should drive the right-stick instead of the mouse.</summary>
+        public static bool GamepadAimActive =>
+            GamepadAimAvailable && AppConfig.Current?.ToggleState?.UseControllerForAim == true;
+
+        /// <summary>
+        ///     Apply an incremental aim delta. Routes through the gamepad's right-stick when
+        ///     <see cref="GamepadAimActive"/>, otherwise through <see cref="MouseManager"/>.
+        /// </summary>
+        public static void Move(int dx, int dy)
+        {
+            if (GamepadAimActive) DriveRightStick(dx, dy);
+            else MouseManager.Move(dx, dy);
+        }
+
+        /// <summary>
+        ///     Same semantics as <see cref="MouseManager.MoveCrosshair"/> — compute the delta
+        ///     from the detected point to the crosshair centre, then dispatch through whichever
+        ///     path is active. Keeping the path-switch here means gamepad-aim still benefits
+        ///     from the same Sensitivity slider and EMA smoothing as mouse-aim.
+        /// </summary>
+        public static void MoveCrosshair(int detectedX, int detectedY, System.Drawing.Rectangle area)
+        {
+            if (!GamepadAimActive)
+            {
+                MouseManager.MoveCrosshair(detectedX, detectedY, area);
+                return;
+            }
+
+            // Match MouseManager's delta computation so the Sensitivity slider feels identical
+            // on both engines.
+            int halfW = area.Width / 2;
+            int halfH = area.Height / 2;
+            int targetX = detectedX - halfW;
+            int targetY = detectedY - halfH;
+            double aspect = area.Height > 0 ? (double)area.Width / area.Height : 1.0;
+            targetY = (int)(targetY * aspect);
+            targetX = Math.Clamp(targetX, -150, 150);
+            targetY = Math.Clamp(targetY, -150, 150);
+            double t = 1 - AppConfig.Current.SliderSettings.MouseSensitivity;
+            int stepX = (int)(targetX * t);
+            int stepY = (int)(targetY * t);
+            DriveRightStick(stepX, stepY);
+        }
+
+        private static void DriveRightStick(int dx, int dy)
+        {
+            var sender = GamepadManager.GamepadSender;
+            if (sender == null || !sender.CanWork) return;
+            // ±150 px clipping → roughly full deflection.
+            const double scale = 200.0;
+            short sx = (short)Math.Clamp(dx * scale, short.MinValue, short.MaxValue);
+            short sy = (short)Math.Clamp(-dy * scale, short.MinValue, short.MaxValue);
+            sender.SetAxisValue(GamepadAxis.RightThumbX, sx);
+            sender.SetAxisValue(GamepadAxis.RightThumbY, sy);
+            _lastStickPush = DateTime.UtcNow;
+            EnsureReleaseTimer();
+        }
+
+        /// <summary>
+        ///     Auto-release the right-stick to neutral after <see cref="StickReleaseAfterMs"/> ms
+        ///     of inactivity so the in-game view doesn't keep panning once we lose the target.
+        /// </summary>
+        private static void EnsureReleaseTimer()
+        {
+            if (_releaseTimer != null) return;
+            _releaseTimer = new System.Threading.Timer(_ =>
+            {
+                try
+                {
+                    if ((DateTime.UtcNow - _lastStickPush).TotalMilliseconds < StickReleaseAfterMs) return;
+                    var sender = GamepadManager.GamepadSender;
+                    if (sender == null || !sender.CanWork) return;
+                    sender.SetAxisValue(GamepadAxis.RightThumbX, 0);
+                    sender.SetAxisValue(GamepadAxis.RightThumbY, 0);
+                }
+                catch { /* ignored */ }
+            }, null, 30, 30);
+        }
+
+        // ===========================================================================
+        //  Keypress / button dispatch
+        // ===========================================================================
 
         public static async Task SendKeyAsync(StoredInputBinding evt, CancellationTokenSource token = default)
         {

@@ -305,6 +305,8 @@ public partial class MainWindow
 
         if (GamepadTester != null)
             GamepadTester.BackRequested += (_, _) => _ = NavigateTo(nameof(GamepadSettings));
+
+        UpdateAdminButton();
     }
 
     private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -353,6 +355,52 @@ public partial class MainWindow
     private void Minimize_Click(object sender, RoutedEventArgs e)
     {
         WindowState = WindowState.Minimized;
+    }
+
+    /// <summary>
+    ///     Relaunches PowerAim with admin rights via ShellExecute "runas". Visible in the
+    ///     topbar only when the current process isn't already elevated (see UpdateAdminButton).
+    /// </summary>
+    private void RestartAsAdminButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var exe = Environment.ProcessPath ?? System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
+            if (string.IsNullOrEmpty(exe))
+            {
+                new global::Visuality.NoticeBar("Couldn't resolve the PowerAim executable path.", 4000).Show();
+                return;
+            }
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = exe,
+                UseShellExecute = true,
+                Verb = "runas",
+            };
+            System.Diagnostics.Process.Start(psi);
+            // Quit the unelevated instance so we don't have two running side by side.
+            Application.Current.Shutdown();
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            // User dismissed the UAC prompt — leave the unelevated instance alone.
+            new global::Visuality.NoticeBar("UAC declined — staying in non-elevated mode.", 3000).Show();
+        }
+        catch (Exception ex)
+        {
+            new global::Visuality.NoticeBar($"Restart-as-admin failed: {ex.Message}", 5000).Show();
+        }
+    }
+
+    /// <summary>
+    ///     Hides the "Restart as admin" button when we're already elevated.
+    /// </summary>
+    private void UpdateAdminButton()
+    {
+        if (RestartAsAdminButton == null) return;
+        RestartAsAdminButton.Visibility = PowerAim.Class.Native.DeviceHide.IsElevated()
+            ? Visibility.Collapsed
+            : Visibility.Visible;
     }
 
     // ===================================================================== LAYOUT MANAGER ====
@@ -1049,6 +1097,18 @@ public partial class MainWindow
         AimConfig.AddDropdown(Locale.AimingBoundariesAlignment, AppConfig.Current.DropdownState.AimingBoundariesAlignment, v => AppConfig.Current.DropdownState.AimingBoundariesAlignment = v);
         AimConfig.AddDropdown(Locale.MovementPath, AppConfig.Current.DropdownState.MovementPathType, v => AppConfig.Current.DropdownState.MovementPathType = v);
         AimConfig.AddSlider(Locale.MouseSensitivity, Locale.Sensitivity, 0.01, 0.01, 0.01, 1).BindTo(() => AppConfig.Current.SliderSettings.MouseSensitivity);
+
+        // Use-controller-for-aim toggle. Uses the same AddToggleWithKeyBind pattern as
+        // GlobalActive/AutoTrigger/AntiRecoil so the user can bind a hotkey to flip it on/off
+        // from inside the game without having to alt-tab to PowerAim. AddToggleWithKeyBind
+        // handles the two-way binding + keybind plumbing internally.
+        var useControllerToggle = AimConfig.AddToggleWithKeyBind("Use controller for aim",
+            "UseControllerForAim", BindingManager);
+        useControllerToggle.BindTo(() => AppConfig.Current.ToggleState.UseControllerForAim);
+        //useControllerToggle.IsEnabled = PowerAim.InputLogic.GamepadManager.CanSend;
+        useControllerToggle.ToolTip = PowerAim.InputLogic.GamepadManager.CanSend
+            ? "Drive aim through the virtual Xbox controller's right-stick instead of synthesising mouse motion. Useful for games that lock out KB+M input or apply controller-specific aim-assist. Click the keybind icon on the right to set a global hotkey."
+            : "Disabled — no working gamepad sender. Configure ViGEm in Settings → Gamepad first.";
         AimConfig.AddButton("Calibrate sensitivity…").Reader.Click += (_, _) =>
         {
             new PowerAim.Visuality.CalibrationWizardDialog { Owner = this }.ShowDialog();
@@ -1399,6 +1459,13 @@ public partial class MainWindow
                 GamepadSettingsConfig.AddCredit(Locale.Status, "Internal mode initialized", credit => credit.Description.Foreground = Brushes.Orange);
             }
         }
+
+        // Inline live diagnostics — replaces the earlier modal dialog. Stays on the Gamepad page
+        // so the user can read the slot map while tweaking other settings on the same screen.
+        GamepadSettingsConfig.Children.Add(new PowerAim.UILibrary.GamepadDiagnosticsPanel
+        {
+            Margin = new Thickness(0, 8, 0, 8),
+        });
 
         GamepadSettingsConfig.AddSeparator();
 

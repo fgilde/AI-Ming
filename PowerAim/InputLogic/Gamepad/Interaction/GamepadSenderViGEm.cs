@@ -9,31 +9,96 @@ using Nefarius.ViGEm.Client;
 
 public class GamepadSenderViGEm : IGamepadSender
 {
-    private Controller _physicalController;
-    private readonly IXbox360Controller? _virtualController;
+    private Controller? _physicalController;
+    private IXbox360Controller? _virtualController;
     private bool _isRunning;
     private readonly HashSet<Xbox360Button> _pausedButtons = new();
     private readonly HashSet<Xbox360Slider> _pausedSliders = new();
     private readonly HashSet<Xbox360Axis> _pausedAxes = new();
     private readonly BlockingCollection<Action> _actions = new();
-    private readonly ViGEmClient _client;
+    private ViGEmClient? _client;
+
+    private bool _connected;
+    private string _lastError = "";
+
+    public bool IsConnected => _connected;
+    public string LastError => _lastError;
+
+    /// <summary>
+    ///     Real Microsoft Xbox 360 wired controller VID/PID. The previous values
+    ///     (<c>vid=0x0002, pid=0xFFFF</c>) were synthetic and many games rejected the resulting
+    ///     virtual pad as "not a real controller", which is why direct SetButton/SetAxis calls
+    ///     never seemed to do anything in-game. Using the canonical IDs makes XInput treat the
+    ///     virtual pad as a standard Xbox 360 controller.
+    /// </summary>
+    private const ushort Xbox360Vid = 0x045E;
+    private const ushort Xbox360Pid = 0x028E;
 
     public GamepadSenderViGEm()
     {
-        _client = new ViGEmClient();
-        _virtualController = _client.CreateXbox360Controller(2, ushort.MaxValue);
-        _virtualController.Connect();
+        EnsureConnected();
+    }
+
+    public bool EnsureConnected()
+    {
+        if (_connected) return true;
+        try
+        {
+            _client = new ViGEmClient();
+            _virtualController = _client.CreateXbox360Controller(Xbox360Vid, Xbox360Pid); 
+            _virtualController.Connect();
+            _connected = true;
+            _lastError = "";
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[GamepadSenderViGEm] ViGEm init failed: {ex.Message}");
+            _virtualController = null;
+            _client = null;
+
+            _lastError = ex.Message;
+            _connected = false;
+            return false;
+        }
     }
 
     public bool CanWork => _virtualController != null;
 
-
-    public IGamepadSender SyncWith(Controller physicalController)
+    /// <summary>
+    ///     Force a disconnect + reconnect of the virtual controller. Windows treats it as a
+    ///     fresh device plug-event which kicks XInput into re-enumerating its slots. Games that
+    ///     started ignoring our virtual pad (because they latched onto something else first) tend
+    ///     to pick it up after this. Returns true if the reconnect succeeded.
+    /// </summary>
+    public bool Reconnect()
     {
+        if (_virtualController == null) return false;
+        try
+        {
+            _virtualController.Disconnect();
+            System.Threading.Thread.Sleep(100); // let Windows process the disconnect
+            _virtualController.Connect();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[GamepadSenderViGEm] Reconnect failed: {ex.Message}");
+            return false;
+        }
+    }
+
+
+    public IGamepadSender SyncWith(Controller? physicalController)
+    {
+        // Physical controller is optional — the sender runs standalone too, accepting direct
+        // SetButtonState / SetAxisValue calls from upstream (e.g., aim/trigger pipelines that
+        // synthesize input independent of any real pad). Previously the action queue was only
+        // drained when a physical pad was connected, so standalone use silently buffered forever.
         _physicalController = physicalController;
-      //  _physicalController.Deactivate();
+        if (_isRunning) return this;
         _isRunning = true;
-        var thread = new Thread(SyncLoop);
+        var thread = new Thread(SyncLoop) { IsBackground = true, Name = "GamepadSenderViGEm-Loop" };
         thread.Start();
         return this;
     }
@@ -125,14 +190,28 @@ public class GamepadSenderViGEm : IGamepadSender
 
     private void SyncLoop()
     {
-        while (_isRunning && _physicalController.IsConnected)
+        // The loop has two responsibilities, separated for the no-physical-controller case:
+        //   1. Drain the action queue (direct SetButton / SetAxis calls). MUST always run.
+        //   2. Mirror the physical controller's state onto the virtual one. Only when a physical
+        //      pad is actually connected — falls back gracefully if none / disconnected.
+        while (_isRunning)
         {
-            var state = _physicalController.GetState();
-
+            // Pump direct-call actions unconditionally.
             while (_actions.TryTake(out var action, 0))
             {
-                action();
+                try { action(); }
+                catch { /* swallow — ViGEm transient failures shouldn't kill the loop */ }
             }
+
+            if (_physicalController == null || !_physicalController.IsConnected)
+            {
+                Thread.Sleep(2);
+                continue;
+            }
+
+            State state;
+            try { state = _physicalController.GetState(); }
+            catch { Thread.Sleep(10); continue; }
 
             if (!_pausedButtons.Contains(Xbox360Button.A)) _virtualController?.SetButtonState(Xbox360Button.A, state.Gamepad.Buttons.HasFlag(GamepadButtonFlags.A));
             if (!_pausedButtons.Contains(Xbox360Button.B)) _virtualController?.SetButtonState(Xbox360Button.B, state.Gamepad.Buttons.HasFlag(GamepadButtonFlags.B));

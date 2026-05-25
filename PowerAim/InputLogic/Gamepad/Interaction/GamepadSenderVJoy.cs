@@ -25,7 +25,7 @@ public class GamepadSenderVJoy : IGamepadSender
 
     public bool CanWork => _vJoyController != null && !_vJoyController.HasRelinquished;
 
-    public IGamepadSender SyncWith(Controller physicalController)
+    public IGamepadSender SyncWith(Controller? physicalController)
     {
         _physicalController = physicalController;
         _isRunning = true;
