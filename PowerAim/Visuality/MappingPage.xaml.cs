@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows.Controls;
 using PowerAim.Config;
 using PowerAim.InputLogic.Mapping;
+using PowerAim;
 using PowerAim.Extensions; // AddToggleWithKeyBind + BindTo helpers
 
 namespace PowerAim.Visuality;
@@ -61,7 +62,7 @@ public partial class MappingPage : System.Windows.Controls.UserControl
         var bm = MainWindow.Instance?.BindingManager;
         if (bm == null) return;
         ActiveHost.Children.Clear();
-        ActiveHost.AddToggleWithKeyBind("Mapping active", "MappingActive", bm)
+        ActiveHost.AddToggleWithKeyBind(Locale.MappingActive, "MappingActive", bm)
             .BindTo(() => AppConfig.Current.ToggleState.MappingActive);
         _activeToggleBuilt = true;
     }
@@ -154,14 +155,14 @@ public partial class MappingPage : System.Windows.Controls.UserControl
     private void UpdateEngineStatus()
     {
         var engine = MappingEngine.Instance;
-        var active = engine.ActiveProfile?.Name ?? "(none)";
+        var active = engine.ActiveProfile?.Name ?? Locale.NoneParen;
         bool masterOn = AppConfig.Current?.ToggleState?.MappingActive == true;
         bool anyEnabledProfile = AppConfig.Current?.ControllerMappingProfiles?.Any(p => p.Enabled) == true;
         string hint = "";
         if (!masterOn && anyEnabledProfile)
-            hint = "  —  Mapping active is OFF. Flip the master toggle above to activate the profile.";
+            hint = Locale.MappingActiveOffHint;
         else if (masterOn && !anyEnabledProfile)
-            hint = "  —  No profile is enabled. Toggle one in the list below.";
-        EngineStatusText.Text = $"Engine: {engine.Status} · Active profile: {active}{hint}";
+            hint = Locale.NoMappingProfileEnabledHint;
+        EngineStatusText.Text = string.Format(Locale.MappingEngineStatusFormat, engine.Status, active, hint);
     }
 }

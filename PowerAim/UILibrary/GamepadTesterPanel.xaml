@@ -55,7 +55,7 @@
                                FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
                                FontSize="12"
                                VerticalAlignment="Center" />
-                    <TextBlock Text="Back"
+                    <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Back'}"
                                Margin="6,0,0,0"
                                VerticalAlignment="Center"
                                FontFamily="Segoe UI Variable Text"
@@ -64,7 +64,7 @@
             </Button>
 
             <TextBlock Grid.Column="1"
-                       Text="Gamepad Controller Test"
+                       Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='GamepadControllerTest'}"
                        Margin="14,0,0,0"
                        VerticalAlignment="Center"
                        FontFamily="Segoe UI Variable Display"
@@ -83,7 +83,7 @@
                     <StackPanel Orientation="Horizontal">
                         <Ellipse x:Name="StatusDot" Width="8" Height="8" Fill="#E81123" Margin="0,0,6,0" VerticalAlignment="Center" />
                         <TextBlock x:Name="ConnectionStatus"
-                                   Text="Disconnected"
+                                   Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Disconnected'}"
                                    FontFamily="Segoe UI Variable Small"
                                    FontSize="12"
                                    Foreground="{DynamicResource FluentTextPrimary}"
@@ -94,13 +94,13 @@
                         Style="{StaticResource FluentStandardButton}"
                         Click="PopOut_Click"
                         Padding="10,6,12,6"
-                        ToolTip="Open the tester in a separate, non-modal window so you can keep it visible while doing other things in PowerAim.">
+                        ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='PopOutTooltip'}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="&#xE8A7;"
                                    FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
                                    FontSize="12"
                                    VerticalAlignment="Center" />
-                        <TextBlock Text="Pop out"
+                        <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='PopOut'}"
                                    Margin="6,0,0,0"
                                    VerticalAlignment="Center"
                                    FontFamily="Segoe UI Variable Text"
@@ -123,7 +123,7 @@
 
                         <!-- D-Pad -->
                         <StackPanel Grid.Column="0" HorizontalAlignment="Center">
-                            <TextBlock Text="D-Pad" Style="{StaticResource SubHeader}" />
+                            <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DPad'}" Style="{StaticResource SubHeader}" />
                             <Grid Width="170" Height="170">
                                 <Border x:Name="BtnUp" Style="{StaticResource GamepadButtonIndicator}" HorizontalAlignment="Center" VerticalAlignment="Top">
                                     <TextBlock Text="↑" Style="{StaticResource GamepadButtonLabel}" />
@@ -142,13 +142,13 @@
 
                         <!-- Center -->
                         <StackPanel Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <TextBlock Text="Center" Style="{StaticResource SubHeader}" />
+                            <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Center'}" Style="{StaticResource SubHeader}" />
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                 <Border x:Name="BtnBack" Style="{StaticResource GamepadButtonIndicator}">
-                                    <TextBlock Text="Back" Style="{StaticResource GamepadButtonLabel}" FontSize="10" />
+                                    <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Back'}" Style="{StaticResource GamepadButtonLabel}" FontSize="10" />
                                 </Border>
                                 <Border x:Name="BtnStart" Style="{StaticResource GamepadButtonIndicator}">
-                                    <TextBlock Text="Start" Style="{StaticResource GamepadButtonLabel}" FontSize="10" />
+                                    <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Start'}" Style="{StaticResource GamepadButtonLabel}" FontSize="10" />
                                 </Border>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
@@ -169,7 +169,7 @@
 
                         <!-- Face buttons -->
                         <StackPanel Grid.Column="2" HorizontalAlignment="Center">
-                            <TextBlock Text="Face Buttons" Style="{StaticResource SubHeader}" />
+                            <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='FaceButtons'}" Style="{StaticResource SubHeader}" />
                             <Grid Width="170" Height="170">
                                 <Border x:Name="BtnY" Style="{StaticResource GamepadButtonIndicator}" HorizontalAlignment="Center" VerticalAlignment="Top">
                                     <TextBlock Text="Y" Style="{StaticResource GamepadButtonLabel}" />
@@ -201,7 +201,7 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="Shoulders &amp; Triggers" Style="{StaticResource SubHeader}" HorizontalAlignment="Left" Margin="0,0,0,10" />
+                        <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ShouldersAndTriggers'}" Style="{StaticResource SubHeader}" HorizontalAlignment="Left" Margin="0,0,0,10" />
 
                         <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,0">
                             <Grid>
@@ -214,7 +214,7 @@
                                     <TextBlock Text="LB" Style="{StaticResource GamepadButtonLabel}" />
                                 </Border>
                                 <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
-                                    <TextBlock Text="Left Trigger" FontFamily="Segoe UI Variable Small" FontSize="11" Foreground="{DynamicResource FluentTextSecondary}" />
+                                    <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LeftTrigger'}" FontFamily="Segoe UI Variable Small" FontSize="11" Foreground="{DynamicResource FluentTextSecondary}" />
                                     <ProgressBar x:Name="LeftTriggerBar" Height="6" Minimum="0" Maximum="255" Value="0" Foreground="{DynamicResource FluentAccent}" Background="{DynamicResource FluentSurface3}" BorderThickness="0" Margin="0,4,0,0" />
                                 </StackPanel>
                                 <TextBlock Grid.Column="2" x:Name="LeftTriggerValue" Text="0" Width="32" TextAlignment="Right" VerticalAlignment="Center" Margin="6,0,0,0" Foreground="{DynamicResource FluentTextSecondary}" FontFamily="Segoe UI Variable Small" FontSize="11" />
@@ -232,7 +232,7 @@
                                     <TextBlock Text="RB" Style="{StaticResource GamepadButtonLabel}" />
                                 </Border>
                                 <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
-                                    <TextBlock Text="Right Trigger" FontFamily="Segoe UI Variable Small" FontSize="11" Foreground="{DynamicResource FluentTextSecondary}" />
+                                    <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='RightTrigger'}" FontFamily="Segoe UI Variable Small" FontSize="11" Foreground="{DynamicResource FluentTextSecondary}" />
                                     <ProgressBar x:Name="RightTriggerBar" Height="6" Minimum="0" Maximum="255" Value="0" Foreground="{DynamicResource FluentAccent}" Background="{DynamicResource FluentSurface3}" BorderThickness="0" Margin="0,4,0,0" />
                                 </StackPanel>
                                 <TextBlock Grid.Column="2" x:Name="RightTriggerValue" Text="0" Width="32" TextAlignment="Right" VerticalAlignment="Center" Margin="6,0,0,0" Foreground="{DynamicResource FluentTextSecondary}" FontFamily="Segoe UI Variable Small" FontSize="11" />
@@ -244,7 +244,7 @@
                 <!-- Sequence Testing -->
                 <Border Style="{StaticResource FluentCard}">
                     <StackPanel>
-                        <TextBlock Text="Sequence Testing" Style="{StaticResource SubHeader}" HorizontalAlignment="Left" Margin="0,0,0,8" />
+                        <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SequenceTesting'}" Style="{StaticResource SubHeader}" HorizontalAlignment="Left" Margin="0,0,0,8" />
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -257,22 +257,22 @@
                                 <ColumnDefinition Width="50" />
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Delay before start" VerticalAlignment="Center" Margin="0,5,10,5" Foreground="{DynamicResource FluentTextPrimary}" FontFamily="Segoe UI Variable Text" FontSize="13" />
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DelayBeforeStart'}" VerticalAlignment="Center" Margin="0,5,10,5" Foreground="{DynamicResource FluentTextPrimary}" FontFamily="Segoe UI Variable Text" FontSize="13" />
                             <Slider Grid.Row="0" Grid.Column="1" x:Name="TimeoutSlider" Minimum="0" Maximum="10" Value="3" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
                             <TextBlock Grid.Row="0" Grid.Column="2" x:Name="TimeoutValue" Text="3s" VerticalAlignment="Center" TextAlignment="Right" Foreground="{DynamicResource FluentTextSecondary}" />
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Test Sequence" VerticalAlignment="Center" Margin="0,8,10,5" Foreground="{DynamicResource FluentTextPrimary}" FontFamily="Segoe UI Variable Text" FontSize="13" />
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='TestSequence'}" VerticalAlignment="Center" Margin="0,8,10,5" Foreground="{DynamicResource FluentTextPrimary}" FontFamily="Segoe UI Variable Text" FontSize="13" />
                             <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" x:Name="SequenceSelector" Margin="0,8,0,5" SelectionChanged="SequenceSelector_SelectionChanged">
-                                <ComboBoxItem Content="A Button Press (500ms)" Tag="A_Button" />
-                                <ComboBoxItem Content="A+B Combo (1s)" Tag="AB_Combo" />
-                                <ComboBoxItem Content="D-Pad Circle (2s)" Tag="DPad_Circle" IsSelected="True" />
-                                <ComboBoxItem Content="Left Stick Circle (2s)" Tag="LStick_Circle" />
-                                <ComboBoxItem Content="Trigger Press (1s)" Tag="Trigger_Press" />
-                                <ComboBoxItem Content="Complex Combo (3s)" Tag="Complex_Combo" />
+                                <ComboBoxItem Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SeqAButtonPress'}" Tag="A_Button" />
+                                <ComboBoxItem Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SeqABCombo'}" Tag="AB_Combo" />
+                                <ComboBoxItem Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SeqDpadCircle'}" Tag="DPad_Circle" IsSelected="True" />
+                                <ComboBoxItem Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SeqLStickCircle'}" Tag="LStick_Circle" />
+                                <ComboBoxItem Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SeqTriggerPress'}" Tag="Trigger_Press" />
+                                <ComboBoxItem Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SeqComplexCombo'}" Tag="Complex_Combo" />
                             </ComboBox>
 
                             <TextBlock Grid.Row="2" Grid.ColumnSpan="3" x:Name="SequenceDescription"
-                                       Text="Simulates D-Pad presses in a circular pattern: Up → Right → Down → Left"
+                                       Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SeqDpadCircleDescription'}"
                                        Foreground="{DynamicResource FluentTextTertiary}"
                                        FontFamily="Segoe UI Variable Small"
                                        FontSize="11"
@@ -283,14 +283,14 @@
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
                             <Button x:Name="StopSequenceButton"
                                     Style="{StaticResource FluentStandardButton}"
-                                    Content="Stop"
+                                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Stop'}"
                                     MinWidth="90"
                                     Margin="0,0,8,0"
                                     IsEnabled="False"
                                     Click="StopSequenceButton_Click" />
                             <Button x:Name="StartSequenceButton"
                                     Style="{StaticResource FluentAccentButton}"
-                                    Content="Start Test Sequence"
+                                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='StartTestSequence'}"
                                     MinWidth="150"
                                     Click="StartSequenceButton_Click" />
                         </StackPanel>
@@ -306,7 +306,7 @@
                             Padding="12,6,12,6">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" />
-                            <TextBlock Text="Refresh connection" Margin="6,0,0,0" VerticalAlignment="Center" FontFamily="Segoe UI Variable Text" FontSize="13" />
+                            <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='RefreshConnection'}" Margin="6,0,0,0" VerticalAlignment="Center" FontFamily="Segoe UI Variable Text" FontSize="13" />
                         </StackPanel>
                     </Button>
                 </StackPanel>

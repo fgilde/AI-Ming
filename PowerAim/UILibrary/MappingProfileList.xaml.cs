@@ -6,6 +6,7 @@ using PowerAim;
 using PowerAim.Config;
 using PowerAim.InputLogic;
 using PowerAim.InputLogic.Mapping;
+using PowerAim;
 using PowerAim.Types;
 
 namespace PowerAim.UILibrary;
@@ -58,7 +59,7 @@ public partial class MappingProfileList : System.Windows.Controls.UserControl
         if ((sender as FrameworkElement)?.Tag is not ControllerMappingProfile p) return;
         var clone = new ControllerMappingProfile
         {
-            Name = p.Name + " (copy)",
+            Name = p.Name + Locale.CopySuffix,
             Enabled = false,
             MatchProcess = p.MatchProcess,
             MouseToStickSensitivity = p.MouseToStickSensitivity,
@@ -89,8 +90,8 @@ public partial class MappingProfileList : System.Windows.Controls.UserControl
     {
         if ((sender as FrameworkElement)?.Tag is not ControllerMappingProfile p) return;
         if (PowerAim.Visuality.MessageDialog.Confirm(
-                $"Delete mapping profile '{p.Name}'?",
-                "Delete profile",
+                string.Format(Locale.ConfirmDeleteMappingProfileFormat, p.Name),
+                Locale.DeleteProfile,
                 owner: Window.GetWindow(this),
                 icon: PowerAim.Visuality.MessageDialog.DialogIcon.Warning,
                 defaultResult: PowerAim.Visuality.MessageDialog.DialogResult.No))
@@ -120,15 +121,15 @@ public partial class MappingProfileList : System.Windows.Controls.UserControl
         }
 
         // Header item — non-clickable label.
-        Add("Empty profile",                     () => new ControllerMappingProfile { Name = $"Profile {Profiles.Count + 1}" });
+        Add(Locale.EmptyProfile,                 () => new ControllerMappingProfile { Name = string.Format(Locale.ProfileDefaultNameFormat, Profiles.Count + 1) });
         menu.Items.Add(new Separator());
-        var presetsHeader = new MenuItem { Header = "PRESETS", IsEnabled = false, FontSize = 10 };
+        var presetsHeader = new MenuItem { Header = Locale.PresetsHeader, IsEnabled = false, FontSize = 10 };
         menu.Items.Add(presetsHeader);
-        Add("FPS — Both directions (KB+M ↔ Controller)", MappingPresets.NewFpsBoth);
-        Add("FPS — KB+M → Controller",                    MappingPresets.NewFpsKbToPad);
-        Add("FPS — Controller → KB+M",                    MappingPresets.NewFpsPadToKb);
-        Add("Driving / Racing — KB+M → Controller",       MappingPresets.NewDrivingKbToPad);
-        Add("Controller as Mouse (navigate Windows)",     MappingPresets.NewControllerAsMouse);
+        Add(Locale.PresetFpsBoth,            MappingPresets.NewFpsBoth);
+        Add(Locale.PresetFpsKbToPad,         MappingPresets.NewFpsKbToPad);
+        Add(Locale.PresetFpsPadToKb,         MappingPresets.NewFpsPadToKb);
+        Add(Locale.PresetDrivingKbToPad,     MappingPresets.NewDrivingKbToPad);
+        Add(Locale.PresetControllerAsMouse,  MappingPresets.NewControllerAsMouse);
 
         menu.PlacementTarget = NewProfileBtn;
         menu.IsOpen = true;

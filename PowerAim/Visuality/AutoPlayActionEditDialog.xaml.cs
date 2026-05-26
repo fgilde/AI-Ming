@@ -3,6 +3,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using PowerAim.Config;
 using PowerAim.Extensions;
+using PowerAim;
 using PowerAim.Visuality;
 
 namespace Visuality
@@ -36,24 +37,20 @@ namespace Visuality
             DurationPanel.RemoveAll();
 
             // Action Type dropdown
-            DurationPanel.AddDropdown("Action Type", Action.ActionType, type =>
+            DurationPanel.AddDropdown(Locale.ActionType, Action.ActionType, type =>
             {
                 Action.ActionType = type;
             }, dropdown =>
             {
                 dropdown.BorderBrush = dropdown.Background = Brushes.Transparent;
-                dropdown.ToolTip = "How this action behaves:\n" +
-                    "• Continuous: Held until another action is chosen\n" +
-                    "• Instant: Quick tap (jump, reload)\n" +
-                    "• Modifier: Can combine with other actions (sprint, aim)\n" +
-                    "• Toggle: Press once to toggle on/off (crouch)";
+                dropdown.ToolTip = Locale.ActionTypeTooltip;
             });
 
             // Duration slider (mainly for Instant actions)
-            DurationPanel.AddSlider("Tap Duration", "seconds", 0.01, 0.05, 0.01, 1).InitWith(slider =>
+            DurationPanel.AddSlider(Locale.TapDuration, Locale.Seconds, 0.01, 0.05, 0.01, 1).InitWith(slider =>
             {
                 slider.BorderBrush = slider.Background = Brushes.Transparent;
-                slider.ToolTip = "How long to hold the key for instant/toggle actions.";
+                slider.ToolTip = Locale.TapDurationTooltip;
             }).BindTo(() => Action.Duration);
         }
 

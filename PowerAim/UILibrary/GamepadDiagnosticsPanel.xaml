@@ -8,7 +8,7 @@
              d:DesignHeight="400" d:DesignWidth="600">
     <StackPanel>
         <!-- XInput slots row -->
-        <TextBlock Text="XInput slots (the 4 controllers Windows tracks)"
+        <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='XInputSlotsHeader'}"
                    Foreground="{DynamicResource FluentTextPrimary}"
                    FontFamily="Segoe UI Variable Display"
                    FontWeight="SemiBold" FontSize="13"
@@ -23,7 +23,7 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                <TextBlock Text="Detected gamepads (Windows HID devices)"
+                <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DetectedGamepadsHeader'}"
                            Foreground="{DynamicResource FluentTextPrimary}"
                            FontFamily="Segoe UI Variable Display"
                            FontWeight="SemiBold" FontSize="13" />
@@ -33,15 +33,15 @@
                            Margin="0,2,0,0" />
             </StackPanel>
             <Button Grid.Column="1"
-                    Content="Manage hidden controllers →"
+                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ManageHiddenControllers'}"
                     Padding="12,4,12,4"
                     MinHeight="30"
-                    ToolTip="Opens a focused page where you can hide / unhide individual controllers without HidHide."
+                    ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ManageHiddenControllersTooltip'}"
                     Click="OpenHiddenControllers_Click" />
         </Grid>
 
         <!-- Sender state -->
-        <TextBlock Text="PowerAim sender"
+        <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='PowerAimSender'}"
                    Foreground="{DynamicResource FluentTextPrimary}"
                    FontFamily="Segoe UI Variable Display"
                    FontWeight="SemiBold" FontSize="13"
@@ -53,7 +53,7 @@
                 BorderThickness="0,0,0,0"
                 Margin="0,14,0,4">
             <StackPanel>
-                <TextBlock Text="Diagnose"
+                <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Diagnose'}"
                            Foreground="{DynamicResource FluentAccent}"
                            FontFamily="Segoe UI Variable Display"
                            FontWeight="SemiBold" FontSize="13"
@@ -69,39 +69,39 @@
 
         <!-- Actions -->
         <WrapPanel Margin="0,12,0,0">
-            <Button Content="Fire test RT pulse"
+            <Button Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='FireTestRtPulse'}"
                     MinHeight="32" Padding="12,4,12,4"
                     Margin="0,0,8,4"
                     Click="TestPulse_Click" />
-            <Button Content="Reconnect virtual pad"
+            <Button Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ReconnectVirtualPad'}"
                     MinHeight="32" Padding="12,4,12,4"
                     Margin="0,0,8,4"
-                    ToolTip="Forces a USB disconnect + reconnect of PowerAim's virtual controller. Often kicks games into picking it up when they were stuck on a different slot."
+                    ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ReconnectVirtualPadTooltip'}"
                     Click="ReconnectVirtual_Click" />
-            <Button Content="Reset HidHide cloak"
+            <Button Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ResetHidHideCloak'}"
                     MinHeight="32" Padding="12,4,12,4"
                     Margin="0,0,8,4"
-                    ToolTip="Turns HidHide's master cloak off and unhides every device — fixes situations where past PowerAim sessions accidentally cloaked your real or virtual pads."
+                    ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ResetHidHideCloakTooltip'}"
                     Click="ResetHidHide_Click" />
-            <Button Content="Refresh now"
+            <Button Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='RefreshNow'}"
                     MinHeight="32" Padding="12,4,12,4"
                     Margin="0,0,8,4"
                     Click="Refresh_Click" />
             <Button x:Name="LaunchHidHideBtn"
-                    Content="Launch HidHide UI"
+                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LaunchHidHideUI'}"
                     MinHeight="32" Padding="12,4,12,4"
                     Margin="0,0,8,4"
-                    ToolTip="Opens HidHideClient.exe if installed. Use HidHide to cloak your physical pad from games while leaving PowerAim's virtual pad visible."
+                    ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LaunchHidHideUITooltip'}"
                     Click="LaunchHidHide_Click" />
-            <Button Content="Open Gamepad Tester"
+            <Button Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='OpenGamepadTester'}"
                     MinHeight="32" Padding="12,4,12,4"
                     Margin="0,0,8,4"
-                    ToolTip="Switches to the live gamepad tester page — useful for verifying physical input + slot mapping."
+                    ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='OpenGamepadTesterTooltip'}"
                     Click="OpenGamepadTester_Click" />
-            <Button Content="Windows joy.cpl"
+            <Button Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='WindowsJoyCpl'}"
                     MinHeight="32" Padding="12,4,12,4"
                     Margin="0,0,8,4"
-                    ToolTip="Opens Windows' built-in game controller properties dialog (joy.cpl)."
+                    ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='WindowsJoyCplTooltip'}"
                     Click="OpenJoyCpl_Click" />
         </WrapPanel>
     </StackPanel>

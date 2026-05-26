@@ -29,6 +29,7 @@ using PowerAim.Class.Native;
 using System.Runtime.InteropServices;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
+using PowerAim;
 
 namespace PowerAim.UILibrary
 {
@@ -208,7 +209,7 @@ namespace PowerAim.UILibrary
             headerRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             var header = new TextBlock
             {
-                Text = "Select capture window",
+                Text = Locale.SelectCaptureWindow,
                 FontFamily = new System.Windows.Media.FontFamily("Segoe UI Variable Display"),
                 FontWeight = FontWeights.SemiBold,
                 FontSize = 13,
@@ -220,7 +221,7 @@ namespace PowerAim.UILibrary
 
             var browseBtn = new Button
             {
-                Content = "Browse all…",
+                Content = Locale.BrowseAll,
                 MinWidth = 110,
                 Margin = new Thickness(0, 0, 2, 8)
             };
@@ -370,7 +371,7 @@ namespace PowerAim.UILibrary
 
             var pidLabel = new TextBlock
             {
-                Text = $"PID {process.Id}",
+                Text = string.Format(Locale.PidFormat, process.Id),
                 FontFamily = new System.Windows.Media.FontFamily("Segoe UI Variable Small"),
                 FontSize = 11,
                 Margin = new Thickness(0, 2, 0, 0)
@@ -472,7 +473,7 @@ namespace PowerAim.UILibrary
 
             var header = new TextBlock
             {
-                Text = "Select capture monitor",
+                Text = Locale.SelectCaptureMonitor,
                 FontFamily = new System.Windows.Media.FontFamily("Segoe UI Variable Display"),
                 FontWeight = FontWeights.SemiBold,
                 FontSize = 13,
@@ -574,7 +575,7 @@ namespace PowerAim.UILibrary
                 badge.SetResourceReference(Border.BackgroundProperty, "FluentAccent");
                 var badgeText = new TextBlock
                 {
-                    Text = "Primary",
+                    Text = Locale.Primary,
                     FontFamily = new System.Windows.Media.FontFamily("Segoe UI Variable Small"),
                     FontSize = 10,
                     FontWeight = FontWeights.SemiBold
@@ -628,7 +629,7 @@ namespace PowerAim.UILibrary
 
             var posLabel = new TextBlock
             {
-                Text = $"Position {monitor.Bounds.X}, {monitor.Bounds.Y}",
+                Text = string.Format(Locale.PositionFormat, monitor.Bounds.X, monitor.Bounds.Y),
                 FontFamily = new System.Windows.Media.FontFamily("Segoe UI Variable Small"),
                 FontSize = 11,
                 Margin = new Thickness(0, 2, 0, 0)

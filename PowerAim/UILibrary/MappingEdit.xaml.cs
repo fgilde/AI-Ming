@@ -6,6 +6,7 @@ using PowerAim.Config;
 using PowerAim.Extensions;
 using PowerAim.InputLogic;
 using PowerAim.InputLogic.Mapping;
+using PowerAim;
 // Pin WPF types that collide with WinForms.
 using UserControl = System.Windows.Controls.UserControl;
 using Button = System.Windows.Controls.Button;
@@ -83,20 +84,20 @@ public partial class MappingEdit : UserControl
         if (Profile == null) return;
         var p = Profile;
 
-        StickSettingsHost.AddSlider("Mouse → Stick sensitivity", "× scale", 0.05, 0.05, 0.1, 5.0)
+        StickSettingsHost.AddSlider(Locale.MouseToStickSensitivity, Locale.MultiplierUnit, 0.05, 0.05, 0.1, 5.0)
             .BindTo(() => p.MouseToStickSensitivity);
-        StickSettingsHost.AddSlider("Stick → Mouse sensitivity", "px per tick", 1, 1, 1, 60)
+        StickSettingsHost.AddSlider(Locale.StickToMouseSensitivity, Locale.PxPerTickUnit, 1, 1, 1, 60)
             .BindTo(() => p.StickToMouseSensitivity);
-        StickSettingsHost.AddSlider("Dead-zone", "× full deflection", 0.01, 0.01, 0.0, 0.45)
+        StickSettingsHost.AddSlider(Locale.DeadZone, Locale.FullDeflectionUnit, 0.01, 0.01, 0.0, 0.45)
             .BindTo(() => p.StickDeadzone);
-        StickSettingsHost.AddSlider("Anti-dead-zone", "× full deflection", 0.01, 0.01, 0.0, 0.45)
+        StickSettingsHost.AddSlider(Locale.AntiDeadZone, Locale.FullDeflectionUnit, 0.01, 0.01, 0.0, 0.45)
             .BindTo(() => p.StickAntiDeadzone);
-        StickSettingsHost.AddSlider("Mouse response curve", "exponent", 0.05, 0.05, 0.8, 3.0)
+        StickSettingsHost.AddSlider(Locale.MouseResponseCurve, Locale.ExponentUnit, 0.05, 0.05, 0.8, 3.0)
             .BindTo(() => p.StickMouseExponent);
 
         var invY = new System.Windows.Controls.CheckBox
         {
-            Content = "Invert Y axis (stick ↔ mouse)",
+            Content = Locale.InvertYAxis,
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(0, 6, 0, 0),
             FontFamily = new FontFamily("Segoe UI Variable Text"),
@@ -190,7 +191,7 @@ public partial class MappingEdit : UserControl
             VerticalAlignment = VerticalAlignment.Center,
             FontFamily = new FontFamily("Segoe UI Variable Text"),
             FontSize = 12,
-            ToolTip = "Press style: Press = while held, LongPress = after holding, DoubleTap = quick two presses, Toggle = latching, Pulse = brief fire-and-release.",
+            ToolTip = Locale.MappingActivatorTooltip,
         };
         foreach (MappingActivator a in Enum.GetValues<MappingActivator>())
             act.Items.Add(a);
@@ -208,7 +209,7 @@ public partial class MappingEdit : UserControl
             Content = "🗑",
             MinHeight = 30, MinWidth = 36,
             Padding = new Thickness(6, 2, 6, 2),
-            ToolTip = "Remove this mapping",
+            ToolTip = Locale.RemoveMapping,
         };
         rem.SetResourceReference(StyleProperty, "FluentStandardButton");
         rem.Click += (_, _) => Profile?.Mappings.Remove(mapping);
@@ -271,7 +272,7 @@ public partial class MappingEdit : UserControl
                 MinHeight = 30, MinWidth = 30,
                 Margin = new Thickness(6, 0, 0, 0),
                 Padding = new Thickness(0),
-                ToolTip = "Switch back to recording a normal key / button / trigger.",
+                ToolTip = Locale.RecordNormalTooltip,
             };
             recordBtn.SetResourceReference(StyleProperty, "FluentStandardButton");
             recordBtn.Click += (_, _) =>
@@ -329,7 +330,7 @@ public partial class MappingEdit : UserControl
             MinHeight = 30, MinWidth = 30,
             Margin = new Thickness(6, 0, 0, 0),
             Padding = new Thickness(0),
-            ToolTip = "Pick a stick direction or mouse-motion target (things the recorder can't capture).",
+            ToolTip = Locale.SpecialEndpointTooltip,
         };
         specialBtn.SetResourceReference(StyleProperty, "FluentStandardButton");
         specialBtn.Click += (_, _) => OpenSpecialMenu(specialBtn, mapping, isSource);
@@ -359,17 +360,17 @@ public partial class MappingEdit : UserControl
             menu.Items.Add(item);
         }
 
-        Add("🎮 Left Stick — Up",     MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.LeftStickUp);
-        Add("🎮 Left Stick — Down",   MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.LeftStickDown);
-        Add("🎮 Left Stick — Left",   MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.LeftStickLeft);
-        Add("🎮 Left Stick — Right",  MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.LeftStickRight);
+        Add(Locale.MenuLeftStickUp,    MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.LeftStickUp);
+        Add(Locale.MenuLeftStickDown,  MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.LeftStickDown);
+        Add(Locale.MenuLeftStickLeft,  MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.LeftStickLeft);
+        Add(Locale.MenuLeftStickRight, MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.LeftStickRight);
         menu.Items.Add(new System.Windows.Controls.Separator());
-        Add("🎮 Right Stick — Up",    MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.RightStickUp);
-        Add("🎮 Right Stick — Down",  MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.RightStickDown);
-        Add("🎮 Right Stick — Left",  MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.RightStickLeft);
-        Add("🎮 Right Stick — Right", MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.RightStickRight);
+        Add(Locale.MenuRightStickUp,    MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.RightStickUp);
+        Add(Locale.MenuRightStickDown,  MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.RightStickDown);
+        Add(Locale.MenuRightStickLeft,  MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.RightStickLeft);
+        Add(Locale.MenuRightStickRight, MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.RightStickRight);
         menu.Items.Add(new System.Windows.Controls.Separator());
-        Add("🖱 Mouse motion (relative)", MappingInputKind.MouseButton, MappingBindingConverter.MouseMotionSentinel);
+        Add(Locale.MenuMouseMotionRelative, MappingInputKind.MouseButton, MappingBindingConverter.MouseMotionSentinel);
 
         menu.PlacementTarget = anchor;
         menu.IsOpen = true;

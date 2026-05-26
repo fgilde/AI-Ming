@@ -15,21 +15,21 @@
                 <!-- Enabled Toggle -->
                 <Grid>
                     <uiLibrary:AToggle Margin="0 -10 -8 0" Panel.ZIndex="10" BorderBrush="Transparent" Background="Transparent"
-                                       Text="Enabled"
+                                       Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Enabled'}"
                                        VerticalAlignment="Top" HorizontalAlignment="Right"
                                        Checked="{Binding Profile.Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                     <StackPanel>
                         <!-- Profile Name -->
                         <Label Foreground="{StaticResource Foreground}"
                                FontSize="13"
-                               Content="Profile Name"
+                               Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ProfileName'}"
                                FontFamily="Segoe UI Variable Text" />
                         <TextBox BorderThickness="1"
                                  Padding="3 5 1 5"
                                  Text="{Binding Profile.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  TextWrapping="Wrap"
                                  Margin="2, 5"
-                                 Tag="Enter profile name..."
+                                 Tag="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='EnterProfileName'}"
                                  VerticalAlignment="Top"
                                  FontFamily="Segoe UI Variable Text"
                                  Style="{DynamicResource placeHolder}"
@@ -43,7 +43,7 @@
                 <StackPanel x:Name="OllamaModelPanel" Margin="0 10 0 0">
                     <Label Foreground="{StaticResource Foreground}"
                            FontSize="13"
-                           Content="Ollama Model"
+                           Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='OllamaModel'}"
                            FontFamily="Segoe UI Variable Text" />
                     <TextBox BorderThickness="1"
                              Padding="3 5 1 5"
@@ -59,7 +59,7 @@
                                FontSize="11"
                                Margin="2 0 0 10"
                                TextWrapping="Wrap"
-                               Text="Recommended: moondream (fast), llava:7b (balanced), qwen2.5-vl:7b (quality)"
+                               Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='OllamaModelRecommended'}"
                                Visibility="{Binding Converter={StaticResource helpVis}}"
                                FontFamily="Segoe UI Variable Text" />
                 </StackPanel>
@@ -68,7 +68,7 @@
                 <StackPanel Margin="0 10 0 0">
                     <Label Foreground="{StaticResource Foreground}"
                            FontSize="13"
-                           Content="Match process (optional)"
+                           Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='MatchProcessOptional'}"
                            FontFamily="Segoe UI Variable Text" />
                     <TextBox BorderThickness="1"
                              Padding="3 5 1 5"
@@ -85,7 +85,7 @@
                                Margin="2 0 0 10"
                                TextWrapping="Wrap"
                                Visibility="{Binding Converter={StaticResource helpVis}}"
-                               Text="When set, this profile only fires while a process matching the pattern is focused. Supports wildcards (*, ?) and pipes (cs2|valorant). Leave empty for always-on."
+                               Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='AutoPlayMatchProcessHelp'}"
                                FontFamily="Segoe UI Variable Text" />
                 </StackPanel>
 
@@ -96,7 +96,7 @@
                 <StackPanel Margin="0 10 0 0">
                     <Label Foreground="{StaticResource Foreground}"
                            FontSize="13"
-                           Content="Game Context (for AI)"
+                           Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='GameContext'}"
                            FontFamily="Segoe UI Variable Text" />
                     <TextBox BorderThickness="1"
                              Padding="3 5 1 5"
@@ -107,7 +107,7 @@
                              MaxHeight="150"
                              VerticalScrollBarVisibility="Auto"
                              Margin="2, 5"
-                             Tag="Describe the game for the AI..."
+                             Tag="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DescribeGameForAi'}"
                              FontFamily="Segoe UI Variable Text"
                              Style="{DynamicResource placeHolder}"
                              BorderBrush="{DynamicResource FluentStroke}"
@@ -118,7 +118,7 @@
                                Margin="2 0 0 10"
                                TextWrapping="Wrap"
                                Visibility="{Binding Converter={StaticResource helpVis}}"
-                               Text="Example: This is a 2D platformer. The player needs to jump over obstacles and collect coins."
+                               Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='GameContextExample'}"
                                FontFamily="Segoe UI Variable Text" />
                 </StackPanel>
 
@@ -128,14 +128,14 @@
                 <StackPanel>
                     <Label Foreground="{StaticResource Foreground}"
                            FontSize="13"
-                           Content="Actions"
+                           Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Actions'}"
                            FontFamily="Segoe UI Variable Text" />
                     <TextBlock Foreground="{StaticResource Foreground}"
                                FontSize="11"
                                Margin="2 0 0 10"
                                TextWrapping="Wrap"
                                Visibility="{Binding Converter={StaticResource helpVis}}"
-                               Text="Define actions the AI can choose from. Each action has a name (e.g., 'move_left') and keys to press."
+                               Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ActionsHelp'}"
                                FontFamily="Segoe UI Variable Text" />
                     <local:AutoPlayActionList x:Name="ActionsList"
                                               Actions="{Binding Profile.Actions, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />

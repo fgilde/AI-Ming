@@ -9,6 +9,7 @@ using PowerAim.Extensions;
 using Visuality;
 using Other;
 using PowerAim.Config;
+using PowerAim;
 using Supercluster.KDTree;
 
 namespace PowerAim.AILogic;
@@ -86,13 +87,13 @@ public class PredictionLogic : IPredictionLogic
             try
             {
                 Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
-                    new NoticeBar($"CUDA load failed ({cudaEx.Message}), retrying with DirectML.", 4000).Show()));
+                    new NoticeBar(string.Format(Locale.CudaLoadFailedFormat, cudaEx.Message), 4000).Show()));
                 LoadModel(sessionOptions, modelPath, OnnxExecutionProvider.DirectML);
             }
             catch (Exception dmlEx)
             {
                 Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
-                    new NoticeBar($"Error starting the model: {dmlEx.Message}", 5000).Show()));
+                    new NoticeBar(string.Format(Locale.ErrorStartingModelFormat, dmlEx.Message), 5000).Show()));
                 _onnxModel?.Dispose();
                 _onnxModel = null;
             }
@@ -199,7 +200,7 @@ public class PredictionLogic : IPredictionLogic
             // models whose metadata advertises a different anchor count we didn't predict).
             Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
                 new NoticeBar(
-                        $"Output shape does not match the expected shape of {string.Join("x", expectedShape)}.\n\nPlease use a YOLOv8 model converted to ONNXv8.",
+                        string.Format(Locale.OutputShapeMismatchFormat, string.Join("x", expectedShape)),
                         15000)
                     .Show()
             ));
@@ -343,7 +344,7 @@ public class PredictionLogic : IPredictionLogic
                 }
                 catch (Exception e)
                 {
-                    new NoticeBar($"Collect Data isn't working, try again later. {e.Message}", 6000).Show();
+                    new NoticeBar(string.Format(Locale.CollectDataFailedFormat, e.Message), 6000).Show();
                 }
             }
         }

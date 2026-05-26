@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using PowerAim;
 using Visuality;
 
 namespace UILibrary
@@ -35,7 +36,7 @@ namespace UILibrary
             {
                 var dlg = new AutoPlayActionEditDialog
                 {
-                    Title = "Edit Action",
+                    Title = Locale.EditAction,
                     Action = action
                 };
                 dlg.ShowDialog();
@@ -46,7 +47,7 @@ namespace UILibrary
         {
             var dlg = new AutoPlayActionEditDialog
             {
-                Title = "Add Action",
+                Title = Locale.AddAction,
                 Action = new AutoPlayAction()
             };
             if (dlg.ShowDialog() ?? false)
@@ -58,7 +59,7 @@ namespace UILibrary
         private void DeleteAction_Click(object sender, RoutedEventArgs e)
         {
             if ((sender as FrameworkElement)?.Tag is AutoPlayAction action &&
-                PowerAim.Visuality.MessageDialog.Show($"Delete action '{action.Name}'?", "Delete Action",
+                PowerAim.Visuality.MessageDialog.Show(string.Format(Locale.ConfirmDeleteActionFormat, action.Name), Locale.DeleteAction,
                     PowerAim.Visuality.MessageDialog.DialogButtons.YesNo, PowerAim.Visuality.MessageDialog.DialogIcon.Question,
                     owner: Window.GetWindow(this), defaultResult: PowerAim.Visuality.MessageDialog.DialogResult.No) == PowerAim.Visuality.MessageDialog.DialogResult.Yes)
             {

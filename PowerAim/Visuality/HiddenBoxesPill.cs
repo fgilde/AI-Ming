@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using PowerAim;
 
 namespace PowerAim.Visuality;
 
@@ -128,7 +129,7 @@ public sealed class HiddenBoxesPill
 
         var heading = new TextBlock
         {
-            Text = "Hidden sections",
+            Text = Locale.HiddenSections,
             FontFamily = new FontFamily("Segoe UI Variable Display"),
             FontWeight = FontWeights.SemiBold,
             FontSize = 12,
@@ -176,7 +177,7 @@ public sealed class HiddenBoxesPill
             return;
         }
         _pill.Visibility = Visibility.Visible;
-        _label.Text = hidden.Count == 1 ? "1 hidden section" : $"{hidden.Count} hidden sections";
+        _label.Text = hidden.Count == 1 ? Locale.OneHiddenSection : string.Format(Locale.HiddenSectionsCountFormat, hidden.Count);
 
         _flyoutItems.Children.Clear();
         foreach (var box in hidden)

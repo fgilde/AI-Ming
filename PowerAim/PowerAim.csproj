@@ -121,8 +121,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="kli.Localize" Version="0.8.3" />
-    <AdditionalFiles Include="Localizations\Locale.json" NamespaceName="PowerAim" ClassName="Locale" />
+    <PackageReference Include="kli.Localize" Version="2.0.4" />
+    <Localize Include="Localizations\Locale_*.json" NeutralCulture="en-US" NamespaceName="PowerAim" ClassName="Locale" />
   </ItemGroup>
 
   <ItemGroup>

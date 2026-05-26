@@ -28,7 +28,7 @@
 
                 <TextBlock x:Name="StatusText"
                            Grid.Column="1"
-                           Text="Ollama: Checking..."
+                           Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='OllamaChecking'}"
                            Foreground="{DynamicResource FluentTextPrimary}"
                            VerticalAlignment="Center"
                            FontFamily="Segoe UI Variable Text"
@@ -37,7 +37,7 @@
                 <Button Style="{StaticResource FluentIconButton}" x:Name="RefreshButton"
                                  Grid.Column="2"
                                  Content="&#xE72C;"
-                                 ToolTip="Refresh Status"
+                                 ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='RefreshStatus'}"
                                  FontSize="13"
                                  BorderBrush="Transparent"
                                  Foreground="{DynamicResource FluentTextPrimary}"
@@ -53,7 +53,7 @@
                        FontFamily="Segoe UI Variable Small" />
 
             <TextBlock x:Name="ModelsText"
-                       Text="Models: -"
+                       Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ModelsDashFallback'}"
                        Foreground="{DynamicResource FluentTextSecondary}"
                        FontSize="11"
                        TextWrapping="Wrap"
@@ -68,7 +68,7 @@
                        Visibility="Collapsed"
                        FontFamily="Segoe UI Variable Small" />
 
-            <TextBlock Text="Install Ollama: ollama.com | Start: 'ollama serve'"
+            <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='InstallOllamaHint'}"
                        Foreground="{DynamicResource FluentTextTertiary}"
                        FontSize="10"
                        Margin="0,4,0,0"

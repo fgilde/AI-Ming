@@ -48,7 +48,7 @@
                                                    Checked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
                                 <Button Style="{StaticResource FluentIconButton}"
-                                    ToolTip="Edit"
+                                    ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Edit'}"
                                     Tag="{Binding}"
                                     MouseDown="UIElement_OnMouseDown"
                                     Click="EditProfile_Click"
@@ -59,7 +59,7 @@
                                     Width="50" />
 
                                 <Button Style="{StaticResource FluentIconButton}"
-                                    ToolTip="Delete"
+                                    ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Delete'}"
                                     Tag="{Binding}"
                                     MouseDown="UIElement_OnMouseDown"
                                     Click="DeleteProfile_Click"
@@ -76,7 +76,7 @@
             <Border Grid.Row="1">
                 <Button Style="{StaticResource FluentIconButton}"
                     HorizontalAlignment="Right"
-                    ToolTip="Add Profile"
+                    ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='AddProfile'}"
                     MouseDown="UIElement_OnMouseDown"
                     Click="AddProfile_Click"
                     Foreground="{DynamicResource FluentTextPrimary}"

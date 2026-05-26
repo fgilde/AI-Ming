@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using PowerAim.Class.Native;
+using PowerAim;
 
 namespace PowerAim.UILibrary;
 
@@ -43,7 +44,7 @@ public partial class HiddenControllersPanel : UserControl
             {
                 DevicesPanel.Children.Add(new TextBlock
                 {
-                    Text = "No HID gaming devices detected. Plug a controller in and click Refresh.",
+                    Text = Locale.NoHidDevicesDetected,
                     FontFamily = new FontFamily("Segoe UI Variable Small"),
                     FontSize = 12,
                     Foreground = (Brush?)TryFindResource("FluentTextTertiary") ?? Brushes.Gray,
@@ -58,7 +59,7 @@ public partial class HiddenControllersPanel : UserControl
         {
             DevicesPanel.Children.Add(new TextBlock
             {
-                Text = $"Device enumeration failed: {ex.Message}",
+                Text = string.Format(Locale.DeviceEnumerationFailedFormat, ex.Message),
                 Foreground = Brushes.Tomato,
                 FontSize = 12,
             });
@@ -85,7 +86,7 @@ public partial class HiddenControllersPanel : UserControl
         var info = new StackPanel();
         var name = new TextBlock
         {
-            Text = d.Enabled ? d.FriendlyName : $"{d.FriendlyName}    (HIDDEN)",
+            Text = d.Enabled ? d.FriendlyName : string.Format(Locale.ControllerHiddenFormat, d.FriendlyName),
             FontFamily = new FontFamily("Segoe UI Variable Display"),
             FontWeight = FontWeights.SemiBold,
             FontSize = 14,
@@ -121,7 +122,7 @@ public partial class HiddenControllersPanel : UserControl
 
         var btn = new Button
         {
-            Content = d.Enabled ? "Hide from games" : "Show again",
+            Content = d.Enabled ? Locale.HideFromGames : Locale.ShowAgain,
             MinHeight = 30,
             MinWidth = 140,
             Padding = new Thickness(12, 4, 12, 4),
@@ -129,9 +130,9 @@ public partial class HiddenControllersPanel : UserControl
             IsEnabled = elevated,
             ToolTip = elevated
                 ? (d.Enabled
-                    ? "Disable this device system-wide via CM_Disable_DevNode. Games stop seeing it; PowerAim's virtual pad can claim slot 0."
-                    : "Re-enable the device.")
-                : "Requires PowerAim running as administrator. Use the 'Restart as admin' button in the top bar.",
+                    ? Locale.HideDeviceTooltip
+                    : Locale.ReEnableDeviceTooltip)
+                : Locale.RequiresAdminTooltip,
         };
         btn.SetResourceReference(StyleProperty, d.Enabled ? "FluentStandardButton" : "FluentAccentButton");
         btn.Click += (_, _) =>
@@ -142,10 +143,10 @@ public partial class HiddenControllersPanel : UserControl
                     ? DeviceHide.TryDisable(d.InstanceId)
                     : DeviceHide.TryEnable(d.InstanceId);
                 StatusText.Text = ok
-                    ? $"'{d.FriendlyName}' {(d.Enabled ? "hidden" : "shown")}. Windows refreshes XInput on next pump."
-                    : $"Could not {(d.Enabled ? "disable" : "enable")} '{d.FriendlyName}': {DeviceHide.LastError}";
+                    ? string.Format(Locale.DeviceToggledFormat, d.FriendlyName, d.Enabled ? Locale.Hidden : Locale.Shown)
+                    : string.Format(Locale.DeviceToggleFailedFormat, d.Enabled ? "disable" : "enable", d.FriendlyName, DeviceHide.LastError);
             }
-            catch (Exception ex) { StatusText.Text = $"Operation failed: {ex.Message}"; }
+            catch (Exception ex) { StatusText.Text = string.Format(Locale.OperationFailedFormat, ex.Message); }
             Refresh();
         };
         Grid.SetColumn(btn, 1);

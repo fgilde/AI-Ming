@@ -6,6 +6,7 @@ using System.Windows.Threading;
 using PowerAim.AILogic;
 using PowerAim.Class.Native;
 using PowerAim.Config;
+using PowerAim;
 
 namespace PowerAim.Visuality;
 
@@ -25,6 +26,9 @@ public partial class OcrRegionsDialog
     public OcrRegionsDialog()
     {
         InitializeComponent();
+        // Without DataContext the {Binding Path=Texts ...} expressions resolve nothing and every
+        // localized TextBlock in the XAML stays empty.
+        DataContext = this;
 
         var settings = AppConfig.Current?.OcrSettings;
         if (settings != null)
@@ -153,7 +157,7 @@ public partial class OcrRegionsDialog
         {
             if (_selected == null)
             {
-                DetailHeader.Text = "No region selected";
+                DetailHeader.Text = Locale.NoRegionSelected;
                 NameBox.IsEnabled = KindCombo.IsEnabled = XBox.IsEnabled = YBox.IsEnabled =
                     WBox.IsEnabled = HBox.IsEnabled = ThresholdSlider.IsEnabled = InvertBox.IsEnabled =
                     DeleteButton.IsEnabled = false;
@@ -165,7 +169,7 @@ public partial class OcrRegionsDialog
                 ConfidenceText.Text = "";
                 return;
             }
-            DetailHeader.Text = $"Editing: {_selected.Name}";
+            DetailHeader.Text = string.Format(Locale.EditingItemFormat, _selected.Name);
             NameBox.IsEnabled = KindCombo.IsEnabled = XBox.IsEnabled = YBox.IsEnabled =
                 WBox.IsEnabled = HBox.IsEnabled = ThresholdSlider.IsEnabled = InvertBox.IsEnabled =
                 DeleteButton.IsEnabled = true;
@@ -195,7 +199,7 @@ public partial class OcrRegionsDialog
         {
             t.Text = _selected.Name;
         }
-        DetailHeader.Text = $"Editing: {_selected.Name}";
+        DetailHeader.Text = string.Format(Locale.EditingItemFormat, _selected.Name);
     }
 
     private void KindCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -251,13 +255,13 @@ public partial class OcrRegionsDialog
         if (_selected == null) return;
         if (OcrService.Instance.Latest.TryGetValue(_selected.Name, out var result))
         {
-            PreviewText.Text = string.IsNullOrEmpty(result.Text) ? "(empty)" : result.Text;
-            ConfidenceText.Text = $"Confidence: {result.Confidence:0.00} · {result.Timestamp:HH:mm:ss}";
+            PreviewText.Text = string.IsNullOrEmpty(result.Text) ? Locale.OcrEmpty : result.Text;
+            ConfidenceText.Text = string.Format(Locale.OcrConfidenceFormat, result.Confidence, result.Timestamp);
         }
         else
         {
             PreviewText.Text = "—";
-            ConfidenceText.Text = "No reading yet — enable the engine and wait one polling cycle.";
+            ConfidenceText.Text = Locale.OcrNoReadingYet;
         }
     }
 
@@ -267,7 +271,7 @@ public partial class OcrRegionsDialog
     {
         var settings = AppConfig.Current?.OcrSettings;
         if (settings == null) return;
-        var fresh = new OcrRegion { Name = $"Region {settings.Regions.Count + 1}" };
+        var fresh = new OcrRegion { Name = string.Format(Locale.OcrRegionDefaultNameFormat, settings.Regions.Count + 1) };
         settings.Regions.Add(fresh);
         RebuildList();
         Select(fresh);
@@ -320,12 +324,12 @@ public partial class OcrRegionsDialog
 
     private async void Download_Click(object sender, RoutedEventArgs e)
     {
-        StatusLine.Text = "Downloading eng.traineddata…";
+        StatusLine.Text = Locale.OcrDownloadingTraineddata;
         bool ok = await OcrService.EnsureTraineddataAsync(new Progress<double>(v =>
-            StatusLine.Text = $"Downloading eng.traineddata… {(int)(v * 100)}%"));
+            StatusLine.Text = string.Format(Locale.OcrDownloadingTraineddataProgressFormat, (int)(v * 100))));
         StatusLine.Text = ok
-            ? $"eng.traineddata installed in {OcrService.ResolveTessdataPath()}"
-            : "Download failed — drop eng.traineddata into the tessdata folder manually.";
+            ? string.Format(Locale.OcrTraineddataInstalledFormat, OcrService.ResolveTessdataPath())
+            : Locale.OcrDownloadFailed;
     }
 
     private void Test_Click(object sender, RoutedEventArgs e)
@@ -348,9 +352,9 @@ public partial class OcrRegionsDialog
         bool hasData = OcrService.HasTraineddata(AppConfig.Current?.OcrSettings?.TessdataPath);
         string err = OcrService.Instance.LastError;
         if (!string.IsNullOrEmpty(err)) StatusLine.Text = err;
-        else if (!hasData) StatusLine.Text = "eng.traineddata is missing — use 'Download Tesseract data'.";
-        else if (AppConfig.Current?.OcrSettings?.Enabled != true) StatusLine.Text = "Engine paused.";
-        else StatusLine.Text = "Engine running.";
+        else if (!hasData) StatusLine.Text = Locale.OcrTraineddataMissing;
+        else if (AppConfig.Current?.OcrSettings?.Enabled != true) StatusLine.Text = Locale.OcrEnginePaused;
+        else StatusLine.Text = Locale.OcrEngineRunningStatus;
     }
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();

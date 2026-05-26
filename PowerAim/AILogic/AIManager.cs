@@ -9,6 +9,7 @@ using PowerAim.Config;
 using PowerAim.Models;
 using Nextended.Core.Extensions;
 using Other;
+using PowerAim;
 using Visuality;
 
 
@@ -45,7 +46,7 @@ public class AIManager : IDisposable
         }
         catch (Exception e)
         {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() => new NoticeBar($"Error: {e.Message}", 5000).Show()));
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => new NoticeBar(string.Format(Locale.ErrorFormat, e.Message), 5000).Show()));
             throw;
         }
     }

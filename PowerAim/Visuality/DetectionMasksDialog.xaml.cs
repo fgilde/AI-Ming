@@ -6,6 +6,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using PowerAim.Class.Native;
 using PowerAim.Config;
+using PowerAim;
 
 namespace PowerAim.Visuality;
 
@@ -35,7 +36,7 @@ public partial class DetectionMasksDialog
     public DetectionMasksDialog()
     {
         InitializeComponent();
-
+        DataContext = this;
         var src = AppConfig.Current?.AISettings?.IgnoreRegions;
         if (src != null)
         {
@@ -174,13 +175,13 @@ public partial class DetectionMasksDialog
         {
             if (_selected == null)
             {
-                SelectedHeader.Text = "No mask selected";
+                SelectedHeader.Text = Locale.NoMaskSelected;
                 XSlider.IsEnabled = YSlider.IsEnabled = WSlider.IsEnabled = HSlider.IsEnabled = false;
                 XSlider.Value = YSlider.Value = 0;
                 WSlider.Value = HSlider.Value = 0.1;
                 return;
             }
-            SelectedHeader.Text = $"Editing: {_selected.Name}";
+            SelectedHeader.Text = string.Format(Locale.EditingItemFormat, _selected.Name);
             XSlider.IsEnabled = YSlider.IsEnabled = WSlider.IsEnabled = HSlider.IsEnabled = true;
             XSlider.Value = _selected.X;
             YSlider.Value = _selected.Y;
@@ -253,7 +254,7 @@ public partial class DetectionMasksDialog
         var pos = e.GetPosition(PreviewCanvas);
         var fresh = new DetectionMaskRegion
         {
-            Name = $"Mask {_working.Count + 1}",
+            Name = string.Format(Locale.MaskDefaultNameFormat, _working.Count + 1),
             X = pos.X / PreviewHost.Width,
             Y = pos.Y / PreviewHost.Height,
             Width = 0.01,
@@ -327,7 +328,7 @@ public partial class DetectionMasksDialog
     {
         var fresh = new DetectionMaskRegion
         {
-            Name = $"Mask {_working.Count + 1}",
+            Name = string.Format(Locale.MaskDefaultNameFormat, _working.Count + 1),
             X = 0.4, Y = 0.4, Width = 0.2, Height = 0.1, Enabled = true
         };
         _working.Add(fresh);

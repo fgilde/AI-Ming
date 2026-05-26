@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using PowerAim.Config;
 using PowerAim.Extensions;
+using PowerAim;
 
 namespace UILibrary
 {
@@ -36,10 +37,10 @@ namespace UILibrary
         private void UpdateDynamicUi()
         {
             DecisionIntervalPanel.RemoveAll();
-            DecisionIntervalPanel.AddSlider("Decision Interval", "seconds", 0.1, 0.5, 0.3, 10).InitWith(slider =>
+            DecisionIntervalPanel.AddSlider(Locale.DecisionInterval, Locale.Seconds, 0.1, 0.5, 0.3, 10).InitWith(slider =>
             {
                 slider.BorderBrush = slider.Background = Brushes.Transparent;
-                slider.ToolTip = "Time between AI decisions. Lower = more responsive but higher load.";
+                slider.ToolTip = Locale.DecisionIntervalTooltip;
             }).BindTo(() => Profile.DecisionInterval);
         }
 

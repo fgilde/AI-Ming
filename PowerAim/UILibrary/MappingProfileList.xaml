@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:uiLibrary="clr-namespace:PowerAim.UILibrary"
              xmlns:poweraim="clr-namespace:PowerAim"
+             xmlns:localizations="clr-namespace:PowerAim.Localizations"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="600">
     <Border BorderThickness="0" Background="Transparent">
@@ -36,7 +37,7 @@
                                            FontFamily="Segoe UI Variable Small"
                                            FontSize="11"
                                            TextTrimming="CharacterEllipsis"
-                                           Text="{Binding MatchProcess, StringFormat=Match: {0}}" />
+                                           Text="{Binding MatchProcess, StringFormat={x:Static poweraim:Locale.MatchPrefix}}" />
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal">
                                 <uiLibrary:AKeyChanger KeyConfigName="{Binding Id}"
@@ -50,21 +51,21 @@
                                 <uiLibrary:AToggle BorderBrush="Transparent" Text=""
                                                    Checked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}" />
                                 <Button Style="{StaticResource FluentIconButton}"
-                                        ToolTip="Edit"
+                                        ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Edit'}"
                                         Tag="{Binding}"
                                         Click="EditProfile_Click"
                                         Foreground="{DynamicResource FluentTextPrimary}"
                                         Content="&#xEB7E;"
                                         Padding="0" FontSize="20" Width="50" />
                                 <Button Style="{StaticResource FluentIconButton}"
-                                        ToolTip="Duplicate"
+                                        ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Duplicate'}"
                                         Tag="{Binding}"
                                         Click="DuplicateProfile_Click"
                                         Foreground="{DynamicResource FluentTextPrimary}"
                                         Content="&#xE8C8;"
                                         Padding="0" FontSize="20" Width="50" />
                                 <Button Style="{StaticResource FluentIconButton}"
-                                        ToolTip="Delete"
+                                        ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Delete'}"
                                         Tag="{Binding}"
                                         Click="DeleteProfile_Click"
                                         Foreground="{DynamicResource FluentTextPrimary}"
@@ -83,9 +84,9 @@
                             MinHeight="34"
                             Margin="0,8,0,0"
                             Click="NewProfileBtn_Click"
-                            ToolTip="Create a new profile — empty or pre-populated from a preset.">
+                            ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NewProfileTooltip'}">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="+ New profile" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NewProfile'}" VerticalAlignment="Center" />
                             <TextBlock Text=" ▾"
                                        Margin="6,0,0,0"
                                        VerticalAlignment="Center"

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:visuality="clr-namespace:PowerAim.Visuality"
         mc:Ignorable="d"
-        Title="Sensitivity Calibration"
+        Title="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SensitivityCalibration'}"
         Height="520"
         Width="600"
         WindowStyle="None"
@@ -35,7 +35,7 @@
                            FontFamily="Segoe UI Variable Display"
                            FontWeight="SemiBold"
                            FontSize="13"
-                           Text="Sensitivity Calibration Wizard" />
+                           Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SensitivityCalibrationWizard'}" />
             </StackPanel>
             <Button HorizontalAlignment="Right"
                     Background="Transparent" BorderBrush="Transparent" BorderThickness="0"
@@ -71,7 +71,7 @@
             <!-- Step 1: Welcome -->
             <Border x:Name="WelcomePanel" Visibility="Visible">
                 <StackPanel>
-                    <TextBlock Text="Calibrate to your game"
+                    <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='CalibrateToYourGame'}"
                                Foreground="{DynamicResource FluentTextPrimary}"
                                FontFamily="Segoe UI Variable Display"
                                FontWeight="SemiBold"
@@ -82,29 +82,28 @@
                                FontSize="13"
                                TextWrapping="Wrap"
                                LineHeight="20"
-                               Text="PowerAim measures how many screen pixels your game moves per unit of raw mouse input. It then suggests a damping factor (MouseSensitivity) so the AI's aim correction doesn't overshoot." />
+                               Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='CalibrationIntroBody'}" />
+                    <TextBlock Foreground="{DynamicResource FluentTextPrimary}"
+                               FontFamily="Segoe UI Variable Text"
+                               FontSize="13"
+                               FontWeight="SemiBold"
+                               TextWrapping="Wrap"
+                               Margin="0,12,0,0"
+                               LineHeight="20"
+                               Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='CalibrationBeforeYouStart'}" />
                     <TextBlock Foreground="{DynamicResource FluentTextSecondary}"
                                FontFamily="Segoe UI Variable Text"
                                FontSize="13"
                                TextWrapping="Wrap"
-                               Margin="0,12,0,0"
-                               LineHeight="20">
-                        <Run FontWeight="SemiBold" Foreground="{DynamicResource FluentTextPrimary}">Before you start:</Run>
-                        <LineBreak />
-                        • Switch to the game window.
-                        <LineBreak />
-                        • Aim at a static, textured surface (e.g. a wall, the floor).
-                        <LineBreak />
-                        • Don't move your mouse — the wizard will move it for you.
-                        <LineBreak />
-                        • The wizard takes about 2 seconds.
-                    </TextBlock>
+                               Margin="0,4,0,0"
+                               LineHeight="20"
+                               Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='CalibrationBulletList'}" />
                     <TextBlock Foreground="{DynamicResource FluentTextTertiary}"
                                FontFamily="Segoe UI Variable Small"
                                FontSize="11"
                                TextWrapping="Wrap"
                                Margin="0,16,0,0"
-                               Text="Tip: also disable raw input acceleration / smoothing in your game for the most accurate result." />
+                               Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='CalibrationTip'}" />
                 </StackPanel>
             </Border>
 
@@ -112,14 +111,14 @@
             <Border x:Name="RunningPanel" Visibility="Collapsed">
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                     <TextBlock x:Name="RunningStatus"
-                               Text="Calibrating…"
+                               Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='CalibrationRunning'}"
                                Foreground="{DynamicResource FluentTextPrimary}"
                                FontFamily="Segoe UI Variable Display"
                                FontWeight="SemiBold"
                                FontSize="18"
                                HorizontalAlignment="Center"
                                Margin="0,0,0,12" />
-                    <TextBlock Text="Don't move the mouse"
+                    <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DontMoveMouse'}"
                                Foreground="{DynamicResource FluentTextSecondary}"
                                FontFamily="Segoe UI Variable Text"
                                FontSize="13"
@@ -137,7 +136,7 @@
             <Border x:Name="ResultPanel" Visibility="Collapsed">
                 <StackPanel>
                     <TextBlock x:Name="ResultHeader"
-                               Text="Result"
+                               Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Result'}"
                                Foreground="{DynamicResource FluentTextPrimary}"
                                FontFamily="Segoe UI Variable Display"
                                FontWeight="SemiBold"
@@ -154,7 +153,7 @@
                                     <ColumnDefinition Width="180" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Measured pixels / input"
+                                <TextBlock Grid.Column="0" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='MeasuredPixelsPerInput'}"
                                            Foreground="{DynamicResource FluentTextSecondary}"
                                            FontFamily="Segoe UI Variable Text" FontSize="13" />
                                 <TextBlock Grid.Column="1" x:Name="RatioText"
@@ -166,7 +165,7 @@
                                     <ColumnDefinition Width="180" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Samples used"
+                                <TextBlock Grid.Column="0" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SamplesUsed'}"
                                            Foreground="{DynamicResource FluentTextSecondary}"
                                            FontFamily="Segoe UI Variable Text" FontSize="13" />
                                 <TextBlock Grid.Column="1" x:Name="SamplesText"
@@ -178,7 +177,7 @@
                                     <ColumnDefinition Width="180" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Current MouseSensitivity"
+                                <TextBlock Grid.Column="0" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='CurrentMouseSensitivity'}"
                                            Foreground="{DynamicResource FluentTextSecondary}"
                                            FontFamily="Segoe UI Variable Text" FontSize="13" />
                                 <TextBlock Grid.Column="1" x:Name="CurrentSensText"
@@ -190,7 +189,7 @@
                                     <ColumnDefinition Width="180" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Suggested MouseSensitivity"
+                                <TextBlock Grid.Column="0" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SuggestedMouseSensitivity'}"
                                            Foreground="{DynamicResource FluentAccent}"
                                            FontFamily="Segoe UI Variable Text" FontWeight="SemiBold" FontSize="13" />
                                 <TextBlock Grid.Column="1" x:Name="SuggestedSensText"
@@ -218,7 +217,7 @@
                                FontSize="40"
                                HorizontalAlignment="Center"
                                Margin="0,0,0,12" />
-                    <TextBlock Text="Calibration failed"
+                    <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='CalibrationFailed'}"
                                Foreground="{DynamicResource FluentTextPrimary}"
                                FontFamily="Segoe UI Variable Display"
                                FontWeight="SemiBold"
@@ -243,12 +242,12 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <Button Grid.Column="1" x:Name="LeftButton" Content="Cancel"
+            <Button Grid.Column="1" x:Name="LeftButton" Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Cancel'}"
                     MinWidth="110" MinHeight="34"
                     Margin="0,0,8,0" Padding="14,6,14,6"
                     Style="{DynamicResource FluentStandardButton}"
                     Click="LeftButton_Click" />
-            <Button Grid.Column="2" x:Name="RightButton" Content="Start calibration"
+            <Button Grid.Column="2" x:Name="RightButton" Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='StartCalibration'}"
                     MinWidth="160" MinHeight="34"
                     Padding="14,6,14,6"
                     Style="{DynamicResource FluentAccentButton}"

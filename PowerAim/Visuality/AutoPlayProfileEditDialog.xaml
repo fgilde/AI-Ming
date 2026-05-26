@@ -7,7 +7,7 @@
         xmlns:uiLibrary="clr-namespace:UILibrary"
         xmlns:visuality="clr-namespace:PowerAim.Visuality"
         mc:Ignorable="d"
-        Title="Edit AutoPlay Profile"
+        Title="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='EditAutoPlayProfile'}"
         Height="640"
         Width="580"
         MinHeight="500"
@@ -99,7 +99,7 @@
             <Button Grid.Column="1"
                     x:Name="CancelButton"
                     Style="{StaticResource FluentStandardButton}"
-                    Content="Cancel"
+                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Cancel'}"
                     MinWidth="90"
                     Margin="0,0,8,0"
                     Click="Exit_Click" />
@@ -107,7 +107,7 @@
                     x:Name="SaveButton"
                     IsEnabled="{Binding Profile.IsValid}"
                     Style="{StaticResource FluentAccentButton}"
-                    Content="Save"
+                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Save'}"
                     MinWidth="100"
                     Click="SaveButton_Click" />
         </Grid>

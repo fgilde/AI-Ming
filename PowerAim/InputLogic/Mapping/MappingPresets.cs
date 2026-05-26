@@ -1,5 +1,6 @@
 using System.Windows.Forms;
 using PowerAim.Config;
+using PowerAim;
 
 namespace PowerAim.InputLogic.Mapping;
 
@@ -19,7 +20,7 @@ public static class MappingPresets
     {
         var p = new ControllerMappingProfile
         {
-            Name = "FPS (KB+M → Pad)",
+            Name = Locale.PresetNameFpsKbToPad,
             Enabled = false,
             MatchProcess = "",
             MouseToStickSensitivity = 1.0,
@@ -75,7 +76,7 @@ public static class MappingPresets
         var padToKb = NewFpsPadToKb();
         var combined = new ControllerMappingProfile
         {
-            Name = "FPS preset (both directions)",
+            Name = Locale.PresetNameFpsBoth,
             Enabled = true,
             MouseToStickSensitivity = kbToPad.MouseToStickSensitivity,
             StickToMouseSensitivity = padToKb.StickToMouseSensitivity,
@@ -93,7 +94,7 @@ public static class MappingPresets
     {
         var p = new ControllerMappingProfile
         {
-            Name = "Driving (KB+M → Pad)",
+            Name = Locale.PresetNameDrivingKbToPad,
             Enabled = false,
             MouseToStickSensitivity = 1.0,
         };
@@ -127,7 +128,7 @@ public static class MappingPresets
     {
         var p = new ControllerMappingProfile
         {
-            Name = "Controller as Mouse",
+            Name = Locale.PresetNameControllerAsMouse,
             Enabled = false,
             StickToMouseSensitivity = 14.0,
         };
@@ -170,7 +171,7 @@ public static class MappingPresets
     {
         var p = new ControllerMappingProfile
         {
-            Name = "FPS (Pad → KB+M)",
+            Name = Locale.PresetNameFpsPadToKb,
             Enabled = false,
             MatchProcess = "",
             StickToMouseSensitivity = 12.0,

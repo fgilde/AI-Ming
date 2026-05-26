@@ -8,7 +8,7 @@
         xmlns:local="clr-namespace:Visuality"
         xmlns:visuality="clr-namespace:PowerAim.Visuality"
         mc:Ignorable="d"
-        Title="Edit Action"
+        Title="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='EditAction'}"
         Height="540"
         Width="480"
         MinHeight="420"
@@ -80,7 +80,7 @@
         <ScrollViewer Grid.Row="1" Margin="14,4,14,8" VerticalScrollBarVisibility="Auto">
             <StackPanel>
                 <!-- Action Name -->
-                <TextBlock Style="{StaticResource FluentSectionTitle}" Text="Action Name" />
+                <TextBlock Style="{StaticResource FluentSectionTitle}" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ActionName'}" />
                 <Border Background="{DynamicResource FluentSurface3}"
                         BorderBrush="{DynamicResource FluentStroke}"
                         BorderThickness="1"
@@ -89,7 +89,7 @@
                              Background="Transparent"
                              Padding="10,8,10,8"
                              Text="{Binding Action.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                             Tag="e.g. move_left, jump, attack..."
+                             Tag="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ActionNamePlaceholder'}"
                              FontFamily="Segoe UI Variable Text"
                              FontSize="13"
                              Style="{DynamicResource placeHolder}"
@@ -100,11 +100,11 @@
                            Margin="2,4,0,12"
                            TextWrapping="Wrap"
                            Visibility="{Binding Converter={StaticResource helpVis}}"
-                           Text="The name the AI will use to trigger this action. Use underscores, no spaces."
+                           Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ActionNameHelp'}"
                            FontFamily="Segoe UI Variable Small" />
 
                 <!-- Description -->
-                <TextBlock Style="{StaticResource FluentSectionTitle}" Text="Description (for AI)" />
+                <TextBlock Style="{StaticResource FluentSectionTitle}" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DescriptionForAi'}" />
                 <Border Background="{DynamicResource FluentSurface3}"
                         BorderBrush="{DynamicResource FluentStroke}"
                         BorderThickness="1"
@@ -116,7 +116,7 @@
                              TextWrapping="Wrap"
                              AcceptsReturn="True"
                              MinHeight="60"
-                             Tag="Describe what this action does..."
+                             Tag="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DescribeActionPlaceholder'}"
                              FontFamily="Segoe UI Variable Text"
                              FontSize="13"
                              Style="{DynamicResource placeHolder}"
@@ -127,11 +127,11 @@
                            Margin="2,4,0,12"
                            TextWrapping="Wrap"
                            Visibility="{Binding Converter={StaticResource helpVis}}"
-                           Text="Help the AI understand when to use this action."
+                           Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DescriptionForAiHelp'}"
                            FontFamily="Segoe UI Variable Small" />
 
                 <!-- Keys -->
-                <TextBlock Style="{StaticResource FluentSectionTitle}" Text="Keys to Press" />
+                <TextBlock Style="{StaticResource FluentSectionTitle}" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='KeysToPress'}" />
                 <uiLibrary1:MultiKeyChanger Margin="0,4,0,0"
                                             Keys="{Binding Action.Keys, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 <TextBlock Foreground="{DynamicResource FluentTextTertiary}"
@@ -139,7 +139,7 @@
                            Margin="2,4,0,12"
                            TextWrapping="Wrap"
                            Visibility="{Binding Converter={StaticResource helpVis}}"
-                           Text="The keys/buttons that will be pressed when this action is executed."
+                           Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='KeysToPressHelp'}"
                            FontFamily="Segoe UI Variable Small" />
 
                 <!-- Duration -->
@@ -150,14 +150,14 @@
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,14,14">
             <Button x:Name="CancelButton"
                     Style="{StaticResource FluentStandardButton}"
-                    Content="Cancel"
+                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Cancel'}"
                     Margin="0,0,8,0"
                     MinWidth="90"
                     Click="Exit_Click" />
             <Button x:Name="SaveButton"
                     IsEnabled="{Binding Action.IsValid}"
                     Style="{StaticResource FluentAccentButton}"
-                    Content="Save"
+                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Save'}"
                     MinWidth="100"
                     Click="SaveButton_Click" />
         </StackPanel>

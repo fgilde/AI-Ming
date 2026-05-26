@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:visuality="clr-namespace:PowerAim.Visuality"
         mc:Ignorable="d"
-        Title="Recoil Patterns"
+        Title="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='RecoilPatterns'}"
         Height="600"
         Width="880"
         WindowStyle="None"
@@ -35,7 +35,7 @@
                            FontFamily="Segoe UI Variable Display"
                            FontWeight="SemiBold"
                            FontSize="13"
-                           Text="Recoil Patterns" />
+                           Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='RecoilPatterns'}" />
             </StackPanel>
             <Button HorizontalAlignment="Right"
                     Background="Transparent" BorderBrush="Transparent" BorderThickness="0"
@@ -72,7 +72,7 @@
                    FontFamily="Segoe UI Variable Small"
                    FontSize="12"
                    TextWrapping="Wrap"
-                   Text="Record a 2-second pattern by firing the weapon at a static wall — PowerAim measures the screen drift via phase correlation and replays the inverse stroke while you shoot. Adjust PatternStrength to scale the effect for different in-game sensitivities." />
+                   Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='RecoilPatternsHelp'}" />
 
         <Grid Grid.Row="2" Margin="16,0,16,12">
             <Grid.ColumnDefinitions>
@@ -101,13 +101,13 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <Button Grid.Column="0" x:Name="RecordButton"
-                                Content="Record (2s)"
+                                Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='RecordPattern2s'}"
                                 Style="{DynamicResource FluentAccentButton}"
                                 MinHeight="34"
                                 Click="Record_Click" />
                         <Button Grid.Column="1" Margin="6,0,0,0"
                                 x:Name="DeleteButton"
-                                Content="Delete selected"
+                                Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DeleteSelected'}"
                                 Style="{DynamicResource FluentStandardButton}"
                                 MinHeight="34"
                                 Click="Delete_Click" />
@@ -136,14 +136,14 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                                <TextBlock Text="Name"
+                                <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Name'}"
                                            Foreground="{DynamicResource FluentTextSecondary}"
                                            FontFamily="Segoe UI Variable Text" FontSize="12" />
                                 <TextBox x:Name="NameBox" Margin="0,4,0,0" MinHeight="28"
                                          TextChanged="NameBox_TextChanged" />
                             </StackPanel>
                             <StackPanel Grid.Column="1" Margin="8,0,0,0">
-                                <TextBlock Text="Weapon"
+                                <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Weapon'}"
                                            Foreground="{DynamicResource FluentTextSecondary}"
                                            FontFamily="Segoe UI Variable Text" FontSize="12" />
                                 <TextBox x:Name="WeaponBox" Margin="0,4,0,0" MinHeight="28"
@@ -153,7 +153,7 @@
                         <TextBlock x:Name="DurationText" Margin="0,8,0,0"
                                    Foreground="{DynamicResource FluentTextTertiary}"
                                    FontFamily="Segoe UI Variable Small" FontSize="11"
-                                   Text="No pattern selected." />
+                                   Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NoPatternSelected'}" />
                     </StackPanel>
                 </Border>
 
@@ -177,7 +177,7 @@
                         Padding="14">
                     <StackPanel>
                         <CheckBox x:Name="EnablePlaybackBox"
-                                  Content="Use pattern playback while firing"
+                                  Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='UsePatternPlayback'}"
                                   Foreground="{DynamicResource FluentTextPrimary}"
                                   FontFamily="Segoe UI Variable Text" FontSize="13"
                                   Margin="0,0,0,8"
@@ -189,7 +189,7 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="60" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Pattern strength"
+                            <TextBlock Grid.Column="0" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='PatternStrength'}"
                                        Foreground="{DynamicResource FluentTextSecondary}"
                                        FontFamily="Segoe UI Variable Text" FontSize="12"
                                        VerticalAlignment="Center" />
@@ -219,7 +219,7 @@
                        FontFamily="Segoe UI Variable Small" FontSize="11"
                        VerticalAlignment="Center"
                        TextWrapping="Wrap" />
-            <Button Grid.Column="1" x:Name="CloseButton" Content="Close"
+            <Button Grid.Column="1" x:Name="CloseButton" Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Close'}"
                     MinWidth="96" MinHeight="34"
                     Padding="14,6,14,6"
                     Style="{DynamicResource FluentStandardButton}"

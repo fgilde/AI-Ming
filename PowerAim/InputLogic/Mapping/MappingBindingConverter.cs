@@ -1,6 +1,7 @@
 using System.Windows.Forms;
 using PowerAim.Config;
 using PowerAim.InputLogic.Contracts;
+using PowerAim;
 
 namespace PowerAim.InputLogic.Mapping;
 
@@ -102,8 +103,8 @@ public static class MappingBindingConverter
     /// <summary>Human-readable label for a special endpoint.</summary>
     public static string SpecialLabel(MappingInputKind kind, int code) => kind switch
     {
-        MappingInputKind.MouseButton when code == MouseMotionSentinel => "🖱 Mouse motion",
-        MappingInputKind.GamepadStickDirection => $"🎮 {(GamepadStickDirection)code}",
-        _ => "(unknown)",
+        MappingInputKind.MouseButton when code == MouseMotionSentinel => Locale.SpecialLabelMouseMotion,
+        MappingInputKind.GamepadStickDirection => string.Format(Locale.SpecialLabelGamepadStickFormat, (GamepadStickDirection)code),
+        _ => Locale.UnknownParen,
     };
 }

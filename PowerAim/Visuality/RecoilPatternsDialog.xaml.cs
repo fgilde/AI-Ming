@@ -1,6 +1,7 @@
 using PowerAim.AILogic;
 using PowerAim.Class.Native;
 using PowerAim.Config;
+using PowerAim;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -29,7 +30,7 @@ public partial class RecoilPatternsDialog
     public RecoilPatternsDialog()
     {
         InitializeComponent();
-
+        DataContext = this;
         var settings = AppConfig.Current?.AntiRecoilSettings;
         if (settings != null)
         {
@@ -144,14 +145,14 @@ public partial class RecoilPatternsDialog
                 NameBox.Text = "";
                 WeaponBox.Text = "";
                 NameBox.IsEnabled = WeaponBox.IsEnabled = DeleteButton.IsEnabled = false;
-                DurationText.Text = "No pattern selected.";
+                DurationText.Text = Locale.NoPatternSelected;
             }
             else
             {
                 NameBox.Text = _selected.Name;
                 WeaponBox.Text = _selected.Weapon;
                 NameBox.IsEnabled = WeaponBox.IsEnabled = DeleteButton.IsEnabled = true;
-                DurationText.Text = $"{_selected.Samples.Count} samples · {_selected.DurationMs} ms total";
+                DurationText.Text = string.Format(Locale.PatternSamplesDurationFormat, _selected.Samples.Count, _selected.DurationMs);
             }
         }
         finally
@@ -249,7 +250,7 @@ public partial class RecoilPatternsDialog
             Foreground = TryFindResource("FluentTextTertiary") as Brush ?? Brushes.Gray,
             FontFamily = new FontFamily("Segoe UI Variable Small"),
             FontSize = 10,
-            Text = "Accent: Y drift · Faint: X drift"
+            Text = Locale.RecoilPreviewLegend
         };
         Canvas.SetLeft(legend, 6);
         Canvas.SetTop(legend, 4);
@@ -269,7 +270,7 @@ public partial class RecoilPatternsDialog
         var capture = AIManager.Instance?.ImageCapture;
         if (capture == null)
         {
-            StatusText.Text = "No capture source — load a model first.";
+            StatusText.Text = Locale.NoCaptureSourceLoadModelFirst;
             return;
         }
 
@@ -282,16 +283,16 @@ public partial class RecoilPatternsDialog
         }
 
         _recordCts = new CancellationTokenSource();
-        RecordButton.Content = "Recording… (click to cancel)";
-        StatusText.Text = "Fire the weapon — recording for 2 seconds.";
+        RecordButton.Content = Locale.RecordingClickToCancel;
+        StatusText.Text = Locale.RecordingFireWeapon;
 
         var progress = new Progress<double>(v =>
-            StatusText.Text = $"Fire the weapon — {(int)(v * 100)}% recorded.");
+            StatusText.Text = string.Format(Locale.RecordingProgressFormat, (int)(v * 100)));
 
         // Build an in-flight RecoilPattern so we can plot it live as samples roll in. The
         // recorder appends each new sample via sampleProgress; we re-render the preview canvas
         // on every report so the user actually *sees* the curve being drawn during the 2s.
-        var inFlight = new RecoilPattern { Name = "(recording)" };
+        var inFlight = new RecoilPattern { Name = Locale.Recording };
         _selected = inFlight;
         UpdatePreview();
         var sampleProgress = new Progress<RecoilSample>(sample =>
@@ -302,7 +303,7 @@ public partial class RecoilPatternsDialog
 
         try
         {
-            var name = $"Pattern {(AppConfig.Current?.AntiRecoilSettings?.Patterns?.Count ?? 0) + 1}";
+            var name = string.Format(Locale.PatternDefaultNameFormat, (AppConfig.Current?.AntiRecoilSettings?.Patterns?.Count ?? 0) + 1);
             var pattern = await RecoilPatternRecorder.RecordAsync(
                 capture,
                 durationMs: 2000,
@@ -314,19 +315,19 @@ public partial class RecoilPatternsDialog
 
             if (pattern.Samples.Count == 0)
             {
-                StatusText.Text = "No motion detected — aim at a textured surface and try again.";
+                StatusText.Text = Locale.RecordingNoMotion;
             }
             else
             {
                 AppConfig.Current!.AntiRecoilSettings.Patterns.Add(pattern);
                 RebuildList();
                 Select(pattern);
-                StatusText.Text = $"Recorded {pattern.Samples.Count} samples over {pattern.DurationMs} ms.";
+                StatusText.Text = string.Format(Locale.RecordingDoneFormat, pattern.Samples.Count, pattern.DurationMs);
             }
         }
         catch (Exception ex)
         {
-            StatusText.Text = $"Recording failed: {ex.Message}";
+            StatusText.Text = string.Format(Locale.RecordingFailedFormat, ex.Message);
         }
         finally
         {
@@ -337,7 +338,7 @@ public partial class RecoilPatternsDialog
             }
             _recordCts?.Dispose();
             _recordCts = null;
-            RecordButton.Content = "Record (2s)";
+            RecordButton.Content = Locale.RecordPattern2s;
         }
     }
 

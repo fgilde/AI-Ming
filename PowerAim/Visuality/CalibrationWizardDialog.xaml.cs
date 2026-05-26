@@ -4,6 +4,7 @@ using System.Windows.Input;
 using PowerAim.AILogic;
 using PowerAim.Class.Native;
 using PowerAim.Config;
+using PowerAim;
 
 namespace PowerAim.Visuality;
 
@@ -27,6 +28,7 @@ public partial class CalibrationWizardDialog
     public CalibrationWizardDialog()
     {
         InitializeComponent();
+        DataContext = this;
         UpdateChrome();
     }
 
@@ -40,26 +42,26 @@ public partial class CalibrationWizardDialog
         switch (_step)
         {
             case Step.Welcome:
-                LeftButton.Content = "Cancel";
-                RightButton.Content = "Start calibration";
+                LeftButton.Content = Locale.Cancel;
+                RightButton.Content = Locale.StartCalibration;
                 RightButton.IsEnabled = true;
                 LeftButton.IsEnabled = true;
                 break;
             case Step.Running:
-                LeftButton.Content = "Cancel";
-                RightButton.Content = "Running…";
+                LeftButton.Content = Locale.Cancel;
+                RightButton.Content = Locale.Running;
                 RightButton.IsEnabled = false;
                 LeftButton.IsEnabled = true;
                 break;
             case Step.Result:
-                LeftButton.Content = "Close";
-                RightButton.Content = "Apply suggested";
+                LeftButton.Content = Locale.Close;
+                RightButton.Content = Locale.ApplySuggested;
                 RightButton.IsEnabled = _lastResult is { Ok: true };
                 LeftButton.IsEnabled = true;
                 break;
             case Step.Error:
-                LeftButton.Content = "Close";
-                RightButton.Content = "Try again";
+                LeftButton.Content = Locale.Close;
+                RightButton.Content = Locale.TryAgain;
                 RightButton.IsEnabled = true;
                 LeftButton.IsEnabled = true;
                 break;
@@ -104,7 +106,7 @@ public partial class CalibrationWizardDialog
         var capture = AIManager.Instance?.ImageCapture;
         if (capture == null)
         {
-            ShowError("No capture source available. Make sure a model is loaded and PowerAim is initialised.");
+            ShowError(Locale.NoCaptureSourceLoaded);
             return;
         }
 
@@ -128,11 +130,11 @@ public partial class CalibrationWizardDialog
 
             if (result.WasCancelled)
             {
-                ShowError("Cancelled.");
+                ShowError(Locale.Cancelled);
             }
             else if (!result.Ok)
             {
-                ShowError(result.ErrorMessage ?? "Unknown error.");
+                ShowError(result.ErrorMessage ?? Locale.UnknownError);
             }
             else
             {
@@ -168,11 +170,11 @@ public partial class CalibrationWizardDialog
 
         InterpretationText.Text = result.Ratio switch
         {
-            <= 0.5 => "Your in-game sensitivity is quite low (the screen barely moves per mouse unit). Consider raising it so PowerAim has more headroom to correct.",
-            <= 1.05 => "1:1 sensitivity. No damping needed — keep MouseSensitivity at 0.",
-            <= 1.6  => "Slightly high in-game sensitivity. A small amount of damping helps the AI settle on targets.",
-            <= 3.0  => "High in-game sensitivity. The damping factor will keep the AI from overshooting on close-range corrections.",
-            _       => "Very high in-game sensitivity. Heavy damping is required; you may also want to lower your in-game sens for finer control.",
+            <= 0.5 => Locale.CalibrationInterpretLow,
+            <= 1.05 => Locale.CalibrationInterpret1to1,
+            <= 1.6  => Locale.CalibrationInterpretSlightHigh,
+            <= 3.0  => Locale.CalibrationInterpretHigh,
+            _       => Locale.CalibrationInterpretVeryHigh,
         };
 
         _step = Step.Result;

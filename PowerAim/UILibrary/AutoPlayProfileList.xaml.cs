@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using PowerAim.Extensions;
+using PowerAim;
 using Nextended.Core.Extensions;
 using Visuality;
 
@@ -41,7 +42,7 @@ namespace UILibrary
             {
                 var dlg = new AutoPlayProfileEditDialog
                 {
-                    Title = "Edit AutoPlay Profile",
+                    Title = Locale.EditAutoPlayProfile,
                     Profile = profile
                 };
                 dlg.ShowDialog();
@@ -52,7 +53,7 @@ namespace UILibrary
         {
             var dlg = new AutoPlayProfileEditDialog
             {
-                Title = "Add AutoPlay Profile",
+                Title = Locale.AddAutoPlayProfile,
                 Profile = new AutoPlayProfile()
             };
             if (dlg.ShowDialog() ?? false)
@@ -64,7 +65,7 @@ namespace UILibrary
         private void DeleteProfile_Click(object sender, RoutedEventArgs e)
         {
             if ((sender as FrameworkElement)?.Tag is AutoPlayProfile profile &&
-                PowerAim.Visuality.MessageDialog.Show($"Delete profile '{profile.Name}'?", "Delete Profile",
+                PowerAim.Visuality.MessageDialog.Show(string.Format(Locale.ConfirmDeleteAutoPlayProfileFormat, profile.Name), Locale.DeleteProfile,
                     PowerAim.Visuality.MessageDialog.DialogButtons.YesNo, PowerAim.Visuality.MessageDialog.DialogIcon.Question,
                     owner: Window.GetWindow(this), defaultResult: PowerAim.Visuality.MessageDialog.DialogResult.No) == PowerAim.Visuality.MessageDialog.DialogResult.Yes)
             {

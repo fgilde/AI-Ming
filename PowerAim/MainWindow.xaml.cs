@@ -14,6 +14,7 @@ using PowerAim.Config;
 using PowerAim.Extensions;
 using PowerAim.InputLogic;
 using PowerAim.InputLogic.HidHide;
+using PowerAim;
 using PowerAim.Localizations;
 using PowerAim.Models;
 using PowerAim.MouseMovementLibraries.GHubSupport;
@@ -368,7 +369,7 @@ public partial class MainWindow
             var exe = Environment.ProcessPath ?? System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
             if (string.IsNullOrEmpty(exe))
             {
-                new global::Visuality.NoticeBar("Couldn't resolve the PowerAim executable path.", 4000).Show();
+                new global::Visuality.NoticeBar(Locale.ResolveExePathFailed, 4000).Show();
                 return;
             }
             var psi = new System.Diagnostics.ProcessStartInfo
@@ -384,11 +385,11 @@ public partial class MainWindow
         catch (System.ComponentModel.Win32Exception)
         {
             // User dismissed the UAC prompt — leave the unelevated instance alone.
-            new global::Visuality.NoticeBar("UAC declined — staying in non-elevated mode.", 3000).Show();
+            new global::Visuality.NoticeBar(Locale.UacDeclined, 3000).Show();
         }
         catch (Exception ex)
         {
-            new global::Visuality.NoticeBar($"Restart-as-admin failed: {ex.Message}", 5000).Show();
+            new global::Visuality.NoticeBar(Locale.RestartAsAdminFailedFormat.FormatWith(ex.Message), 5000).Show();
         }
     }
 
@@ -520,10 +521,10 @@ public partial class MainWindow
         var matches = PowerAim.Class.GlobalSearch.Filter(_searchIndex, query);
         if (matches.Count == 0)
         {
-            GlobalSearchHint.Text = "No matches.";
+            GlobalSearchHint.Text = Locale.NoMatches;
             return;
         }
-        GlobalSearchHint.Text = $"{matches.Count} match{(matches.Count == 1 ? "" : "es")} · Enter = open first";
+        GlobalSearchHint.Text = Locale.SearchMatchesFormat.FormatWith(matches.Count);
         foreach (var entry in matches)
             GlobalSearchResults.Items.Add(BuildResultRow(entry));
     }
@@ -654,7 +655,7 @@ public partial class MainWindow
         if (SectionLabel != null)
         {
             var section = string.Join(" ", name.Replace("Menu", "").SplitByUpperCase()).ToUpper();
-            SectionLabel.Content = section == "AIM" ? "MAIN" : section;
+            SectionLabel.Content = section == "AIM" ? Locale.MainSection : section;
         }
 
         clickedButton ??= FindNavButton(name);
@@ -1254,7 +1255,7 @@ public partial class MainWindow
                           ?? new Dictionary<int, string>();
             new PowerAim.Visuality.TargetClassDialog(classes) { Owner = this }.ShowDialog();
         };
-        PredictionConfig.AddButton("Detection masks…").Reader.Click += (_, _) =>
+        PredictionConfig.AddButton(Locale.DetectionMasksMenuItem).Reader.Click += (_, _) =>
         {
             new PowerAim.Visuality.DetectionMasksDialog { Owner = this }.ShowDialog();
         };
@@ -1273,14 +1274,14 @@ public partial class MainWindow
         // GlobalActive/AutoTrigger/AntiRecoil so the user can bind a hotkey to flip it on/off
         // from inside the game without having to alt-tab to PowerAim. AddToggleWithKeyBind
         // handles the two-way binding + keybind plumbing internally.
-        var useControllerToggle = AimConfig.AddToggleWithKeyBind("Use controller for aim",
-            "UseControllerForAim", BindingManager);
+        var useControllerToggle = AimConfig.AddToggleWithKeyBind(Locale.UseControllerForAim,
+            nameof(Locale.UseControllerForAim), BindingManager);
         useControllerToggle.BindTo(() => AppConfig.Current.ToggleState.UseControllerForAim);
         //useControllerToggle.IsEnabled = PowerAim.InputLogic.GamepadManager.CanSend;
         useControllerToggle.ToolTip = PowerAim.InputLogic.GamepadManager.CanSend
-            ? "Drive aim through the virtual Xbox controller's right-stick instead of synthesising mouse motion. Useful for games that lock out KB+M input or apply controller-specific aim-assist. Click the keybind icon on the right to set a global hotkey."
-            : "Disabled — no working gamepad sender. Configure ViGEm in Settings → Gamepad first.";
-        AimConfig.AddButton("Calibrate sensitivity…").Reader.Click += (_, _) =>
+            ? Locale.UseControllerForAimTooltip
+            : Locale.UseControllerForAimDisabledTooltip;
+        AimConfig.AddButton(Locale.CalibrateSensitivity).Reader.Click += (_, _) =>
         {
             new PowerAim.Visuality.CalibrationWizardDialog { Owner = this }.ShowDialog();
         };
@@ -1335,8 +1336,8 @@ public partial class MainWindow
         // Pattern recorder + playback. Mutually exclusive with both the legacy and the BETA paths
         // — when this is on and a pattern is selected, the other two skip themselves in their
         // .Active getters.
-        var patternToggle = AntiRecoil.AddToggle("Use recoil pattern playback");
-        patternToggle.ToolTip = "When armed, plays back a previously recorded recoil pattern while you fire. Overrides the legacy / BETA paths.";
+        var patternToggle = AntiRecoil.AddToggle(Locale.UsePatternPlayback);
+        patternToggle.ToolTip = Locale.UsePatternPlaybackTooltip;
         patternToggle.BindTo(() => AppConfig.Current.AntiRecoilSettings.UsePatternRecoil);
 
         var patternStatus = new System.Windows.Controls.Label
@@ -1349,7 +1350,7 @@ public partial class MainWindow
         };
         AntiRecoil.Children.Add(patternStatus);
 
-        AntiRecoil.AddButton("Recoil patterns…").Reader.Click += (_, _) =>
+        AntiRecoil.AddButton(Locale.RecoilPatternsMenuItem).Reader.Click += (_, _) =>
         {
             new PowerAim.Visuality.RecoilPatternsDialog { Owner = this }.ShowDialog();
         };
@@ -1396,13 +1397,13 @@ public partial class MainWindow
 
             // Status line right under the pattern toggle.
             if (pattern)
-                patternStatus.Content = $"Active pattern: {s.ActivePatternName}  ·  strength {s.PatternStrength:0.00}";
+                patternStatus.Content = string.Format(Locale.ActivePatternStatusFormat, s.ActivePatternName, s.PatternStrength);
             else if (s.UsePatternRecoil)
-                patternStatus.Content = "Pattern playback armed but no pattern selected. Open 'Recoil patterns…' and click one in the list.";
+                patternStatus.Content = Locale.PatternArmedButNoneSelected;
             else if (beta)
-                patternStatus.Content = "Mode: image-based (BETA, phase correlation).";
+                patternStatus.Content = Locale.RecoilModeImageBased;
             else
-                patternStatus.Content = "Mode: legacy (fixed X/Y per fire rate). Record Fire Rate measures the cadence for this mode only.";
+                patternStatus.Content = Locale.RecoilModeLegacy;
         }
         AppConfig.Current.AntiRecoilSettings.PropertyChanged += (s, e) =>
         {
@@ -1486,13 +1487,13 @@ public partial class MainWindow
             sizeToggle.SetEnabled(v != OverlayDrawingMethod.WpfWindowCanvas);
             if (v == OverlayDrawingMethod.DesktopDC)
             {
-                w1 = new NoticeBar("WARNING: This method is the fastest, but not hidden for captures!!", 8000);
+                w1 = new NoticeBar(Locale.DrawingMethodWarning, 8000);
                 w1.Closed += (s, e) => w1 = null;
                 w1.Show();
                 if (AppConfig.Current.ToggleState.GlobalActive && AppConfig.Current.ToggleState.ShowDetectedPlayer)
                 {
                     AppConfig.Current.ToggleState.GlobalActive = false;
-                    w2 = new NoticeBar("For more security we disabled the active state to prevent auto bans by capture analysis. Use this mode carefully! ", 10000);
+                    w2 = new NoticeBar(Locale.DisabledActiveStateForSafety, 10000);
                     w2.Closed += (s, e) => w2 = null;
                     w2.Show();
                 }
@@ -1620,14 +1621,14 @@ public partial class MainWindow
         }
         else if (AppConfig.Current.DropdownState.GamepadSendMode == GamepadSendMode.Internal)
         {
-            GamepadSettingsConfig.AddCredit("Internal Mode", "Internal mode virtualizes the controller without requiring external drivers. The virtual controller can be manipulated via the existing interfaces and classes.");
+            GamepadSettingsConfig.AddCredit(Locale.InternalModeTitle, Locale.InternalModeInfo);
             if (GamepadManager.CanSend)
             {
                 GamepadSettingsConfig.AddCredit(Locale.Status, $"{Locale.Great.ToUpper()}, {Locale.GamepadDriverSuccessMessage}");
             }
             else
             {
-                GamepadSettingsConfig.AddCredit(Locale.Status, "Internal mode initialized", credit => credit.Description.Foreground = Brushes.Orange);
+                GamepadSettingsConfig.AddCredit(Locale.Status, Locale.InternalModeInitialized, credit => credit.Description.Foreground = Brushes.Orange);
             }
         }
 
@@ -1700,10 +1701,10 @@ public partial class MainWindow
 
         ToolsConfig.AddSeparator();
 
-        ToolsConfig.AddTitle("HWID Spoofer", false);
+        ToolsConfig.AddTitle(Locale.HwidSpoofer, false);
 
-        ToolsConfig.AddButton("Open HWID Spoofer").Reader.Click += (_, _) => OpenSpoofer();
-        ToolsConfig.AddCredit("", "This external tool helps to change your Hardware Id, that can help if your PC is banned");
+        ToolsConfig.AddButton(Locale.OpenHwidSpoofer).Reader.Click += (_, _) => OpenSpoofer();
+        ToolsConfig.AddCredit("", Locale.HwidSpooferHelp);
 
         ToolsConfig.AddSeparator();
 
@@ -1721,14 +1722,14 @@ public partial class MainWindow
     private void BuildSettingsExtras()
     {
         // ===== Active Processes (Auto-Pause + per-game profile switch) =====
-        ActiveProcessesSettings.AddTitle("Active Processes", true);
-        ActiveProcessesSettings.AddToggle("Auto-pause when game loses focus")
-            .InitWith(t => t.ToolTip = "Pauses AI actions when the foreground window is a known non-game (browser, terminal, PowerAim itself, …).")
+        ActiveProcessesSettings.AddTitle(Locale.ActiveProcesses, true);
+        ActiveProcessesSettings.AddToggle(Locale.AutoPauseOnFocusLoss)
+            .InitWith(t => t.ToolTip = Locale.AutoPauseOnFocusLossTooltip)
             .BindTo(() => AppConfig.Current.ActiveProcessSettings.AutoPauseOnFocusLoss);
-        ActiveProcessesSettings.AddToggle("Auto-switch profile by game")
-            .InitWith(t => t.ToolTip = "When a Trigger / AutoPlay profile has a Match-Process pattern, it's only active while the matching game is in the foreground.")
+        ActiveProcessesSettings.AddToggle(Locale.AutoSwitchProfile)
+            .InitWith(t => t.ToolTip = Locale.AutoSwitchProfileTooltip)
             .BindTo(() => AppConfig.Current.ActiveProcessSettings.AutoSwitchProfile);
-        ActiveProcessesSettings.AddCredit("", "Match patterns support wildcards (cs2*) and pipes (cs2|valorant). Configure them on each Trigger / AutoPlay profile.");
+        ActiveProcessesSettings.AddCredit("", Locale.MatchPatternHelp);
 
         // Inline editor for the optional "game whitelist". Comma-separated text-box is the
         // simplest path that round-trips cleanly through the ObservableCollection<string>.
@@ -1740,7 +1741,7 @@ public partial class MainWindow
             Margin = new Thickness(2, 4, 2, 4),
             TextWrapping = TextWrapping.Wrap,
             AcceptsReturn = false,
-            ToolTip = "Comma- or pipe-separated process patterns considered \"games\". Empty = use the built-in non-game blacklist.",
+            ToolTip = Locale.GameProcessPatternsTooltip,
         };
         whitelistInput.Text = string.Join(", ", AppConfig.Current.ActiveProcessSettings.GameProcessPatterns);
         whitelistInput.LostFocus += (_, _) =>
@@ -1753,31 +1754,32 @@ public partial class MainWindow
         ActiveProcessesSettings.Children.Add(whitelistInput);
         ActiveProcessesSettings.AddSeparator();
 
+
         // ===== Overlays (Debug + Crosshair) =====
-        OverlaySettings.AddTitle("Overlays", true);
-        OverlaySettings.AddToggle("Show debug overlay")
-            .InitWith(t => t.ToolTip = "Tiny topmost panel showing FPS, inference time, detection count, current intent and active profile.")
+        OverlaySettings.AddTitle(Locale.Overlays, true);
+        OverlaySettings.AddToggleWithKeyBind(Locale.ShowDebugOverlay, nameof(Locale.ShowDebugOverlay), BindingManager)
+            .InitWith(t => t.ToolTip = Locale.ShowDebugOverlayTooltip)
             .BindTo(() => AppConfig.Current.ToggleState.ShowDebugOverlay);
 
-        OverlaySettings.AddToggle("Show custom crosshair")
-            .InitWith(t => t.ToolTip = "Render a configurable crosshair at the centre of the primary screen. Useful for games without a built-in crosshair.")
+        OverlaySettings.AddToggleWithKeyBind(Locale.ShowCustomCrosshair, nameof(Locale.ShowCustomCrosshair), BindingManager)
+            .InitWith(t => t.ToolTip = Locale.ShowCustomCrosshairTooltip)
             .BindTo(() => AppConfig.Current.ToggleState.ShowCrosshairOverlay);
 
-        OverlaySettings.AddDropdown("Crosshair shape",
+        OverlaySettings.AddDropdown(Locale.CrosshairShape,
             AppConfig.Current.CrosshairSettings.Shape,
             v => AppConfig.Current.CrosshairSettings.Shape = v);
-        OverlaySettings.AddSlider("Crosshair size", "px", 1, 1, 4, 80)
+        OverlaySettings.AddSlider(Locale.CrosshairSize, Locale.Pixels, 1, 1, 4, 80)
             .BindTo(() => AppConfig.Current.CrosshairSettings.Size);
-        OverlaySettings.AddSlider("Crosshair thickness", "px", 1, 1, 1, 10)
+        OverlaySettings.AddSlider(Locale.CrosshairThickness, Locale.Pixels, 1, 1, 1, 10)
             .BindTo(() => AppConfig.Current.CrosshairSettings.Thickness);
-        OverlaySettings.AddSlider("Crosshair gap", "px", 1, 1, 0, 30)
+        OverlaySettings.AddSlider(Locale.CrosshairGap, Locale.Pixels, 1, 1, 0, 30)
             .BindTo(() => AppConfig.Current.CrosshairSettings.Gap);
-        OverlaySettings.AddSlider("Crosshair outline", "px", 1, 1, 0, 4)
+        OverlaySettings.AddSlider(Locale.CrosshairOutline, Locale.Pixels, 1, 1, 0, 4)
             .BindTo(() => AppConfig.Current.CrosshairSettings.OutlineThickness);
         OverlaySettings.AddSeparator();
 
         // ===== Stats =====
-        StatsCard.AddTitle("Session Stats", true);
+        StatsCard.AddTitle(Locale.SessionStats, true);
         var fpsLabel       = new System.Windows.Controls.Label { Padding = new Thickness(0) };
         var msLabel        = new System.Windows.Controls.Label { Padding = new Thickness(0) };
         var detLabel       = new System.Windows.Controls.Label { Padding = new Thickness(0) };
@@ -1799,43 +1801,43 @@ public partial class MainWindow
         statsTimer.Tick += (_, _) =>
         {
             var s = PowerAim.Class.SessionStats.Instance;
-            fpsLabel.Content      = $"FPS                 {s.InstantFps:0.0}";
-            msLabel.Content       = $"Inference time      {s.LastInferenceMs:0.0} ms";
-            detLabel.Content      = $"Detections (last)   {s.LastDetectionCount}";
-            shotsLabel.Content    = $"Shots fired         {s.ShotsFired}";
-            framesLabel.Content   = $"Frames processed    {s.FramesProcessed}";
-            tacticalLabel.Content = $"Tactical actions    {s.TacticalActionsUsed}";
-            durationLabel.Content = $"Session             {s.Duration:hh\\:mm\\:ss}";
+            fpsLabel.Content      = $"{Locale.StatFpsLabel,-19} {s.InstantFps:0.0}";
+            msLabel.Content       = $"{Locale.StatInferenceTime,-19} {s.LastInferenceMs:0.0} ms";
+            detLabel.Content      = $"{Locale.StatDetectionsLast,-19} {s.LastDetectionCount}";
+            shotsLabel.Content    = $"{Locale.StatShotsFired,-19} {s.ShotsFired}";
+            framesLabel.Content   = $"{Locale.StatFramesProcessed,-19} {s.FramesProcessed}";
+            tacticalLabel.Content = $"{Locale.StatTacticalActions,-19} {s.TacticalActionsUsed}";
+            durationLabel.Content = $"{Locale.StatSession,-19} {s.Duration:hh\\:mm\\:ss}";
         };
         statsTimer.Start();
 
-        StatsCard.AddButton("Reset stats").Reader.Click += (_, _) => PowerAim.Class.SessionStats.Instance.Reset();
-        StatsCard.AddToggle("Adaptive Kalman lead-time")
-            .InitWith(t => t.ToolTip = "Scales the predictor's lead-time based on target velocity — less lead on stationary targets, more on fast strafing ones.")
+        StatsCard.AddButton(Locale.ResetStats).Reader.Click += (_, _) => PowerAim.Class.SessionStats.Instance.Reset();
+        StatsCard.AddToggle(Locale.AdaptiveKalmanLead)
+            .InitWith(t => t.ToolTip = Locale.AdaptiveKalmanLeadTooltip)
             .Checked = PowerAim.AILogic.PredictionSettings.AdaptiveKalmanLead;
         StatsCard.AddSeparator();
 
         // ===== HUD OCR =====
-        HudOcrCard.AddTitle("HUD OCR", true);
-        HudOcrCard.AddToggle("Enable HUD OCR engine")
-            .InitWith(t => t.ToolTip = "Periodically samples screen regions (ammo, health, score) with Tesseract. Results are exposed to AutoPlay via OcrService.Instance.Latest.")
+        HudOcrCard.AddTitle(Locale.HudOcr, true);
+        HudOcrCard.AddToggleWithKeyBind(Locale.EnableHudOcr, nameof(Locale.EnableHudOcr), BindingManager)
+            .InitWith(t => t.ToolTip = Locale.EnableHudOcrTooltip)
             .BindTo(() => AppConfig.Current.OcrSettings.Enabled);
-        HudOcrCard.AddSlider("OCR interval", "ms", 50, 50, 100, 5000, true)
+        HudOcrCard.AddSlider(Locale.OcrInterval, Locale.MillisecondsShort, 50, 50, 100, 5000, true)
             .BindTo(() => AppConfig.Current.OcrSettings.IntervalMs);
-        HudOcrCard.AddButton("Configure OCR regions…").Reader.Click += (_, _) =>
+        HudOcrCard.AddButton(Locale.ConfigureOcrRegions).Reader.Click += (_, _) =>
         {
             new PowerAim.Visuality.OcrRegionsDialog { Owner = this }.ShowDialog();
         };
         HudOcrCard.AddSeparator();
 
         // ===== Replay Buffer =====
-        ReplayCard.AddTitle("Replay Buffer", true);
-        ReplayCard.AddToggle("Record rolling buffer")
-            .InitWith(t => t.ToolTip = "Keeps the last N seconds of frames + detections in RAM. Click 'Save replay' to flush to disk as a PNG sequence + annotations.json.")
+        ReplayCard.AddTitle(Locale.ReplayBuffer, true);
+        ReplayCard.AddToggle(Locale.RecordRollingBuffer)
+            .InitWith(t => t.ToolTip = Locale.RecordRollingBufferTooltip)
             .BindTo(() => AppConfig.Current.ReplaySettings.Enabled);
-        ReplayCard.AddSlider("Buffer length", "s", 1, 1, 1, 30, true)
+        ReplayCard.AddSlider(Locale.BufferLength, Locale.SecondsShort, 1, 1, 1, 30, true)
             .BindTo(() => AppConfig.Current.ReplaySettings.BufferSeconds);
-        ReplayCard.AddSlider("JPEG quality", "", 1, 5, 10, 100, true)
+        ReplayCard.AddSlider(Locale.JpegQuality, "", 1, 5, 10, 100, true)
             .BindTo(() => AppConfig.Current.ReplaySettings.JpegQuality);
 
         var replayStatus = new System.Windows.Controls.Label
@@ -1845,36 +1847,36 @@ public partial class MainWindow
             FontSize = 12,
             Padding = new Thickness(0),
             Margin = new Thickness(2, 4, 2, 4),
-            Content = "0 frames buffered"
+            Content = Locale.FramesBufferedZero
         };
         ReplayCard.Children.Add(replayStatus);
         PowerAim.AILogic.ReplayBuffer.Instance.PropertyChanged += (_, _) =>
             Dispatcher.BeginInvoke(new Action(() =>
-                replayStatus.Content = $"{PowerAim.AILogic.ReplayBuffer.Instance.FrameCount} frames buffered"));
+                replayStatus.Content = Locale.FramesBufferedFormat.FormatWith(PowerAim.AILogic.ReplayBuffer.Instance.FrameCount)));
 
-        ReplayCard.AddButton("Save replay buffer").Reader.Click += async (_, _) =>
+        ReplayCard.AddButton(Locale.SaveReplayBuffer).Reader.Click += async (_, _) =>
         {
-            replayStatus.Content = "Exporting…";
+            replayStatus.Content = Locale.Exporting;
             var folder = await PowerAim.AILogic.ReplayBuffer.Instance.ExportAsync();
             replayStatus.Content = folder == null
-                ? "Nothing to export — buffer is empty."
-                : $"Saved to {folder}";
+                ? Locale.NothingToExportEmpty
+                : Locale.SavedToFormat.FormatWith(folder);
         };
-        ReplayCard.AddButton("Clear buffer").Reader.Click += (_, _) =>
+        ReplayCard.AddButton(Locale.ClearBuffer).Reader.Click += (_, _) =>
             PowerAim.AILogic.ReplayBuffer.Instance.Clear();
         ReplayCard.AddSeparator();
 
         // ===== AutoPlay learning =====
-        LearningCard.AddTitle("AutoPlay Learning", true);
-        LearningCard.AddToggle("Record my playstyle")
-            .InitWith(t => t.ToolTip = "While on, samples (state, action) tuples from your input and current detections. Stored in an in-memory model that can be saved to disk.")
+        LearningCard.AddTitle(Locale.AutoPlayLearning, true);
+        LearningCard.AddToggle(Locale.RecordPlaystyle)
+            .InitWith(t => t.ToolTip = Locale.RecordPlaystyleTooltip)
             .BindTo(() => AppConfig.Current.AutoPlayLearningSettings.Recording);
-        LearningCard.AddToggle("Apply learned bias in AutoPlay")
-            .InitWith(t => t.ToolTip = "When AutoPlay picks a tactical action, the learned model can nudge the choice toward what you typically did in similar situations.")
+        LearningCard.AddToggle(Locale.ApplyLearnedBias)
+            .InitWith(t => t.ToolTip = Locale.ApplyLearnedBiasTooltip)
             .BindTo(() => AppConfig.Current.AutoPlayLearningSettings.ApplyModel);
-        LearningCard.AddSlider("Bias strength", "", 0.01, 0.01, 0, 1)
+        LearningCard.AddSlider(Locale.BiasStrength, "", 0.01, 0.01, 0, 1)
             .BindTo(() => AppConfig.Current.AutoPlayLearningSettings.BiasStrength);
-        LearningCard.AddSlider("Sample interval", "ms", 50, 50, 50, 1000, true)
+        LearningCard.AddSlider(Locale.SampleInterval, Locale.MillisecondsShort, 50, 50, 50, 1000, true)
             .BindTo(() => AppConfig.Current.AutoPlayLearningSettings.SampleIntervalMs);
 
         var learnStatus = new System.Windows.Controls.Label
@@ -1890,22 +1892,22 @@ public partial class MainWindow
         PowerAim.AILogic.AutoPlayLearningModel.Instance.PropertyChanged += (_, _) =>
             Dispatcher.BeginInvoke(new Action(() => UpdateLearnStatus(learnStatus)));
 
-        LearningCard.AddButton("Save model").Reader.Click += (_, _) =>
+        LearningCard.AddButton(Locale.SaveModel).Reader.Click += (_, _) =>
         {
             try
             {
                 PowerAim.AILogic.AutoPlayLearningModel.Instance.Save(AppConfig.Current?.AutoPlayLearningSettings?.ModelPath);
-                learnStatus.Content = $"Saved · {PowerAim.AILogic.AutoPlayLearningModel.Instance.TotalSamples} samples";
+                learnStatus.Content = Locale.SavedSamplesFormat.FormatWith(PowerAim.AILogic.AutoPlayLearningModel.Instance.TotalSamples);
             }
-            catch (Exception ex) { learnStatus.Content = $"Save failed: {ex.Message}"; }
+            catch (Exception ex) { learnStatus.Content = Locale.SaveFailedFormat.FormatWith(ex.Message); }
         };
-        LearningCard.AddButton("Load model").Reader.Click += (_, _) =>
+        LearningCard.AddButton(Locale.LoadModel).Reader.Click += (_, _) =>
         {
             bool ok = PowerAim.AILogic.AutoPlayLearningModel.Instance.Load(AppConfig.Current?.AutoPlayLearningSettings?.ModelPath);
-            learnStatus.Content = ok ? "Model loaded." : "No model file found at the configured path.";
+            learnStatus.Content = ok ? Locale.ModelLoaded : Locale.NoModelFileAtPath;
             UpdateLearnStatus(learnStatus);
         };
-        LearningCard.AddButton("Clear model").Reader.Click += (_, _) =>
+        LearningCard.AddButton(Locale.ClearModel).Reader.Click += (_, _) =>
         {
             PowerAim.AILogic.AutoPlayLearningModel.Instance.Clear();
             UpdateLearnStatus(learnStatus);
@@ -1922,7 +1924,7 @@ public partial class MainWindow
     private static void UpdateLearnStatus(System.Windows.Controls.Label label)
     {
         var model = PowerAim.AILogic.AutoPlayLearningModel.Instance;
-        label.Content = $"{model.TotalSamples} samples · {model.StateCount} states";
+        label.Content = string.Format(Locale.LearningStatusFormat, model.TotalSamples, model.StateCount);
     }
 
     private void OpenSpoofer()
@@ -1949,37 +1951,37 @@ public partial class MainWindow
         AutoPlayProfiles.RemoveAll();
 
         // Ollama Status Section
-        AutoPlayConfig.AddTitle("AutoPlay (AI Game Control)", true);
+        AutoPlayConfig.AddTitle(Locale.AutoPlayMenuTitle, true);
         AutoPlayConfig.Add<OllamaStatusIndicator>();
 
         // AutoPlay Toggle
-        AutoPlayConfig.AddToggleWithKeyBind("AutoPlay", "AutoPlay", BindingManager, toggle =>
+        AutoPlayConfig.AddToggleWithKeyBind(Locale.AutoPlay, nameof(Locale.AutoPlay), BindingManager, toggle =>
         {
-            toggle.ToolTip = "Enable AI-controlled gameplay using Ollama vision models";
+            toggle.ToolTip = Locale.AutoPlayToggleTooltip;
         }).BindTo(() => AppConfig.Current.ToggleState.AutoPlay);
 
         // Ollama Settings
-        AutoPlayConfig.AddTitle("Ollama Settings");
-        AutoPlayConfig.AddSlider("Request Timeout", "seconds", 1, 5, 5, 120).BindTo(() => AppConfig.Current.OllamaSettings.TimeoutSeconds);
-        AutoPlayConfig.AddSlider("Temperature", "", 0.1, 0.1, 0.0, 1.0).BindTo(() => AppConfig.Current.OllamaSettings.Temperature);
-        AutoPlayConfig.AddSlider("Image Max Size", "px", 64, 128, 256, 1024).BindTo(() => AppConfig.Current.OllamaSettings.ImageMaxSize);
-        AutoPlayConfig.AddSlider("Image Quality", "%", 5, 10, 30, 100).BindTo(() => AppConfig.Current.OllamaSettings.ImageQuality);
+        AutoPlayConfig.AddTitle(Locale.OllamaSettings);
+        AutoPlayConfig.AddSlider(Locale.RequestTimeout, Locale.Seconds, 1, 5, 5, 120).BindTo(() => AppConfig.Current.OllamaSettings.TimeoutSeconds);
+        AutoPlayConfig.AddSlider(Locale.Temperature, "", 0.1, 0.1, 0.0, 1.0).BindTo(() => AppConfig.Current.OllamaSettings.Temperature);
+        AutoPlayConfig.AddSlider(Locale.ImageMaxSize, Locale.Pixels, 64, 128, 256, 1024).BindTo(() => AppConfig.Current.OllamaSettings.ImageMaxSize);
+        AutoPlayConfig.AddSlider(Locale.ImageQuality, Locale.PercentSign, 5, 10, 30, 100).BindTo(() => AppConfig.Current.OllamaSettings.ImageQuality);
 
         AutoPlayConfig.AddSeparator();
 
         // Profiles Section
-        AutoPlayProfiles.AddTitle("AutoPlay Profiles", true);
+        AutoPlayProfiles.AddTitle(Locale.AutoPlayProfiles, true);
         AutoPlayProfiles.Add<AutoPlayProfileList>().BindTo(() => AppConfig.Current.AutoPlayProfiles);
 
         AutoPlayProfiles.AddSeparator();
 
         // Help Section
-        AutoPlayProfiles.AddTitle("Quick Start");
-        AutoPlayProfiles.AddCredit("1. Install Ollama", "Visit ollama.com and install");
-        AutoPlayProfiles.AddCredit("2. Pull a Vision Model", "Run: ollama pull moondream");
-        AutoPlayProfiles.AddCredit("3. Start Ollama", "Run: ollama serve");
-        AutoPlayProfiles.AddCredit("4. Create Profile", "Add actions like 'move_left', 'jump'");
-        AutoPlayProfiles.AddCredit("5. Enable AutoPlay", "Toggle AutoPlay on");
+        AutoPlayProfiles.AddTitle(Locale.QuickStart);
+        AutoPlayProfiles.AddCredit(Locale.QuickStartStep1Title, Locale.QuickStartStep1Body);
+        AutoPlayProfiles.AddCredit(Locale.QuickStartStep2Title, Locale.QuickStartStep2Body);
+        AutoPlayProfiles.AddCredit(Locale.QuickStartStep3Title, Locale.QuickStartStep3Body);
+        AutoPlayProfiles.AddCredit(Locale.QuickStartStep4Title, Locale.QuickStartStep4Body);
+        AutoPlayProfiles.AddCredit(Locale.QuickStartStep5Title, Locale.QuickStartStep5Body);
 
         AutoPlayProfiles.AddSeparator();
     }
@@ -1996,7 +1998,7 @@ public partial class MainWindow
         CaptureSettings.AddTitle(Locale.CaptureSettings, true);
 
 
-        var text = ApplicationConstants.IsCudaBuild ? "Switch to DirectML Version" : "Switch to CUDA version";
+        var text = ApplicationConstants.IsCudaBuild ? Locale.SwitchToDirectML : Locale.SwitchToCuda;
         UISettings.AddButton(text,
             button =>
             {
@@ -2047,7 +2049,7 @@ public partial class MainWindow
                 Config.ActiveThemeName = palette.Name;
             PowerAim.Theme.ThemeManager.Apply();
         });
-        UISettings.AddDropdown<AppThemeMode>("Theme Mode", AppConfig.Current.ThemeMode, mode =>
+        UISettings.AddDropdown<AppThemeMode>(Locale.ThemeMode, AppConfig.Current.ThemeMode, mode =>
         {
             if (Config != null)
                 Config.ThemeMode = mode;
@@ -2055,17 +2057,17 @@ public partial class MainWindow
         });
 
         UISettings.AddToggle(Locale.UITopMost).BindTo(() => AppConfig.Current.ToggleState.UITopMost);
-        UISettings.AddToggle("Locale.ShowHelpTexts").BindTo(() => AppConfig.Current.ToggleState.ShowHelpTexts);
+        UISettings.AddToggle(Locale.ShowHelpTexts).BindTo(() => AppConfig.Current.ToggleState.ShowHelpTexts);
 
-        var hideCaptureToggle = UISettings.AddToggle("Hide UI from screen capture");
+        var hideCaptureToggle = UISettings.AddToggle(Locale.HideUIFromCapture);
         hideCaptureToggle.BindTo(() => AppConfig.Current.ToggleState.HideUIFromCapture);
         hideCaptureToggle.Changed += (s, e) =>
         {
             if (!e.Value)
             {
                 var result = PowerAim.Visuality.MessageDialog.Show(
-                    "Warning: if you disable this, the Aimmy window and all its overlays may become visible in screen recordings, streams (OBS, Discord, etc.) and other capture tools.\n\nAre you sure you want to disable capture protection?",
-                    "Disable capture protection?",
+                    Locale.DisableCaptureProtectionWarning,
+                    Locale.DisableCaptureProtectionTitle,
                     PowerAim.Visuality.MessageDialog.DialogButtons.YesNo,
                     PowerAim.Visuality.MessageDialog.DialogIcon.Warning,
                     owner: this,
@@ -2232,7 +2234,7 @@ public partial class MainWindow
         if (path == AppConfig.Current.Path)
             return;
         AppConfig.Current.Save();
-        Console.WriteLine("Loading Config: " + path);
+        Console.WriteLine(Locale.LoadingConfigMessage + path);
         Config = AppConfig.Load(path);
         OnPropertyChanged(nameof(Config));
 

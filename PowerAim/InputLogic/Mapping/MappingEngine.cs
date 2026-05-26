@@ -6,6 +6,7 @@ using Nefarius.ViGEm.Client.Targets.Xbox360;
 using PowerAim.Class.Native;
 using PowerAim.Config;
 using PowerAim.InputLogic.Contracts;
+using PowerAim;
 using SharpDX.XInput;
 
 namespace PowerAim.InputLogic.Mapping;
@@ -189,7 +190,7 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
         }
         catch (Exception ex)
         {
-            Status = $"Hook failed: {ex.Message}";
+            Status = string.Format(Locale.MappingStatusHookFailedFormat, ex.Message);
             return;
         }
 
@@ -197,7 +198,7 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
         catch { _physicalPad = null; }
 
         _loopTask = Task.Run(() => Loop(_cts.Token));
-        Status = "Running";
+        Status = Locale.MappingStatusRunning;
     }
 
     public void Stop()
@@ -223,7 +224,7 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
         _activatorLastReleaseAt.Clear();
         _toggleHeld.Clear();
         _pulseUntil.Clear();
-        Status = "Stopped";
+        Status = Locale.MappingStatusStopped;
     }
 
     public void Dispose()
@@ -283,7 +284,7 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
 
             if (NeedsVirtualPad(_activeProfile) && !VirtualReady)
             {
-                Status = "ViGEm sender unavailable — install ViGEmBus and restart PowerAim.";
+                Status = Locale.MappingStatusViGEmUnavailable;
             }
 
             // Pad→KB: poll physical controller state, fire mappings whose source is a gamepad.
@@ -319,7 +320,7 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
         // until the user flips it back on (or hits the hotkey).
         if (AppConfig.Current == null)
         {
-            Status = "Waiting for config…";
+            Status = Locale.MappingStatusWaitingForConfig;
             SetActiveProfile(null);
             return;
         }
@@ -330,14 +331,14 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
                 IdleVirtual();
                 _heldSources.Clear();
             }
-            Status = "Idle — master toggle is OFF";
+            Status = Locale.MappingStatusIdleMasterOff;
             SetActiveProfile(null);
             return;
         }
         var profiles = AppConfig.Current.ControllerMappingProfiles;
         if (profiles == null || profiles.Count == 0)
         {
-            Status = "Idle — no mapping profiles defined";
+            Status = Locale.MappingStatusIdleNoProfiles;
             SetActiveProfile(null);
             return;
         }
@@ -356,7 +357,7 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
                 _heldSources.Clear();
             }
             SetActiveProfile(p);
-            Status = $"Running — '{p.Name}' active";
+            Status = string.Format(Locale.MappingStatusRunningProfileFormat, p.Name);
             return;
         }
         if (_activeProfile != null)
@@ -365,8 +366,8 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
             _heldSources.Clear();
         }
         Status = anyEnabled
-            ? "Idle — enabled profile(s) exist but MatchProcess didn't match the focused window"
-            : "Idle — no profile has Enabled=true";
+            ? Locale.MappingStatusIdleMatchProcessMismatch
+            : Locale.MappingStatusIdleNoProfileEnabled;
         SetActiveProfile(null);
     }
 

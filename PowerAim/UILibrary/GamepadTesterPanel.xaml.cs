@@ -5,6 +5,7 @@ using System.Windows.Threading;
 using PowerAim.InputLogic;
 using PowerAim.InputLogic.Contracts;
 using PowerAim.InputLogic.Gamepad.Interaction;
+using PowerAim;
 using SharpDX.XInput;
 
 namespace PowerAim.UILibrary;
@@ -82,7 +83,7 @@ public partial class GamepadTesterPanel : UserControl
             GamepadManager.GamepadReader.Controller != null)
         {
             _controller = GamepadManager.GamepadReader.Controller;
-            ConnectionStatus.Text = "Connected";
+            ConnectionStatus.Text = Locale.Connected;
             StatusDot.Fill = _connectedDot;
         }
         else
@@ -94,13 +95,13 @@ public partial class GamepadTesterPanel : UserControl
                 {
                     _controller = controller;
                     var controllerNumber = i - UserIndex.One + 1;
-                    ConnectionStatus.Text = $"Connected (Controller {controllerNumber})";
+                    ConnectionStatus.Text = string.Format(Locale.ConnectedControllerFormat, controllerNumber);
                     StatusDot.Fill = _connectedDot;
                     return;
                 }
             }
 
-            ConnectionStatus.Text = "Disconnected";
+            ConnectionStatus.Text = Locale.Disconnected;
             StatusDot.Fill = _disconnectedDot;
         }
     }
@@ -109,7 +110,7 @@ public partial class GamepadTesterPanel : UserControl
     {
         if (_controller == null || !_controller.IsConnected)
         {
-            ConnectionStatus.Text = "Disconnected";
+            ConnectionStatus.Text = Locale.Disconnected;
             StatusDot.Fill = _disconnectedDot;
             return;
         }
@@ -176,12 +177,12 @@ public partial class GamepadTesterPanel : UserControl
         {
             SequenceDescription.Text = item.Tag?.ToString() switch
             {
-                "A_Button" => "Presses the A button for 500ms",
-                "AB_Combo" => "Presses A and B buttons together for 1 second",
-                "DPad_Circle" => "Simulates D-Pad presses in a circular pattern: Up → Right → Down → Left",
-                "LStick_Circle" => "Moves left thumbstick in a circular motion",
-                "Trigger_Press" => "Presses both triggers to maximum and releases",
-                "Complex_Combo" => "Complex sequence: A → B → X → Y with D-Pad movements",
+                "A_Button" => Locale.SeqDescAButton,
+                "AB_Combo" => Locale.SeqDescABCombo,
+                "DPad_Circle" => Locale.SeqDpadCircleDescription,
+                "LStick_Circle" => Locale.SeqDescLStickCircle,
+                "Trigger_Press" => Locale.SeqDescTriggerPress,
+                "Complex_Combo" => Locale.SeqDescComplexCombo,
                 _ => ""
             };
         }
@@ -191,7 +192,7 @@ public partial class GamepadTesterPanel : UserControl
     {
         if (GamepadManager.GamepadSender == null)
         {
-            SequenceStatus.Text = "Error: No gamepad sender available. Please select a gamepad mode.";
+            SequenceStatus.Text = Locale.NoGamepadSenderError;
             SequenceStatus.Foreground = _disconnectedDot;
             return;
         }
@@ -210,22 +211,22 @@ public partial class GamepadTesterPanel : UserControl
         {
             for (int i = timeout; i > 0; i--)
             {
-                SequenceStatus.Text = $"Starting in {i}…";
+                SequenceStatus.Text = string.Format(Locale.StartingInFormat, i);
                 SequenceStatus.Foreground = _connectedDot;
                 await Task.Delay(1000, _sequenceCts.Token);
             }
-            SequenceStatus.Text = "Running sequence…";
+            SequenceStatus.Text = Locale.RunningSequence;
             SequenceStatus.Foreground = _connectedDot;
             await ExecuteSequence(sequenceTag, _sequenceCts.Token);
-            SequenceStatus.Text = "Sequence completed.";
+            SequenceStatus.Text = Locale.SequenceCompleted;
         }
         catch (OperationCanceledException)
         {
-            SequenceStatus.Text = "Sequence stopped.";
+            SequenceStatus.Text = Locale.SequenceStopped;
         }
         catch (Exception ex)
         {
-            SequenceStatus.Text = $"Error: {ex.Message}";
+            SequenceStatus.Text = string.Format(Locale.ErrorFormat, ex.Message);
             SequenceStatus.Foreground = _disconnectedDot;
         }
         finally
