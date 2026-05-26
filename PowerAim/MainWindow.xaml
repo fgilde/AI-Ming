@@ -1,0 +1,1301 @@
+<visuality1:BaseDialog x:Class="PowerAim.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:Ant="clr-namespace:AntWpf.Controls;assembly=AntWpf"
+        xmlns:uiLibrary="clr-namespace:PowerAim.UILibrary"
+        xmlns:poweraim="clr-namespace:PowerAim"
+        xmlns:visuality="clr-namespace:Visuality"
+        xmlns:system="clr-namespace:System;assembly=System.Runtime"
+        xmlns:visuality1="clr-namespace:PowerAim.Visuality"
+        mc:Ignorable="d"
+        Title="{x:Static poweraim:ApplicationConstants.ApplicationName}"
+        Height="560"
+        MinHeight="480"
+        Width="900"
+        MinWidth="780"
+        WindowStyle="None"
+        Topmost="{Binding Config.ToggleState.UITopMost}"
+        ResizeMode="CanResize"
+        WindowStartupLocation="CenterScreen"
+        AllowsTransparency="False"
+        Background="{StaticResource FluentSurface1}"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown"
+        Icon="PowerAim.ico"
+        Loaded="Window_Loaded"
+        Closing="Window_Closing">
+    <WindowChrome.WindowChrome>
+        <WindowChrome ResizeBorderThickness="6"
+                      CaptionHeight="0"
+                      GlassFrameThickness="-1"
+                      UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
+    <Window.InputBindings>
+        <KeyBinding Key="F" Modifiers="Control" Command="{x:Static poweraim:MainWindow.OpenSearchCommand}" />
+    </Window.InputBindings>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.Resources>
+            <BooleanToVisibilityConverter x:Key="boolToVis" />
+        </Grid.Resources>
+
+        <Border x:Name="MainBorder"
+                Background="{StaticResource FluentSurface1}"
+                BorderBrush="{StaticResource FluentStroke}"
+                BorderThickness="0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="48" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- ================= TITLE BAR ================= -->
+                <Grid x:Name="Topbar"
+                      Grid.Row="0"
+                      Background="{StaticResource FluentSurface1}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Left cluster: logo + app name + config menu -->
+                    <StackPanel Grid.Column="0"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center"
+                                Margin="14,0,0,0">
+                        <Image x:Name="AppLogo"
+                               Source="/PowerAim.png"
+                               Width="22"
+                               Height="22"
+                               Stretch="Uniform"
+                               RenderOptions.BitmapScalingMode="HighQuality" />
+                        <TextBlock Text="{x:Static poweraim:ApplicationConstants.ApplicationName}"
+                                   VerticalAlignment="Center"
+                                   Margin="10,0,8,0"
+                                   FontFamily="Segoe UI Variable Display"
+                                   FontWeight="SemiBold"
+                                   FontSize="13"
+                                   Foreground="{StaticResource FluentTextPrimary}" />
+                        <Menu Cursor="Hand"
+                              Background="Transparent"
+                              VerticalAlignment="Center">
+                            <MenuItem Header="&#xE712;"
+                                      FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                                      FontSize="14"
+                                      Foreground="{StaticResource FluentTextSecondary}"
+                                      Padding="6,4,6,4"
+                                      Background="Transparent"
+                                      ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ConfigTooltip'}">
+                                <MenuItem Header="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SaveAsQuickConfig'}" Click="MenuItem_OnClick" />
+                                <MenuItem Header="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SaveConfigAs'}" Click="MenuItemSaveAs_OnClick" />
+                                <Separator />
+                                <MenuItem x:Name="MenuItemOpenCfg" Header="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='OpenQuickConfig'}" />
+                                <MenuItem Header="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='OpenOtherConfig'}" Click="OpenConfig_CLick" />
+                            </MenuItem>
+                        </Menu>
+                    </StackPanel>
+
+                    <!-- Center cluster: quick toggle + monitor select (stays here, modernized) -->
+                    <Border Grid.Column="1"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            CornerRadius="10"
+                            Padding="8,5,8,5"
+                            MinWidth="520"
+                            MinHeight="38"
+                            BorderThickness="1"
+                            BorderBrush="{StaticResource FluentStroke}"
+                            Background="{StaticResource FluentSurface2}">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect BlurRadius="0" Opacity="0" />
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Config.ToggleState.GlobalActive}" Value="True">
+                                        <Setter Property="BorderBrush" Value="{StaticResource FluentAccent}" />
+                                        <Setter Property="Effect">
+                                            <Setter.Value>
+                                                <DropShadowEffect BlurRadius="20"
+                                                                  ShadowDepth="0"
+                                                                  Color="{Binding Path=(poweraim:ApplicationConstants.AccentColor)}"
+                                                                  Opacity="0.6" />
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    x:Name="TopCenterGrid" />
+                    </Border>
+
+                    <!-- Right cluster: search + section badge + window controls -->
+                    <StackPanel Grid.Column="2"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center">
+                        <!-- "Restart as admin" — visible only when PowerAim isn't already elevated.
+                             Needed for DeviceHide / HidHide to actually be able to disable devices. -->
+                        <Button x:Name="RestartAsAdminButton"
+                                Content="&#xE7EF;"
+                                FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                                FontSize="14"
+                                Width="36" Height="36"
+                                Padding="0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Visibility="Collapsed"
+                                Foreground="{StaticResource FluentAccent}"
+                                ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='RestartAsAdminTooltip'}"
+                                WindowChrome.IsHitTestVisibleInChrome="True"
+                                Click="RestartAsAdminButton_Click"
+                                Margin="0,0,4,0" />
+
+                        <!-- Global search lupe -->
+                        <Button x:Name="GlobalSearchButton"
+                                Content="&#xE721;"
+                                FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                                FontSize="14"
+                                Width="36" Height="36"
+                                Padding="0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="{StaticResource FluentTextPrimary}"
+                                ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='FindSettingTooltip'}"
+                                WindowChrome.IsHitTestVisibleInChrome="True"
+                                Click="GlobalSearchButton_Click"
+                                Margin="0,0,8,0" />
+                        <Popup x:Name="GlobalSearchPopup"
+                               Placement="Bottom"
+                               PlacementTarget="{Binding ElementName=GlobalSearchButton}"
+                               HorizontalOffset="-340"
+                               VerticalOffset="4"
+                               AllowsTransparency="True"
+                               PopupAnimation="Fade"
+                               StaysOpen="False">
+                            <Border Background="{StaticResource FluentSurface2}"
+                                    BorderBrush="{StaticResource FluentStroke}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Width="400"
+                                    Padding="8">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="16" ShadowDepth="2" Opacity="0.4" />
+                                </Border.Effect>
+                                <StackPanel>
+                                    <TextBox x:Name="GlobalSearchBox"
+                                             MinHeight="32"
+                                             FontFamily="Segoe UI Variable Text"
+                                             FontSize="13"
+                                             Padding="8,4,8,4"
+                                             Background="{StaticResource FluentSurface3}"
+                                             BorderBrush="{StaticResource FluentStroke}"
+                                             Foreground="{StaticResource FluentTextPrimary}"
+                                             Tag="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SearchSettings'}"
+                                             Style="{DynamicResource placeHolder}"
+                                             TextChanged="GlobalSearchBox_TextChanged"
+                                             KeyDown="GlobalSearchBox_KeyDown" />
+                                    <Border Height="1"
+                                            Background="{StaticResource FluentStroke}"
+                                            Margin="0,6,0,6" />
+                                    <ScrollViewer MaxHeight="360"
+                                                  VerticalScrollBarVisibility="Auto"
+                                                  PanningMode="VerticalOnly">
+                                        <ItemsControl x:Name="GlobalSearchResults" />
+                                    </ScrollViewer>
+                                    <TextBlock x:Name="GlobalSearchHint"
+                                               Foreground="{StaticResource FluentTextTertiary}"
+                                               FontFamily="Segoe UI Variable Small"
+                                               FontSize="11"
+                                               Margin="2,6,2,0"
+                                               Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SearchHint'}" />
+                                </StackPanel>
+                            </Border>
+                        </Popup>
+
+                        <Border CornerRadius="{StaticResource PillCorner}"
+                                Background="{StaticResource FluentSurface3}"
+                                BorderBrush="{StaticResource FluentStroke}"
+                                BorderThickness="1"
+                                Padding="10,4,12,4"
+                                Margin="0,0,8,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Ellipse Width="8" Height="8" Margin="0,0,6,0">
+                                    <Ellipse.Style>
+                                        <Style TargetType="Ellipse">
+                                            <Setter Property="Fill" Value="{StaticResource FluentTextTertiary}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Config.ToggleState.GlobalActive}" Value="True">
+                                                    <Setter Property="Fill" Value="{StaticResource FluentAccent}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
+                                <Label x:Name="SectionLabel"
+                                       Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='MainSection'}"
+                                       Padding="0"
+                                       VerticalAlignment="Center"
+                                       FontFamily="Segoe UI Variable Small"
+                                       FontWeight="SemiBold"
+                                       FontSize="11"
+                                       Foreground="{StaticResource FluentTextSecondary}" />
+                            </StackPanel>
+                        </Border>
+                        <Button x:Name="Minimize"
+                                Content="&#xE921;"
+                                FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                                FontSize="10"
+                                Width="46"
+                                Height="48"
+                                Padding="0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="{StaticResource FluentTextPrimary}"
+                                WindowChrome.IsHitTestVisibleInChrome="True"
+                                Click="Minimize_Click" />
+                        <Button x:Name="Exit"
+                                Content="&#xE8BB;"
+                                FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                                FontSize="10"
+                                Width="46"
+                                Height="48"
+                                Padding="0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="{StaticResource FluentTextPrimary}"
+                                WindowChrome.IsHitTestVisibleInChrome="True"
+                                Click="Exit_Click">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="bd" Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="#E81123" />
+                                                        <Setter Property="Foreground" Value="White" />
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+                <!-- ================= BODY ================= -->
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Sidebar (NavigationView pattern: hamburger toggles compact/expanded) -->
+                    <Grid Grid.Column="0"
+                          x:Name="Sidebar"
+                          Width="48"
+                          Background="{StaticResource FluentSurface2}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Hamburger -->
+                        <Button Grid.Row="0"
+                                x:Name="HamburgerButton"
+                                ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ToggleNavigation'}"
+                                Style="{StaticResource NavItemButton}"
+                                Click="HamburgerButton_Click">
+                            <TextBlock Text="&#xE700;"
+                                       FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                                       FontSize="16"
+                                       Foreground="{StaticResource FluentTextPrimary}"
+                                       Width="40"
+                                       HorizontalAlignment="Left"
+                                       TextAlignment="Center"
+                                       VerticalAlignment="Center" />
+                        </Button>
+
+                        <Grid Grid.Row="1" x:Name="NavRegion" ClipToBounds="True">
+                            <Grid x:Name="MenuHighlighter"
+                                  Height="40"
+                                  VerticalAlignment="Top"
+                                  HorizontalAlignment="Left"
+                                  ClipToBounds="True">
+                                <Border Width="3"
+                                        Height="20"
+                                        CornerRadius="2"
+                                        Background="{StaticResource FluentAccent}"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        Margin="1,0,0,0" />
+                            </Grid>
+                            <DockPanel LastChildFill="False">
+                                <StackPanel DockPanel.Dock="Bottom"
+                                            x:Name="MenuButtonsBottom"
+                                            Margin="0,8,0,8">
+                                    <Border Height="1"
+                                            Background="{StaticResource FluentStroke}"
+                                            Margin="8,0,8,6" />
+                                    <Button x:Name="ButtonGamepadSettings"
+                                            Tag="GamepadSettings"
+                                            ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Gamepad'}"
+                                            Style="{StaticResource NavItemButton}"
+                                            Click="MenuSwitch">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#xE7FC;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Gamepad'}" FontFamily="Segoe UI Variable Text" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="6,0,8,0" />
+                                        </Grid>
+                                    </Button>
+                                    <Button x:Name="Menu5B"
+                                            Tag="Logs"
+                                            ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Logs'}"
+                                            Style="{StaticResource NavItemButton}"
+                                            Click="MenuSwitch">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#xE9D5;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Logs'}" FontFamily="Segoe UI Variable Text" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="6,0,8,0" />
+                                        </Grid>
+                                    </Button>
+                                    <Button x:Name="Menu3B"
+                                            Tag="SettingsMenu"
+                                            ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Settings'}"
+                                            Style="{StaticResource NavItemButton}"
+                                            Click="MenuSwitch">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#xE713;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Settings'}" FontFamily="Segoe UI Variable Text" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="6,0,8,0" />
+                                        </Grid>
+                                    </Button>
+                                    <Button x:Name="MenuHelpB"
+                                            ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DocsHelpTooltip'}"
+                                            Style="{StaticResource NavItemButton}"
+                                            Click="OpenDocumentation_Click">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#xE897;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Help'}" FontFamily="Segoe UI Variable Text" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="6,0,8,0" />
+                                        </Grid>
+                                    </Button>
+                                    <Button x:Name="Menu4B"
+                                            Tag="AboutMenu"
+                                            ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='About'}"
+                                            Visibility="{x:Static poweraim:ApplicationConstants.EasyModeHidden}"
+                                            Style="{StaticResource NavItemButton}"
+                                            Click="MenuSwitch">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#xE946;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='About'}" FontFamily="Segoe UI Variable Text" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="6,0,8,0" />
+                                        </Grid>
+                                    </Button>
+                                </StackPanel>
+                                <StackPanel DockPanel.Dock="Top"
+                                            x:Name="MenuButtons">
+                                    <Button x:Name="Menu1B"
+                                            Tag="AimMenu"
+                                            ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='AimTools'}"
+                                            Style="{StaticResource NavItemButton}"
+                                            Click="MenuSwitch">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#xE726;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='AimTools'}" FontFamily="Segoe UI Variable Text" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="6,0,8,0" />
+                                        </Grid>
+                                    </Button>
+                                    <Button x:Name="ButtonTools"
+                                            Tag="Tools"
+                                            ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Tools'}"
+                                            Style="{StaticResource NavItemButton}"
+                                            Click="MenuSwitch">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#xE90F;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Tools'}" FontFamily="Segoe UI Variable Text" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="6,0,8,0" />
+                                        </Grid>
+                                    </Button>
+                                    <Button x:Name="AutoPlayMenuButton"
+                                            Tag="AutoPlayMenu"
+                                            ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='AutoPlayMenuTooltip'}"
+                                            Style="{StaticResource NavItemButton}"
+                                            Click="MenuSwitch">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#xE768;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='AutoPlay'}" FontFamily="Segoe UI Variable Text" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="6,0,8,0" />
+                                        </Grid>
+                                    </Button>
+                                    <Button x:Name="MappingMenuButton"
+                                            Tag="MappingMenu"
+                                            ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='MappingMenuTooltip'}"
+                                            Style="{StaticResource NavItemButton}"
+                                            Click="MenuSwitch">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#xE765;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Mapping'}" FontFamily="Segoe UI Variable Text" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="6,0,8,0" />
+                                        </Grid>
+                                    </Button>
+                                    <Button x:Name="Menu2B"
+                                            Tag="ModelMenu"
+                                            ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ModelsAndConfigs'}"
+                                            Style="{StaticResource NavItemButton}"
+                                            Click="MenuSwitch">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#xE8E5;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ModelsAndConfigs'}" FontFamily="Segoe UI Variable Text" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="6,0,8,0" />
+                                        </Grid>
+                                    </Button>
+                                </StackPanel>
+                            </DockPanel>
+                        </Grid>
+                    </Grid>
+
+                    <!-- Content -->
+                    <Grid Grid.Column="1" Background="{StaticResource FluentSurface1}">
+                        <ScrollViewer x:Name="AimMenu"
+                                      Padding="20,16,20,16"
+                                      VerticalScrollBarVisibility="Auto"
+                                      PanningMode="VerticalOnly">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <Grid Grid.ColumnSpan="2"
+                                      HorizontalAlignment="Center"
+                                      Visibility="{Binding Path=IsNotModelLoaded, Converter={StaticResource boolToVis }}">
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <TextBlock Foreground="{StaticResource FluentTextSecondary}"
+                                                   Style="{StaticResource FluentBody}"
+                                                   Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NoModelOrNoCaptureSourceError'}" />
+                                    </Border>
+                                </Grid>
+                                <StackPanel x:Name="ASP1"
+                                            Visibility="{Binding Path=IsModelLoaded, Converter={StaticResource boolToVis }}"
+                                            Grid.Column="0"
+                                            Margin="0,0,8,0">
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="AimAssist" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="TriggerBot" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="AntiRecoil" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="ESPConfig" />
+                                    </Border>
+                                </StackPanel>
+                                <StackPanel x:Name="ASP2"
+                                            Grid.Column="1"
+                                            Visibility="{Binding Path=IsModelLoaded, Converter={StaticResource boolToVis }}"
+                                            Margin="8,0,0,0">
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="PredictionConfig" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="AimConfig" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="ARConfig" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="FOVConfig" />
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+                        </ScrollViewer>
+
+                        <ScrollViewer x:Name="ModelMenu"
+                                      Padding="20,16,20,16"
+                                      VerticalScrollBarVisibility="Auto"
+                                      PanningMode="VerticalOnly"
+                                      Visibility="Collapsed">
+                            <StackPanel>
+                                <!-- Segmented toggle: Models / Configs -->
+                                <Border CornerRadius="20"
+                                        Padding="4"
+                                        Background="{StaticResource FluentSurface2}"
+                                        BorderBrush="{StaticResource FluentStroke}"
+                                        BorderThickness="1"
+                                        HorizontalAlignment="Left"
+                                        Margin="0,0,0,12">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button x:Name="SegModels"
+                                                Style="{StaticResource FluentSegmentActive}"
+                                                Click="SegModels_Click"
+                                                Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Models'}" />
+                                        <Button x:Name="SegConfigs"
+                                                Style="{StaticResource FluentSegment}"
+                                                Click="SegConfigs_Click"
+                                                Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Configs'}" />
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Unified search -->
+                                <Border CornerRadius="6"
+                                        Background="{StaticResource FluentSurface3}"
+                                        BorderBrush="{StaticResource FluentStrokeStrong}"
+                                        BorderThickness="1"
+                                        Padding="10,4,10,4"
+                                        Margin="0,0,0,12">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0"
+                                                   Text="&#xE721;"
+                                                   FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                                                   FontSize="14"
+                                                   Foreground="{StaticResource FluentTextSecondary}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,8,0" />
+                                        <TextBox Grid.Column="1"
+                                                 x:Name="UnifiedSearchBox"
+                                                 Tag="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SearchModelsDownloads'}"
+                                                 Style="{DynamicResource placeHolder}"
+                                                 FontFamily="Segoe UI Variable Text"
+                                                 FontSize="13"
+                                                 Padding="0,4,0,4"
+                                                 Background="Transparent"
+                                                 BorderThickness="0"
+                                                 MinHeight="28"
+                                                 Foreground="{StaticResource FluentTextPrimary}"
+                                                 TextChanged="UnifiedSearchBox_TextChanged" />
+                                    </Grid>
+                                </Border>
+
+                                <!-- =================== MODELS GROUP =================== -->
+                                <StackPanel x:Name="ModelsGroup">
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="ModelSettings" />
+                                    </Border>
+
+                                    <!-- Currently loaded -->
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="0"
+                                                    Width="8"
+                                                    Height="8"
+                                                    CornerRadius="4"
+                                                    Background="{StaticResource FluentAccent}"
+                                                    VerticalAlignment="Center"
+                                                    Margin="2,0,10,0" />
+                                            <Label Grid.Column="1"
+                                                   x:Name="SelectedModelNotifier"
+                                                   Foreground="{StaticResource FluentTextPrimary}"
+                                                   FontFamily="Segoe UI Variable Text"
+                                                   FontSize="13"
+                                                   Padding="0"
+                                                   VerticalContentAlignment="Center"
+                                                   Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LoadedModel,N/A'}" />
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Installed Models -->
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel>
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0"
+                                                           Style="{StaticResource FluentSectionTitle}"
+                                                           Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Installed'}" />
+                                                <Button Grid.Column="1"
+                                                        x:Name="OpenFolderB_ModelWindow"
+                                                        Content="&#xE838;"
+                                                        ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='OpenModelsFolder'}"
+                                                        Style="{StaticResource FluentIconButton}"
+                                                        Width="32"
+                                                        Height="32"
+                                                        FontSize="12"
+                                                        Click="OpenFolderB_Click"
+                                                        Tag="models" />
+                                            </Grid>
+                                            <ListBox x:Name="ModelListBox"
+                                                     Background="Transparent"
+                                                     Foreground="{StaticResource FluentTextPrimary}"
+                                                     BorderThickness="0"
+                                                     FontFamily="Segoe UI Variable Text"
+                                                     Padding="0"
+                                                     HorizontalContentAlignment="Stretch">
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Border Grid.Column="0"
+                                                                    Width="6"
+                                                                    Height="6"
+                                                                    CornerRadius="3"
+                                                                    Background="{StaticResource FluentAccent}"
+                                                                    Margin="2,0,10,0"
+                                                                    VerticalAlignment="Center" />
+                                                            <TextBlock Grid.Column="1"
+                                                                       Text="{Binding}"
+                                                                       VerticalAlignment="Center"
+                                                                       TextTrimming="CharacterEllipsis" />
+                                                            <uiLibrary:AKeyChanger Grid.Column="2"
+                                                                                   KeyConfigName="{Binding}"
+                                                                                   Tag="{Binding}"
+                                                                                   KeyConfigPrefix="MODEL"
+                                                                                   BindingManager="{Binding DataContext.BindingManager, RelativeSource={RelativeSource AncestorType=poweraim:MainWindow}}"
+                                                                                   MouseDown="UIElement_OnMouseDown"
+                                                                                   GlobalKeyPressed="AKeyChanger_ModelOnGlobalKeyPressed"
+                                                                                   WithBorder="False"
+                                                                                   Text="" />
+                                                            <Button Grid.Column="3"
+                                                                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DeleteModel'}"
+                                                                    Style="{StaticResource FluentIconButton}"
+                                                                    Content="&#xE74D;"
+                                                                    Tag="{Binding}"
+                                                                    MouseDown="UIElement_OnMouseDown"
+                                                                    Click="DeleteModel_Click"
+                                                                    Width="32"
+                                                                    Height="32" />
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Available to download -->
+                                    <Border Style="{StaticResource FluentCard}"
+                                            Visibility="{x:Static poweraim:ApplicationConstants.EasyModeHidden}">
+                                        <StackPanel>
+                                            <TextBlock Style="{StaticResource FluentSectionTitle}"
+                                                       Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DownloadableModels'}" />
+                                            <Label x:Name="LackOfModelsText"
+                                                   Visibility="Collapsed"
+                                                   HorizontalContentAlignment="Center"
+                                                   Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NoDownloadableModelAvailable'}"
+                                                   Foreground="{StaticResource FluentTextSecondary}" />
+                                            <StackPanel x:Name="ModelStoreScroller" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+
+                                <!-- =================== CONFIGS GROUP =================== -->
+                                <StackPanel x:Name="ConfigsGroup" Visibility="Collapsed">
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="ConfigSettings" />
+                                    </Border>
+
+                                    <!-- Currently loaded -->
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="0"
+                                                    Width="8"
+                                                    Height="8"
+                                                    CornerRadius="4"
+                                                    Background="{StaticResource FluentAccent}"
+                                                    VerticalAlignment="Center"
+                                                    Margin="2,0,10,0" />
+                                            <Label Grid.Column="1"
+                                                   x:Name="SelectedConfigNotifier"
+                                                   Foreground="{StaticResource FluentTextPrimary}"
+                                                   FontFamily="Segoe UI Variable Text"
+                                                   FontSize="13"
+                                                   Padding="0"
+                                                   VerticalContentAlignment="Center"
+                                                   Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LoadedConfig,N/A'}" />
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Installed Configs -->
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel>
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0"
+                                                           Style="{StaticResource FluentSectionTitle}"
+                                                           Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Installed'}" />
+                                                <Button Grid.Column="1"
+                                                        x:Name="OpenFolderB_ConfigWindow"
+                                                        Content="&#xE838;"
+                                                        ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='OpenConfigsFolder'}"
+                                                        Style="{StaticResource FluentIconButton}"
+                                                        Width="32"
+                                                        Height="32"
+                                                        FontSize="12"
+                                                        Click="OpenFolderB_Click"
+                                                        Tag="configs" />
+                                            </Grid>
+                                            <ListBox x:Name="ConfigsListBox"
+                                                     Background="Transparent"
+                                                     Foreground="{StaticResource FluentTextPrimary}"
+                                                     BorderThickness="0"
+                                                     FontFamily="Segoe UI Variable Text"
+                                                     HorizontalContentAlignment="Stretch"
+                                                     Padding="0">
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Border Grid.Column="0"
+                                                                    Width="6"
+                                                                    Height="6"
+                                                                    CornerRadius="3"
+                                                                    Background="{StaticResource FluentAccent}"
+                                                                    Margin="2,0,10,0"
+                                                                    VerticalAlignment="Center" />
+                                                            <TextBlock Grid.Column="1"
+                                                                       Text="{Binding}"
+                                                                       VerticalAlignment="Center"
+                                                                       TextTrimming="CharacterEllipsis" />
+                                                            <uiLibrary:AKeyChanger Grid.Column="2"
+                                                                                   KeyConfigName="{Binding}"
+                                                                                   Tag="{Binding}"
+                                                                                   KeyConfigPrefix="CONFIG"
+                                                                                   BindingManager="{Binding DataContext.BindingManager, RelativeSource={RelativeSource AncestorType=poweraim:MainWindow}}"
+                                                                                   MouseDown="UIElement_OnMouseDown"
+                                                                                   GlobalKeyPressed="AKeyChanger_ConfigOnGlobalKeyPressed"
+                                                                                   WithBorder="False"
+                                                                                   Text="" />
+                                                            <Button Grid.Column="3"
+                                                                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DeleteConfig'}"
+                                                                    Style="{StaticResource FluentIconButton}"
+                                                                    Content="&#xE74D;"
+                                                                    Tag="{Binding}"
+                                                                    MouseDown="UIElement_OnMouseDown"
+                                                                    Click="DeleteConfig_Click"
+                                                                    Width="32"
+                                                                    Height="32" />
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Available to download -->
+                                    <Border Style="{StaticResource FluentCard}"
+                                            Visibility="{x:Static poweraim:ApplicationConstants.EasyModeHidden}">
+                                        <StackPanel>
+                                            <TextBlock Style="{StaticResource FluentSectionTitle}"
+                                                       Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DownloadableConfigs'}" />
+                                            <Label x:Name="LackOfConfigsText"
+                                                   Visibility="Collapsed"
+                                                   HorizontalContentAlignment="Center"
+                                                   Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NoDownloadableConfigAvailable'}"
+                                                   Foreground="{StaticResource FluentTextSecondary}" />
+                                            <StackPanel x:Name="ConfigStoreScroller" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <ScrollViewer x:Name="SettingsMenu"
+                                      Visibility="Collapsed"
+                                      Padding="20,16,20,16"
+                                      VerticalScrollBarVisibility="Auto"
+                                      PanningMode="VerticalOnly">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="UISettings" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="CaptureSettings" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="ActiveProcessesSettings" />
+                                    </Border>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="InputSettings" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="OverlaySettings" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="StatsCard" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="HudOcrCard" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="ReplayCard" />
+                                    </Border>
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="LearningCard" />
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+                        </ScrollViewer>
+
+                        <ScrollViewer x:Name="GamepadSettings"
+                                      Visibility="Collapsed"
+                                      Padding="20,16,20,16"
+                                      VerticalScrollBarVisibility="Auto"
+                                      PanningMode="VerticalOnly">
+                            <Border Style="{StaticResource FluentCard}">
+                                <StackPanel x:Name="GamepadSettingsConfig" />
+                            </Border>
+                        </ScrollViewer>
+
+                        <ScrollViewer x:Name="Tools"
+                                      Visibility="Collapsed"
+                                      Padding="20,16,20,16"
+                                      VerticalScrollBarVisibility="Auto"
+                                      PanningMode="VerticalOnly">
+                            <Border Style="{StaticResource FluentCard}">
+                                <StackPanel x:Name="ToolsConfig" />
+                            </Border>
+                        </ScrollViewer>
+
+                        <ScrollViewer x:Name="Logs"
+                                      Visibility="Collapsed"
+                                      Padding="20,16,20,16"
+                                      VerticalScrollBarVisibility="Auto"
+                                      PanningMode="VerticalOnly">
+                            <Border Style="{StaticResource FluentCard}" Padding="14">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <DockPanel HorizontalAlignment="Stretch">
+                                        <TextBlock DockPanel.Dock="Left"
+                                                   Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Logs'}"
+                                                   Style="{StaticResource FluentSectionTitle}"
+                                                   FontSize="16"
+                                                   VerticalAlignment="Center"
+                                                   Margin="2,0,0,0" />
+                                        <Button DockPanel.Dock="Right"
+                                                ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ClearLogs'}"
+                                                HorizontalAlignment="Right"
+                                                Style="{StaticResource FluentIconButton}"
+                                                Content="&#xE75C;"
+                                                Width="36"
+                                                Click="ClearLogs_Click" />
+                                    </DockPanel>
+                                    <TextBox x:Name="OutputTextBox"
+                                             Grid.Row="1"
+                                             Background="Transparent"
+                                             BorderThickness="0"
+                                             Foreground="{StaticResource FluentTextPrimary}"
+                                             FontFamily="Cascadia Mono,Consolas"
+                                             FontSize="12"
+                                             Margin="0,10,0,0"
+                                             VerticalAlignment="Stretch"
+                                             HorizontalAlignment="Stretch"
+                                             VerticalScrollBarVisibility="Auto"
+                                             TextWrapping="Wrap"
+                                             IsReadOnly="True" />
+                                </Grid>
+                            </Border>
+                        </ScrollViewer>
+
+                        <ScrollViewer x:Name="AboutMenu"
+                                      Visibility="Collapsed"
+                                      Padding="20,16,20,16"
+                                      VerticalScrollBarVisibility="Auto"
+                                      PanningMode="VerticalOnly">
+                            <StackPanel>
+                                <Border Style="{StaticResource FluentCard}" Padding="20" HorizontalAlignment="Center">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <Image x:Name="AboutAppLogo"
+                                               Source="/PowerAim.png"
+                                               Width="96"
+                                               Height="96"
+                                               HorizontalAlignment="Center"
+                                               Margin="0,4,0,12"
+                                               Stretch="Uniform"
+                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                        <Label x:Name="AboutName"
+                                               Content="{x:Static poweraim:ApplicationConstants.ApplicationSlogan}"
+                                               Foreground="{StaticResource FluentTextPrimary}"
+                                               FontFamily="Segoe UI Variable Display"
+                                               FontWeight="SemiBold"
+                                               HorizontalAlignment="Center"
+                                               FontSize="18"
+                                               Padding="0" />
+                                        <Label x:Name="AboutDesc"
+                                               Content="{x:Static poweraim:ApplicationConstants.ApplicationVersionStr}"
+                                               Foreground="{StaticResource FluentTextSecondary}"
+                                               FontFamily="Segoe UI Variable Text"
+                                               HorizontalAlignment="Center"
+                                               FontSize="12"
+                                               Padding="0,2,0,0" />
+                                        <Label x:Name="AboutSpecs"
+                                               Content="Intel I5-13400F • NVIDIA GTX 1050"
+                                               Foreground="{StaticResource FluentTextTertiary}"
+                                               FontFamily="Segoe UI Variable Small"
+                                               HorizontalAlignment="Center"
+                                               FontSize="11"
+                                               Padding="0,4,0,0" />
+                                        <Label Content="{x:Static poweraim:ApplicationConstants.ApplicationInfo}"
+                                               Foreground="{StaticResource FluentTextTertiary}"
+                                               FontFamily="Segoe UI Variable Small"
+                                               HorizontalAlignment="Center"
+                                               FontSize="10"
+                                               Padding="0,2,0,0" />
+                                        <StackPanel Orientation="Horizontal"
+                                                    HorizontalAlignment="Center"
+                                                    Margin="0,14,0,0">
+                                            <Button x:Name="CheckForUpdates"
+                                                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='CheckForUpdate'}"
+                                                    Style="{StaticResource FluentAccentButton}"
+                                                    MinWidth="140"
+                                                    Click="CheckForUpdates_Click" />
+                                            <Button Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ShowKnownIssues'}"
+                                                    Style="{StaticResource FluentStandardButton}"
+                                                    MinWidth="140"
+                                                    Margin="8,0,0,0"
+                                                    Click="ShowKnownIssues_Click" />
+                                        </StackPanel>
+                                        <Label HorizontalAlignment="Center"
+                                               Foreground="{StaticResource FluentTextSecondary}"
+                                               x:Name="UpdateCheckStatusLabel"
+                                               Content="" />
+                                    </StackPanel>
+                                </Border>
+                                <StackPanel x:Name="CreditsPanel" Margin="0,10,0,0" />
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <ScrollViewer x:Name="AutoPlayMenu"
+                                      Visibility="Collapsed"
+                                      Padding="20,16,20,16"
+                                      VerticalScrollBarVisibility="Auto"
+                                      PanningMode="VerticalOnly">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="AutoPlayConfig" />
+                                    </Border>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                    <Border Style="{StaticResource FluentCard}">
+                                        <StackPanel x:Name="AutoPlayProfiles" />
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+                        </ScrollViewer>
+
+                        <ScrollViewer x:Name="GamepadTestPage"
+                                      Visibility="Collapsed"
+                                      Padding="20,16,20,16"
+                                      VerticalScrollBarVisibility="Disabled"
+                                      HorizontalScrollBarVisibility="Disabled">
+                            <uiLibrary:GamepadTesterPanel x:Name="GamepadTester" />
+                        </ScrollViewer>
+
+                        <ScrollViewer x:Name="HiddenControllersPage"
+                                      Visibility="Collapsed"
+                                      Padding="20,16,20,16"
+                                      VerticalScrollBarVisibility="Auto"
+                                      PanningMode="VerticalOnly">
+                            <Border Style="{StaticResource FluentCard}">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button Grid.Column="0"
+                                                Style="{StaticResource FluentStandardButton}"
+                                                Padding="10,6,12,6"
+                                                Margin="0,0,12,0"
+                                                Click="BackToGamepadSettings_Click">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Back'}" Margin="6,0,0,0" VerticalAlignment="Center" FontFamily="Segoe UI Variable Text" FontSize="13" />
+                                            </StackPanel>
+                                        </Button>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='HiddenControllers'}"
+                                                   Foreground="{DynamicResource FluentTextPrimary}"
+                                                   FontFamily="Segoe UI Variable Display"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="18"
+                                                   VerticalAlignment="Center" />
+                                    </Grid>
+                                    <uiLibrary:HiddenControllersPanel />
+                                </StackPanel>
+                            </Border>
+                        </ScrollViewer>
+
+                        <visuality1:MappingPage x:Name="MappingMenu" Visibility="Collapsed" />
+
+                        <Grid x:Name="TriggerEditPage" Visibility="Collapsed">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Border Grid.Row="0"
+                                    Background="{StaticResource FluentSurface1}"
+                                    BorderBrush="{StaticResource FluentStroke}"
+                                    BorderThickness="0,0,0,1"
+                                    Padding="20,12,20,12">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Button Grid.Column="0"
+                                            Style="{StaticResource FluentStandardButton}"
+                                            Click="TriggerEditBack_Click"
+                                            Padding="10,6,12,6">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Back'}" Margin="6,0,0,0" VerticalAlignment="Center" FontFamily="Segoe UI Variable Text" FontSize="13" />
+                                        </StackPanel>
+                                    </Button>
+                                    <StackPanel Grid.Column="1"
+                                                Orientation="Horizontal"
+                                                Margin="14,0,0,0"
+                                                VerticalAlignment="Center">
+                                        <TextBlock x:Name="TriggerEditTitle"
+                                                   Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='EditTrigger'}"
+                                                   Foreground="{DynamicResource FluentTextPrimary}"
+                                                   FontFamily="Segoe UI Variable Display"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="18" />
+                                        <TextBlock x:Name="TriggerEditName"
+                                                   Margin="8,0,0,0"
+                                                   Foreground="{DynamicResource FluentAccent}"
+                                                   FontFamily="Segoe UI Variable Display"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="18"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   MaxWidth="380" />
+                                        <TextBlock x:Name="TriggerEditDirty"
+                                                   Text=" *"
+                                                   Foreground="{DynamicResource FluentAccent}"
+                                                   FontFamily="Segoe UI Variable Display"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="18"
+                                                   Visibility="Collapsed" />
+                                    </StackPanel>
+                                    <Button Grid.Column="2"
+                                            x:Name="TriggerEditCancel"
+                                            Style="{StaticResource FluentStandardButton}"
+                                            Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Cancel'}"
+                                            MinWidth="90"
+                                            Margin="0,0,8,0"
+                                            Click="TriggerEditCancel_Click" />
+                                    <Button Grid.Column="3"
+                                            x:Name="TriggerEditSave"
+                                            Style="{StaticResource FluentAccentButton}"
+                                            Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Save'}"
+                                            MinWidth="100"
+                                            Click="TriggerEditSave_Click" />
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1"
+                                          Padding="20,16,20,16"
+                                          VerticalScrollBarVisibility="Auto"
+                                          PanningMode="VerticalOnly">
+                                <ContentControl x:Name="TriggerEditorHost" />
+                            </ScrollViewer>
+                        </Grid>
+
+                        <!-- Mapping editor page (analog to TriggerEditPage) -->
+                        <Grid x:Name="MappingEditPage" Visibility="Collapsed">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Border Grid.Row="0"
+                                    Background="{StaticResource FluentSurface1}"
+                                    BorderBrush="{StaticResource FluentStroke}"
+                                    BorderThickness="0,0,0,1"
+                                    Padding="20,12,20,12">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Button Grid.Column="0"
+                                            Style="{StaticResource FluentStandardButton}"
+                                            Click="MappingEditBack_Click"
+                                            Padding="10,6,12,6">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Back'}" Margin="6,0,0,0" VerticalAlignment="Center" FontFamily="Segoe UI Variable Text" FontSize="13" />
+                                        </StackPanel>
+                                    </Button>
+                                    <StackPanel Grid.Column="1"
+                                                Orientation="Horizontal"
+                                                Margin="14,0,0,0"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='MappingProfileLabel'}"
+                                                   Foreground="{DynamicResource FluentTextPrimary}"
+                                                   FontFamily="Segoe UI Variable Display"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="18" />
+                                        <TextBlock x:Name="MappingEditName"
+                                                   Margin="8,0,0,0"
+                                                   Foreground="{DynamicResource FluentAccent}"
+                                                   FontFamily="Segoe UI Variable Display"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="18"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   MaxWidth="380" />
+                                        <TextBlock x:Name="MappingEditDirty"
+                                                   Text=" *"
+                                                   Foreground="{DynamicResource FluentAccent}"
+                                                   FontFamily="Segoe UI Variable Display"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="18"
+                                                   Visibility="Collapsed" />
+                                    </StackPanel>
+                                    <Button Grid.Column="2"
+                                            Style="{StaticResource FluentStandardButton}"
+                                            Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Discard'}"
+                                            MinWidth="90"
+                                            Margin="0,0,8,0"
+                                            Click="MappingEditCancel_Click" />
+                                    <Button Grid.Column="3"
+                                            Style="{StaticResource FluentAccentButton}"
+                                            Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Save'}"
+                                            MinWidth="100"
+                                            Click="MappingEditSave_Click" />
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1"
+                                          Padding="20,16,20,16"
+                                          VerticalScrollBarVisibility="Auto"
+                                          PanningMode="VerticalOnly">
+                                <uiLibrary:MappingEdit x:Name="MappingEditor" />
+                            </ScrollViewer>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- ================= STATUS BAR ================= -->
+        <Border Grid.Row="1"
+                Background="{StaticResource FluentSurface2}"
+                BorderBrush="{StaticResource FluentStroke}"
+                BorderThickness="0,1,0,0"
+                Height="30">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0"
+                        Style="{StaticResource FluentSubtleButton}"
+                        HorizontalContentAlignment="Left"
+                        HorizontalAlignment="Left"
+                        Padding="14,2,12,2"
+                        FontSize="11"
+                        Foreground="{StaticResource FluentTextSecondary}"
+                        Click="OpenConfig_CLick"
+                        Content="{Binding Config.Path}" />
+                <Menu Grid.Column="1"
+                      Cursor="Hand"
+                      Background="Transparent"
+                      VerticalAlignment="Center"
+                      Margin="0,0,14,0"
+                      Height="22">
+                    <MenuItem MaxHeight="120"
+                              x:Name="ModelContextMenu"
+                              FontSize="11"
+                              FontFamily="Segoe UI Variable Small"
+                              Header="{Binding Config.LastLoadedModel}"
+                              Foreground="{StaticResource FluentTextSecondary}"
+                              Padding="6,2,6,2"
+                              VerticalAlignment="Top"
+                              Height="22">
+                        <MenuItem Header="Bold" />
+                    </MenuItem>
+                </Menu>
+            </Grid>
+        </Border>
+    </Grid>
+</visuality1:BaseDialog>

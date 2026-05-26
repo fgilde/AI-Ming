@@ -1,0 +1,137 @@
+<visuality:BaseDialog x:Class="Visuality.ProcessPickerDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Visuality"
+        xmlns:converter="clr-namespace:PowerAim.Converter"
+        xmlns:visuality="clr-namespace:PowerAim.Visuality"
+        mc:Ignorable="d"
+        Title="Select Process"
+        Height="440"
+        Width="520"
+        WindowStyle="None"
+        Topmost="True"
+        ResizeMode="CanResizeWithGrip"
+        WindowStartupLocation="CenterScreen"
+        AllowsTransparency="False"
+        Background="{StaticResource FluentSurface1}">
+    <Window.Resources>
+        <converter:AddConverter x:Key="AddConverter" />
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Titlebar -->
+        <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="Border_MouseLeftButtonDown">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0">
+                <TextBlock Text="&#xEE57;"
+                           FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                           Foreground="{DynamicResource FluentAccent}"
+                           FontSize="14"
+                           VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SelectProcess'}"
+                           Margin="10,0,0,0"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource FluentTextPrimary}"
+                           FontFamily="Segoe UI Variable Display"
+                           FontWeight="SemiBold"
+                           FontSize="13" />
+            </StackPanel>
+            <Button x:Name="Exit"
+                    Content="&#xE8BB;"
+                    HorizontalAlignment="Right"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    BorderThickness="0"
+                    Foreground="{DynamicResource FluentTextPrimary}"
+                    FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                    Width="46"
+                    Height="40"
+                    Padding="0"
+                    FontSize="10"
+                    VerticalAlignment="Top"
+                    Click="Exit_Click">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd" Background="{TemplateBinding Background}">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#E81123" />
+                                            <Setter Property="Foreground" Value="White" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </Grid>
+
+        <!-- Help text -->
+        <TextBlock Grid.Row="1"
+                   Margin="14,0,14,8"
+                   Foreground="{DynamicResource FluentTextSecondary}"
+                   FontFamily="Segoe UI Variable Small"
+                   FontSize="12"
+                   TextWrapping="Wrap"
+                   Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SelectProcessHelp'}" />
+
+        <!-- Process list -->
+        <Border Grid.Row="2" Style="{StaticResource FluentCard}" Margin="14,0,14,8" Padding="2">
+            <ListBox x:Name="ProcessListBox"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     Foreground="{DynamicResource FluentTextPrimary}"
+                     FontFamily="Segoe UI Variable Text"
+                     FontSize="13"
+                     SelectionChanged="ProcessListBox_OnSelectionChanged"
+                     MouseDoubleClick="ProcessListBox_MouseDoubleClick">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="2,2,2,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Foreground="{DynamicResource FluentTextPrimary}"
+                                       Text="{Binding MainWindowTitle}"
+                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock Grid.Column="1"
+                                       Foreground="{DynamicResource FluentTextTertiary}"
+                                       Text="{Binding Id}"
+                                       Margin="8,0,0,0" />
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+
+        <!-- Action buttons -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,14,14">
+            <Button x:Name="CancelButton"
+                    Style="{StaticResource FluentStandardButton}"
+                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Cancel'}"
+                    MinWidth="90"
+                    Margin="0,0,8,0"
+                    Click="Exit_Click" />
+            <Button x:Name="ApplyButton"
+                    Style="{StaticResource FluentAccentButton}"
+                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Confirm'}"
+                    IsEnabled="False"
+                    MinWidth="100"
+                    Click="Confirm_Click" />
+        </StackPanel>
+    </Grid>
+</visuality:BaseDialog>

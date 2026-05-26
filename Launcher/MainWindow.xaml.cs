@@ -55,14 +55,26 @@ namespace Launcher
                 if (SetField(ref _selectedRelease, value))
                 {
                     CheckCudaAvailability();
+                    OnPropertyChanged(nameof(CanInstall));
+                    OnPropertyChanged(nameof(SelectedReleaseLabel));
                 }
             }
         }
 
+        /// <summary>Text shown in the version-picker dropdown button.</summary>
+        public string SelectedReleaseLabel => SelectedRelease?.TagName ?? "Select a version…";
+
+        /// <summary>Install button is enabled only when a release is selected and the window is closable.</summary>
+        public bool CanInstall => SelectedRelease != null && CanClose;
+
         public bool CanClose
         {
             get => _canClose;
-            set => SetField(ref _canClose, value);
+            set
+            {
+                if (SetField(ref _canClose, value))
+                    OnPropertyChanged(nameof(CanInstall));
+            }
         }
 
         public bool Installing
@@ -135,6 +147,10 @@ namespace Launcher
         {
             await ReleaseManager.LoadReleasesAsync(Releases);
             SelectedRelease = Releases.FirstOrDefault();
+            if (Releases.Count == 0 && !string.IsNullOrEmpty(ReleaseManager.LastError))
+            {
+                Status = ReleaseManager.LastError;
+            }
         }
 
 
@@ -225,6 +241,19 @@ namespace Launcher
         private void MainWindow_OnClosing(object? sender, CancelEventArgs e)
         {
             e.Cancel = !CanClose;
+        }
+
+        /// <summary>
+        ///     Close the version-picker popup once the user picks a release. The popup's
+        ///     <c>IsOpen</c> is bound to <c>VersionDropToggle.IsChecked</c>, so unchecking the
+        ///     toggle closes the popup.
+        /// </summary>
+        private void VersionList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (sender is System.Windows.Controls.ListBox lb && lb.SelectedItem != null)
+            {
+                VersionDropToggle.IsChecked = false;
+            }
         }
     }
 }

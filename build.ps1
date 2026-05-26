@@ -5,28 +5,44 @@ param(
 
 # Call this script with "powershell -ExecutionPolicy Bypass -File .\build.ps1"
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$outputDir = Join-Path $scriptDir "Aimmy2/bin/Release"
+$outputDir = Join-Path $scriptDir "PowerAim/bin/Release"
 
-# Funktion f�r das Erstellen mit oder ohne CUDA
+# Funktion für das Erstellen mit oder ohne CUDA.
+# Note: we publish each executable project EXPLICITLY (PowerAim + Launcher) instead of running
+# `dotnet publish` from the solution root. The solution-wide publish picks up Core.csproj too,
+# which is a library — `PublishSingleFile=true` on a library produces error NETSDK1099 and
+# pollutes the build output. Targeting projects explicitly is the supported approach.
 function Build-ProjectWithCuda {
     param(
         [bool]$isCuda
     )
 
-    # Setze die IsCuda Variable
     $isCudaValue = if ($isCuda) { "true" } else { "false" }
 
-    # Clean and Build das Projekt mit der IsCuda Variable
+    # Common publish args. Self-contained=false keeps the .exe small (relies on the user's
+    # installed .NET runtime). The csproj also has <SelfContained>true</SelfContained> but the
+    # command-line override wins, matching the previous build behaviour.
+    $commonArgs = @(
+        '-c', 'Release',
+        '-r', 'win-x64',
+        '-p:PublishSingleFile=true',
+        '--self-contained', 'false',
+        '-p:DebugType=None',
+        "-p:IsCuda=$isCudaValue"
+    )
+    if ($isCuda) { $commonArgs += '-p:DefineConstants=IsCuda' }
+
     dotnet clean --configuration Release
-    if($isCuda) {
-        dotnet publish -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None -p:IsCuda=$isCudaValue -p:DefineConstants="IsCuda"
-	    #dotnet publish Aimmy2/Aimmy2.csproj -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None -p:IsCuda=$isCudaValue -p:DefineConstants="IsCuda"
-	    #dotnet publish Launcher/Launcher.csproj -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None -p:IsCuda=$isCudaValue -p:DefineConstants="IsCuda"
-	} else {
-		dotnet publish -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None -p:IsCuda=$isCudaValue
-		#dotnet publish Aimmy2/Aimmy2.csproj -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None -p:IsCuda=$isCudaValue
-		#dotnet publish Launcher/Launcher.csproj -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None -p:IsCuda=$isCudaValue
-	}       
+
+    Write-Host ""
+    Write-Host "Publishing PowerAim (IsCuda=$isCudaValue) ..."
+    dotnet publish PowerAim/PowerAim.csproj @commonArgs
+    if ($LASTEXITCODE -ne 0) { throw "PowerAim publish failed with exit code $LASTEXITCODE" }
+
+    Write-Host ""
+    Write-Host "Publishing Launcher (IsCuda=$isCudaValue) ..."
+    dotnet publish Launcher/Launcher.csproj @commonArgs
+    if ($LASTEXITCODE -ne 0) { throw "Launcher publish failed with exit code $LASTEXITCODE" }
 }
 
 # Check if the output directory exists and delete it
@@ -41,7 +57,7 @@ if (Test-Path $outputDir) {
 dotnet clean --configuration Release
 
 # Get the Assembly name and version from the .csproj file
-$csprojPath = Join-Path $scriptDir "Aimmy2/Aimmy2.csproj"
+$csprojPath = Join-Path $scriptDir "PowerAim/PowerAim.csproj"
 [xml]$csproj = Get-Content $csprojPath
 
 $assemblyName = [string]$csproj.Project.PropertyGroup.AssemblyName
@@ -120,10 +136,43 @@ if ($versionUpdated) {
     Write-Host "old version: $oldversion |"
     Write-Host "Saving the updated .csproj file."
     Write-Host "Current version: $currentVersion"
-    
+
     Replace-Version -oldVersion $oldversion -newVersion $currentVersion -filePath $csprojPath
     Write-Host "Updated .csproj file saved with version $currentVersion"
 }
+
+# ------------------------------------------------------------
+# Rotate AssemblyName from the central Names array in Core/Constants.cs
+# ------------------------------------------------------------
+function Get-RandomAssemblyName {
+    $constantsPath = Join-Path $scriptDir "Core/Constants.cs"
+    if (-not (Test-Path $constantsPath)) {
+        return "PowerAim"
+    }
+    $content = Get-Content $constantsPath -Raw
+    $match = [regex]::Match($content, 'Names\s*=\s*new\[\]\s*\{([^}]+)\}|Names\s*=\s*\{([^}]+)\}', 'Singleline')
+    if (-not $match.Success) {
+        return "PowerAim"
+    }
+    $block = if ($match.Groups[1].Value) { $match.Groups[1].Value } else { $match.Groups[2].Value }
+    $entries = [regex]::Matches($block, '"([^"]+)"')
+    if ($entries.Count -eq 0) { return "PowerAim" }
+    $pick = $entries[(Get-Random -Maximum $entries.Count)].Groups[1].Value
+    # Strip spaces and quotes so the produced .exe filename stays clean
+    return ($pick -replace '\s+', '' -replace "[''""`]", '')
+}
+
+function Replace-AssemblyName {
+    param([string]$newName, [string]$filePath)
+    $content = Get-Content $filePath -Raw
+    $new = $content -replace '<AssemblyName>[^<]+</AssemblyName>', "<AssemblyName>$newName</AssemblyName>"
+    $new | Out-File -FilePath $filePath -Encoding utf8 -NoNewline
+}
+
+$pickedAssemblyName = Get-RandomAssemblyName
+Write-Host ""
+Write-Host "Picked random AssemblyName for this build: $pickedAssemblyName"
+Replace-AssemblyName -newName $pickedAssemblyName -filePath $csprojPath
 
 # Normal Build
 $buildSucceeded = $true
@@ -137,7 +186,7 @@ try {
 }
 
 if ($buildSucceeded) {
-    $paths = @("net8.0-windows", "win-x64", "publish")
+    $paths = @("net10.0-windows", "win-x64", "publish")
     $zipContent = $outputDir
     foreach ($path in $paths) {
         $zipContent = Join-Path $zipContent $path

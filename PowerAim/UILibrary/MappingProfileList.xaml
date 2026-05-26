@@ -1,0 +1,100 @@
+<UserControl x:Class="PowerAim.UILibrary.MappingProfileList"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:uiLibrary="clr-namespace:PowerAim.UILibrary"
+             xmlns:poweraim="clr-namespace:PowerAim"
+             xmlns:localizations="clr-namespace:PowerAim.Localizations"
+             mc:Ignorable="d"
+             d:DesignHeight="300" d:DesignWidth="600">
+    <Border BorderThickness="0" Background="Transparent">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <ListBox x:Name="ProfilesBox"
+                     ItemsSource="{Binding Profiles}"
+                     Foreground="{DynamicResource FluentTextPrimary}"
+                     FontFamily="Segoe UI Variable Text"
+                     Margin="0" Padding="2"
+                     HorizontalContentAlignment="Stretch">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0">
+                                <TextBlock Text="{Binding Name}"
+                                           Foreground="{DynamicResource FluentTextPrimary}"
+                                           FontWeight="SemiBold"
+                                           FontSize="14"
+                                           TextTrimming="CharacterEllipsis" />
+                                <TextBlock Foreground="{DynamicResource FluentTextSecondary}"
+                                           FontFamily="Segoe UI Variable Small"
+                                           FontSize="11"
+                                           TextTrimming="CharacterEllipsis"
+                                           Text="{Binding MatchProcess, StringFormat={x:Static poweraim:Locale.MatchPrefix}}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <uiLibrary:AKeyChanger KeyConfigName="{Binding Id}"
+                                                       Tag="{Binding}"
+                                                       KeyConfigPrefix="MAPPING_PROFILE"
+                                                       BindingManager="{Binding DataContext.BindingManager, RelativeSource={RelativeSource AncestorType=poweraim:MainWindow}}"
+                                                       MouseDown="SwallowMouse"
+                                                       GlobalKeyPressed="ApplyBindingEnabled"
+                                                       WithBorder="False"
+                                                       Text="" />
+                                <uiLibrary:AToggle BorderBrush="Transparent" Text=""
+                                                   Checked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}" />
+                                <Button Style="{StaticResource FluentIconButton}"
+                                        ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Edit'}"
+                                        Tag="{Binding}"
+                                        Click="EditProfile_Click"
+                                        Foreground="{DynamicResource FluentTextPrimary}"
+                                        Content="&#xEB7E;"
+                                        Padding="0" FontSize="20" Width="50" />
+                                <Button Style="{StaticResource FluentIconButton}"
+                                        ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Duplicate'}"
+                                        Tag="{Binding}"
+                                        Click="DuplicateProfile_Click"
+                                        Foreground="{DynamicResource FluentTextPrimary}"
+                                        Content="&#xE8C8;"
+                                        Padding="0" FontSize="20" Width="50" />
+                                <Button Style="{StaticResource FluentIconButton}"
+                                        ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Delete'}"
+                                        Tag="{Binding}"
+                                        Click="DeleteProfile_Click"
+                                        Foreground="{DynamicResource FluentTextPrimary}"
+                                        Content="&#xE74D;"
+                                        Padding="0" FontSize="20" Width="50" />
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <Grid Grid.Row="1">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="NewProfileBtn"
+                            Style="{StaticResource FluentAccentButton}"
+                            Padding="14,4,14,4"
+                            MinHeight="34"
+                            Margin="0,8,0,0"
+                            Click="NewProfileBtn_Click"
+                            ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NewProfileTooltip'}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NewProfile'}" VerticalAlignment="Center" />
+                            <TextBlock Text=" ▾"
+                                       Margin="6,0,0,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="12" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

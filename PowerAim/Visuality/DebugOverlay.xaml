@@ -1,0 +1,87 @@
+<Window x:Class="PowerAim.Visuality.DebugOverlay"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Topmost="True"
+        ShowActivated="False"
+        IsHitTestVisible="False"
+        Focusable="False"
+        SizeToContent="WidthAndHeight"
+        Left="16" Top="16"
+        Title="PowerAim Debug">
+    <Window.Resources>
+        <!-- StaticResource resolution is order-sensitive: this block MUST precede the content
+             that references DebugLabel / DebugValue. Don't move it to the bottom. -->
+        <Style x:Key="DebugLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#9999A6" />
+            <Setter Property="FontFamily" Value="Segoe UI Variable Small" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Margin" Value="0,1,12,1" />
+        </Style>
+        <Style x:Key="DebugValue" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="FontFamily" Value="Cascadia Mono,Consolas,Courier New" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="Margin" Value="0,1,0,1" />
+        </Style>
+    </Window.Resources>
+    <Border Background="#CC1A1A22"
+            BorderBrush="#3E3E4A"
+            BorderThickness="1"
+            CornerRadius="6"
+            Padding="10,8,12,8">
+        <StackPanel>
+            <TextBlock x:Name="HeaderText"
+                       Text="PowerAim · Debug"
+                       Foreground="#8B5CF6"
+                       FontFamily="Segoe UI Variable Display"
+                       FontWeight="SemiBold"
+                       FontSize="11"
+                       Margin="0,0,0,6" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="FPS"        Style="{StaticResource DebugLabel}" />
+                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="FpsText"  Style="{StaticResource DebugValue}" />
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Inference"  Style="{StaticResource DebugLabel}" />
+                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="MsText"   Style="{StaticResource DebugValue}" />
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Detections" Style="{StaticResource DebugLabel}" />
+                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="DetText"  Style="{StaticResource DebugValue}" />
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Shots"      Style="{StaticResource DebugLabel}" />
+                <TextBlock Grid.Row="3" Grid.Column="1" x:Name="ShotsText" Style="{StaticResource DebugValue}" />
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Intent"     Style="{StaticResource DebugLabel}" />
+                <TextBlock Grid.Row="4" Grid.Column="1" x:Name="IntentText" Style="{StaticResource DebugValue}" />
+
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="Profile"    Style="{StaticResource DebugLabel}" />
+                <TextBlock Grid.Row="5" Grid.Column="1" x:Name="ProfileText" Style="{StaticResource DebugValue}" />
+
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="Process"    Style="{StaticResource DebugLabel}" />
+                <TextBlock Grid.Row="6" Grid.Column="1" x:Name="ProcessText" Style="{StaticResource DebugValue}" />
+            </Grid>
+        </StackPanel>
+    </Border>
+</Window>

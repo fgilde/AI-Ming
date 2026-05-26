@@ -1,0 +1,17 @@
+<Window x:Class="PowerAim.Visuality.GamepadTesterWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:uiLibrary="clr-namespace:PowerAim.UILibrary"
+        Title="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='GamepadTester'}"
+        Height="780"
+        Width="900"
+        MinWidth="640"
+        MinHeight="540"
+        ShowInTaskbar="True"
+        Topmost="False"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource FluentSurface1}">
+    <Grid Margin="14">
+        <uiLibrary:GamepadTesterPanel x:Name="Tester" />
+    </Grid>
+</Window>

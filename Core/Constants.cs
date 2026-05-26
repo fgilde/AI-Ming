@@ -14,8 +14,23 @@ public class Constants
     public const string RepoOwner = "fgilde";
     public const string RepoName = "AI-Ming";
 
-    private static readonly string[] Names =
+    /// <summary>Upstream repo we merge community models from in addition to <see cref="RepoOwner"/>/<see cref="RepoName"/>.</summary>
+    public const string UpstreamRepoOwner = "Babyhamsta";
+    public const string UpstreamRepoName = "Aimmy";
+
+    /// <summary>
+    ///     Central rotating brand-name pool. Used both for the rotating window title
+    ///     (<see cref="ApplicationName"/>) and as the random AssemblyName the build script
+    ///     stamps onto the produced .exe (see <c>build.ps1</c>). PowerAim is the canonical
+    ///     brand and is included multiple times to bias the rotation towards it.
+    /// </summary>
+    public static readonly string[] Names =
     {
+        // Canonical brand (weighted)
+        "PowerAim",
+        "Power Aim",
+        "PowerAim",
+        // Heritage names kept from the fork
         "AI-M ME Winehouse",
         "AI-Machine",
         "Aim A.I. Little Higher",
@@ -25,9 +40,21 @@ public class Constants
         "AIM-Possible",
         "A.I.migo",
         "AI-M King",
-        "Aimmy",
         "Mousemovement Machine",
         "Micro AI-mbot",
+        // New additions
+        "AimForge",
+        "TriggerCraft",
+        "Pixel Hunter",
+        "Crosshair Whisperer",
+        "Headshot Maestro",
+        "Smart Reticle",
+        "Targetron",
+        "Aim Architect",
+        "BulletBoss",
+        "Auto-Lock-In",
+        "Reticle Rogue",
+        "FocalAim",
     };
 
     private static readonly string[] Infos =
@@ -38,7 +65,27 @@ public class Constants
         "Perfect aim, even when you've had one too many.",
         "Your aim just got terminated.",
         "Mission accomplished, every single time.",
-        "Your new best friend in hitting the bullseye."
+        "Your new best friend in hitting the bullseye.",
+        "Now with 98% less missing.",
+        "Your crosshair just found its soulmate.",
+        "Built for legends. Used by questionable players.",
+        "Turning panic shots into highlight clips.",
+        "Precision so good, it feels illegal.",
+        "Missed shots are now a personality issue.",
+        "Aim smarter, not harder.",
+        "Because spraying and praying is outdated.",
+        "Your enemies called. They want a nerf.",
+        "Every pixel counts.",
+        "The shortest distance between you and victory.",
+        "Even your excuses won't miss anymore.",
+        "Warning: May cause sudden confidence.",
+        "Lock. Aim. Regret nothing.",
+        "Your monitor just became dangerous.",
+        "For gamers with trust issues in their own aim.",
+        "Less recoil. More ego.",
+        "Click heads, not excuses.",
+        "Your KD ratio's new best friend.",
+        "Accuracy upgraded to absurd."
     };
 
     private static readonly string[] Slogans =
@@ -49,7 +96,27 @@ public class Constants
         "Drunken AIrcher - Aim like nobody's watching.",
         "AI'll Be Back - Hasta la vista, missed shots.",
         "AIM-Possible - The odds are always in your favor.",
-        "A.I.migo - Always by your side, and never missing."
+        "A.I.migo - Always by your side, and never missing.",
+        "PowerAim - Precision Meets Power.",
+        "Aim Like Tomorrow Depends On It.",
+        "Built Different. Aimed Better.",
+        "Zero Fear. Zero Misses.",
+        "Lock In. Pop Off.",
+        "Aim Beyond Human.",
+        "Modern Problems Require Accurate Solutions.",
+        "Pixel Perfect Destruction.",
+        "Your Aim, But Evolved.",
+        "Where Precision Becomes Unfair.",
+        "Every Shot Tells A Story.",
+        "Stay Calm And Click Heads.",
+        "Elite Aim Starts Here.",
+        "Aim Faster. Win Harder.",
+        "Designed For The Impossible Flick.",
+        "PowerAim - Because Missing Hurts.",
+        "Confidence In Every Click.",
+        "The Future Of Precision.",
+        "Target Locked. Victory Loaded.",
+        "More Than Aim. Pure Domination."
     };
     private static readonly Random random = new Random();
 

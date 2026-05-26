@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Forms;
 
-namespace Aimmy2.Config;
+namespace PowerAim.Config;
 
 public class WindowSettingsManager
 {

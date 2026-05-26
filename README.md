@@ -1,186 +1,165 @@
+<p align="center">
+  <img src="readme_assets/PowerAim-icon-256.png" width="160" alt="PowerAim" />
+</p>
+
+<h1 align="center">PowerAim</h1>
+
+<p align="center">
+  <em>A modern, AI-powered aim alignment tool for accessibility, training, and fun.</em>
+</p>
 
 > [!NOTE]
-> If you enjoy Aimmy, please consider giving us a star ⭐! We appreciate it! :)
-  <p>
-    <a href="https://aimmy.dev/" target="_blank">
-      <img width="100%" src="https://raw.githubusercontent.com/Babyhamsta/Aimmy/master/readme_assets/AimmyV2Banner.png"></a>
-  </p>
+> If you enjoy PowerAim, please consider giving the project a star ⭐ — it really helps. Thanks!
 
-Aimmy is a universal AI-Based Aim Alignment Mechanism developed by BabyHamsta, MarsQQ & Taylor to make gaming more accessible for users who have difficulty aiming.
+---
 
-Unlike most AI-Based Aim Alignment Mechanisms, Aimmy utilizes DirectML, ONNX, and YOLOV8 to detect players, offering both higher accuracy and faster performance compared to other Aim Aligners, especially on AMD GPUs, which would not perform well on Aim Alignment Mechanisms that utilize TensorRT.
+PowerAim is a **universal AI-based aim alignment tool**. It captures the screen, runs a YOLOv8 ONNX model on the frame, and nudges the mouse towards the detected target — fully configurable, with a clean Fluent UI built on .NET 10 and WPF.
 
-Aimmy also provides an easy to use user-interface, a wide set of features and customizability options which makes Aimmy a great option for anyone who wants to use and tailor an Aim Alignment Mechanism for a specific game without having to code.
+PowerAim started as a fork of [Babyhamsta/Aimmy](https://github.com/Babyhamsta/Aimmy) but has since been heavily reworked: a decoupled service architecture, a complete trigger-system overhaul, a Fluent-styled UI, gamepad / AutoPlay support, localization in 9 languages, dynamic model sizes, and a much faster capture & inference pipeline.
 
-Aimmy is 100% free to use. This means no ads, no key system, and no paywalled features. Aimmy is not, and will never be for sale for the end user, and is considered a source-available product, **not open source** as we actively discourage other developers from making commercial forks of Aimmy.
+PowerAim is **100% free**: no ads, no key system, no paywalled features. It is **source-available** but **not open source** — please do not make commercial forks.
 
-Please do not confuse Aimmy as an open-source project, we are not, and we have never been one.
+---
 
-Want to connect with us? Join our Discord Server: https://discord.gg/aimmy
+## 📖 Documentation
 
-If you want to share Aimmy with your friends, our website is: https://aimmy.dev/
+Full, searchable documentation is published via GitHub Pages:
+
+**[https://fgilde.github.io/AI-Ming/](https://fgilde.github.io/AI-Ming/)**
+
+The docs cover installation, every feature in detail, model training, configuration reference, and troubleshooting. They are also bundled with the app and shipped offline — click the **Help** button in PowerAim's title bar to open them locally without an internet connection.
+
+Quick links:
+- 🚀 [Getting Started](https://fgilde.github.io/AI-Ming/getting-started/)
+- 🎯 [Features](https://fgilde.github.io/AI-Ming/features/)
+- 🎮 [Controller Mapping](https://fgilde.github.io/AI-Ming/features/controller-mapping/)
+- 🤖 [AutoPlay](https://fgilde.github.io/AI-Ming/features/autoplay/)
+- 🧠 [Training Your Own Model](https://fgilde.github.io/AI-Ming/models/training-your-own/)
+- 🔧 [Troubleshooting](https://fgilde.github.io/AI-Ming/troubleshooting/)
+
+---
 
 ## Table of Contents
-- [What is the purpose of Aimmy?](#what-is-the-purpose-of-aimmy)
-- [How does Aimmy Work?](#how-does-aimmy-work)
+- [Purpose](#purpose)
+- [How it works](#how-it-works)
 - [Features](#features)
 - [Setup](#setup)
-- [How is Aimmy better than similar AI-Based tools?](#how-is-aimmy-better-than-similar-ai-based-tools)
-- [How the hell is Aimmy free?](#how-the-hell-is-aimmy-free)
-- [What is the Web Model?](#what-is-the-web-model)
-- [How do I train my own model?](#how-do-i-train-my-own-model)
-- [How do I upload my model to the "Downloadable Models" menu](#how-do-i-upload-my-model-to-the-downloadable-models-menu)
+- [Trigger System](#trigger-system)
+- [Performance Tools](#performance-tools)
+- [Web Model & Training](#web-model--training)
+- [Contributing Models](MODELS.md)
+- [Credits](#credits)
 
+---
 
+## Purpose
+PowerAim was designed for gamers who are at a real disadvantage relative to able-bodied players:
+- Physically or visually impaired gamers
+- Players without access to a separate HID for controlling the pointer
+- People practicing reaction time / hand-eye coordination
+- Anyone training their FPS aim mechanically
+- Long-session players who develop fatigue or sweaty hands
 
-## What is the purpose of Aimmy?
-### Aimmy was designed for Gamers who are at a severe disadvantage over normal gamers.
-### This includes but is not limited to:
-- Gamers who are physically challenged
-- Gamers who are mentally challenged
-- Gamers who suffer from untreated/untreatable visual impairments
-- Gamers who do not have access to a seperate Human-Interface Device (HID) for controlling the pointer
-- Gamers trying to improve their reaction time
-- Gamers with poor Hand/Eye coordination
-- Gamers who perform poorly in FPS games
-- Gamers who play for long periods in hot environments, causing greasy hands that make aiming difficult 
+It is also a great research / debugging tool for anyone interested in real-time object detection on the desktop.
 
-## How does Aimmy Work?
+## How it works
+
 ```mermaid
-flowchart  LR
-A["Playing Game System"]
-C["Screen Grabbing Functionality"]
-B["YOLOv8 (DirectML + ONNX) Recognition"]
-D{Making Decision}
-DA["X+Y Adjustment"]
-DB["FOV"]
-E["Triggering Functionality"]
-F["Mouse Cursor"]
+flowchart LR
+A[Game on screen]
+C[Screen Capture<br/>DXGI / GDI]
+B[YOLOv8 ONNX<br/>DirectML / CUDA]
+F[Prediction Filter<br/>Multi-Class + Confidence]
+S[Sticky-Aim Selector]
+T[Trigger System<br/>multi-trigger, charge, key operators]
+P[Prediction<br/>Custom Kalman + Velocity]
+M[Mouse / Gamepad output]
 
-A --> E--> C  -->  B  --> D --> F 
-DA  -->  D
-DB  -->  D
-
+A --> C --> B --> F --> S --> P --> M
+S --> T --> M
 ```
-When you press the trigger binding, Aimmy will capture the screen and run the image through AI recognition powered by your computer hardware. The result it develops will be combined with any adjustment you made in the X and Y axis, and your current FOV and will result in a change in your mouse cursor position.
+
+Each block is an independent service — the capture loop, the inference pipeline, the trigger logic, the aim/output loop. They communicate through clear contracts (`ICapture`, `IPredictionLogic`, `IAction`).
 
 ## Features
-1. Full Fledged UI
-	- Aimmy provides a well designed and full-fledged UI for easy usage and game adjustment.
-2. DirectML + ONNX + YOLOv8 AI Detection Algorithm
-	- The use of these technologies allows Aimmy to be one of the most accurate and fastest Aim Alignment Mechanisms out there in the world
-3. Dynamic Customizability System
-	- Aimmy provides an interactive customizability system with various features that auto-updates the way Aimmy will aim as you customize. From AI Confidence, to FOV, to Anti-Recoil Adjustment, Aimmy makes it easy for anyone to tune their aim
-4. Dynamic Visual System
-	- Aimmy contains a universal ESP system that will highlight the player detected by the AI. This is helpful for visually impaired users who have a hard time differentiating enemies, and for configuration creators attempting to debug their configurations.
-5. Adjustable Anti-Recoil
-	- Aimmy offers an incredibly customizable Anti-Recoil system that's designed to be easy to use. With features like recording your Fire Rate, setting your X and Y adjustment, and Configuration Switch Keybindings
-6. Mouse Movement Method
-	- Aimmy grants you the right to switch between 5 Mouse Movement Methods depending on your Mouse Type and Game for better Aim Alignment
-7. Hotswappability
-	- Aimmy lets you hotswap models and configurations on the go. There is no need to reset Aimmy to make your changes
-8. Model and Configuration Store with Repository Support
-	- Aimmy makes it easy to get any models and configurations you may ever need, and with repository support, you can get up to date with the latest models and configurations from your favorite creators
+
+**Detection & inference**
+- DXGI Desktop Duplication capture with automatic GDI fallback (≈6× faster than GDI alone)
+- Dynamic ONNX input-size support — no more hardcoded 640×640
+- Multi-class YOLO models with per-class filtering
+- LUT-based byte→float tensor conversion (lower GC pressure)
+- Built-in **Performance Benchmark** that recommends the optimal model size for your hardware
+- Optional inference FPS cap
+
+**Aim**
+- Custom 2D Kalman filter with lead-time prediction
+- Velocity-based Shalloe & WiseTheFox prediction methods (no longer the broken upstream versions)
+- **Sticky Aim** target lock between frames — no flicker between overlapping detections
+- Movement-path selector: Cubic-Bezier, Lerp, Exponential, Adaptive, or Perlin-noise jitter
+
+**Trigger system**
+- Multiple independent triggers per profile, each with its own keys and behavior
+- Charge mode with `BeginIntersectionCheck` + `ExecutionIntersectionCheck`
+- AND/OR operators for trigger keys and anti-trigger keys
+- Sequential vs simultaneous action execution
+- Configurable head-area sub-region
+
+**UI / UX**
+- Fluent-styled UI on .NET 10 (Mica backdrop, light / dark / system-follow)
+- Hamburger sidebar navigation
+- Localization in 9 languages (en, de, es, fr, it, ru, tr, uk, zh)
+- Modern in-app `MessageDialog` (slides down from the window header)
+- Live monitor / window picker with thumbnail previews and on-hover overlay highlights
+- Gamepad Test page with virtual vJoy + AutoPlay system
+
+**Anti-Recoil**
+- OpenCV crosshair-tracking based anti-recoil (replaces the original simple recoil compensator)
+
+**Mouse backends**
+- SendInput, MouseEvent, LG HUB, Razer Synapse, ddxoft
 
 ## Setup
-- Download and Install the x64 version of [.NET Runtime 8.0.X.X](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-8.0.2-windows-x64-installer)
-- Download and Install the x64 version of [Visual C++ Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe)
-- Download Aimmy from [Releases](https://github.com/BabyHamsta/Aimmy/releases) (Make sure it's the Aimmy zip and not Source zip)
-- Extract the Aimmy.zip file
-- Run Aimmy.exe
-- Choose your Model and Enjoy :)
+1. Install the x64 version of [.NET Runtime 10](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
+2. Install the x64 version of the [Visual C++ Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe)
+3. Download the latest PowerAim release from the [Releases](https://github.com/fgilde/AI-Ming/releases) page
+4. Either run the `Installer.exe`, or extract the `.zip` and run the bundled `.exe`
+5. Pick a model in the Models tab and click **Active** — that's it
 
-## How is Aimmy better than similar AI-Based tools?
-Aimmy is written in C# using .NET 8 and WPF utilizing pre-existing libraries like DirectML and ONNX. This has allowed us to make a very fast Aim Aligner with high compatiblity on both AMD and NVIDIA GPUs without sacrificing the end-user experience.
+For CUDA acceleration, download the `_cuda` variant of the release.
 
-![Example of Model switching](https://github.com/Babyhamsta/Aimmy/blob/master/readme_assets/UI.gif?raw=true)
+## Trigger System
+PowerAim's trigger system is a complete rewrite of the original Aimmy autotrigger.
 
-Beyond the core functionality, Aimmy also adds some amazing additional features like Detection ESP and Anti-Recoil to help you tune your gaming experience however you like it.
+- Each **trigger** is an `ActionTrigger` with its own name, active state, keys, actions, intersection checks, and timing.
+- **Trigger Keys / Anti-Trigger Keys** support AND or OR operators — combine `LMB AND Shift`, or `LMB OR Q`, or `NOT (R OR Tab)` to block firing while reloading.
+- **Charge Mode** lets the trigger pre-aim while a button is held: enters when the target enters the configured *begin* head-area, executes when it enters the *execution* head-area.
+- **Sequential / Simultaneous** action mode controls whether multiple actions are sent in order or all at once.
 
-Aimmy comes pre-bundled with 2 well trained AI models with thousands of images each. 
-1. Phantom Forces
-2. Universal Model
+Open `Aim Tools → Triggers → Edit` to configure visually with live previews.
 
-Besides those 2 models, Aimmy provides dozens of other community made models through the store, with more models being developed every day by other Aimmy users. These models vary from game to image count, making Aimmy incredibly versatile and universal for thousands of games on the market right now.
+## Performance Tools
+- **Run Benchmark** (Models tab) measures FPS / inference time / GPU% across a set of image sizes (320 / 416 / 512 / 640 / 800) and recommends the largest size that still hits ≥60 FPS on your hardware.
+- **Max Inference FPS** (Prediction Config) lets you cap the loop — useful for laptops where you want to keep thermals in check.
+- **Image Size Override** (Models) is used for ONNX models with dynamic input shapes.
 
-## How the hell is Aimmy free?
-As an AI based Aim Aligner, Aimmy does not require any sort of upkeep because it does not read any specific game data to perform it's actions. If Aimmy team stops maintaining Aimmy, even if no one pitches in to fork and maintain the project, Aimmy would still work.
+## Web Model & Training
+The repo contains a TFJS export under `Universalv3_web_model/`. It is intended to help auto-label new training data via [MakeSense.ai](https://www.makesense.ai). Load your images, pick *Object Detection*, run the AI locally with YOLOv5, upload the web-model files, label, and export.
 
-This has meant that while we do currently use out of pocket expenses to run Aimmy, those expenses have been low enough that it hasn't been a necessity for Aimmy to run on even an ad-supported model.
+A short walkthrough video for training your own model:
+[![Watch on YouTube](https://img.youtube.com/vi/i98wF4218-Q/maxresdefault.jpg)](https://youtu.be/i98wF4218-Q)
 
-We do not seek to make money from Aimmy, we only seek your kind words <3, and a chance to help people aim better, by assisting their aim or even to train how they aim (yes, you can use Aimmy in that way too)
+## Want to contribute a model?
+See **[MODELS.md](MODELS.md)** for the full step-by-step guide. PowerAim's in-app downloader merges models from this fork **and** from the upstream Babyhamsta/Aimmy repo — newer commit wins on a name conflict, fork wins on a tie.
 
-## What is the Web Model
-The web model is a TFJS (TensorFlow Javascript) export of the model. This allow you to use the model for image labeling, which then images can be sent to us to help further train the PF/Universal model or you can use those images to train your own YOLOv8 model.
-You may wonder, "Why is it in YOLOv5 and not YOLOv8?". This is due to us using the tool called MakeSense, it to me is one of the easiest tools and is all web based. I am sure there are other tools that may accept the YOLOv8 web model.
+## Credits
 
-You can visit MakeSense here: https://www.makesense.ai
-You then can simply load all of your images in and select Object Detection.
+PowerAim is built on the shoulders of [Babyhamsta/Aimmy](https://github.com/Babyhamsta/Aimmy) by BabyHamsta, MarsQQ and Taylor — without their original work and ONNX/DirectML wiring this project would not exist. Thank you. ❤️
 
-![image](https://github.com/MarsQQ/Aimmy/assets/22938086/35046774-b70b-4264-8c26-eba5fe0b6b9e)
+**Model creators (kept from upstream):**
+- Babyhamsta — UniversalV4, Phantom Forces
+- Natdog400 — AIO V2, V7
+- Themida — Arsenal, Strucid, Bad Business, Blade Ball, LGHub check
+- Hogthewog — Da Hood, FN
+- Ninja — MarsQQ's emotional support
 
-
-Then run the AI locally, select YOLOv5, and upload all the web model files.
-
-![image](https://github.com/MarsQQ/Aimmy/assets/22938086/78e6329d-0b55-453e-baf1-47186020b2b8)
-![image](https://github.com/MarsQQ/Aimmy/assets/22938086/0f13a664-0d0e-41aa-84b2-9d7f96daea1c)
-![image](https://github.com/MarsQQ/Aimmy/assets/22938086/f0896522-954d-4120-926f-b691673c802a)
-
-
-You can now go through your images and click and drag to highlight any Enemies on screen and approve the auto detected enemies from the web model:
-
-![image](https://github.com/MarsQQ/Aimmy/assets/22938086/f1288009-5e7a-4360-a1c5-bee9faf7f387)
-
-Once you are finished labeling you'll want to export the labels for AI training:
-
-![image](https://github.com/MarsQQ/Aimmy/assets/22938086/1af932c3-adde-4138-86f5-1c59934afae7)
-![image](https://github.com/MarsQQ/Aimmy/assets/22938086/05cc8837-8131-4035-897c-722301a0233b)
-
-## How do I train my own model
-Please see the video tutorial bellow on how to label images and train your own model. (Redirects to Youtube)
-[![Watch the video on Youtube](https://img.youtube.com/vi/i98wF4218-Q/maxresdefault.jpg)](https://youtu.be/i98wF4218-Q)
-
-## How do I upload my model to the "Downloadable Models" menu?
-
-If you are not aware already, Aimmy contains a "Downloadable Models" tab that allows you to download models developed and shared by the Aimmy Community.
-
-<img src="https://raw.githubusercontent.com/MarsQQ/Aimmy/master/readme_assets/DownloadableModels.png">
-
-Aimmy pulls these models from the [Aimmy repository](https://github.com/Babyhamsta/Aimmy/tree/master/models), this means **anyone can upload models to the "Downloadable Models" tab by making a pull request**.
-
-To start, please note that if you would like to be credited for your work, name your model as:
-**[Game Name/Model Name]** by **[The Creator]**
-
-If you would like to stay anonymous however, you may only list the Game Name/Model Name.
-
-Now, fork the Aimmy Repository
-<img src="https://raw.githubusercontent.com/MarsQQ/Aimmy/master/readme_assets/DT1.png">
-<img src="https://raw.githubusercontent.com/MarsQQ/Aimmy/master/readme_assets/DT2.png">
-
-After that, go to your fork's model folder
-<img src="https://raw.githubusercontent.com/MarsQQ/Aimmy/master/readme_assets/DT3.png">
-
-Press "Add File"
-<img src="https://raw.githubusercontent.com/MarsQQ/Aimmy/master/readme_assets/DT4.png">
-
-Drag your model onto the area that contains the text "Drag additional files here to add them to your repository"
-<img src="https://raw.githubusercontent.com/MarsQQ/Aimmy/master/readme_assets/DT5.png">
-
-and press "Commit Changes" when the green progress bar disappears
-<img src="https://raw.githubusercontent.com/MarsQQ/Aimmy/master/readme_assets/DT6.png">
-
-Now go to the "Pull requests" tab
-<img src="https://raw.githubusercontent.com/MarsQQ/Aimmy/master/readme_assets/DT7.png">
-
-Create a new pull request
-<img src="https://raw.githubusercontent.com/MarsQQ/Aimmy/master/readme_assets/DT8.png">
-
-Create the pull request
-<img src="https://raw.githubusercontent.com/MarsQQ/Aimmy/master/readme_assets/DT9.png">
-
-Create the pull request (again)
-<img src="https://raw.githubusercontent.com/MarsQQ/Aimmy/master/readme_assets/DT10.png">
-
-You are done! We will review your pull request and your model will be added in 24-48 hours. If you would like to remove your model from the "Downloadable Models" tab, you may make another pull request or contact us on the Issues tab.
-
-For anyone who does this, thank you so much =D, Aimmy genuinely thrives with community contributions and support, and making and sharing your Aimmy models genuinely means a lot to us! Thank you!
+PowerAim is **source-available** (see [SourceAvailable.md](SourceAvailable.md)). Commercial forks are not permitted.

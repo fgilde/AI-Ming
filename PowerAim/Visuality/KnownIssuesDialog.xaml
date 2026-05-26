@@ -1,0 +1,115 @@
+<visuality:BaseDialog x:Class="Visuality.KnownIssuesDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Visuality"
+        xmlns:converter="clr-namespace:PowerAim.Converter"
+        xmlns:mdXaml="https://github.com/whistyun/MdXaml"
+        xmlns:visuality="clr-namespace:PowerAim.Visuality"
+        mc:Ignorable="d"
+        Title="Known Issues"
+        Height="500"
+        Width="640"
+        WindowStyle="None"
+        Topmost="True"
+        ResizeMode="CanResizeWithGrip"
+        WindowStartupLocation="CenterOwner"
+        AllowsTransparency="False"
+        Background="{StaticResource FluentSurface1}">
+    <Window.Resources>
+        <converter:AddConverter x:Key="AddConverter" />
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Titlebar -->
+        <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="Border_MouseLeftButtonDown">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0">
+                <TextBlock Text="&#xEA80;"
+                           FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                           Foreground="{DynamicResource FluentAccent}"
+                           FontSize="14"
+                           VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='KnownIssues'}"
+                           Margin="10,0,0,0"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource FluentTextPrimary}"
+                           FontFamily="Segoe UI Variable Display"
+                           FontWeight="SemiBold"
+                           FontSize="13" />
+            </StackPanel>
+            <Button IsEnabled="{Binding CanClose}"
+                    x:Name="Exit"
+                    Content="&#xE8BB;"
+                    HorizontalAlignment="Right"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    BorderThickness="0"
+                    Foreground="{DynamicResource FluentTextPrimary}"
+                    FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                    Width="46"
+                    Height="40"
+                    Padding="0"
+                    FontSize="10"
+                    VerticalAlignment="Top"
+                    Click="Exit_Click">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd" Background="{TemplateBinding Background}">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#E81123" />
+                                            <Setter Property="Foreground" Value="White" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </Grid>
+
+        <!-- Body -->
+        <Border Grid.Row="1" Style="{StaticResource FluentCard}" Margin="14,4,14,8" Padding="14">
+            <mdXaml:MarkdownScrollViewer MarkdownStyle="{StaticResource MdStyle}"
+                                         Markdown="{Binding Markdown}"
+                                         Foreground="{StaticResource FluentTextPrimary}"
+                                         xml:space="preserve" />
+        </Border>
+
+        <!-- Footer -->
+        <Grid Grid.Row="2" Margin="14,0,14,14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <CheckBox Grid.Column="0"
+                      Unchecked="ToggleButton_OnChecked"
+                      Checked="ToggleButton_OnChecked"
+                      Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ShowOnStartup'}"
+                      IsChecked="{Binding Settings.ShouldShow}"
+                      Foreground="{DynamicResource FluentTextPrimary}"
+                      FontFamily="Segoe UI Variable Text"
+                      FontSize="13"
+                      VerticalAlignment="Center" />
+            <Button Grid.Column="1"
+                    x:Name="ApplyButton"
+                    IsEnabled="{Binding CanClose}"
+                    Style="{StaticResource FluentAccentButton}"
+                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Close'}"
+                    MinWidth="100"
+                    Click="Exit_Click" />
+        </Grid>
+    </Grid>
+</visuality:BaseDialog>

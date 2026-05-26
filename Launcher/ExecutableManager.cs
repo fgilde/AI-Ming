@@ -69,7 +69,7 @@ public class ExecutableManager
     {
         var launcherExe = Process.GetCurrentProcess().MainModule.FileName;
         var currentDir = Path.GetDirectoryName(launcherExe);
-        //var currentDir = @"C:\dev\privat\github\AI-Ming\Aimmy2\bin\Release\Release_1.0.0.4";
+        //var currentDir = @"C:\dev\privat\github\AI-Ming\PowerAim\bin\Release\Release_1.0.0.4";
 
         var exeList = Directory.EnumerateFiles(currentDir, "*.exe")
             .Where(x => x != launcherExe && !x.EndsWith("createdump.exe") && !x.EndsWith("Installer.exe"))

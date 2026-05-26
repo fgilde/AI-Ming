@@ -1,0 +1,291 @@
+<visuality:BaseDialog x:Class="PowerAim.Visuality.OcrRegionsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:visuality="clr-namespace:PowerAim.Visuality"
+        mc:Ignorable="d"
+        Title="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='HudOcrRegions'}"
+        Height="640"
+        Width="960"
+        WindowStyle="None"
+        Topmost="True"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        AllowsTransparency="False"
+        Background="{DynamicResource FluentSurface1}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="Titlebar_MouseLeftButtonDown">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0">
+                <TextBlock Text="&#xE721;"
+                           FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                           Foreground="{DynamicResource FluentAccent}"
+                           FontSize="14"
+                           VerticalAlignment="Center" />
+                <TextBlock Margin="10,0,0,0"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource FluentTextPrimary}"
+                           FontFamily="Segoe UI Variable Display"
+                           FontWeight="SemiBold"
+                           FontSize="13"
+                           Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='HudOcrRegions'}" />
+            </StackPanel>
+            <Button HorizontalAlignment="Right"
+                    Background="Transparent" BorderBrush="Transparent" BorderThickness="0"
+                    Foreground="{DynamicResource FluentTextPrimary}"
+                    FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                    Content="&#xE8BB;" Width="46" Height="40" Padding="0" FontSize="10"
+                    VerticalAlignment="Top"
+                    Click="Close_Click">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd" Background="{TemplateBinding Background}">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#E81123" />
+                                            <Setter Property="Foreground" Value="White" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </Grid>
+
+        <TextBlock Grid.Row="1"
+                   Margin="16,0,16,10"
+                   Foreground="{DynamicResource FluentTextSecondary}"
+                   FontFamily="Segoe UI Variable Small"
+                   FontSize="12"
+                   TextWrapping="Wrap"
+                   Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='OcrCoordinatesHelp'}" />
+
+        <Grid Grid.Row="2" Margin="16,0,16,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="320" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0"
+                    Background="{DynamicResource FluentSurface2}"
+                    BorderBrush="{DynamicResource FluentStroke}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Margin="0,0,8,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Padding="6,6,6,6">
+                        <ItemsControl x:Name="RegionItems" />
+                    </ScrollViewer>
+                    <Grid Grid.Row="1" Margin="8,4,8,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='AddRegion'}"
+                                Style="{DynamicResource FluentAccentButton}"
+                                MinHeight="32"
+                                Click="AddRegion_Click" />
+                        <Button Grid.Column="1" Margin="6,0,0,0"
+                                x:Name="DeleteButton"
+                                Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Delete'}"
+                                Style="{DynamicResource FluentStandardButton}"
+                                MinHeight="32"
+                                Click="DeleteRegion_Click" />
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1" Margin="8,0,0,0"
+                    Background="{DynamicResource FluentSurface2}"
+                    BorderBrush="{DynamicResource FluentStroke}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="16">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="DetailPanel">
+                        <TextBlock x:Name="DetailHeader" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NoRegionSelected'}"
+                                   Foreground="{DynamicResource FluentTextPrimary}"
+                                   FontFamily="Segoe UI Variable Display"
+                                   FontWeight="SemiBold"
+                                   FontSize="14"
+                                   Margin="0,0,0,12" />
+
+                        <!-- Name + kind -->
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Name'}" Foreground="{DynamicResource FluentTextSecondary}"
+                                           FontFamily="Segoe UI Variable Text" FontSize="12" />
+                                <TextBox x:Name="NameBox" Margin="0,4,0,0" MinHeight="28"
+                                         TextChanged="NameBox_TextChanged" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Kind'}" Foreground="{DynamicResource FluentTextSecondary}"
+                                           FontFamily="Segoe UI Variable Text" FontSize="12" />
+                                <ComboBox x:Name="KindCombo" Margin="0,4,0,0" MinHeight="28"
+                                          SelectionChanged="KindCombo_SelectionChanged">
+                                    <ComboBoxItem Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='OcrKindText'}" />
+                                    <ComboBoxItem Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='OcrKindNumber'}" />
+                                    <ComboBoxItem Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='OcrKindHealth'}" />
+                                </ComboBox>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Coords -->
+                        <Grid Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ScreenRectangle'}"
+                                       Foreground="{DynamicResource FluentTextSecondary}"
+                                       FontFamily="Segoe UI Variable Text" FontSize="12"
+                                       VerticalAlignment="Center" />
+                            <Button Grid.Column="1" x:Name="PickOnScreenButton"
+                                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='PickOnScreen'}"
+                                    MinHeight="26" Padding="10,2,10,2"
+                                    Style="{DynamicResource FluentStandardButton}"
+                                    Click="PickOnScreen_Click" />
+                        </Grid>
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="X"
+                                       Foreground="{DynamicResource FluentTextTertiary}"
+                                       FontFamily="Segoe UI Variable Small" FontSize="11" Margin="0,0,4,2" />
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="Y"
+                                       Foreground="{DynamicResource FluentTextTertiary}"
+                                       FontFamily="Segoe UI Variable Small" FontSize="11" Margin="4,0,4,2" />
+                            <TextBlock Grid.Row="0" Grid.Column="2" Text="W"
+                                       Foreground="{DynamicResource FluentTextTertiary}"
+                                       FontFamily="Segoe UI Variable Small" FontSize="11" Margin="4,0,4,2" />
+                            <TextBlock Grid.Row="0" Grid.Column="3" Text="H"
+                                       Foreground="{DynamicResource FluentTextTertiary}"
+                                       FontFamily="Segoe UI Variable Small" FontSize="11" Margin="4,0,0,2" />
+
+                            <TextBox Grid.Row="1" Grid.Column="0" x:Name="XBox" MinHeight="28"
+                                     Margin="0,0,4,0" TextChanged="CoordBox_TextChanged" Tag="X" />
+                            <TextBox Grid.Row="1" Grid.Column="1" x:Name="YBox" MinHeight="28"
+                                     Margin="4,0,4,0" TextChanged="CoordBox_TextChanged" Tag="Y" />
+                            <TextBox Grid.Row="1" Grid.Column="2" x:Name="WBox" MinHeight="28"
+                                     Margin="4,0,4,0" TextChanged="CoordBox_TextChanged" Tag="W" />
+                            <TextBox Grid.Row="1" Grid.Column="3" x:Name="HBox" MinHeight="28"
+                                     Margin="4,0,0,0" TextChanged="CoordBox_TextChanged" Tag="H" />
+                        </Grid>
+
+                        <!-- Threshold + Invert -->
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="160" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="60" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='BinarizeThreshold'}"
+                                       Foreground="{DynamicResource FluentTextSecondary}"
+                                       FontFamily="Segoe UI Variable Text" FontSize="12"
+                                       VerticalAlignment="Center" />
+                            <Slider x:Name="ThresholdSlider" Grid.Column="1"
+                                    Minimum="0" Maximum="255" TickFrequency="1"
+                                    IsSnapToTickEnabled="True"
+                                    ValueChanged="ThresholdSlider_Changed" />
+                            <TextBlock Grid.Column="2" x:Name="ThresholdText"
+                                       Foreground="{DynamicResource FluentTextPrimary}"
+                                       FontFamily="Segoe UI Variable Text" FontSize="12"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Right"
+                                       Text="140" />
+                        </Grid>
+                        <CheckBox x:Name="InvertBox" Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='OcrInvertCheckbox'}"
+                                  Foreground="{DynamicResource FluentTextPrimary}"
+                                  FontFamily="Segoe UI Variable Text" FontSize="13"
+                                  Margin="0,0,0,12"
+                                  Checked="InvertBox_Toggle" Unchecked="InvertBox_Toggle" />
+
+                        <!-- Live preview -->
+                        <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LivePreview'}"
+                                   Foreground="{DynamicResource FluentTextSecondary}"
+                                   FontFamily="Segoe UI Variable Text" FontSize="12" Margin="0,4,0,4" />
+                        <Border Background="Black" CornerRadius="4" Padding="6" Margin="0,0,0,8">
+                            <TextBlock x:Name="PreviewText"
+                                       Foreground="#9EE7FF"
+                                       FontFamily="Consolas"
+                                       FontSize="20"
+                                       Text="—"
+                                       MinHeight="32"
+                                       TextWrapping="Wrap" />
+                        </Border>
+                        <TextBlock x:Name="ConfidenceText"
+                                   Foreground="{DynamicResource FluentTextTertiary}"
+                                   FontFamily="Segoe UI Variable Small" FontSize="11"
+                                   Text=""/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="3" Margin="16,0,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <CheckBox x:Name="EngineEnabledBox" Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='OcrEngineRunning'}"
+                          Foreground="{DynamicResource FluentTextPrimary}"
+                          FontFamily="Segoe UI Variable Text" FontSize="13"
+                          Margin="0,0,16,0"
+                          Checked="EngineEnabled_Toggle" Unchecked="EngineEnabled_Toggle" />
+                <TextBlock x:Name="StatusLine"
+                           Foreground="{DynamicResource FluentTextTertiary}"
+                           FontFamily="Segoe UI Variable Small" FontSize="11"
+                           VerticalAlignment="Center" />
+            </StackPanel>
+            <Button Grid.Column="1" Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DownloadTesseractData'}"
+                    MinWidth="180" MinHeight="34"
+                    Margin="0,0,8,0" Padding="14,6,14,6"
+                    Style="{DynamicResource FluentStandardButton}"
+                    Click="Download_Click" />
+            <Button Grid.Column="2" Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='TestEngine'}"
+                    MinWidth="120" MinHeight="34"
+                    Margin="0,0,8,0" Padding="14,6,14,6"
+                    Style="{DynamicResource FluentStandardButton}"
+                    ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='TestEngineTooltip'}"
+                    Click="Test_Click" />
+            <Button Grid.Column="3" Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Close'}"
+                    MinWidth="96" MinHeight="34"
+                    Padding="14,6,14,6"
+                    Style="{DynamicResource FluentAccentButton}"
+                    Click="Close_Click" />
+        </Grid>
+    </Grid>
+</visuality:BaseDialog>
