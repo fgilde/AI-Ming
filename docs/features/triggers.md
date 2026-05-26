@@ -8,8 +8,7 @@ nav_order: 2
 
 PowerAim's trigger system is a complete rewrite of the original Aimmy autotrigger. Each profile holds an **arbitrary number of independent triggers** — each with its own keys, actions, intersection checks, and timing.
 
-![Triggers page with the trigger list visible](../images/triggers-list.png)
-<!-- SCREENSHOT NEEDED: Aim Tools page scrolled to the Triggers card with 2-3 triggers in the list and the Edit button on one of them. -->
+![Aim Tools page showing the Auto Trigger card](../images/aim-tools-page.png)
 
 ## What it does
 
@@ -36,7 +35,6 @@ Use cases:
 The trigger editor is the heart of the system. Open it via **Edit** on any trigger row.
 
 ![Trigger editor](../images/trigger-editor.png)
-<!-- SCREENSHOT NEEDED: Trigger editor dialog open, showing the Name field, key/action chips, intersection-check dropdowns, and the live head-area preview. -->
 
 ### Identification
 

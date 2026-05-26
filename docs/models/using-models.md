@@ -17,8 +17,7 @@ How to load, switch, and benchmark models inside PowerAim.
 
 A segmented switch at the top toggles between **Models** and **Configs**. Configs are saved `.cfg` presets — same store, separate folder.
 
-![Models tab with local + remote columns](../images/models-tab.png)
-<!-- SCREENSHOT NEEDED: Models tab open with the local-models column on the left, the downloadable models on the right, and a segmented Models / Configs toggle at the top. -->
+<!-- SCREENSHOT NEEDED (../images/models-tab.png): Models tab open with the local-models column on the left, the downloadable models on the right, and a segmented Models / Configs toggle at the top. -->
 
 ## Loading a model
 
@@ -63,8 +62,7 @@ The benchmark runs:
 3. Reports per-size FPS, latency, and GPU% in a results dialog
 4. Optionally applies the recommended size to `SliderSettings.ImageSize`
 
-![Benchmark results dialog](../images/benchmark-results.png)
-<!-- SCREENSHOT NEEDED: Performance Benchmark results dialog with a per-size table (Resolution, FPS, ms, GPU%), the recommended size highlighted, and Apply / Cancel buttons. -->
+<!-- SCREENSHOT NEEDED (../images/benchmark-results.png): Performance Benchmark results dialog with a per-size table (Resolution, FPS, ms, GPU%), the recommended size highlighted, and Apply / Cancel buttons. -->
 
 {: .tip }
 Re-run the benchmark whenever you switch hardware, change drivers, or load a markedly different model. It's the most reliable way to find your sweet spot.

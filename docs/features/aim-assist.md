@@ -9,7 +9,6 @@ nav_order: 1
 The core PowerAim feature: while the configured aim key is held, the mouse is nudged toward the nearest detected target inside the FOV circle.
 
 ![Aim Tools page with Aim Assist + AimConfig cards](../images/aim-tools-page.png)
-<!-- SCREENSHOT NEEDED: Aim Tools page open, showing the Aim Assist card top-left and the AimConfig card on the right column. -->
 
 ## What it does
 

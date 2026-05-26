@@ -8,8 +8,7 @@ nav_order: 4
 
 A topmost custom crosshair drawn over the game. Useful when the game's own crosshair is too small, too colorful for your monitor, or hidden by hipfire spread.
 
-![Custom crosshair overlay](../images/crosshair-overlay.png)
-<!-- SCREENSHOT NEEDED: In-game with PowerAim's custom Plus crosshair (purple, 16 px, 4 px gap) drawn over the game's own reticle. -->
+<!-- SCREENSHOT NEEDED (../images/crosshair-overlay.png): In-game with PowerAim's custom Plus crosshair (purple, 16 px, 4 px gap) drawn over the game's own reticle. -->
 
 ## What it does
 

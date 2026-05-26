@@ -15,8 +15,7 @@ A modern, AI-powered aim alignment tool for accessibility, training, and fun —
 [Get Started](getting-started/){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [View on GitHub](https://github.com/fgilde/AI-Ming){: .btn .fs-5 .mb-4 .mb-md-0 }
 
-![PowerAim main window](images/main-window.png)
-<!-- SCREENSHOT NEEDED: Top-level shot of the PowerAim main window with a model loaded, sidebar visible, AimConfig + ESPConfig + AimAssist cards on screen. -->
+![PowerAim main window](images/aim-tools-page.png)
 
 ---
 

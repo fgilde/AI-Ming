@@ -11,7 +11,6 @@ Every option on PowerAim's **Settings** sidebar page, organized by card.
 The Settings page has 9 cards. Some controls are also exposed on the relevant feature page (e.g. crosshair settings appear both here and on the Overlays card) — this page is the authoritative list.
 
 ![Settings page with all cards visible](../images/settings-page.png)
-<!-- SCREENSHOT NEEDED: Full Settings page screenshot, scrolled to show as many cards as possible. -->
 
 ## UI Settings
 

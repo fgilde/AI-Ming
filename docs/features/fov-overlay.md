@@ -8,8 +8,7 @@ nav_order: 6
 
 The FOV (Field-of-View) overlay draws a circle on your screen showing the region PowerAim will scan for targets. It's both a configuration tool and a visual reference during play.
 
-![FOV ring drawn over a game](../images/fov-ring.png)
-<!-- SCREENSHOT NEEDED: Game running with the PowerAim FOV ring drawn centered on the screen, showing the radius and a faint accent-color tint. -->
+<!-- SCREENSHOT NEEDED (../images/fov-ring.png): Game running with the PowerAim FOV ring drawn centered on the screen, showing the radius and a faint accent-color tint. -->
 
 ## What it does
 

@@ -23,8 +23,7 @@ Click any model file (e.g. `Universal.onnx`). When loading completes you'll see:
 - The model's name appears in the bottom status bar
 - The Aim Tools sidebar entry becomes the obvious next stop
 
-![Models tab with bundled models](../images/models-tab.png)
-<!-- SCREENSHOT NEEDED: Models tab showing both the local model list and the downloadable models strip, with one model selected. -->
+<!-- SCREENSHOT NEEDED (../images/models-tab.png): Models tab showing both the local model list and the downloadable models strip, with one model selected. -->
 
 {: .tip }
 The bundled **Universal** models are good starting points — they're trained on a broad mix of FPS games. For a specific game, check the downloadable list for a game-specific model.
@@ -33,8 +32,7 @@ The bundled **Universal** models are good starting points — they're trained on
 
 Center of the title bar shows the current capture target — by default that's your main monitor. Click the monitor selector if you have multiple displays or want to capture a specific window.
 
-![Capture source selector in the title bar](../images/capture-source-selector.png)
-<!-- SCREENSHOT NEEDED: Title bar's capture-source picker open, showing the list of monitors and windows with thumbnails. -->
+<!-- SCREENSHOT NEEDED (../images/capture-source-selector.png): Title bar's capture-source picker open, showing the list of monitors and windows with thumbnails. -->
 
 ## 4. Pick the aim key
 
@@ -46,8 +44,7 @@ Click **Aim Tools** in the sidebar. The first card, **Aim Assist**, contains:
 
 By default, the aim key is **Right Mouse Button** + **Left Alt**. To change it, click the key chip and press the new key/button.
 
-![Aim Assist card](../images/aim-assist-card.png)
-<!-- SCREENSHOT NEEDED: Aim Assist card with the Aim Key Bindings chip in focus. -->
+![Aim Assist card](../images/aim-tools-page.png)
 
 ## 5. Enable Global Active
 
@@ -65,8 +62,7 @@ If nothing happens:
 - Make sure the model recognizes whatever the game shows on screen — enable **Show Detected Player** in the ESPConfig card to see live detections
 - Check the [Troubleshooting]({{ '/troubleshooting/' | relative_url }}) section if you still see nothing
 
-![Detected player overlay in-game](../images/detected-player-overlay.png)
-<!-- SCREENSHOT NEEDED: Game with detected-player boxes drawn over enemies — illustrates the ESP overlay. -->
+<!-- SCREENSHOT NEEDED (../images/detected-player-overlay.png): Game with detected-player boxes drawn over enemies — illustrates the ESP overlay. -->
 
 ## What next?
 

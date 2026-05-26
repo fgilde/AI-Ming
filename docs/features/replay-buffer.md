@@ -8,8 +8,7 @@ nav_order: 8
 
 A rolling in-memory buffer of the last N seconds of captured frames and their detections. One click exports the buffer to disk as a PNG sequence plus a JSON sidecar — useful for clipping that one play, debugging a model that misses targets, or building a training dataset.
 
-![Replay Buffer card on the Settings page](../images/replay-card.png)
-<!-- SCREENSHOT NEEDED: Settings page → Replay Buffer card with the toggle, the buffer-length slider, the JPEG-quality slider, the Save / Clear buttons, and the live "Frames buffered: 73" status. -->
+<!-- SCREENSHOT NEEDED (../images/replay-card.png): Settings page → Replay Buffer card with the toggle, the buffer-length slider, the JPEG-quality slider, the Save / Clear buttons, and the live "Frames buffered: 73" status. -->
 
 ## What it does
 

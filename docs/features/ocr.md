@@ -9,7 +9,6 @@ nav_order: 9
 A periodic Tesseract-based OCR engine that reads named rectangular regions of your screen and exposes the recognized text. Use it to track health, ammo, score, or any other on-screen number — and feed the values into triggers or AutoPlay.
 
 ![OCR Regions dialog](../images/ocr-regions-dialog.png)
-<!-- SCREENSHOT NEEDED: OCR Regions dialog open, master/detail layout — list of regions on the left, live preview + sliders on the right. -->
 
 ## What it does
 

@@ -9,7 +9,6 @@ nav_order: 10
 A guided 4-step wizard that **automatically measures your in-game sensitivity** and writes a `MouseSensitivity` value that matches. No more trial-and-error.
 
 ![Calibration Wizard dialog](../images/calibration-wizard.png)
-<!-- SCREENSHOT NEEDED: Calibration Wizard's "Welcome" step open over the main window. -->
 
 ## What it does
 

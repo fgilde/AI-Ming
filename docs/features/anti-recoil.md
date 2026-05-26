@@ -12,8 +12,7 @@ PowerAim has **three independent anti-recoil engines**. Only one runs at a time;
 2. **Image-based** (BETA, OpenCV crosshair tracking) — wins if "Use Image-Based" is on and no pattern is armed
 3. **Legacy fixed X/Y compensation** — fallback when neither of the above is active
 
-![Anti-Recoil card with all three sections](../images/anti-recoil-card.png)
-<!-- SCREENSHOT NEEDED: Aim Tools page → AntiRecoil card showing the master toggle, BETA toggle, pattern toggle, and the legacy sliders below. -->
+![Aim Tools page showing the Anti Recoil card](../images/aim-tools-page.png)
 
 ## What it does
 

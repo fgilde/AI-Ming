@@ -9,7 +9,6 @@ nav_order: 13
 Let a local vision-capable LLM (Ollama) **play the game for you**. PowerAim captures the screen, sends it to the LLM with a context prompt + list of available actions, then executes whichever action the model picks.
 
 ![AutoPlay page](../images/autoplay-page.png)
-<!-- SCREENSHOT NEEDED: AutoPlay sidebar entry selected, showing the Ollama status indicator, the master toggle, the Ollama settings sliders, and a profile list with one or two profiles. -->
 
 ## What it does
 
@@ -61,6 +60,8 @@ Each profile holds:
 
 PowerAim ships a **"FPS Default"** profile with 10 actions covering WASD movement, jump, shoot, aim, reload, crouch, sprint. Use it as a template.
 
+![Edit AutoPlay Profile dialog](../images/autoplay-edit-profile.png)
+
 ### Game context prompt
 
 The `GameContext` is the most important field. It tells the LLM:
@@ -88,6 +89,8 @@ Each action has:
 - **ActionType** — Instant / Continuous / Modifier / Toggle
 
 The Edit dialog opens via the profile editor and provides a per-action form.
+
+![Edit Action dialog](../images/autoplay-edit-action.png)
 
 ## Ollama settings
 

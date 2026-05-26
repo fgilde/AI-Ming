@@ -9,7 +9,6 @@ nav_order: 12
 Record the recoil drift of a specific gun, save it as a named pattern, and play it back to perfectly counter the spray. Patterns are the strongest mode of the [Anti-Recoil]({{ '/features/anti-recoil' | relative_url }}) system.
 
 ![Recoil Patterns dialog](../images/recoil-patterns-dialog.png)
-<!-- SCREENSHOT NEEDED: Recoil Patterns dialog showing the master/detail layout — pattern list on the left, drift-curve preview on the right, name field + record button at the top. -->
 
 ## What it does
 

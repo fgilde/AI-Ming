@@ -30,8 +30,7 @@ PowerAim ships two release flavors:
 
 If unsure, **start with DirectML**. You can switch later from the Settings page without losing your config.
 
-![Switch to DirectML / CUDA button on the Settings page](../images/settings-switch-build.png)
-<!-- SCREENSHOT NEEDED: Settings page, UISettings card with the "Switch to DirectML / CUDA" button highlighted. -->
+![Switch to DirectML / CUDA button on the Settings page](../images/settings-page.png)
 
 ## 3. Download
 
@@ -70,7 +69,6 @@ Easiest path:
 5. Back in PowerAim, click any other sidebar item then click **Gamepad** again — the status line should now say "PowerAim is ready to send Gamepad signals"
 
 ![Gamepad settings page with ViGEm OK status](../images/gamepad-settings-vigem-ok.png)
-<!-- SCREENSHOT NEEDED: Gamepad settings page with ViGEm selected as send mode and the green "ready" status credit visible. -->
 
 ## 6. (Optional) Install HidHide
 

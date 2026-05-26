@@ -32,6 +32,10 @@ The binding is captured via a low-level keyboard + mouse hook (`Gma.System.Mouse
 | **Model Switch** | (none) | Aim Tools → Model Settings → Model Switch Keybind |
 | **Gun 1 / Gun 2** | `1` / `2` | Aim Tools → AntiRecoilConfig |
 
+The Magnifier and HWID Spoofer live on the **Tools** page:
+
+![Tools page with Magnifier and HWID Spoofer](../images/tools-page.png)
+
 ## Toggle hotkeys
 
 Many toggles have a **chip next to them** that lets you bind a global hotkey for the toggle itself. Press the hotkey in-game to flip the toggle on/off without alt-tabbing.

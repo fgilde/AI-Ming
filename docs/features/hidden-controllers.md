@@ -58,8 +58,7 @@ Some setups can't run HidHide (locked-down enterprise machines, missing kernel-d
 
 This requires PowerAim to run as **administrator** — Device Manager API needs elevated rights. If not elevated, you'll see a "Restart as admin" button in the title bar (also clickable from this subpage).
 
-![Hidden Controllers subpage](../images/hidden-controllers-page.png)
-<!-- SCREENSHOT NEEDED: Hidden Controllers subpage listing 2-3 HID devices, each with a name, a status indicator, and Disable/Enable buttons. -->
+<!-- SCREENSHOT NEEDED (../images/hidden-controllers-page.png): Hidden Controllers subpage listing 2-3 HID devices, each with a name, a status indicator, and Disable/Enable buttons. -->
 
 ### Restart as admin
 

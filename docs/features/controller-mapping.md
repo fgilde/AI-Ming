@@ -11,7 +11,6 @@ PowerAim's controller-mapping engine lets you **remap keyboard/mouse → virtual
 Use it to play gamepad-only games with KB+M, KB-only games with a controller, or to build hybrid bindings you can flip with a hotkey mid-match.
 
 ![Controller Mapping page](../images/mapping-page.png)
-<!-- SCREENSHOT NEEDED: Mapping sidebar entry selected, showing the Active toggle, direction picker (Both / KB→Pad / Pad→KB), profile list, and the Engine status line. -->
 
 ## Prerequisites
 
@@ -89,7 +88,6 @@ The status line at the bottom of the Mapping page shows the engine state: **Engi
 ## The profile editor
 
 ![Profile editor with mappings table](../images/mapping-editor.png)
-<!-- SCREENSHOT NEEDED: Mapping editor showing a profile with several mappings, slot-style chips for source/target, the activator dropdown, and the stick-tuning sliders at the top right. -->
 
 The editor has three main areas:
 
@@ -193,7 +191,6 @@ Open it from:
 - **Mapping page → Open Tester** (pops out as a separate window so you can keep editing)
 
 ![Gamepad Tester window](../images/gamepad-tester.png)
-<!-- SCREENSHOT NEEDED: Gamepad Tester window showing the Xbox controller silhouette with two columns — physical (left) and virtual (right) — and a tap-indicator for any pressed button. -->
 
 The tester floats above other windows so you can leave it open while editing mappings.
 

@@ -8,8 +8,7 @@ nav_order: 5
 
 A topmost diagnostic panel that displays the AI pipeline's live state — FPS, inference time, detection count, current target, prediction trail.
 
-![Debug overlay floating over a game](../images/debug-overlay.png)
-<!-- SCREENSHOT NEEDED: Game running with the PowerAim Debug Overlay in the top-left corner, showing FPS, inference time, detection count, currently locked target. -->
+<!-- SCREENSHOT NEEDED (../images/debug-overlay.png): Game running with the PowerAim Debug Overlay in the top-left corner, showing FPS, inference time, detection count, currently locked target. -->
 
 ## What it does
 
