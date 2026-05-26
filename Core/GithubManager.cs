@@ -40,19 +40,104 @@ namespace Core
         {
             string apiUrl = $"https://api.github.com/repos/{owner}/{repo}/releases";
 
-            var content = await httpClient.GetAsync(apiUrl);
-            var data = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(content);
-
-            return data.Select(d => new GitHubRelease
+            try
             {
-                TagName = d["tag_name"].ToString(),
-                Description = d["body"].ToString(),
-                Assets = ((JsonElement)d["assets"]).EnumerateArray().Select(a => new Asset
+                var content = await httpClient.GetAsync(apiUrl);
+                var data = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(content);
+                if (data != null && data.Count > 0)
                 {
-                    Name = a.GetProperty("name").ToString(),
-                    DownloadUrl = a.GetProperty("browser_download_url").ToString()
-                }).ToList()
-            });
+                    return data.Select(d => new GitHubRelease
+                    {
+                        TagName = d["tag_name"].ToString(),
+                        Description = d["body"].ToString(),
+                        Assets = ((JsonElement)d["assets"]).EnumerateArray().Select(a => new Asset
+                        {
+                            Name = a.GetProperty("name").ToString(),
+                            DownloadUrl = a.GetProperty("browser_download_url").ToString()
+                        }).ToList()
+                    });
+                }
+            }
+            catch (HttpRequestException ex) when (
+                ex.Message.Contains("403", StringComparison.Ordinal) ||
+                ex.Message.Contains("429", StringComparison.Ordinal) ||
+                ex.Message.Contains("rate limit", StringComparison.OrdinalIgnoreCase))
+            {
+                // Anonymous GitHub API access is limited to 60 requests/hour/IP. The atom feed
+                // below is NOT rate-limited (it's a regular HTML/XML endpoint), so we fall back to
+                // it. Asset URLs are reconstructed from build.ps1's naming convention since the
+                // atom feed doesn't carry them.
+            }
+            catch (Exception)
+            {
+                // Any other failure — DNS, certificate, transient 5xx, JSON parse — also flips us
+                // to the atom-feed fallback rather than burning the call.
+            }
+
+            return await GetReleasesViaAtomAsync(owner, repo);
+        }
+
+        /// <summary>
+        ///     Rate-limit-free release list via the public atom feed
+        ///     (<c>https://github.com/{owner}/{repo}/releases.atom</c>). Returns the same
+        ///     <see cref="GitHubRelease"/> shape as the API path. Asset URLs are constructed from
+        ///     PowerAim's build.ps1 naming convention — if a release was published with non-standard
+        ///     zip names, those assets won't be discoverable through this path, but the dropdown
+        ///     still lists the tag so the user can navigate manually.
+        /// </summary>
+        public async Task<IEnumerable<GitHubRelease>> GetReleasesViaAtomAsync(string owner, string repo)
+        {
+            string atomUrl = $"https://github.com/{owner}/{repo}/releases.atom";
+            string xml;
+            try { xml = await httpClient.GetAsync(atomUrl); }
+            catch { return []; }
+
+            var doc = System.Xml.Linq.XDocument.Parse(xml);
+            System.Xml.Linq.XNamespace atom = "http://www.w3.org/2005/Atom";
+            var entries = doc.Descendants(atom + "entry").Select(e =>
+            {
+                var title = e.Element(atom + "title")?.Value ?? "";
+                var content = e.Element(atom + "content")?.Value ?? "";
+                return new GitHubRelease
+                {
+                    TagName = title.Trim(),
+                    Description = StripHtml(content),
+                    Assets = BuildKnownAssetsForTag(owner, repo, title.Trim()),
+                };
+            }).ToList();
+            return entries;
+        }
+
+        /// <summary>
+        ///     Constructs asset URLs that PowerAim's <c>build.ps1</c> is known to produce for any
+        ///     given tag:
+        ///     <list type="bullet">
+        ///       <item><c>Release_{tag}.zip</c> — DirectML build</item>
+        ///       <item><c>Release_{tag}_cuda.zip</c> — CUDA build</item>
+        ///       <item><c>Installer.exe</c> — standalone installer</item>
+        ///     </list>
+        ///     The URLs are well-formed even if a specific asset doesn't exist at that path —
+        ///     GitHub returns 404 then and the launcher's download step surfaces it normally.
+        /// </summary>
+        private static List<Asset> BuildKnownAssetsForTag(string owner, string repo, string tag)
+        {
+            string baseUrl = $"https://github.com/{owner}/{repo}/releases/download/{tag}";
+            return
+            [
+                new Asset { Name = $"Release_{tag}.zip",      DownloadUrl = $"{baseUrl}/Release_{tag}.zip" },
+                new Asset { Name = $"Release_{tag}_cuda.zip", DownloadUrl = $"{baseUrl}/Release_{tag}_cuda.zip" },
+                new Asset { Name = "Installer.exe",            DownloadUrl = $"{baseUrl}/Installer.exe" },
+            ];
+        }
+
+        private static string StripHtml(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return s;
+            // Cheap tag-strip — atom feeds wrap content in <p>/<ul>/<li>. Don't pull in HtmlAgility
+            // for two regexes.
+            s = System.Text.RegularExpressions.Regex.Replace(s, "<[^>]+>", " ");
+            s = System.Net.WebUtility.HtmlDecode(s);
+            return System.Text.RegularExpressions.Regex.Replace(s, @"\s+", " ").Trim();
         }
 
         public async Task<GitHubRelease> GetLatestReleaseInfoAsync(string owner, string repo)

@@ -38,7 +38,7 @@
                            FontSize="14"
                            VerticalAlignment="Center" />
                 <TextBlock x:Name="TitleLabel"
-                           Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='UpdateAvailable'}"
+                           Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='UpdateAvailable'}"
                            Margin="10,0,0,0"
                            VerticalAlignment="Center"
                            Foreground="{DynamicResource FluentTextPrimary}"
@@ -103,7 +103,7 @@
                     <TextBlock Foreground="{DynamicResource FluentTextSecondary}"
                                FontFamily="Segoe UI Variable Text"
                                FontSize="12"
-                               Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='YourVersion'}" />
+                               Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='YourVersion'}" />
                     <TextBlock Foreground="{DynamicResource FluentTextPrimary}"
                                FontFamily="Segoe UI Variable Text"
                                FontWeight="SemiBold"
@@ -115,7 +115,7 @@
                     <TextBlock Foreground="{DynamicResource FluentTextSecondary}"
                                FontFamily="Segoe UI Variable Text"
                                FontSize="12"
-                               Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NewVersion'}" />
+                               Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='NewVersion'}" />
                     <TextBlock Foreground="{DynamicResource FluentAccent}"
                                FontFamily="Segoe UI Variable Text"
                                FontWeight="SemiBold"
@@ -157,14 +157,14 @@
             <Button x:Name="CancelButton"
                     IsEnabled="{Binding CanClose}"
                     Style="{StaticResource FluentStandardButton}"
-                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Cancel'}"
+                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Cancel'}"
                     MinWidth="90"
                     Margin="0,0,8,0"
                     Click="Exit_Click" />
             <Button x:Name="ApplyButton"
                     IsEnabled="{Binding CanClose}"
                     Style="{StaticResource FluentAccentButton}"
-                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='InstallUpdate'}"
+                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='InstallUpdate'}"
                     MinWidth="120"
                     Click="Confirm_Click" />
         </StackPanel>

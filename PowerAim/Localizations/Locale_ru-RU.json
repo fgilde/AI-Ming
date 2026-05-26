@@ -508,6 +508,7 @@
   "OpenGamepadTester": "Открыть тестер геймпада",
   "OpenGamepadTesterTooltip": "Переключает на страницу живого тестера геймпада — полезно для проверки физического ввода + сопоставления слотов.",
   "OpenHwidSpoofer": "Открыть HWID Spoofer",
+  "OpenInBrowser": "Открыть в браузере",
   "OpenJoyCplFailedFormat": "Не удалось открыть joy.cpl: {0}",
   "OpenModelsFolder": "Открыть папку моделей",
   "OpenOtherConfig": "Открыть другую конфигурацию...",

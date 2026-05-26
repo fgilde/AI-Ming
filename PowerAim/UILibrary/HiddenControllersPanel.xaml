@@ -8,7 +8,7 @@
              d:DesignHeight="500" d:DesignWidth="700">
     <StackPanel>
         <TextBlock x:Name="HeaderText"
-                   Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='HiddenControllersHelp'}"
+                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='HiddenControllersHelp'}"
                    Foreground="{DynamicResource FluentTextSecondary}"
                    FontFamily="Segoe UI Variable Text"
                    FontSize="12"
@@ -23,12 +23,12 @@
                    FontSize="12"
                    TextWrapping="Wrap"
                    Margin="0,0,0,8"
-                   Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NotElevatedWarning'}" />
+                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='NotElevatedWarning'}" />
 
         <StackPanel x:Name="DevicesPanel" />
 
         <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-            <Button Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Refresh'}"
+            <Button Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Refresh'}"
                     MinHeight="32" Padding="14,4,14,4"
                     Margin="0,0,8,0"
                     Click="Refresh_Click" />

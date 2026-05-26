@@ -307,6 +307,8 @@ public partial class MainWindow
         if (GamepadTester is not null)
             GamepadTester.BackRequested += (_, _) => _ = NavigateTo(nameof(GamepadSettings));
 
+        WireHelpPanel();
+
         UpdateAdminButton();
     }
 
@@ -645,26 +647,21 @@ public partial class MainWindow
     }
 
     /// <summary>
-    ///     Help-sidebar button — opens the PowerAim documentation in the user's default browser.
-    ///     URL lives in <see cref="ApplicationConstants.DocsUrl"/> so it can be retargeted without
-    ///     touching MainWindow code.
+    ///     Wire the embedded help panel's "back" button so it returns to whichever menu the user
+    ///     was on before opening Help. Called once during UI bootstrap.
     /// </summary>
-    private void OpenDocumentation_Click(object sender, RoutedEventArgs e)
+    private void WireHelpPanel()
     {
-        try
+        if (HelpPanelHost != null)
         {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-            {
-                FileName = ApplicationConstants.DocsUrl,
-                UseShellExecute = true,
-            });
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[Docs] Failed to launch browser: {ex.Message}");
-            new global::Visuality.NoticeBar($"Could not open documentation: {ex.Message}", 4000).Show();
+            HelpPanelHost.BackRequested -= HelpPanel_BackRequested;
+            HelpPanelHost.BackRequested += HelpPanel_BackRequested;
         }
     }
+
+    private string? _helpReturnTo;
+    private void HelpPanel_BackRequested(object? sender, EventArgs e) =>
+        _ = NavigateTo(_helpReturnTo ?? nameof(AimMenu));
 
     private Button? FindNavButton(string name)
     {
@@ -674,6 +671,12 @@ public partial class MainWindow
 
     private async Task NavigateTo(string name, bool animate = true, Button? clickedButton = null)
     {
+        // Track the previously-active menu when entering the Help page so its Back button can
+        // restore the user's location. Don't update on Help→Help re-entry (which would erase the
+        // real back-target).
+        if (name == nameof(HelpPage) && CurrentMenu != nameof(HelpPage))
+            _helpReturnTo = CurrentMenu;
+
         if (SectionLabel is not null)
         {
             var section = string.Join(" ", name.Replace("Menu", "").SplitByUpperCase()).ToUpper();

@@ -508,6 +508,7 @@
   "OpenGamepadTester": "Oyun Kumandası Test Cihazını Aç",
   "OpenGamepadTesterTooltip": "Canlı oyun kumandası test sayfasına geçer — fiziksel giriş + slot eşlemesini doğrulamak için kullanışlıdır.",
   "OpenHwidSpoofer": "HWID Spoofer'ı Aç",
+  "OpenInBrowser": "Tarayıcıda aç",
   "OpenJoyCplFailedFormat": "joy.cpl açılamadı: {0}",
   "OpenModelsFolder": "Modeller klasörünü aç",
   "OpenOtherConfig": "Diğer ayarı aç...",

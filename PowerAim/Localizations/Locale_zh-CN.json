@@ -508,6 +508,7 @@
   "OpenGamepadTester": "打开游戏手柄测试器",
   "OpenGamepadTesterTooltip": "切换到实时游戏手柄测试器页面——用于验证物理输入 + 槽位映射。",
   "OpenHwidSpoofer": "打开 HWID 伪装器",
+  "OpenInBrowser": "在浏览器中打开",
   "OpenJoyCplFailedFormat": "无法打开 joy.cpl：{0}",
   "OpenModelsFolder": "打开模型文件夹",
   "OpenOtherConfig": "打开其他配置...",

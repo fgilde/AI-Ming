@@ -508,6 +508,7 @@
   "OpenGamepadTester": "Open Gamepad Tester",
   "OpenGamepadTesterTooltip": "Switches to the live gamepad tester page — useful for verifying physical input + slot mapping.",
   "OpenHwidSpoofer": "Open HWID Spoofer",
+  "OpenInBrowser": "Open in browser",
   "OpenJoyCplFailedFormat": "Could not open joy.cpl: {0}",
   "OpenModelsFolder": "Open models folder",
   "OpenOtherConfig": "Open other config...",

@@ -1,10 +1,10 @@
-<Window x:Class="PowerAim.Visuality.GamepadTesterWindow"
+<Window x:Class="PowerAim.Visuality.HelpWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:uiLibrary="clr-namespace:PowerAim.UILibrary"
-        Title="{Binding Converter={StaticResource localeConverter}, ConverterParameter='GamepadTester'}"
-        Height="780"
-        Width="900"
+        Title="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Help'}"
+        Height="820"
+        Width="1100"
         MinWidth="640"
         MinHeight="540"
         ShowInTaskbar="True"
@@ -12,6 +12,6 @@
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource FluentSurface1}">
     <Grid Margin="14">
-        <uiLibrary:GamepadTesterPanel x:Name="Tester" />
+        <uiLibrary:HelpPanel x:Name="Panel" />
     </Grid>
 </Window>

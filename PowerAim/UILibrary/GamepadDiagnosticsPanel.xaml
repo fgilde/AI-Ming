@@ -8,7 +8,7 @@
              d:DesignHeight="400" d:DesignWidth="600">
     <StackPanel>
         <!-- XInput slots row -->
-        <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='XInputSlotsHeader'}"
+        <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='XInputSlotsHeader'}"
                    Foreground="{DynamicResource FluentTextPrimary}"
                    FontFamily="Segoe UI Variable Display"
                    FontWeight="SemiBold" FontSize="13"
@@ -23,7 +23,7 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DetectedGamepadsHeader'}"
+                <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DetectedGamepadsHeader'}"
                            Foreground="{DynamicResource FluentTextPrimary}"
                            FontFamily="Segoe UI Variable Display"
                            FontWeight="SemiBold" FontSize="13" />
@@ -33,15 +33,15 @@
                            Margin="0,2,0,0" />
             </StackPanel>
             <Button Grid.Column="1"
-                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ManageHiddenControllers'}"
+                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ManageHiddenControllers'}"
                     Padding="12,4,12,4"
                     MinHeight="30"
-                    ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ManageHiddenControllersTooltip'}"
+                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ManageHiddenControllersTooltip'}"
                     Click="OpenHiddenControllers_Click" />
         </Grid>
 
         <!-- Sender state -->
-        <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='PowerAimSender'}"
+        <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='PowerAimSender'}"
                    Foreground="{DynamicResource FluentTextPrimary}"
                    FontFamily="Segoe UI Variable Display"
                    FontWeight="SemiBold" FontSize="13"
@@ -53,7 +53,7 @@
                 BorderThickness="0,0,0,0"
                 Margin="0,14,0,4">
             <StackPanel>
-                <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Diagnose'}"
+                <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Diagnose'}"
                            Foreground="{DynamicResource FluentAccent}"
                            FontFamily="Segoe UI Variable Display"
                            FontWeight="SemiBold" FontSize="13"
@@ -69,39 +69,39 @@
 
         <!-- Actions -->
         <WrapPanel Margin="0,12,0,0">
-            <Button Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='FireTestRtPulse'}"
+            <Button Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='FireTestRtPulse'}"
                     MinHeight="32" Padding="12,4,12,4"
                     Margin="0,0,8,4"
                     Click="TestPulse_Click" />
-            <Button Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ReconnectVirtualPad'}"
+            <Button Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ReconnectVirtualPad'}"
                     MinHeight="32" Padding="12,4,12,4"
                     Margin="0,0,8,4"
-                    ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ReconnectVirtualPadTooltip'}"
+                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ReconnectVirtualPadTooltip'}"
                     Click="ReconnectVirtual_Click" />
-            <Button Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ResetHidHideCloak'}"
+            <Button Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ResetHidHideCloak'}"
                     MinHeight="32" Padding="12,4,12,4"
                     Margin="0,0,8,4"
-                    ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ResetHidHideCloakTooltip'}"
+                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ResetHidHideCloakTooltip'}"
                     Click="ResetHidHide_Click" />
-            <Button Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='RefreshNow'}"
+            <Button Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='RefreshNow'}"
                     MinHeight="32" Padding="12,4,12,4"
                     Margin="0,0,8,4"
                     Click="Refresh_Click" />
             <Button x:Name="LaunchHidHideBtn"
-                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LaunchHidHideUI'}"
+                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='LaunchHidHideUI'}"
                     MinHeight="32" Padding="12,4,12,4"
                     Margin="0,0,8,4"
-                    ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='LaunchHidHideUITooltip'}"
+                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='LaunchHidHideUITooltip'}"
                     Click="LaunchHidHide_Click" />
-            <Button Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='OpenGamepadTester'}"
+            <Button Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OpenGamepadTester'}"
                     MinHeight="32" Padding="12,4,12,4"
                     Margin="0,0,8,4"
-                    ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='OpenGamepadTesterTooltip'}"
+                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OpenGamepadTesterTooltip'}"
                     Click="OpenGamepadTester_Click" />
-            <Button Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='WindowsJoyCpl'}"
+            <Button Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='WindowsJoyCpl'}"
                     MinHeight="32" Padding="12,4,12,4"
                     Margin="0,0,8,4"
-                    ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='WindowsJoyCplTooltip'}"
+                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='WindowsJoyCplTooltip'}"
                     Click="OpenJoyCpl_Click" />
         </WrapPanel>
     </StackPanel>

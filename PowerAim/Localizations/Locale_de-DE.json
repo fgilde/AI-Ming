@@ -508,6 +508,7 @@
   "OpenGamepadTester": "Gamepad-Tester öffnen",
   "OpenGamepadTesterTooltip": "Wechselt zur Live-Gamepad-Tester-Seite — nützlich zum Überprüfen von physischer Eingabe + Slot-Mapping.",
   "OpenHwidSpoofer": "HWID-Spoofer öffnen",
+  "OpenInBrowser": "Im Browser öffnen",
   "OpenJoyCplFailedFormat": "Konnte joy.cpl nicht öffnen: {0}",
   "OpenModelsFolder": "Models-Ordner öffnen",
   "OpenOtherConfig": "Andere Konfiguration öffnen...",

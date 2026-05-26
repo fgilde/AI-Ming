@@ -37,7 +37,7 @@
                        VerticalAlignment="Top"
                        Foreground="{DynamicResource FluentTextPrimary}"
                        FontFamily="Segoe UI Variable Text"
-                       Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='AntiRecoilHelp'}"
+                       Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AntiRecoilHelp'}"
                        FontSize="20"
                        VerticalContentAlignment="Center"
                        Padding="0"
@@ -58,7 +58,7 @@
                 Margin="0,0,0,100">
             
             <Grid>
-                <Label Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='QuestionBulletCount'}"
+                <Label Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='QuestionBulletCount'}"
                        HorizontalAlignment="Center"
                        VerticalAlignment="Top"
                        Foreground="{DynamicResource FluentTextPrimary}"
@@ -75,7 +75,7 @@
                 <TextBox x:Name="BulletNumberTextbox"
                          BorderThickness="1"
                          TextWrapping="Wrap"
-                         Tag="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='InsertNumberHere'}"
+                         Tag="{Binding Converter={StaticResource localeConverter}, ConverterParameter='InsertNumberHere'}"
                          VerticalAlignment="Top"
                          FontFamily="Segoe UI Variable Text"
                          Padding="5,5,5,5"
@@ -89,7 +89,7 @@
                          TextChanged="BulletNumberTextbox_TextChanged" />
                 <Button x:Name="ConfirmB"
                         Style="{StaticResource FluentAccentButton}"
-                        Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Confirm'}"
+                        Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Confirm'}"
                         HorizontalAlignment="Left"
                         MinWidth="90"
                         VerticalAlignment="Bottom"
@@ -97,7 +97,7 @@
                         Margin="64,0,0,20" />
                 <Button x:Name="TryAgainB"
                         Style="{StaticResource FluentStandardButton}"
-                        Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='TryAgain'}"
+                        Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='TryAgain'}"
                         HorizontalAlignment="Left"
                         MinWidth="90"
                         VerticalAlignment="Top"

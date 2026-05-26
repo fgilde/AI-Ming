@@ -508,6 +508,7 @@
   "OpenGamepadTester": "Ouvrir le testeur de manette",
   "OpenGamepadTesterTooltip": "Bascule vers la page de test de manette en direct — utile pour vérifier l'entrée physique + le mappage des slots.",
   "OpenHwidSpoofer": "Ouvrir le spoofer HWID",
+  "OpenInBrowser": "Ouvrir dans le navigateur",
   "OpenJoyCplFailedFormat": "Impossible d'ouvrir joy.cpl : {0}",
   "OpenModelsFolder": "Ouvrir le dossier des modèles",
   "OpenOtherConfig": "Ouvrir une autre configuration...",

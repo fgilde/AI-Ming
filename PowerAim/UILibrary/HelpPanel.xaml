@@ -1,0 +1,108 @@
+<UserControl x:Class="PowerAim.UILibrary.HelpPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1000"
+             Background="Transparent">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar -->
+        <Grid Grid.Row="0" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0"
+                    x:Name="BackBtn"
+                    Style="{StaticResource FluentStandardButton}"
+                    Padding="8,4,10,4"
+                    Margin="0,0,4,0"
+                    Click="Back_Click"
+                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Back'}">
+                <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="13" />
+            </Button>
+            <Button Grid.Column="1"
+                    x:Name="ForwardBtn"
+                    Style="{StaticResource FluentStandardButton}"
+                    Padding="8,4,10,4"
+                    Margin="0,0,4,0"
+                    Click="Forward_Click">
+                <TextBlock Text="&#xE72A;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="13" />
+            </Button>
+            <Button Grid.Column="2"
+                    Style="{StaticResource FluentStandardButton}"
+                    Padding="8,4,10,4"
+                    Margin="0,0,8,0"
+                    Click="Reload_Click"
+                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Refresh'}">
+                <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="13" />
+            </Button>
+
+            <TextBox Grid.Column="3"
+                     x:Name="UrlBox"
+                     MinHeight="30"
+                     VerticalContentAlignment="Center"
+                     FontFamily="Segoe UI Variable Text"
+                     FontSize="12"
+                     IsReadOnly="True"
+                     Foreground="{DynamicResource FluentTextSecondary}" />
+
+            <Button Grid.Column="4"
+                    Style="{StaticResource FluentStandardButton}"
+                    Padding="10,6,12,6"
+                    Margin="8,0,4,0"
+                    Click="OpenInBrowser_Click"
+                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OpenDocumentation'}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="&#xE774;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" />
+                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" FontSize="12" FontFamily="Segoe UI Variable Text"
+                               Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OpenInBrowser'}" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="5"
+                    x:Name="PopOutBtn"
+                    Style="{StaticResource FluentStandardButton}"
+                    Padding="10,6,12,6"
+                    Click="PopOut_Click"
+                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='PopOutTooltip'}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="&#xE8A7;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='PopOut'}"
+                               Margin="6,0,0,0" VerticalAlignment="Center" FontFamily="Segoe UI Variable Text" FontSize="12" />
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <!-- WebView -->
+        <Border Grid.Row="1"
+                Background="{DynamicResource FluentSurface2}"
+                BorderBrush="{DynamicResource FluentStroke}"
+                BorderThickness="1"
+                CornerRadius="6">
+            <wv2:WebView2 x:Name="Web" />
+        </Border>
+
+        <!-- Status / error bar -->
+        <TextBlock Grid.Row="2"
+                   x:Name="StatusBar"
+                   Margin="2,6,2,0"
+                   FontFamily="Segoe UI Variable Small"
+                   FontSize="11"
+                   Foreground="{DynamicResource FluentTextTertiary}"
+                   TextWrapping="Wrap"
+                   Visibility="Collapsed" />
+    </Grid>
+</UserControl>

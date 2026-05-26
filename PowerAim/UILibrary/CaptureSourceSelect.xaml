@@ -33,9 +33,9 @@
                             <TextBlock TextDecorations="Underline"
                                        FontSize="12"
                                        Foreground="{DynamicResource FluentTextPrimary}"
-                                       Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SelectMonitorToCapture'}" />
+                                       Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SelectMonitorToCapture'}" />
                             <StackPanel Margin="0,5,0,0" Orientation="Horizontal">
-                                <TextBlock FontSize="10" Foreground="{DynamicResource FluentTextSecondary}" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='CurrentColon'}" />
+                                <TextBlock FontSize="10" Foreground="{DynamicResource FluentTextSecondary}" Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='CurrentColon'}" />
                                 <TextBlock FontSize="10"
                                            Margin="3,0,0,0"
                                            Foreground="{DynamicResource FluentTextSecondary}"
@@ -58,7 +58,7 @@
                                Foreground="{Binding ScreenForeground}"
                                FontFamily="Segoe UI Variable Small"
                                FontSize="12"
-                               Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Monitor'}"
+                               Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Monitor'}"
                                VerticalAlignment="Center" />
                     <TextBlock FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
                                Foreground="{Binding ScreenForeground}"
@@ -90,9 +90,9 @@
                             <TextBlock TextDecorations="Underline"
                                        FontSize="12"
                                        Foreground="{DynamicResource FluentTextPrimary}"
-                                       Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SelectApplicationWindow'}" />
+                                       Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SelectApplicationWindow'}" />
                             <StackPanel Margin="0,5,0,0" Orientation="Horizontal">
-                                <TextBlock FontSize="10" Foreground="{DynamicResource FluentTextSecondary}" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='CurrentColon'}" />
+                                <TextBlock FontSize="10" Foreground="{DynamicResource FluentTextSecondary}" Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='CurrentColon'}" />
                                 <TextBlock FontSize="10"
                                            Margin="3,0,0,0"
                                            Foreground="{DynamicResource FluentTextSecondary}"
@@ -115,7 +115,7 @@
                                Foreground="{Binding ProcessForeground}"
                                FontFamily="Segoe UI Variable Small"
                                FontSize="12"
-                               Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Window'}"
+                               Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Window'}"
                                VerticalAlignment="Center" />
                     <TextBlock FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
                                Foreground="{Binding ProcessForeground}"

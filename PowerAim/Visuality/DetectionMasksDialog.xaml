@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:visuality="clr-namespace:PowerAim.Visuality"
         mc:Ignorable="d"
-        Title="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DetectionRegionMasks'}"
+        Title="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DetectionRegionMasks'}"
         Height="640"
         Width="960"
         WindowStyle="None"
@@ -37,7 +37,7 @@
                            FontFamily="Segoe UI Variable Display"
                            FontWeight="SemiBold"
                            FontSize="13"
-                           Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DetectionRegionMasks'}" />
+                           Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DetectionRegionMasks'}" />
             </StackPanel>
             <Button HorizontalAlignment="Right"
                     Background="Transparent" BorderBrush="Transparent" BorderThickness="0"
@@ -75,7 +75,7 @@
                    FontFamily="Segoe UI Variable Small"
                    FontSize="12"
                    TextWrapping="Wrap"
-                   Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DetectionMasksHelp'}" />
+                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DetectionMasksHelp'}" />
 
         <!-- Body -->
         <Grid Grid.Row="2" Margin="16,0,16,12">
@@ -104,12 +104,12 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Button Grid.Column="0" Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='AddMask'}"
+                        <Button Grid.Column="0" Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AddMask'}"
                                 Style="{DynamicResource FluentAccentButton}"
                                 MinHeight="32"
                                 Click="AddMask_Click" />
                         <Button Grid.Column="1" Margin="6,0,0,0"
-                                Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ClearAll'}"
+                                Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ClearAll'}"
                                 Style="{DynamicResource FluentStandardButton}"
                                 MinHeight="32"
                                 Click="ClearAll_Click" />
@@ -153,7 +153,7 @@
                                    FontFamily="Segoe UI Variable Small"
                                    FontSize="11"
                                    Foreground="{DynamicResource FluentTextTertiary}"
-                                   Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='MasksDragHint'}" />
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='MasksDragHint'}" />
                     </Grid>
                 </Border>
 
@@ -167,7 +167,7 @@
                         Padding="14">
                     <StackPanel x:Name="SliderPanel">
                         <TextBlock x:Name="SelectedHeader"
-                                   Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NoMaskSelected'}"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='NoMaskSelected'}"
                                    Foreground="{DynamicResource FluentTextPrimary}"
                                    FontFamily="Segoe UI Variable Display"
                                    FontWeight="SemiBold"
@@ -198,10 +198,10 @@
                                     Minimum="0" Maximum="1" TickFrequency="0.01"
                                     IsSnapToTickEnabled="True" Margin="8,0,0,8"
                                     ValueChanged="OnSliderChanged" />
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Width'}"
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Width'}"
                                        Foreground="{DynamicResource FluentTextSecondary}"
                                        FontFamily="Segoe UI Variable Text" FontSize="12" Margin="0,0,8,2" />
-                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Height'}"
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Height'}"
                                        Foreground="{DynamicResource FluentTextSecondary}"
                                        FontFamily="Segoe UI Variable Text" FontSize="12" Margin="8,0,0,2" />
                             <Slider x:Name="WSlider" Grid.Row="3" Grid.Column="0"
@@ -230,13 +230,13 @@
                        FontFamily="Segoe UI Variable Small" FontSize="11"
                        VerticalAlignment="Center"
                        TextWrapping="Wrap"
-                       Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='MasksFooterHelp'}" />
-            <Button Grid.Column="1" x:Name="CancelButton" Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Cancel'}"
+                       Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='MasksFooterHelp'}" />
+            <Button Grid.Column="1" x:Name="CancelButton" Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Cancel'}"
                     MinWidth="96" MinHeight="34"
                     Margin="0,0,8,0" Padding="14,6,14,6"
                     Style="{DynamicResource FluentStandardButton}"
                     Click="Cancel_Click" />
-            <Button Grid.Column="2" x:Name="SaveButton" Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Save'}"
+            <Button Grid.Column="2" x:Name="SaveButton" Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Save'}"
                     MinWidth="100" MinHeight="34"
                     Padding="14,6,14,6"
                     Style="{DynamicResource FluentAccentButton}"

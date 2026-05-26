@@ -70,7 +70,7 @@
                                        Checked="{Binding Trigger.Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 </Grid>
                 <TextBox Text="{Binding Trigger.Name, UpdateSourceTrigger=PropertyChanged}"
-                         Tag="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Name'}"
+                         Tag="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Name'}"
                          Style="{DynamicResource placeHolder}" />
             </StackPanel>
         </Border>

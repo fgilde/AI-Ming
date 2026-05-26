@@ -8,7 +8,7 @@
         xmlns:uiLibrary1="clr-namespace:UILibrary"
         xmlns:visuality="clr-namespace:PowerAim.Visuality"
         mc:Ignorable="d"
-        Title="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='EditTrigger'}"
+        Title="{Binding Converter={StaticResource localeConverter}, ConverterParameter='EditTrigger'}"
         Height="820"
         Width="760"
         MinHeight="500"
@@ -106,7 +106,7 @@
             <Button Grid.Column="1"
                     x:Name="CancelButton"
                     Style="{StaticResource FluentStandardButton}"
-                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Cancel'}"
+                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Cancel'}"
                     MinWidth="90"
                     Margin="0,0,8,0"
                     Click="Exit_Click" />
@@ -114,7 +114,7 @@
                     x:Name="SaveButton"
                     IsEnabled="{Binding Trigger.IsValid}"
                     Style="{StaticResource FluentAccentButton}"
-                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Save'}"
+                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Save'}"
                     MinWidth="100"
                     Click="SaveButton_Click" />
         </Grid>

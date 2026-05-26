@@ -35,7 +35,7 @@
                            Foreground="{DynamicResource FluentAccent}"
                            FontSize="14"
                            VerticalAlignment="Center" />
-                <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SelectProcess'}"
+                <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SelectProcess'}"
                            Margin="10,0,0,0"
                            VerticalAlignment="Center"
                            Foreground="{DynamicResource FluentTextPrimary}"
@@ -86,7 +86,7 @@
                    FontFamily="Segoe UI Variable Small"
                    FontSize="12"
                    TextWrapping="Wrap"
-                   Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='SelectProcessHelp'}" />
+                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SelectProcessHelp'}" />
 
         <!-- Process list -->
         <Border Grid.Row="2" Style="{StaticResource FluentCard}" Margin="14,0,14,8" Padding="2">
@@ -122,13 +122,13 @@
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,14,14">
             <Button x:Name="CancelButton"
                     Style="{StaticResource FluentStandardButton}"
-                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Cancel'}"
+                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Cancel'}"
                     MinWidth="90"
                     Margin="0,0,8,0"
                     Click="Exit_Click" />
             <Button x:Name="ApplyButton"
                     Style="{StaticResource FluentAccentButton}"
-                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Confirm'}"
+                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Confirm'}"
                     IsEnabled="False"
                     MinWidth="100"
                     Click="Confirm_Click" />

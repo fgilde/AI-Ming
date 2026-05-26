@@ -70,10 +70,13 @@ public class ReleaseManager
     private static string ShortError(Exception e)
     {
         var msg = e.Message ?? string.Empty;
-        if (msg.Contains("API rate limit", StringComparison.OrdinalIgnoreCase))
-            return "GitHub API rate limit reached. Try again later.";
-        if (msg.Contains("403"))
-            return "GitHub denied the request (rate limit?). Try again later.";
+        // Note: the GithubManager now auto-falls back to the atom feed when the API is
+        // rate-limited, so these messages only surface when BOTH the API and the (unlimited)
+        // atom feed failed — typically a real network outage, not a rate limit. The wording
+        // mentions the network rather than blaming the rate-limit to keep users from waiting
+        // an hour for nothing.
+        if (msg.Contains("rate limit", StringComparison.OrdinalIgnoreCase))
+            return "GitHub API and atom-feed fallback both failed. Check your internet connection.";
         return msg.Length > 160 ? msg.Substring(0, 160) + "…" : msg;
     }
 }

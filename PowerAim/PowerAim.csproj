@@ -92,6 +92,7 @@
 
   <ItemGroup Condition="'$(IsCuda)' == 'false'">
     <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.19.2" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2792.45" />
   </ItemGroup>
 
   <ItemGroup>

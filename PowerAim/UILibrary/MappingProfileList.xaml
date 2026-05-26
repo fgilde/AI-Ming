@@ -51,21 +51,21 @@
                                 <uiLibrary:AToggle BorderBrush="Transparent" Text=""
                                                    Checked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}" />
                                 <Button Style="{StaticResource FluentIconButton}"
-                                        ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Edit'}"
+                                        ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Edit'}"
                                         Tag="{Binding}"
                                         Click="EditProfile_Click"
                                         Foreground="{DynamicResource FluentTextPrimary}"
                                         Content="&#xEB7E;"
                                         Padding="0" FontSize="20" Width="50" />
                                 <Button Style="{StaticResource FluentIconButton}"
-                                        ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Duplicate'}"
+                                        ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Duplicate'}"
                                         Tag="{Binding}"
                                         Click="DuplicateProfile_Click"
                                         Foreground="{DynamicResource FluentTextPrimary}"
                                         Content="&#xE8C8;"
                                         Padding="0" FontSize="20" Width="50" />
                                 <Button Style="{StaticResource FluentIconButton}"
-                                        ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Delete'}"
+                                        ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Delete'}"
                                         Tag="{Binding}"
                                         Click="DeleteProfile_Click"
                                         Foreground="{DynamicResource FluentTextPrimary}"
@@ -84,9 +84,9 @@
                             MinHeight="34"
                             Margin="0,8,0,0"
                             Click="NewProfileBtn_Click"
-                            ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NewProfileTooltip'}">
+                            ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='NewProfileTooltip'}">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='NewProfile'}" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='NewProfile'}" VerticalAlignment="Center" />
                             <TextBlock Text=" ▾"
                                        Margin="6,0,0,0"
                                        VerticalAlignment="Center"

@@ -35,7 +35,7 @@
                            Foreground="{DynamicResource FluentAccent}"
                            FontSize="14"
                            VerticalAlignment="Center" />
-                <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='KnownIssues'}"
+                <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='KnownIssues'}"
                            Margin="10,0,0,0"
                            VerticalAlignment="Center"
                            Foreground="{DynamicResource FluentTextPrimary}"
@@ -97,7 +97,7 @@
             <CheckBox Grid.Column="0"
                       Unchecked="ToggleButton_OnChecked"
                       Checked="ToggleButton_OnChecked"
-                      Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='ShowOnStartup'}"
+                      Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ShowOnStartup'}"
                       IsChecked="{Binding Settings.ShouldShow}"
                       Foreground="{DynamicResource FluentTextPrimary}"
                       FontFamily="Segoe UI Variable Text"
@@ -107,7 +107,7 @@
                     x:Name="ApplyButton"
                     IsEnabled="{Binding CanClose}"
                     Style="{StaticResource FluentAccentButton}"
-                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Close'}"
+                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Close'}"
                     MinWidth="100"
                     Click="Exit_Click" />
         </Grid>

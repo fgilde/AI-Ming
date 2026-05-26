@@ -508,6 +508,7 @@
   "OpenGamepadTester": "Abrir probador de gamepad",
   "OpenGamepadTesterTooltip": "Cambia a la página del probador de gamepad en vivo — útil para verificar la entrada física + la asignación de ranuras.",
   "OpenHwidSpoofer": "Abrir HWID Spoofer",
+  "OpenInBrowser": "Abrir en el navegador",
   "OpenJoyCplFailedFormat": "No se pudo abrir joy.cpl: {0}",
   "OpenModelsFolder": "Abrir carpeta de modelos",
   "OpenOtherConfig": "Abrir otra configuración...",

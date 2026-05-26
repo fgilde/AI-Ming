@@ -7,7 +7,7 @@
         xmlns:converter="clr-namespace:PowerAim.Converter"
         xmlns:visuality="clr-namespace:PowerAim.Visuality"
         mc:Ignorable="d"
-        Title="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='EditHeadArea'}"
+        Title="{Binding Converter={StaticResource localeConverter}, ConverterParameter='EditHeadArea'}"
         Height="640"
         Width="900"
         WindowStyle="None"
@@ -36,7 +36,7 @@
                            Foreground="{DynamicResource FluentAccent}"
                            FontSize="14"
                            VerticalAlignment="Center" />
-                <TextBlock Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='EditHeadArea'}"
+                <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='EditHeadArea'}"
                            Margin="10,0,0,0"
                            VerticalAlignment="Center"
                            Foreground="{DynamicResource FluentTextPrimary}"
@@ -87,7 +87,7 @@
                    FontFamily="Segoe UI Variable Small"
                    FontSize="12"
                    TextWrapping="Wrap"
-                   Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='HeadAreaHelp'}" />
+                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='HeadAreaHelp'}" />
 
         <!-- Body: preview area + sliders -->
         <Grid x:Name="MainArea" Grid.Row="2" Margin="14,0,14,8" MouseMove="MainArea_MouseMove" MouseUp="MainArea_MouseUp">
@@ -166,7 +166,7 @@
                                Foreground="{DynamicResource FluentTextSecondary}"
                                FontFamily="Segoe UI Variable Text"
                                FontSize="12"
-                               Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Width'}" />
+                               Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Width'}" />
                     <Slider Minimum="0.01" Maximum="1.0"
                             ValueChanged="Slider_OnValueChanged"
                             Value="{Binding Path=RelativeRect.WidthPercentage, Mode=TwoWay}"
@@ -178,7 +178,7 @@
                                Foreground="{DynamicResource FluentTextSecondary}"
                                FontFamily="Segoe UI Variable Text"
                                FontSize="12"
-                               Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Height'}" />
+                               Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Height'}" />
                     <Slider Minimum="0.01" Maximum="1.0"
                             ValueChanged="Slider_OnValueChanged"
                             Value="{Binding Path=RelativeRect.HeightPercentage, Mode=TwoWay}"
@@ -190,7 +190,7 @@
                                Foreground="{DynamicResource FluentTextSecondary}"
                                FontFamily="Segoe UI Variable Text"
                                FontSize="12"
-                               Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Left'}" />
+                               Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Left'}" />
                     <Slider Minimum="0.0" Maximum="1.0"
                             ValueChanged="Slider_OnValueChanged"
                             Value="{Binding Path=RelativeRect.LeftMarginPercentage, Mode=TwoWay}"
@@ -202,7 +202,7 @@
                                Foreground="{DynamicResource FluentTextSecondary}"
                                FontFamily="Segoe UI Variable Text"
                                FontSize="12"
-                               Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Top'}" />
+                               Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Top'}" />
                     <Slider Minimum="0.0" Maximum="1.0"
                             ValueChanged="Slider_OnValueChanged"
                             Value="{Binding Path=RelativeRect.TopMarginPercentage, Mode=TwoWay}"
@@ -212,7 +212,7 @@
 
                     <Button x:Name="ResetButton"
                             Style="{StaticResource FluentStandardButton}"
-                            Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Reset'}"
+                            Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Reset'}"
                             HorizontalAlignment="Stretch"
                             Click="Reset_Click" />
                 </StackPanel>
@@ -223,13 +223,13 @@
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,14,14">
             <Button x:Name="CancelButton"
                     Style="{StaticResource FluentStandardButton}"
-                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Cancel'}"
+                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Cancel'}"
                     MinWidth="90"
                     Margin="0,0,8,0"
                     Click="Exit_Click" />
             <Button x:Name="SaveButton"
                     Style="{StaticResource FluentAccentButton}"
-                    Content="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Save'}"
+                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Save'}"
                     MinWidth="100"
                     Click="SaveButton_Click" />
         </StackPanel>
