@@ -395,6 +395,19 @@
                                             <TextBlock Grid.Column="1" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Settings'}" FontFamily="Segoe UI Variable Text" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="6,0,8,0" />
                                         </Grid>
                                     </Button>
+                                    <Button x:Name="MenuHelpB"
+                                            ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='DocsHelpTooltip'}"
+                                            Style="{StaticResource NavItemButton}"
+                                            Click="OpenDocumentation_Click">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#xE897;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='Help'}" FontFamily="Segoe UI Variable Text" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="6,0,8,0" />
+                                        </Grid>
+                                    </Button>
                                     <Button x:Name="Menu4B"
                                             Tag="AboutMenu"
                                             ToolTip="{Binding Path=Texts, Converter={StaticResource localeConverter}, ConverterParameter='About'}"

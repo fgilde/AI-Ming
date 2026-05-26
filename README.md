@@ -21,6 +21,24 @@ PowerAim is **100% free**: no ads, no key system, no paywalled features. It is *
 
 ---
 
+## 📖 Documentation
+
+Full, searchable documentation is published via GitHub Pages:
+
+**[https://fgilde.github.io/AI-Ming/](https://fgilde.github.io/AI-Ming/)**
+
+The docs cover installation, every feature in detail, model training, configuration reference, and troubleshooting. They are also bundled with the app and shipped offline — click the **Help** button in PowerAim's title bar to open them locally without an internet connection.
+
+Quick links:
+- 🚀 [Getting Started](https://fgilde.github.io/AI-Ming/getting-started/)
+- 🎯 [Features](https://fgilde.github.io/AI-Ming/features/)
+- 🎮 [Controller Mapping](https://fgilde.github.io/AI-Ming/features/controller-mapping/)
+- 🤖 [AutoPlay](https://fgilde.github.io/AI-Ming/features/autoplay/)
+- 🧠 [Training Your Own Model](https://fgilde.github.io/AI-Ming/models/training-your-own/)
+- 🔧 [Troubleshooting](https://fgilde.github.io/AI-Ming/troubleshooting/)
+
+---
+
 ## Table of Contents
 - [Purpose](#purpose)
 - [How it works](#how-it-works)

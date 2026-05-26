@@ -7,26 +7,42 @@ param(
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $outputDir = Join-Path $scriptDir "PowerAim/bin/Release"
 
-# Funktion f�r das Erstellen mit oder ohne CUDA
+# Funktion für das Erstellen mit oder ohne CUDA.
+# Note: we publish each executable project EXPLICITLY (PowerAim + Launcher) instead of running
+# `dotnet publish` from the solution root. The solution-wide publish picks up Core.csproj too,
+# which is a library — `PublishSingleFile=true` on a library produces error NETSDK1099 and
+# pollutes the build output. Targeting projects explicitly is the supported approach.
 function Build-ProjectWithCuda {
     param(
         [bool]$isCuda
     )
 
-    # Setze die IsCuda Variable
     $isCudaValue = if ($isCuda) { "true" } else { "false" }
 
-    # Clean and Build das Projekt mit der IsCuda Variable
+    # Common publish args. Self-contained=false keeps the .exe small (relies on the user's
+    # installed .NET runtime). The csproj also has <SelfContained>true</SelfContained> but the
+    # command-line override wins, matching the previous build behaviour.
+    $commonArgs = @(
+        '-c', 'Release',
+        '-r', 'win-x64',
+        '-p:PublishSingleFile=true',
+        '--self-contained', 'false',
+        '-p:DebugType=None',
+        "-p:IsCuda=$isCudaValue"
+    )
+    if ($isCuda) { $commonArgs += '-p:DefineConstants=IsCuda' }
+
     dotnet clean --configuration Release
-    if($isCuda) {
-        dotnet publish -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None -p:IsCuda=$isCudaValue -p:DefineConstants="IsCuda"
-	    #dotnet publish PowerAim/PowerAim.csproj -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None -p:IsCuda=$isCudaValue -p:DefineConstants="IsCuda"
-	    #dotnet publish Launcher/Launcher.csproj -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None -p:IsCuda=$isCudaValue -p:DefineConstants="IsCuda"
-	} else {
-		dotnet publish -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None -p:IsCuda=$isCudaValue
-		#dotnet publish PowerAim/PowerAim.csproj -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None -p:IsCuda=$isCudaValue
-		#dotnet publish Launcher/Launcher.csproj -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=None -p:IsCuda=$isCudaValue
-	}       
+
+    Write-Host ""
+    Write-Host "Publishing PowerAim (IsCuda=$isCudaValue) ..."
+    dotnet publish PowerAim/PowerAim.csproj @commonArgs
+    if ($LASTEXITCODE -ne 0) { throw "PowerAim publish failed with exit code $LASTEXITCODE" }
+
+    Write-Host ""
+    Write-Host "Publishing Launcher (IsCuda=$isCudaValue) ..."
+    dotnet publish Launcher/Launcher.csproj @commonArgs
+    if ($LASTEXITCODE -ne 0) { throw "Launcher publish failed with exit code $LASTEXITCODE" }
 }
 
 # Check if the output directory exists and delete it

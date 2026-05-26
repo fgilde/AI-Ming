@@ -1,0 +1,66 @@
+title: PowerAim Documentation
+description: AI-powered aim alignment for accessibility, training, and fun
+theme: just-the-docs
+url: ""
+baseurl: ""
+permalink: pretty
+
+# just-the-docs config
+search_enabled: true
+heading_anchors: true
+color_scheme: dark
+
+aux_links:
+  "PowerAim on GitHub":
+    - "//github.com/fgilde/AI-Ming"
+  "Download":
+    - "//github.com/fgilde/AI-Ming/releases"
+
+# External nav links (rendered in the side menu)
+nav_external_links:
+  - title: PowerAim on GitHub
+    url: https://github.com/fgilde/AI-Ming
+    hide_icon: false
+  - title: Releases
+    url: https://github.com/fgilde/AI-Ming/releases
+    hide_icon: false
+
+# Footer
+footer_content: 'PowerAim is source-available under PolyForm Noncommercial. Commercial use prohibited.'
+
+# Search
+search:
+  heading_level: 3
+  previews: 2
+  preview_words_before: 3
+  preview_words_after: 3
+  tokenizer_separator: /[\s\-/]+/
+  rel_url: true
+  button: false
+
+# Callouts (admonitions)
+callouts_level: quiet
+callouts:
+  note:
+    title: Note
+    color: blue
+  warning:
+    title: Warning
+    color: yellow
+  important:
+    title: Important
+    color: red
+  tip:
+    title: Tip
+    color: green
+
+# Plugins
+plugins:
+  - jekyll-seo-tag
+
+# Files / dirs to exclude from build
+exclude:
+  - README.md
+  - vendor/
+  - Gemfile
+  - Gemfile.lock

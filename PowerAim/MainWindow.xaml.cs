@@ -644,6 +644,28 @@ public partial class MainWindow
         }
     }
 
+    /// <summary>
+    ///     Help-sidebar button — opens the PowerAim documentation in the user's default browser.
+    ///     URL lives in <see cref="ApplicationConstants.DocsUrl"/> so it can be retargeted without
+    ///     touching MainWindow code.
+    /// </summary>
+    private void OpenDocumentation_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = ApplicationConstants.DocsUrl,
+                UseShellExecute = true,
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Docs] Failed to launch browser: {ex.Message}");
+            new global::Visuality.NoticeBar($"Could not open documentation: {ex.Message}", 4000).Show();
+        }
+    }
+
     private Button? FindNavButton(string name)
     {
         return MenuButtons?.Children.OfType<Button>().FirstOrDefault(b => b.Tag?.ToString() == name)

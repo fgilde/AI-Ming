@@ -27,6 +27,13 @@ public class ApplicationConstants : Constants
     public const string ShowOnly = "";
     public const bool EasyMode = false;
 
+    /// <summary>
+    ///     URL the in-app Help button opens. Points to the GitHub Pages-hosted documentation.
+    ///     Bundled docs live under <c>docs/</c> in the repo and are auto-published to this URL
+    ///     by GitHub Pages on push. Update when the repo path changes.
+    /// </summary>
+    public const string DocsUrl = "https://fgilde.github.io/AI-Ming/";
+
     public static Visibility EasyModeHidden => EasyMode ? Visibility.Collapsed : Visibility.Visible;
     public static string[] DisabledFeatures => EasyMode ? ["AimAssist", "AntiRecoil", "ASP2", "AimConfig", "ARConfig"] : [];
 
