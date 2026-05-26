@@ -1,6 +1,10 @@
 title: PowerAim Documentation
 description: AI-powered aim alignment for accessibility, training, and fun
-theme: just-the-docs
+# `remote_theme` is required instead of `theme` because GitHub Pages' default
+# Jekyll build (ghcr.io/actions/jekyll-build-pages) only ships a whitelisted
+# set of themes; just-the-docs is not in that list. `jekyll-remote-theme` IS
+# whitelisted and pulls the theme straight from its GitHub repo at build time.
+remote_theme: just-the-docs/just-the-docs
 url: ""
 baseurl: ""
 permalink: pretty
@@ -54,8 +58,11 @@ callouts:
     title: Tip
     color: green
 
-# Plugins
+# Plugins — both must be in the GitHub Pages plugin whitelist
+# (https://pages.github.com/versions/). jekyll-remote-theme is required for
+# the `remote_theme:` above to work; jekyll-seo-tag adds OpenGraph/Twitter meta.
 plugins:
+  - jekyll-remote-theme
   - jekyll-seo-tag
 
 # Files / dirs to exclude from build
