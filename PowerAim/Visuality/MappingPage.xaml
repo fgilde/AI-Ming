@@ -27,27 +27,6 @@
                     <!-- Master active toggle with global hotkey support -->
                     <StackPanel x:Name="ActiveHost" Margin="0,0,0,8" />
 
-                    <!-- Direction radio buttons -->
-                    <Border Margin="0,8,0,0"
-                            Background="{DynamicResource FluentSurface3}"
-                            BorderBrush="{DynamicResource FluentStroke}"
-                            BorderThickness="1"
-                            CornerRadius="6"
-                            Padding="12,10,12,10">
-                        <StackPanel>
-                            <TextBlock Text="Active direction"
-                                       Foreground="{DynamicResource FluentTextSecondary}"
-                                       FontFamily="Segoe UI Variable Text" FontSize="12"
-                                       Margin="0,0,0,6" />
-                            <StackPanel x:Name="DirectionStack" Orientation="Horizontal" />
-                            <TextBlock Foreground="{DynamicResource FluentTextTertiary}"
-                                       FontFamily="Segoe UI Variable Small" FontSize="11"
-                                       Margin="0,6,0,0"
-                                       TextWrapping="Wrap"
-                                       Text="A profile can hold both directions. Switch any time — no need to re-edit the profile." />
-                        </StackPanel>
-                    </Border>
-
                     <!-- Engine status line -->
                     <TextBlock x:Name="EngineStatusText"
                                Foreground="{DynamicResource FluentTextTertiary}"

@@ -77,18 +77,21 @@
             </ListBox>
             <Grid Grid.Row="1">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Style="{StaticResource FluentStandardButton}"
-                            Content="+ FPS preset"
-                            Padding="14,4,14,4"
-                            MinHeight="34"
-                            Margin="0,8,8,0"
-                            Click="AddFpsPreset_Click" />
-                    <Button Style="{StaticResource FluentAccentButton}"
-                            Content="+ New profile"
+                    <Button x:Name="NewProfileBtn"
+                            Style="{StaticResource FluentAccentButton}"
                             Padding="14,4,14,4"
                             MinHeight="34"
                             Margin="0,8,0,0"
-                            Click="AddBlank_Click" />
+                            Click="NewProfileBtn_Click"
+                            ToolTip="Create a new profile — empty or pre-populated from a preset.">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="+ New profile" VerticalAlignment="Center" />
+                            <TextBlock Text=" ▾"
+                                       Margin="6,0,0,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="12" />
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Grid>

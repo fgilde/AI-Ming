@@ -82,10 +82,22 @@ namespace PowerAim.InputLogic
             DriveRightStick(stepX, stepY);
         }
 
+        private static bool _stickAxesPaused;
+
         private static void DriveRightStick(int dx, int dy)
         {
             var sender = GamepadManager.GamepadSender;
             if (sender == null || !sender.CanWork) return;
+            // CRITICAL: take ownership of the right-stick axes ONCE — otherwise the sender's
+            // SyncLoop (mirror physical→virtual every 1 ms) overwrites our values back to the
+            // physical pad's state (0 if nothing is plugged in) immediately after we write them.
+            // Same root cause that broke the mapping engine.
+            if (!_stickAxesPaused)
+            {
+                sender.PauseSync(GamepadAxis.RightThumbX);
+                sender.PauseSync(GamepadAxis.RightThumbY);
+                _stickAxesPaused = true;
+            }
             // ±150 px clipping → roughly full deflection.
             const double scale = 200.0;
             short sx = (short)Math.Clamp(dx * scale, short.MinValue, short.MaxValue);

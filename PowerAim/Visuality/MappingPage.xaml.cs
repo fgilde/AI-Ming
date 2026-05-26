@@ -1,13 +1,10 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 using PowerAim.Config;
 using PowerAim.InputLogic.Mapping;
 using PowerAim.Extensions; // AddToggleWithKeyBind + BindTo helpers
-using RadioButton = System.Windows.Controls.RadioButton;
 
 namespace PowerAim.Visuality;
 
@@ -29,7 +26,6 @@ public partial class MappingPage : System.Windows.Controls.UserControl
     public MappingPage()
     {
         InitializeComponent();
-        BuildDirectionPicker();
         BindProfiles();
         // BuildActiveToggle needs MainWindow.BindingManager which isn't reliably available during
         // XAML construction (the MappingPage child of MainWindow can be instantiated before
@@ -70,37 +66,6 @@ public partial class MappingPage : System.Windows.Controls.UserControl
         _activeToggleBuilt = true;
     }
 
-    private void BuildDirectionPicker()
-    {
-        DirectionStack.Children.Clear();
-        var options = new (string label, MappingDirection dir, string tip)[]
-        {
-            ("Both ↔",                MappingDirection.Both,                 "Both directions fire — KB+M drives the virtual controller AND your physical controller drives KB+M."),
-            ("Keyboard → Controller", MappingDirection.KeyboardToController, "Only KB+M-sourced mappings fire. Use to play gamepad-only games with KB+M."),
-            ("Controller → Keyboard", MappingDirection.ControllerToKeyboard, "Only controller-sourced mappings fire. Use to play KB+M-only games with a controller."),
-        };
-        foreach (var opt in options)
-        {
-            var b = new RadioButton
-            {
-                Content = opt.label,
-                GroupName = "MappingDirection",
-                Margin = new Thickness(0, 0, 14, 0),
-                FontFamily = new FontFamily("Segoe UI Variable Text"),
-                FontSize = 13,
-                IsChecked = AppConfig.Current?.MappingDirection == opt.dir,
-                ToolTip = opt.tip,
-                Tag = opt.dir,
-            };
-            b.SetResourceReference(RadioButton.ForegroundProperty, "FluentTextPrimary");
-            b.Checked += (_, _) =>
-            {
-                if (b.Tag is MappingDirection d && AppConfig.Current != null)
-                    AppConfig.Current.MappingDirection = d;
-            };
-            DirectionStack.Children.Add(b);
-        }
-    }
 
     /// <summary>
     ///     Hook ProfileList up to whichever collection lives on the currently-loaded
@@ -142,12 +107,19 @@ public partial class MappingPage : System.Windows.Controls.UserControl
         }
         _wiredProfiles = profiles;
         ProfileList.Profiles = profiles;
-        _autoSaveHandler = (_, _) => AppConfig.Current?.Save();
+        // Auto-save on collection changes — but only when the editor isn't actively touching the
+        // profile (otherwise every keypress during editing persists the in-flight state and
+        // Discard has nothing to roll back to).
+        _autoSaveHandler = (_, _) =>
+        {
+            if (MainWindow.Instance?.IsMappingEditorOpen == true) return;
+            AppConfig.Current?.Save();
+        };
         profiles.CollectionChanged += _autoSaveHandler;
-        BuildDirectionPicker();
         UpdateEngineStatus();
         // Also persist when the master toggle is flipped — without this, MappingActive=true never
-        // hits disk unless the user uses the Exit button (and we can't rely on that).
+        // hits disk unless the user uses the Exit button (and we can't rely on that). Note we
+        // don't gate this on IsMappingEditorOpen: the master toggle lives OUTSIDE the editor.
         if (cfg.ToggleState != null)
         {
             cfg.ToggleState.PropertyChanged += (_, e) =>
@@ -173,6 +145,9 @@ public partial class MappingPage : System.Windows.Controls.UserControl
     }
     private void ProfilePropAutoSave(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        // Skip while the editor is actively touching a profile — see HookCollectionAutoSave for
+        // the reasoning. The editor handles its own persistence on Save.
+        if (MainWindow.Instance?.IsMappingEditorOpen == true) return;
         AppConfig.Current?.Save();
     }
 

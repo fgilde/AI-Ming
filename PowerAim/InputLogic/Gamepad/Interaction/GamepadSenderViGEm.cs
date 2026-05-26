@@ -63,7 +63,7 @@ public class GamepadSenderViGEm : IGamepadSender
         }
     }
 
-    public bool CanWork => _virtualController != null;
+    public bool CanWork => _virtualController != null && IsConnected;
 
     /// <summary>
     ///     Force a disconnect + reconnect of the virtual controller. Windows treats it as a

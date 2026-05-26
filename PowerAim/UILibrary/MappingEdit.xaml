@@ -3,7 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:PowerAim.UILibrary"
              xmlns:uiLibrary="clr-namespace:PowerAim.UILibrary"
              mc:Ignorable="d"
              d:DesignHeight="900" d:DesignWidth="900">
@@ -93,7 +92,93 @@
             </StackPanel>
         </Border>
 
-        <!-- ====== Stick configuration ====== -->
+        <!-- ====== Mappings — the actual core editor ====== -->
+        <Border Style="{StaticResource FluentCard}">
+            <StackPanel>
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Style="{StaticResource SectionIcon}">
+                        <TextBlock Text="&#xE8A1;" Style="{StaticResource SectionIconGlyph}" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource SectionTitleBig}" Text="Mappings" />
+                        <TextBlock Style="{StaticResource SectionSubtitle}"
+                                   Text="Click a Source / Target slot, then press the key or controller button you want to bind." />
+                    </StackPanel>
+                    <Button Grid.Column="2" Style="{StaticResource FluentStandardButton}"
+                            Content="+ Add"
+                            Padding="12,4,12,4"
+                            Margin="0,0,8,0"
+                            ToolTip="Add an empty mapping row. Click each side to record a key / button."
+                            Click="AddRow_Click" />
+                    <Button Grid.Column="3" Style="{StaticResource FluentStandardButton}"
+                            Content="+ Stick → Mouse"
+                            Padding="10,4,10,4"
+                            Margin="0,0,8,0"
+                            ToolTip="Adds the special right-stick → mouse-motion mapping."
+                            Click="AddStickToMouse_Click" />
+                    <Button Grid.Column="4" Style="{StaticResource FluentStandardButton}"
+                            Content="+ Mouse → Stick"
+                            Padding="10,4,10,4"
+                            ToolTip="Adds the special mouse-motion → right-stick mapping."
+                            Click="AddMouseToStick_Click" />
+                </Grid>
+
+                <!-- Header strip -->
+                <Grid Margin="0,4,0,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <CheckBox Grid.Column="0" Margin="2,0,8,0" IsHitTestVisible="False" Opacity="0" />
+                    <TextBlock Grid.Column="1"
+                               Text="SOURCE"
+                               Foreground="{DynamicResource FluentTextSecondary}"
+                               FontFamily="Segoe UI Variable Small"
+                               FontSize="11"
+                               FontWeight="SemiBold"
+                               Margin="2,0,0,0" />
+                    <TextBlock Grid.Column="2"
+                               Text="→"
+                               Foreground="{DynamicResource FluentTextTertiary}"
+                               FontSize="16"
+                               Margin="14,0,14,0"
+                               VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="3"
+                               Text="TARGET"
+                               Foreground="{DynamicResource FluentTextSecondary}"
+                               FontFamily="Segoe UI Variable Small"
+                               FontSize="11"
+                               FontWeight="SemiBold"
+                               Margin="2,0,0,0" />
+                    <TextBlock Grid.Column="4"
+                               Text="ACTIVATOR"
+                               Foreground="{DynamicResource FluentTextSecondary}"
+                               FontFamily="Segoe UI Variable Small"
+                               FontSize="11"
+                               FontWeight="SemiBold"
+                               Margin="14,0,14,0" />
+                </Grid>
+
+                <ItemsControl x:Name="MappingItems" />
+
+                <TextBlock x:Name="MappingEmpty"
+                           Style="{DynamicResource FluentCaption}"
+                           Text="No mappings yet. Click '+ Add' above, then click each slot to record a key or controller button." />
+            </StackPanel>
+        </Border>
+
+        <!-- ====== Stick tuning ====== -->
         <Border Style="{StaticResource FluentCard}">
             <StackPanel>
                 <Grid Margin="0,0,0,10">
@@ -113,93 +198,5 @@
             </StackPanel>
         </Border>
 
-        <!-- ====== Controller visual ====== -->
-        <Border Style="{StaticResource FluentCard}">
-            <StackPanel>
-                <Grid Margin="0,0,0,10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Border Grid.Column="0" Style="{StaticResource SectionIcon}">
-                        <TextBlock Text="&#xE7FC;" Style="{StaticResource SectionIconGlyph}" />
-                    </Border>
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock Style="{StaticResource SectionTitleBig}" Text="Xbox 360 Controller" />
-                        <TextBlock Style="{StaticResource SectionSubtitle}" Text="Click a button to start a mapping — then click a key on the keyboard below." />
-                    </StackPanel>
-                </Grid>
-                <Border Background="{DynamicResource FluentSurface2}"
-                        BorderBrush="{DynamicResource FluentStroke}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="14">
-                    <local:Xbox360ControllerCanvas x:Name="Controller" HorizontalAlignment="Center" />
-                </Border>
-            </StackPanel>
-        </Border>
-
-        <!-- ====== Keyboard + Mouse visual ====== -->
-        <Border Style="{StaticResource FluentCard}">
-            <StackPanel>
-                <Grid Margin="0,0,0,10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Border Grid.Column="0" Style="{StaticResource SectionIcon}">
-                        <TextBlock Text="&#xE765;" Style="{StaticResource SectionIconGlyph}" />
-                    </Border>
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock Style="{StaticResource SectionTitleBig}" Text="Keyboard &amp; Mouse" />
-                        <TextBlock Style="{StaticResource SectionSubtitle}" Text="The other side of the mapping. ESC cancels an armed selection." />
-                    </StackPanel>
-                </Grid>
-                <Border Background="{DynamicResource FluentSurface2}"
-                        BorderBrush="{DynamicResource FluentStroke}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="14">
-                    <StackPanel x:Name="KeyboardStack" HorizontalAlignment="Center" />
-                </Border>
-            </StackPanel>
-        </Border>
-
-        <!-- ====== Mappings list ====== -->
-        <Border Style="{StaticResource FluentCard}">
-            <StackPanel>
-                <Grid Margin="0,0,0,10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <Border Grid.Column="0" Style="{StaticResource SectionIcon}">
-                        <TextBlock Text="&#xE8A1;" Style="{StaticResource SectionIconGlyph}" />
-                    </Border>
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock Style="{StaticResource SectionTitleBig}" Text="Mappings" />
-                        <TextBlock x:Name="StatusText" Style="{StaticResource SectionSubtitle}"
-                                   Text="Click a controller button or a key to start." />
-                    </StackPanel>
-                    <Button Grid.Column="2" Style="{StaticResource FluentStandardButton}"
-                            Content="Stick → Mouse"
-                            Padding="10,4,10,4"
-                            Margin="0,0,8,0"
-                            ToolTip="Add a mapping that feeds the right stick into mouse motion."
-                            Click="AddStickToMouse_Click" />
-                    <Button Grid.Column="3" Style="{StaticResource FluentStandardButton}"
-                            Content="Mouse → Stick"
-                            Padding="10,4,10,4"
-                            ToolTip="Add a mapping that feeds mouse motion into the virtual right stick."
-                            Click="AddMouseToStick_Click" />
-                </Grid>
-                <ItemsControl x:Name="MappingItems" />
-                <TextBlock x:Name="MappingEmpty"
-                           Style="{DynamicResource FluentCaption}"
-                           Text="No mappings yet. Click a controller button to arm a source, then click a key to pair it." />
-            </StackPanel>
-        </Border>
     </StackPanel>
 </UserControl>

@@ -895,27 +895,63 @@ public partial class MainWindow
     private string? _mappingEditReturnTo;
     private PowerAim.Config.ControllerMappingProfile? _mappingEditTarget;
     private bool _mappingEditDirty;
+    private bool _mappingEditIsNew;
+    private Action<PowerAim.Config.ControllerMappingProfile?>? _mappingEditCommit;
     private System.ComponentModel.PropertyChangedEventHandler? _mappingDirtyHandler;
     private System.Collections.Specialized.NotifyCollectionChangedEventHandler? _mappingCollectionDirtyHandler;
+    private List<PowerAim.Config.InputMapping>? _mappingEditSnapshot;
 
     /// <summary>
-    ///     Open the mapping editor for a profile. Saves on confirm, discards otherwise (with
-    ///     unsaved-changes warning). Mirrors the trigger-editor flow.
+    ///     True while the mapping editor is open. The <see cref="PowerAim.Visuality.MappingPage"/>'s
+    ///     auto-save handlers check this to skip writing during editing — otherwise every keystroke
+    ///     would persist the in-flight state and Discard would have nothing to roll back to.
     /// </summary>
-    public void OpenMappingEditor(PowerAim.Config.ControllerMappingProfile target)
+    public bool IsMappingEditorOpen { get; private set; }
+
+    /// <summary>
+    ///     Open the mapping editor.
+    ///     <para>
+    ///     <paramref name="isNew"/> = true: <paramref name="target"/> is a draft NOT in the
+    ///     profiles collection yet. <paramref name="commit"/> is invoked with the saved profile
+    ///     (or null on discard). This is the trigger-editor pattern — prevents zombie "Profile N"
+    ///     entries from clicking + immediately discarding.
+    ///     </para>
+    ///     <para>
+    ///     <paramref name="isNew"/> = false: target is already in the collection. We snapshot its
+    ///     mappings list + call BeginEdit; on Discard we restore from the snapshot AND call
+    ///     CancelEdit so both property changes and inner mappings-list mutations roll back.
+    ///     </para>
+    /// </summary>
+    public void OpenMappingEditor(
+        PowerAim.Config.ControllerMappingProfile target,
+        bool isNew = false,
+        Action<PowerAim.Config.ControllerMappingProfile?>? commit = null)
     {
         _mappingEditReturnTo = CurrentMenu;
         _mappingEditTarget = target;
-        // BeginEdit so Discard rolls the profile back to its pre-edit state.
-        target.BeginEdit();
+        _mappingEditIsNew = isNew;
+        _mappingEditCommit = commit;
+        IsMappingEditorOpen = true;
+
+        if (!isNew)
+        {
+            // For existing profiles: take a snapshot of the current Mappings list so Discard can
+            // restore it. Nextended's BeginEdit handles primitive properties; the inner collection
+            // mutations are NOT covered by IEditableObject contract.
+            _mappingEditSnapshot = target.Mappings.Select(ClonedMapping).ToList();
+            target.BeginEdit();
+        }
+        else
+        {
+            _mappingEditSnapshot = null;
+        }
+
         MappingEditName.Text = target.Name ?? "";
-        _mappingEditDirty = false;
-        MappingEditDirty.Visibility = Visibility.Collapsed;
+        _mappingEditDirty = isNew; // new drafts start "dirty" so save is the only way to commit
+        MappingEditDirty.Visibility = _mappingEditDirty ? Visibility.Visible : Visibility.Collapsed;
 
         MappingEditor.Profile = target;
 
-        // Dirty tracking: any property or collection change marks the editor dirty so the user
-        // sees the * indicator and gets a "discard unsaved?" prompt on back/cancel.
         Dispatcher.BeginInvoke(new Action(() =>
         {
             if (!ReferenceEquals(_mappingEditTarget, target)) return;
@@ -940,10 +976,26 @@ public partial class MainWindow
         _ = NavigateTo(nameof(MappingEditPage));
     }
 
+    private static PowerAim.Config.InputMapping ClonedMapping(PowerAim.Config.InputMapping m) => new()
+    {
+        SourceKind = m.SourceKind,
+        SourceCode = m.SourceCode,
+        TargetKind = m.TargetKind,
+        TargetCode = m.TargetCode,
+        Enabled = m.Enabled,
+        Activator = m.Activator,
+        LongPressMs = m.LongPressMs,
+        ModifierKind = m.ModifierKind,
+        ModifierCode = m.ModifierCode,
+    };
+
     private void CloseMappingEditor(bool save)
     {
         var target = _mappingEditTarget;
         var returnTo = _mappingEditReturnTo ?? nameof(MappingMenu);
+        var isNew = _mappingEditIsNew;
+        var commit = _mappingEditCommit;
+        var snapshot = _mappingEditSnapshot;
 
         if (!save && _mappingEditDirty)
         {
@@ -966,21 +1018,40 @@ public partial class MainWindow
                 target.Mappings.CollectionChanged -= _mappingCollectionDirtyHandler;
             if (save)
             {
-                target.EndEdit();
-                // Persist immediately — the MappingPage's CollectionChanged auto-save covers
-                // add/remove, but inner-profile edits (renaming, mappings list, sliders) only
-                // mutate property state. Without this Save() the user would lose those edits on
-                // app exit unless they happen to trigger another save path.
+                if (!isNew) target.EndEdit();
+                // Hand draft to the commit callback (which appends to collection for new
+                // profiles) BEFORE writing to disk so the JSON contains it.
+                commit?.Invoke(target);
                 AppConfig.Current?.Save();
             }
-            else target.CancelEdit();
+            else
+            {
+                if (!isNew)
+                {
+                    // Roll back inner mappings list to the snapshot (IEditableObject doesn't cover
+                    // ObservableCollection mutations), then roll back primitive properties.
+                    if (snapshot != null)
+                    {
+                        target.Mappings.Clear();
+                        foreach (var m in snapshot)
+                            target.Mappings.Add(m);
+                    }
+                    target.CancelEdit();
+                }
+                // For isNew drafts: do nothing — the profile was never in the collection.
+                commit?.Invoke(null);
+            }
         }
         _mappingDirtyHandler = null;
         _mappingCollectionDirtyHandler = null;
         _mappingEditDirty = false;
+        _mappingEditSnapshot = null;
+        _mappingEditCommit = null;
+        _mappingEditIsNew = false;
         MappingEditDirty.Visibility = Visibility.Collapsed;
         MappingEditor.Profile = null;
         _mappingEditTarget = null;
+        IsMappingEditorOpen = false;
 
         SetSidebarLocked(false);
         _ = NavigateTo(returnTo);

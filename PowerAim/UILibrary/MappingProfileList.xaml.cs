@@ -99,33 +99,51 @@ public partial class MappingProfileList : System.Windows.Controls.UserControl
         }
     }
 
-    private void AddBlank_Click(object sender, RoutedEventArgs e)
+    /// <summary>
+    ///     Open a split-button menu offering an Empty profile plus the built-in presets. Reduces
+    ///     the previous two-button row to one consistent affordance with all preset variants
+    ///     discoverable in one place.
+    /// </summary>
+    private void NewProfileBtn_Click(object sender, RoutedEventArgs e)
     {
-        var p = new ControllerMappingProfile { Name = $"Profile {Profiles.Count + 1}" };
-        Profiles.Add(p);
-        MainWindow.Instance.OpenMappingEditor(p);
-    }
+        var menu = new ContextMenu();
 
-    private void AddFpsPreset_Click(object sender, RoutedEventArgs e)
-    {
-        var preset = MergeFpsPresets();
-        Profiles.Add(preset);
-        MainWindow.Instance.OpenMappingEditor(preset);
-    }
-
-    private static ControllerMappingProfile MergeFpsPresets()
-    {
-        var kbToPad = MappingPresets.NewFpsKbToPad();
-        var padToKb = MappingPresets.NewFpsPadToKb();
-        var combined = new ControllerMappingProfile
+        void Add(string header, Func<ControllerMappingProfile> factory)
         {
-            Name = "FPS preset",
-            Enabled = true,
-            MouseToStickSensitivity = kbToPad.MouseToStickSensitivity,
-            StickToMouseSensitivity = padToKb.StickToMouseSensitivity,
-        };
-        foreach (var m in kbToPad.Mappings) combined.Mappings.Add(m);
-        foreach (var m in padToKb.Mappings) combined.Mappings.Add(m);
-        return combined;
+            var item = new MenuItem { Header = header };
+            item.Click += (_, _) =>
+            {
+                var draft = factory();
+                CreateDraftThenOpen(draft);
+            };
+            menu.Items.Add(item);
+        }
+
+        // Header item — non-clickable label.
+        Add("Empty profile",                     () => new ControllerMappingProfile { Name = $"Profile {Profiles.Count + 1}" });
+        menu.Items.Add(new Separator());
+        var presetsHeader = new MenuItem { Header = "PRESETS", IsEnabled = false, FontSize = 10 };
+        menu.Items.Add(presetsHeader);
+        Add("FPS — Both directions (KB+M ↔ Controller)", MappingPresets.NewFpsBoth);
+        Add("FPS — KB+M → Controller",                    MappingPresets.NewFpsKbToPad);
+        Add("FPS — Controller → KB+M",                    MappingPresets.NewFpsPadToKb);
+        Add("Driving / Racing — KB+M → Controller",       MappingPresets.NewDrivingKbToPad);
+        Add("Controller as Mouse (navigate Windows)",     MappingPresets.NewControllerAsMouse);
+
+        menu.PlacementTarget = NewProfileBtn;
+        menu.IsOpen = true;
+    }
+
+    /// <summary>
+    ///     Open the editor on a draft profile that's NOT in the collection yet. Only on Save does
+    ///     the commit callback append it — Discard then leaves the collection clean (no zombie
+    ///     "Profile 4" rows from accidental clicks). Mirrors the trigger-editor pattern.
+    /// </summary>
+    private void CreateDraftThenOpen(ControllerMappingProfile draft)
+    {
+        MainWindow.Instance.OpenMappingEditor(draft, isNew: true, saved =>
+        {
+            if (saved != null) Profiles.Add(saved);
+        });
     }
 }

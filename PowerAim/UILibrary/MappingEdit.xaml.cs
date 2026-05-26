@@ -1,34 +1,35 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Forms;
-using System.Windows.Input;
 using System.Windows.Media;
 using PowerAim.Config;
 using PowerAim.Extensions;
+using PowerAim.InputLogic;
 using PowerAim.InputLogic.Mapping;
-// System.Windows.Forms shadows several WPF types — pin the WPF ones.
-using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+// Pin WPF types that collide with WinForms.
 using UserControl = System.Windows.Controls.UserControl;
 using Button = System.Windows.Controls.Button;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using VerticalAlignment = System.Windows.VerticalAlignment;
-using Orientation = System.Windows.Controls.Orientation;
-using Cursors = System.Windows.Input.Cursors;
 
 namespace PowerAim.UILibrary;
 
 /// <summary>
-///     Full mapping editor that mirrors the TriggerEdit pattern: a UserControl bound to a single
-///     <see cref="ControllerMappingProfile"/> via the <see cref="Profile"/> DependencyProperty.
-///     Hosts the new Xbox-360 controller visual, a QWERTY keyboard + mouse strip, stick-tuning
-///     sliders, and a mappings list (with activator picker per row).
+///     Mapping editor — hybrid design.
+///     <list type="number">
+///       <item>Editor is a row list. Each row uses two <see cref="AKeyChanger"/>s (source + target)
+///             driven by the same global recorder PowerAim uses everywhere else (Triggers, Aim
+///             keybinds, …), plus an Activator combo. Recording works for KB + mouse + gamepad
+///             buttons + triggers out of the box because <see cref="StoredInputBinding"/> already
+///             covers all of them.</item>
+///       <item>Two stick-shaped specials (mouse ↔ stick motion, stick direction) that can't be
+///             carried by <see cref="StoredInputBinding"/> show as a labelled chip with a Remove
+///             button instead of an AKeyChanger.</item>
+///       <item>The Xbox 360 visual stays as a read-only reference — buttons that have a mapping
+///             are highlighted, but the diagram itself isn't an editor anymore.</item>
+///     </list>
+///     Persistence schema (<see cref="InputMapping"/>) is unchanged — the per-row
+///     <see cref="MappingBindingConverter"/> handles the round-trip so the engine doesn't care.
 /// </summary>
 public partial class MappingEdit : UserControl
 {
@@ -36,17 +37,11 @@ public partial class MappingEdit : UserControl
         nameof(Profile), typeof(ControllerMappingProfile), typeof(MappingEdit),
         new PropertyMetadata(null, OnProfileChanged));
 
-    /// <summary>The profile being edited. Set this once when opening the editor.</summary>
     public ControllerMappingProfile? Profile
     {
         get => (ControllerMappingProfile?)GetValue(ProfileProperty);
         set => SetValue(ProfileProperty, value);
     }
-
-    private (MappingInputKind kind, int code, string label)? _armed;
-    private readonly Dictionary<(MappingInputKind, int), Border> _keyboardHitboxes = new();
-    private readonly HashSet<(MappingInputKind, int)> _mappedSources = new();
-    private readonly HashSet<(MappingInputKind, int)> _mappedTargets = new();
 
     private NotifyCollectionChangedEventHandler? _mappingsHandler;
 
@@ -56,28 +51,16 @@ public partial class MappingEdit : UserControl
         DataContext = this;
 
         BuildStickSettings();
-        BuildKeyboardGrid();
 
-        Controller.HotspotClicked += (_, hot) => OnDiagramClicked(hot.Kind, hot.Code, hot.Label);
-
-        Loaded += (_, _) =>
-        {
-            if (Window.GetWindow(this) is Window w) w.PreviewKeyDown += OnWindowPreviewKeyDown;
-            RebuildAll();
-        };
-        Unloaded += (_, _) =>
-        {
-            if (Window.GetWindow(this) is Window w) w.PreviewKeyDown -= OnWindowPreviewKeyDown;
-        };
+        Loaded += (_, _) => RebuildAll();
     }
 
     private static void OnProfileChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is not MappingEdit me) return;
         if (e.OldValue is ControllerMappingProfile oldP && me._mappingsHandler != null)
-        {
             oldP.Mappings.CollectionChanged -= me._mappingsHandler;
-        }
+
         if (e.NewValue is ControllerMappingProfile newP)
         {
             me._mappingsHandler = (_, _) => me.Dispatcher.BeginInvoke(new Action(me.RebuildAll));
@@ -86,24 +69,10 @@ public partial class MappingEdit : UserControl
         me.RebuildAll();
     }
 
-    private void OnWindowPreviewKeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key == Key.Escape && _armed != null)
-        {
-            _armed = null;
-            RefreshHighlights();
-            UpdateStatus();
-            e.Handled = true;
-        }
-    }
-
     private void RebuildAll()
     {
-        // Rebuild stick-setting bindings against the new profile.
         BuildStickSettings();
         RebuildMappingsList();
-        RefreshHighlights();
-        UpdateStatus();
     }
 
     // ============================================================================ STICK SETTINGS ====
@@ -116,21 +85,16 @@ public partial class MappingEdit : UserControl
 
         StickSettingsHost.AddSlider("Mouse → Stick sensitivity", "× scale", 0.05, 0.05, 0.1, 5.0)
             .BindTo(() => p.MouseToStickSensitivity);
-
         StickSettingsHost.AddSlider("Stick → Mouse sensitivity", "px per tick", 1, 1, 1, 60)
             .BindTo(() => p.StickToMouseSensitivity);
-
         StickSettingsHost.AddSlider("Dead-zone", "× full deflection", 0.01, 0.01, 0.0, 0.45)
             .BindTo(() => p.StickDeadzone);
-
         StickSettingsHost.AddSlider("Anti-dead-zone", "× full deflection", 0.01, 0.01, 0.0, 0.45)
             .BindTo(() => p.StickAntiDeadzone);
-
         StickSettingsHost.AddSlider("Mouse response curve", "exponent", 0.05, 0.05, 0.8, 3.0)
             .BindTo(() => p.StickMouseExponent);
 
-        // Invert-Y toggle row.
-        var toggleRow = new System.Windows.Controls.CheckBox
+        var invY = new System.Windows.Controls.CheckBox
         {
             Content = "Invert Y axis (stick ↔ mouse)",
             VerticalAlignment = VerticalAlignment.Center,
@@ -139,226 +103,13 @@ public partial class MappingEdit : UserControl
             FontSize = 13,
             IsChecked = p.InvertMouseY,
         };
-        toggleRow.SetResourceReference(System.Windows.Controls.CheckBox.ForegroundProperty, "FluentTextPrimary");
-        toggleRow.Checked   += (_, _) => p.InvertMouseY = true;
-        toggleRow.Unchecked += (_, _) => p.InvertMouseY = false;
-        StickSettingsHost.Children.Add(toggleRow);
+        invY.SetResourceReference(System.Windows.Controls.CheckBox.ForegroundProperty, "FluentTextPrimary");
+        invY.Checked   += (_, _) => p.InvertMouseY = true;
+        invY.Unchecked += (_, _) => p.InvertMouseY = false;
+        StickSettingsHost.Children.Add(invY);
     }
 
-    // ============================================================================ KEYBOARD GRID ====
-
-    /// <summary>Hand-tuned QWERTY layout. Each row is a list of (label, Keys-value, width-units).</summary>
-    private static readonly (string label, Keys key, double widthUnits)[][] _kbRows = new[]
-    {
-        new[]
-        {
-            ("Esc", Keys.Escape, 1.0), ("F1", Keys.F1, 1.0), ("F2", Keys.F2, 1.0), ("F3", Keys.F3, 1.0),
-            ("F4", Keys.F4, 1.0), ("F5", Keys.F5, 1.0), ("F6", Keys.F6, 1.0), ("F7", Keys.F7, 1.0),
-            ("F8", Keys.F8, 1.0), ("F9", Keys.F9, 1.0), ("F10", Keys.F10, 1.0), ("F11", Keys.F11, 1.0),
-            ("F12", Keys.F12, 1.0),
-        },
-        new[]
-        {
-            ("`", Keys.Oemtilde, 1.0), ("1", Keys.D1, 1.0), ("2", Keys.D2, 1.0), ("3", Keys.D3, 1.0),
-            ("4", Keys.D4, 1.0), ("5", Keys.D5, 1.0), ("6", Keys.D6, 1.0), ("7", Keys.D7, 1.0),
-            ("8", Keys.D8, 1.0), ("9", Keys.D9, 1.0), ("0", Keys.D0, 1.0),
-            ("-", Keys.OemMinus, 1.0), ("=", Keys.Oemplus, 1.0), ("⌫", Keys.Back, 2.0),
-        },
-        new[]
-        {
-            ("Tab", Keys.Tab, 1.5),
-            ("Q", Keys.Q, 1.0), ("W", Keys.W, 1.0), ("E", Keys.E, 1.0), ("R", Keys.R, 1.0),
-            ("T", Keys.T, 1.0), ("Y", Keys.Y, 1.0), ("U", Keys.U, 1.0), ("I", Keys.I, 1.0),
-            ("O", Keys.O, 1.0), ("P", Keys.P, 1.0), ("[", Keys.OemOpenBrackets, 1.0),
-            ("]", Keys.OemCloseBrackets, 1.0), ("\\", Keys.OemPipe, 1.5),
-        },
-        new[]
-        {
-            ("Caps", Keys.CapsLock, 1.75),
-            ("A", Keys.A, 1.0), ("S", Keys.S, 1.0), ("D", Keys.D, 1.0), ("F", Keys.F, 1.0),
-            ("G", Keys.G, 1.0), ("H", Keys.H, 1.0), ("J", Keys.J, 1.0), ("K", Keys.K, 1.0),
-            ("L", Keys.L, 1.0), (";", Keys.OemSemicolon, 1.0), ("'", Keys.OemQuotes, 1.0),
-            ("Enter", Keys.Enter, 2.25),
-        },
-        new[]
-        {
-            ("Shift", Keys.ShiftKey, 2.25),
-            ("Z", Keys.Z, 1.0), ("X", Keys.X, 1.0), ("C", Keys.C, 1.0), ("V", Keys.V, 1.0),
-            ("B", Keys.B, 1.0), ("N", Keys.N, 1.0), ("M", Keys.M, 1.0),
-            (",", Keys.Oemcomma, 1.0), (".", Keys.OemPeriod, 1.0), ("/", Keys.OemQuestion, 1.0),
-            ("Shift", Keys.RShiftKey, 2.75),
-        },
-        new[]
-        {
-            ("Ctrl", Keys.ControlKey, 1.5), ("Win", Keys.LWin, 1.0), ("Alt", Keys.Menu, 1.5),
-            ("Space", Keys.Space, 6.0),
-            ("Alt", Keys.RMenu, 1.5), ("Menu", Keys.Apps, 1.0), ("Ctrl", Keys.RControlKey, 1.5),
-        },
-    };
-
-    private void BuildKeyboardGrid()
-    {
-        KeyboardStack.Children.Clear();
-        _keyboardHitboxes.Clear();
-        const double unit = 38;
-        foreach (var row in _kbRows)
-        {
-            var sp = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 2) };
-            foreach (var (label, key, widthUnits) in row)
-            {
-                var captured = key;
-                var box = MakeBox(label, unit * widthUnits - 4, unit - 4,
-                    () => OnDiagramClicked(MappingInputKind.KeyboardKey, (int)captured, captured.ToString()));
-                sp.Children.Add(box);
-                _keyboardHitboxes[(MappingInputKind.KeyboardKey, (int)key)] = box;
-            }
-            KeyboardStack.Children.Add(sp);
-        }
-
-        // Mouse row.
-        var mouseRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 0) };
-        AddMouse(mouseRow, "LMB", MouseButtons.Left);
-        AddMouse(mouseRow, "RMB", MouseButtons.Right);
-        AddMouse(mouseRow, "MMB", MouseButtons.Middle);
-        AddMouse(mouseRow, "X1",  MouseButtons.XButton1);
-        AddMouse(mouseRow, "X2",  MouseButtons.XButton2);
-        AddMouse(mouseRow, "🖱  Motion", (MouseButtons)0xFFFF, widthUnits: 4);
-        KeyboardStack.Children.Add(mouseRow);
-    }
-
-    private void AddMouse(StackPanel row, string label, MouseButtons btn, double widthUnits = 1.5)
-    {
-        const double unit = 38;
-        var box = MakeBox(label, unit * widthUnits - 4, unit - 4,
-            () => OnDiagramClicked(MappingInputKind.MouseButton, (int)btn, label));
-        row.Children.Add(box);
-        _keyboardHitboxes[(MappingInputKind.MouseButton, (int)btn)] = box;
-    }
-
-    private Border MakeBox(string label, double width, double height, Action onClick)
-    {
-        var box = new Border
-        {
-            Width = width, Height = height,
-            CornerRadius = new CornerRadius(4),
-            BorderThickness = new Thickness(1),
-            Cursor = Cursors.Hand,
-            Margin = new Thickness(2),
-        };
-        box.SetResourceReference(Border.BorderBrushProperty, "FluentStroke");
-        box.SetResourceReference(Border.BackgroundProperty, "FluentSurface2");
-        var tb = new TextBlock
-        {
-            Text = label,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            FontFamily = new FontFamily("Segoe UI Variable Text"),
-            FontSize = 11,
-        };
-        tb.SetResourceReference(TextBlock.ForegroundProperty, "FluentTextPrimary");
-        box.Child = tb;
-        box.MouseLeftButtonDown += (_, e) => { onClick(); e.Handled = true; };
-        return box;
-    }
-
-    // ============================================================================ INTERACTION ====
-
-    private void OnDiagramClicked(MappingInputKind kind, int code, string label)
-    {
-        if (Profile == null) return;
-        if (_armed == null)
-        {
-            _armed = (kind, code, label);
-            RefreshHighlights();
-            UpdateStatus();
-            return;
-        }
-
-        var src = _armed.Value;
-        bool srcIsGamepad = IsGamepadKind(src.kind);
-        bool tgtIsGamepad = IsGamepadKind(kind);
-        if (srcIsGamepad == tgtIsGamepad)
-        {
-            // Re-arm — clicking two of the same family is interpreted as "I meant THIS one".
-            _armed = (kind, code, label);
-            RefreshHighlights();
-            UpdateStatus();
-            return;
-        }
-
-        Profile.Mappings.Add(new InputMapping
-        {
-            SourceKind = src.kind, SourceCode = src.code,
-            TargetKind = kind, TargetCode = code,
-            Enabled = true,
-            Activator = MappingActivator.Press,
-        });
-        _armed = null;
-        // Rebuild will be triggered by CollectionChanged.
-    }
-
-    private static bool IsGamepadKind(MappingInputKind k)
-        => k == MappingInputKind.GamepadButton
-        || k == MappingInputKind.GamepadTrigger
-        || k == MappingInputKind.GamepadStickDirection;
-
-    private void UpdateStatus()
-    {
-        if (Profile == null) { StatusText.Text = "(no profile)"; return; }
-        StatusText.Text = _armed == null
-            ? $"{Profile.Mappings.Count} mappings · click a hotspot to arm a source."
-            : $"Armed: {_armed.Value.label} — click the OTHER side to pair (ESC to cancel).";
-    }
-
-    private void RefreshHighlights()
-    {
-        _mappedSources.Clear();
-        _mappedTargets.Clear();
-        if (Profile != null)
-        {
-            foreach (var m in Profile.Mappings)
-            {
-                _mappedSources.Add((m.SourceKind, m.SourceCode));
-                _mappedTargets.Add((m.TargetKind, m.TargetCode));
-            }
-        }
-        var armedKind = _armed?.kind;
-        var armedCode = _armed?.code ?? -1;
-        Controller.RefreshHighlights((k, c) => _mappedSources.Contains((k, c)) || _mappedTargets.Contains((k, c)),
-            armedKind, armedCode);
-
-        var accent = TryFindResource("FluentAccent") as Brush ?? Brushes.MediumPurple;
-        var stroke = TryFindResource("FluentStroke") as Brush ?? Brushes.DimGray;
-        var mappedBg = new SolidColorBrush(Color.FromArgb(70,
-            (accent as SolidColorBrush)?.Color.R ?? 139,
-            (accent as SolidColorBrush)?.Color.G ?? 92,
-            (accent as SolidColorBrush)?.Color.B ?? 246));
-        foreach (var kv in _keyboardHitboxes)
-        {
-            bool armed = armedKind.HasValue && armedKind.Value == kv.Key.Item1 && armedCode == kv.Key.Item2;
-            bool mapped = _mappedSources.Contains(kv.Key) || _mappedTargets.Contains(kv.Key);
-            if (armed)
-            {
-                kv.Value.BorderBrush = accent;
-                kv.Value.BorderThickness = new Thickness(2);
-                kv.Value.Background = mappedBg;
-            }
-            else if (mapped)
-            {
-                kv.Value.BorderBrush = accent;
-                kv.Value.BorderThickness = new Thickness(1);
-                kv.Value.Background = mappedBg;
-            }
-            else
-            {
-                kv.Value.BorderBrush = stroke;
-                kv.Value.BorderThickness = new Thickness(1);
-                kv.Value.SetResourceReference(Border.BackgroundProperty, "FluentSurface2");
-            }
-        }
-    }
-
-    // ============================================================================ MAPPINGS LIST ====
+    // ============================================================================ MAPPING ROWS ====
 
     private void RebuildMappingsList()
     {
@@ -369,59 +120,73 @@ public partial class MappingEdit : UserControl
             return;
         }
         MappingEmpty.Visibility = Visibility.Collapsed;
+        int idx = 0;
         foreach (var m in Profile.Mappings)
-            MappingItems.Items.Add(BuildMappingRow(m));
+        {
+            MappingItems.Items.Add(BuildRow(m, idx));
+            idx++;
+        }
     }
 
-    private FrameworkElement BuildMappingRow(InputMapping m)
+    private FrameworkElement BuildRow(InputMapping mapping, int index)
     {
         var border = new Border
         {
             BorderThickness = new Thickness(1),
             CornerRadius = new CornerRadius(6),
-            Padding = new Thickness(10, 6, 10, 6),
+            Padding = new Thickness(10, 8, 10, 8),
             Margin = new Thickness(0, 0, 0, 6),
         };
         border.SetResourceReference(Border.BorderBrushProperty, "FluentStroke");
         border.SetResourceReference(Border.BackgroundProperty, "FluentSurface3");
 
         var grid = new Grid();
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });            // 0 enabled
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // 1 source
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });            // 2 arrow
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // 3 target
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });            // 4 activator
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });            // 5 remove
 
-        // 0 — enabled checkbox
+        // -- col 0: enabled checkbox
         var enabledBox = new System.Windows.Controls.CheckBox
         {
-            IsChecked = m.Enabled,
+            IsChecked = mapping.Enabled,
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(0, 0, 8, 0),
         };
-        enabledBox.Checked   += (_, _) => m.Enabled = true;
-        enabledBox.Unchecked += (_, _) => m.Enabled = false;
+        enabledBox.Checked   += (_, _) => mapping.Enabled = true;
+        enabledBox.Unchecked += (_, _) => mapping.Enabled = false;
         Grid.SetColumn(enabledBox, 0);
         grid.Children.Add(enabledBox);
 
-        // 1 — source → target label
-        var src = LabelForCode(m.SourceKind, m.SourceCode);
-        var tgt = LabelForCode(m.TargetKind, m.TargetCode);
-        var txt = new TextBlock
-        {
-            Text = $"{src}    →    {tgt}",
-            VerticalAlignment = VerticalAlignment.Center,
-            FontFamily = new FontFamily("Segoe UI Variable Text"),
-            FontSize = 13,
-        };
-        txt.SetResourceReference(TextBlock.ForegroundProperty, "FluentTextPrimary");
-        Grid.SetColumn(txt, 1);
-        grid.Children.Add(txt);
+        // -- col 1: source
+        var sourceHost = BuildEndpointPicker(mapping, isSource: true, index);
+        Grid.SetColumn(sourceHost, 1);
+        grid.Children.Add(sourceHost);
 
-        // 2 — activator picker (combobox)
+        // -- col 2: arrow
+        var arrow = new TextBlock
+        {
+            Text = "→",
+            Margin = new Thickness(14, 0, 14, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            FontSize = 16,
+        };
+        arrow.SetResourceReference(TextBlock.ForegroundProperty, "FluentTextTertiary");
+        Grid.SetColumn(arrow, 2);
+        grid.Children.Add(arrow);
+
+        // -- col 3: target
+        var targetHost = BuildEndpointPicker(mapping, isSource: false, index);
+        Grid.SetColumn(targetHost, 3);
+        grid.Children.Add(targetHost);
+
+        // -- col 4: activator combo
         var act = new System.Windows.Controls.ComboBox
         {
-            MinWidth = 130, MinHeight = 28,
-            Margin = new Thickness(8, 0, 8, 0),
+            MinWidth = 130, MinHeight = 30,
+            Margin = new Thickness(10, 0, 8, 0),
             VerticalAlignment = VerticalAlignment.Center,
             FontFamily = new FontFamily("Segoe UI Variable Text"),
             FontSize = 12,
@@ -429,60 +194,218 @@ public partial class MappingEdit : UserControl
         };
         foreach (MappingActivator a in Enum.GetValues<MappingActivator>())
             act.Items.Add(a);
-        act.SelectedItem = m.Activator;
+        act.SelectedItem = mapping.Activator;
         act.SelectionChanged += (_, _) =>
         {
-            if (act.SelectedItem is MappingActivator a) m.Activator = a;
+            if (act.SelectedItem is MappingActivator a) mapping.Activator = a;
         };
-        Grid.SetColumn(act, 2);
+        Grid.SetColumn(act, 4);
         grid.Children.Add(act);
 
-        // 3 — remove button
+        // -- col 5: remove
         var rem = new Button
         {
-            Content = "Remove",
-            MinHeight = 28,
-            Padding = new Thickness(10, 2, 10, 2),
+            Content = "🗑",
+            MinHeight = 30, MinWidth = 36,
+            Padding = new Thickness(6, 2, 6, 2),
+            ToolTip = "Remove this mapping",
         };
         rem.SetResourceReference(StyleProperty, "FluentStandardButton");
-        rem.Click += (_, _) => Profile?.Mappings.Remove(m);
-        Grid.SetColumn(rem, 3);
+        rem.Click += (_, _) => Profile?.Mappings.Remove(mapping);
+        Grid.SetColumn(rem, 5);
         grid.Children.Add(rem);
 
         border.Child = grid;
         return border;
     }
 
-    private static string LabelForCode(MappingInputKind kind, int code) => kind switch
+    /// <summary>
+    ///     Renders one endpoint slot for the row. The slot is always a two-column composite:
+    ///     <c>[ AKeyChanger | "▾ Special" button ]</c> when the endpoint is a regular kb/mouse/pad
+    ///     binding, OR <c>[ Special chip | "← Record" button ]</c> when the endpoint is a
+    ///     stick-direction / mouse-motion special that can't be captured via the recorder. The
+    ///     "Special" button opens a context menu listing all stick directions plus mouse-motion,
+    ///     letting the user assemble e.g. "W → LStickUp" entirely by hand instead of relying on
+    ///     the FPS preset.
+    /// </summary>
+    private FrameworkElement BuildEndpointPicker(InputMapping mapping, bool isSource, int rowIndex)
     {
-        MappingInputKind.KeyboardKey       => $"⌨ {(Keys)code}",
-        MappingInputKind.MouseButton       => code == 0xFFFF ? "🖱 Motion" : $"🖱 {(MouseButtons)code}",
-        MappingInputKind.GamepadButton     => $"🎮 {((XboxButtonId)code)}",
-        MappingInputKind.GamepadTrigger    => code == 0 ? "🎮 LT" : "🎮 RT",
-        MappingInputKind.GamepadStickDirection => $"🎮 {((GamepadStickDirection)code)}",
-        _ => "?",
-    };
+        var host = new Grid();
+        host.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        host.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-    // ============================================================================ STICK ↔ MOUSE SHORTCUTS ====
+        MappingInputKind kind = isSource ? mapping.SourceKind : mapping.TargetKind;
+        int code = isSource ? mapping.SourceCode : mapping.TargetCode;
+
+        if (MappingBindingConverter.IsSpecial(kind, code))
+        {
+            // ----- Special chip (stick direction or mouse motion) -----
+            var chip = new Border
+            {
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(14),
+                Padding = new Thickness(12, 6, 12, 6),
+                MinHeight = 34,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            chip.SetResourceReference(Border.BorderBrushProperty, "FluentAccent");
+            chip.SetResourceReference(Border.BackgroundProperty, "FluentSurface2");
+            var t = new TextBlock
+            {
+                Text = MappingBindingConverter.SpecialLabel(kind, code),
+                FontFamily = new FontFamily("Segoe UI Variable Text"),
+                FontSize = 13,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            t.SetResourceReference(TextBlock.ForegroundProperty, "FluentTextPrimary");
+            chip.Child = t;
+            Grid.SetColumn(chip, 0);
+            host.Children.Add(chip);
+
+            // Swap-to-recorder button so user can flip back from a special to a normal capture.
+            var recordBtn = new Button
+            {
+                Content = "↺",
+                MinHeight = 30, MinWidth = 30,
+                Margin = new Thickness(6, 0, 0, 0),
+                Padding = new Thickness(0),
+                ToolTip = "Switch back to recording a normal key / button / trigger.",
+            };
+            recordBtn.SetResourceReference(StyleProperty, "FluentStandardButton");
+            recordBtn.Click += (_, _) =>
+            {
+                if (isSource) { mapping.SourceKind = MappingInputKind.KeyboardKey; mapping.SourceCode = 0; }
+                else          { mapping.TargetKind = MappingInputKind.KeyboardKey; mapping.TargetCode = 0; }
+                RebuildMappingsList();
+            };
+            Grid.SetColumn(recordBtn, 1);
+            host.Children.Add(recordBtn);
+            return host;
+        }
+
+        // ----- Normal slot: AKeyChanger + Special picker button -----
+        string slotKey = $"MAP_{Profile?.Id ?? "x"}_{rowIndex}_{(isSource ? "S" : "T")}";
+        var bm = MainWindow.Instance?.BindingManager;
+        var initial = MappingBindingConverter.ToBinding(kind, code);
+
+        var picker = new AKeyChanger
+        {
+            BindingManager = bm,
+            KeyConfigName = slotKey,
+            KeyConfigPrefix = "MAPPING_PICKER",
+            ShowTitle = false,
+            CanEditMinTime = false,
+            WithBorder = true,
+            KeyBind = initial,
+            VerticalAlignment = VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            MinHeight = 34,
+        };
+        picker.KeyBindChanged += (s, e) =>
+        {
+            var newBinding = e.Value.KeyBinding;
+            if (newBinding is not { IsValid: true }) return;
+            var dec = MappingBindingConverter.FromBinding(newBinding);
+            if (dec == null) return;
+            if (isSource)
+            {
+                mapping.SourceKind = dec.Value.Kind;
+                mapping.SourceCode = dec.Value.Code;
+            }
+            else
+            {
+                mapping.TargetKind = dec.Value.Kind;
+                mapping.TargetCode = dec.Value.Code;
+            }
+        };
+        Grid.SetColumn(picker, 0);
+        host.Children.Add(picker);
+
+        var specialBtn = new Button
+        {
+            Content = "▾",
+            MinHeight = 30, MinWidth = 30,
+            Margin = new Thickness(6, 0, 0, 0),
+            Padding = new Thickness(0),
+            ToolTip = "Pick a stick direction or mouse-motion target (things the recorder can't capture).",
+        };
+        specialBtn.SetResourceReference(StyleProperty, "FluentStandardButton");
+        specialBtn.Click += (_, _) => OpenSpecialMenu(specialBtn, mapping, isSource);
+        Grid.SetColumn(specialBtn, 1);
+        host.Children.Add(specialBtn);
+        return host;
+    }
+
+    /// <summary>
+    ///     Show the "pick a special endpoint" context menu — stick directions for both sticks plus
+    ///     mouse-motion. Selecting an item rewrites the mapping's kind/code and triggers a list
+    ///     rebuild so the slot flips from AKeyChanger to a special chip.
+    /// </summary>
+    private void OpenSpecialMenu(Button anchor, InputMapping mapping, bool isSource)
+    {
+        var menu = new System.Windows.Controls.ContextMenu();
+
+        void Add(string header, MappingInputKind kind, int code)
+        {
+            var item = new System.Windows.Controls.MenuItem { Header = header };
+            item.Click += (_, _) =>
+            {
+                if (isSource) { mapping.SourceKind = kind; mapping.SourceCode = code; }
+                else          { mapping.TargetKind = kind; mapping.TargetCode = code; }
+                RebuildMappingsList();
+            };
+            menu.Items.Add(item);
+        }
+
+        Add("🎮 Left Stick — Up",     MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.LeftStickUp);
+        Add("🎮 Left Stick — Down",   MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.LeftStickDown);
+        Add("🎮 Left Stick — Left",   MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.LeftStickLeft);
+        Add("🎮 Left Stick — Right",  MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.LeftStickRight);
+        menu.Items.Add(new System.Windows.Controls.Separator());
+        Add("🎮 Right Stick — Up",    MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.RightStickUp);
+        Add("🎮 Right Stick — Down",  MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.RightStickDown);
+        Add("🎮 Right Stick — Left",  MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.RightStickLeft);
+        Add("🎮 Right Stick — Right", MappingInputKind.GamepadStickDirection, (int)GamepadStickDirection.RightStickRight);
+        menu.Items.Add(new System.Windows.Controls.Separator());
+        Add("🖱 Mouse motion (relative)", MappingInputKind.MouseButton, MappingBindingConverter.MouseMotionSentinel);
+
+        menu.PlacementTarget = anchor;
+        menu.IsOpen = true;
+    }
+
+    // ============================================================================ ADD BUTTONS ====
+
+    private void AddRow_Click(object sender, RoutedEventArgs e)
+    {
+        if (Profile == null) return;
+        // Start with a blank kb→kb row — user records both sides.
+        Profile.Mappings.Add(new InputMapping
+        {
+            SourceKind = MappingInputKind.KeyboardKey,
+            SourceCode = 0,
+            TargetKind = MappingInputKind.KeyboardKey,
+            TargetCode = 0,
+            Enabled = true,
+            Activator = MappingActivator.Press,
+        });
+    }
 
     private void AddStickToMouse_Click(object sender, RoutedEventArgs e)
     {
         if (Profile == null) return;
-        // Sentinel mapping the engine recognises: source = RightStickRight, target = MouseButton 0xFFFF.
         if (Profile.Mappings.Any(m =>
             m.SourceKind == MappingInputKind.GamepadStickDirection
             && m.SourceCode == (int)GamepadStickDirection.RightStickRight
             && m.TargetKind == MappingInputKind.MouseButton
-            && m.TargetCode == 0xFFFF))
-        {
-            return; // already exists
-        }
+            && m.TargetCode == MappingBindingConverter.MouseMotionSentinel)) return;
         Profile.Mappings.Add(new InputMapping
         {
             SourceKind = MappingInputKind.GamepadStickDirection,
             SourceCode = (int)GamepadStickDirection.RightStickRight,
             TargetKind = MappingInputKind.MouseButton,
-            TargetCode = 0xFFFF,
+            TargetCode = MappingBindingConverter.MouseMotionSentinel,
             Enabled = true,
         });
     }
@@ -492,19 +415,17 @@ public partial class MappingEdit : UserControl
         if (Profile == null) return;
         if (Profile.Mappings.Any(m =>
             m.SourceKind == MappingInputKind.MouseButton
-            && m.SourceCode == 0xFFFF
+            && m.SourceCode == MappingBindingConverter.MouseMotionSentinel
             && m.TargetKind == MappingInputKind.GamepadStickDirection
-            && m.TargetCode == (int)GamepadStickDirection.RightStickRight))
-        {
-            return; // already exists
-        }
+            && m.TargetCode == (int)GamepadStickDirection.RightStickRight)) return;
         Profile.Mappings.Add(new InputMapping
         {
             SourceKind = MappingInputKind.MouseButton,
-            SourceCode = 0xFFFF,
+            SourceCode = MappingBindingConverter.MouseMotionSentinel,
             TargetKind = MappingInputKind.GamepadStickDirection,
             TargetCode = (int)GamepadStickDirection.RightStickRight,
             Enabled = true,
         });
     }
+
 }

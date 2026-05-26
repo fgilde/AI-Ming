@@ -139,6 +139,30 @@ public static class GamepadEnumExtensions
         };
     }
 
+    /// <summary>
+    ///     Reverse of <see cref="ToGamepadButtonFlags"/> — translate a single XInput bit flag back
+    ///     into PowerAim's <see cref="GamepadButton"/> enum. Returns <c>null</c> for unknown /
+    ///     composite flags so callers can skip cleanly (e.g. <see cref="GamepadButtonFlags.None"/>).
+    /// </summary>
+    public static GamepadButton? ToGamepadButton(this GamepadButtonFlags flag) => flag switch
+    {
+        GamepadButtonFlags.A             => GamepadButton.A,
+        GamepadButtonFlags.B             => GamepadButton.B,
+        GamepadButtonFlags.X             => GamepadButton.X,
+        GamepadButtonFlags.Y             => GamepadButton.Y,
+        GamepadButtonFlags.LeftShoulder  => GamepadButton.LeftShoulder,
+        GamepadButtonFlags.RightShoulder => GamepadButton.RightShoulder,
+        GamepadButtonFlags.LeftThumb     => GamepadButton.LeftThumb,
+        GamepadButtonFlags.RightThumb    => GamepadButton.RightThumb,
+        GamepadButtonFlags.DPadUp        => GamepadButton.Up,
+        GamepadButtonFlags.DPadDown      => GamepadButton.Down,
+        GamepadButtonFlags.DPadLeft      => GamepadButton.Left,
+        GamepadButtonFlags.DPadRight     => GamepadButton.Right,
+        GamepadButtonFlags.Start         => GamepadButton.Start,
+        GamepadButtonFlags.Back          => GamepadButton.Back,
+        _ => null,
+    };
+
     public static string ToTriggerString(this GamepadSlider slider)
     {
         return slider switch

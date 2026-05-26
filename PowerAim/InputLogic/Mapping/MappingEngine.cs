@@ -106,7 +106,7 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
             switch (m.TargetKind)
             {
                 case MappingInputKind.GamepadButton:
-                    sender.PauseSync(GamepadButtonFromId(m.TargetCode));
+                    sender.PauseSync(((XboxButtonId)m.TargetCode).ToGamepadButton());
                     break;
                 case MappingInputKind.GamepadTrigger:
                     sender.PauseSync(m.TargetCode == 0 ? GamepadSlider.LeftTrigger : GamepadSlider.RightTrigger);
@@ -137,7 +137,7 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
             switch (m.TargetKind)
             {
                 case MappingInputKind.GamepadButton:
-                    sender.ResumeSync(GamepadButtonFromId(m.TargetCode));
+                    sender.ResumeSync(((XboxButtonId)m.TargetCode).ToGamepadButton());
                     break;
                 case MappingInputKind.GamepadTrigger:
                     sender.ResumeSync(m.TargetCode == 0 ? GamepadSlider.LeftTrigger : GamepadSlider.RightTrigger);
@@ -564,7 +564,7 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
         switch (m.TargetKind)
         {
             case MappingInputKind.GamepadButton:
-                SendVButton(GamepadButtonFromId(m.TargetCode), pressed);
+                SendVButton(((XboxButtonId)m.TargetCode).ToGamepadButton(), pressed);
                 break;
             case MappingInputKind.GamepadTrigger:
                 SendVSlider(m.TargetCode == 0 ? GamepadSlider.LeftTrigger : GamepadSlider.RightTrigger,
@@ -648,15 +648,16 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
         catch { return; }
         var flags = state.Gamepad.Buttons;
         // Buttons. CRITICAL: profiles persist gamepad source codes as XboxButtonId indices
-        // (A=10, RightThumb=7, …) — NOT as XInput bit flags (A=0x1000, RightThumb=0x80). Without
-        // this translation Pad→KB never fired because the SourceCode we compare against in
-        // DispatchPadButton lives in a completely different namespace than the raw flag value.
+        // (A=10, RightThumb=7, …) — NOT as XInput bit flags (A=0x1000, RightThumb=0x80). Use
+        // the central extensions in Contracts + Mapping to translate flag → GamepadButton →
+        // XboxButtonId so there's exactly one source of truth (Pad→KB never fired before this
+        // translation existed).
         foreach (GamepadButtonFlags f in Enum.GetValues<GamepadButtonFlags>())
         {
             if (f == GamepadButtonFlags.None) continue;
-            int id = XboxButtonIdFromFlag(f);
-            if (id < 0) continue; // unknown flag, skip
-            DispatchPadButton(id, flags.HasFlag(f), profile);
+            var gb = f.ToGamepadButton();
+            if (gb == null) continue; // unknown / composite flag, skip
+            DispatchPadButton((int)gb.Value.ToXboxButtonId(), flags.HasFlag(f), profile);
         }
         // Triggers (digital threshold at 128).
         DispatchPadButton(unchecked((int)0x80000001), state.Gamepad.LeftTrigger  > 128, profile);
@@ -788,47 +789,4 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
         NativeAPIMethods.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
     }
 
-    /// <summary>
-    ///     Translates the persistence-friendly target-code (a stable int matching
-    ///     <c>XboxButtonId</c>) into PowerAim's <see cref="GamepadButton"/> enum. Order must
-    ///     stay aligned with <see cref="MappingPresets.XboxButtonId"/>.
-    /// </summary>
-    private static GamepadButton GamepadButtonFromId(int code)
-    {
-        GamepadButton[] all =
-        {
-            GamepadButton.Up, GamepadButton.Down, GamepadButton.Left, GamepadButton.Right,
-            GamepadButton.Start, GamepadButton.Back,
-            GamepadButton.LeftThumb, GamepadButton.RightThumb,
-            GamepadButton.LeftShoulder, GamepadButton.RightShoulder,
-            GamepadButton.A, GamepadButton.B, GamepadButton.X, GamepadButton.Y,
-        };
-        if (code >= 0 && code < all.Length) return all[code];
-        return GamepadButton.A;
-    }
-
-    /// <summary>
-    ///     Map XInput's <see cref="GamepadButtonFlags"/> bit-flag value to the persistence-friendly
-    ///     <see cref="XboxButtonId"/> index. Used by <see cref="PollPhysicalPad"/> so the
-    ///     <c>SourceCode</c> we dispatch against matches what the profile stores. Returns -1 for
-    ///     unknown flags (the loop skips them).
-    /// </summary>
-    private static int XboxButtonIdFromFlag(GamepadButtonFlags f) => f switch
-    {
-        GamepadButtonFlags.DPadUp        => (int)XboxButtonId.Up,
-        GamepadButtonFlags.DPadDown      => (int)XboxButtonId.Down,
-        GamepadButtonFlags.DPadLeft      => (int)XboxButtonId.Left,
-        GamepadButtonFlags.DPadRight     => (int)XboxButtonId.Right,
-        GamepadButtonFlags.Start         => (int)XboxButtonId.Start,
-        GamepadButtonFlags.Back          => (int)XboxButtonId.Back,
-        GamepadButtonFlags.LeftThumb     => (int)XboxButtonId.LeftThumb,
-        GamepadButtonFlags.RightThumb    => (int)XboxButtonId.RightThumb,
-        GamepadButtonFlags.LeftShoulder  => (int)XboxButtonId.LeftShoulder,
-        GamepadButtonFlags.RightShoulder => (int)XboxButtonId.RightShoulder,
-        GamepadButtonFlags.A             => (int)XboxButtonId.A,
-        GamepadButtonFlags.B             => (int)XboxButtonId.B,
-        GamepadButtonFlags.X             => (int)XboxButtonId.X,
-        GamepadButtonFlags.Y             => (int)XboxButtonId.Y,
-        _ => -1,
-    };
 }
