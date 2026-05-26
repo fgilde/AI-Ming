@@ -8,7 +8,12 @@
         
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="pack://application:,,,/MrsWineHouse;component/Theme.xaml" />
+                <!-- Source is relative on purpose: build.ps1 randomises the AssemblyName from
+                     Core/Constants.cs Names (SmartReticle, MrsWineHouse, …) every build. A pack
+                     URI with a hardcoded `<assembly>;component/...` segment breaks whenever the
+                     name rotates. Relative URI resolves against the entry assembly at runtime
+                     and stays valid regardless of the chosen name. -->
+                <ResourceDictionary Source="Theme.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
             <FontFamily x:Key="AKONY">pack://application:,,,/Graphics/Fonts/#AKONY</FontFamily>

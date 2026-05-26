@@ -5,8 +5,14 @@ description: AI-powered aim alignment for accessibility, training, and fun
 # set of themes; just-the-docs is not in that list. `jekyll-remote-theme` IS
 # whitelisted and pulls the theme straight from its GitHub repo at build time.
 remote_theme: just-the-docs/just-the-docs
-url: ""
-baseurl: ""
+# GitHub Pages serves this site at https://fgilde.github.io/AI-Ming/.
+# `url` is the scheme + host, `baseurl` is the path prefix (= the repo name for
+# project pages). Leaving these empty broke the layout because just-the-docs'
+# generated CSS/JS link tags use `{{ site.baseurl }}` and `relative_url`
+# everywhere — without a baseurl every asset 404s and the nav links land at
+# https://fgilde.github.io/<page>/ instead of https://fgilde.github.io/AI-Ming/<page>/.
+url: "https://fgilde.github.io"
+baseurl: "/AI-Ming"
 permalink: pretty
 
 # just-the-docs config
