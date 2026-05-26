@@ -613,11 +613,15 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
     private void ApplyMouseToStick(ControllerMappingProfile profile)
     {
         if (_accumulatedMouseDx == 0 && _accumulatedMouseDy == 0) return;
-        // Has any "MouseAxis → RightStick" mapping?
+        // Has any "MouseAxis → RightStick" mapping AND is its direction allowed right now?
+        // (Source is mouse-motion = a KB+M source, so it must respect the KeyboardToController /
+        // Both filter — without this gate the right stick of the virtual pad would still get
+        // driven even when the user said "only pad → KB".)
         bool wantsMouseRStick = profile.Mappings.Any(m =>
             m.Enabled
             && m.SourceKind == MappingInputKind.MouseButton
             && m.SourceCode == MouseMotionSentinel
+            && IsDirectionAllowed(m)
             && (m.TargetKind == MappingInputKind.GamepadStickDirection
                 || m.TargetKind == MappingInputKind.GamepadButton)); // tolerate quirky targets
         if (!wantsMouseRStick) { _accumulatedMouseDx = 0; _accumulatedMouseDy = 0; return; }
@@ -706,13 +710,16 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
     private void ApplyStickToMouse(ControllerMappingProfile profile, State state)
     {
         // Opt-in via a sentinel mapping: source RightStickRight + target MouseButton with code
-        // 0xFFFF means "feed right stick into mouse motion".
+        // 0xFFFF means "feed right stick into mouse motion". Source is gamepad-side, so this
+        // must also obey the direction filter — otherwise pulling the physical stick still
+        // moves the OS cursor even when the user has set 'Keyboard → Controller'.
         bool wantsStickToMouse = profile.Mappings.Any(m =>
             m.Enabled
             && m.SourceKind == MappingInputKind.GamepadStickDirection
             && m.SourceCode == (int)GamepadStickDirection.RightStickRight
             && m.TargetKind == MappingInputKind.MouseButton
-            && m.TargetCode == MouseMotionSentinel);
+            && m.TargetCode == MouseMotionSentinel
+            && IsDirectionAllowed(m));
         if (!wantsStickToMouse) return;
 
         // Map -32768..32767 → -1..+1 with profile-controlled deadzone + response curve.
