@@ -220,8 +220,8 @@ namespace PowerAim.Class.Native
             }
             else
             {
-                // Handle the case when GetCursorPos fails
-                throw new Exception("Failed to get cursor position.");
+                return new System.Drawing.Point(0, 0);
+                //throw new Exception("Failed to get cursor position.");
             }
         }
 

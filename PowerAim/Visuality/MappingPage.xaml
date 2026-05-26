@@ -3,13 +3,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:uilib="clr-namespace:PowerAim.UILibrary"
              mc:Ignorable="d"
              Background="Transparent"
              d:DesignHeight="800" d:DesignWidth="1100">
     <ScrollViewer VerticalScrollBarVisibility="Auto" PanningMode="VerticalOnly">
         <StackPanel Margin="20,16,20,16">
 
-            <!-- ============ Profile chooser + Direction ============ -->
+            <!-- ============ Active + Direction ============ -->
             <Border Style="{StaticResource FluentCard}">
                 <StackPanel>
                     <TextBlock Text="Controller ↔ Keyboard Mapping"
@@ -17,16 +18,17 @@
                                FontFamily="Segoe UI Variable Display"
                                FontWeight="SemiBold" FontSize="16"
                                Margin="0,0,0,4" />
-                    <TextBlock Text="Bind controller buttons to keyboard keys (or vice versa) so games that lock you to one input device respond to the other. Pick a profile below and a direction; click a button on either diagram to pair it with the other side."
+                    <TextBlock Text="Make games respond to whichever input device they don't natively support — kb+mouse drives a virtual gamepad, or a controller drives kb+mouse. Pick a profile and a direction; flip the master switch when you're ready to play."
                                Foreground="{DynamicResource FluentTextSecondary}"
                                FontFamily="Segoe UI Variable Text" FontSize="12"
                                TextWrapping="Wrap" LineHeight="18"
                                Margin="0,0,0,12" />
 
-                    <StackPanel x:Name="ProfileHeader" />
+                    <!-- Master active toggle with global hotkey support -->
+                    <StackPanel x:Name="ActiveHost" Margin="0,0,0,8" />
 
-                    <!-- Direction picker (runtime — independent of profile content) -->
-                    <Border Margin="0,12,0,0"
+                    <!-- Direction radio buttons -->
+                    <Border Margin="0,8,0,0"
                             Background="{DynamicResource FluentSurface3}"
                             BorderBrush="{DynamicResource FluentStroke}"
                             BorderThickness="1"
@@ -42,91 +44,36 @@
                                        FontFamily="Segoe UI Variable Small" FontSize="11"
                                        Margin="0,6,0,0"
                                        TextWrapping="Wrap"
-                                       Text="The profile holds the mappings; the direction picks which side drives. Switch any time — no need to re-edit the profile." />
+                                       Text="A profile can hold both directions. Switch any time — no need to re-edit the profile." />
                         </StackPanel>
                     </Border>
-                </StackPanel>
-            </Border>
 
-            <!-- ============ Status hint ============ -->
-            <Border Style="{StaticResource FluentCard}" Padding="14">
-                <StackPanel>
-                    <TextBlock x:Name="StatusText"
-                               Foreground="{DynamicResource FluentTextSecondary}"
-                               FontFamily="Segoe UI Variable Text" FontSize="13"
-                               TextWrapping="Wrap"
-                               Text="Click a button on the controller, then a key on the keyboard — that creates a mapping. Or click a key first, then a controller button. ESC cancels." />
+                    <!-- Engine status line -->
                     <TextBlock x:Name="EngineStatusText"
                                Foreground="{DynamicResource FluentTextTertiary}"
                                FontFamily="Segoe UI Variable Small" FontSize="11"
-                               TextWrapping="Wrap" Margin="0,4,0,0"/>
+                               Margin="2,10,0,0"
+                               TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
 
-            <!-- ============ Controller diagram ============ -->
+            <!-- ============ Profile list ============ -->
             <Border Style="{StaticResource FluentCard}">
                 <StackPanel>
-                    <TextBlock Text="Controller"
+                    <TextBlock Text="Mapping profiles"
                                Foreground="{DynamicResource FluentTextPrimary}"
                                FontFamily="Segoe UI Variable Display"
                                FontWeight="SemiBold" FontSize="14"
                                Margin="0,0,0,8" />
-                    <Border Background="{DynamicResource FluentSurface2}"
-                            BorderBrush="{DynamicResource FluentStroke}"
-                            BorderThickness="1"
-                            CornerRadius="8"
-                            Padding="20">
-                        <Canvas x:Name="ControllerCanvas"
-                                Width="720"
-                                Height="360"
-                                HorizontalAlignment="Center" />
-                    </Border>
-                </StackPanel>
-            </Border>
-
-            <!-- ============ Keyboard diagram ============ -->
-            <Border Style="{StaticResource FluentCard}">
-                <StackPanel>
-                    <TextBlock Text="Keyboard"
-                               Foreground="{DynamicResource FluentTextPrimary}"
-                               FontFamily="Segoe UI Variable Display"
-                               FontWeight="SemiBold" FontSize="14"
-                               Margin="0,0,0,8" />
-                    <Border Background="{DynamicResource FluentSurface2}"
-                            BorderBrush="{DynamicResource FluentStroke}"
-                            BorderThickness="1"
-                            CornerRadius="8"
-                            Padding="12">
-                        <StackPanel x:Name="KeyboardStack" HorizontalAlignment="Center" />
-                    </Border>
-                </StackPanel>
-            </Border>
-
-            <!-- ============ Mappings list ============ -->
-            <Border Style="{StaticResource FluentCard}">
-                <StackPanel>
-                    <Grid Margin="0,0,0,8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Mappings in this profile"
-                                   Foreground="{DynamicResource FluentTextPrimary}"
-                                   FontFamily="Segoe UI Variable Display"
-                                   FontWeight="SemiBold" FontSize="14"
-                                   VerticalAlignment="Center" />
-                        <Button Grid.Column="1" x:Name="ClearAllButton"
-                                Content="Clear all"
-                                MinHeight="28" Padding="10,4,10,4"
-                                Click="ClearAll_Click" />
-                    </Grid>
-                    <ItemsControl x:Name="MappingItems" />
-                    <TextBlock x:Name="MappingEmpty"
-                               Foreground="{DynamicResource FluentTextTertiary}"
+                    <TextBlock Text="One active profile at a time — the engine picks the first enabled profile whose 'match process' (if any) is focused. Click the pencil to edit, the diamond to duplicate, the bin to delete."
+                               Foreground="{DynamicResource FluentTextSecondary}"
                                FontFamily="Segoe UI Variable Small" FontSize="11"
-                               Text="No mappings yet. Click a button on the controller above to start, or use 'Add FPS preset' in the profile chooser." />
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,10" />
+                    <uilib:MappingProfileList x:Name="ProfileList" />
                 </StackPanel>
             </Border>
+
         </StackPanel>
     </ScrollViewer>
 </UserControl>

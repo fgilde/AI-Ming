@@ -48,6 +48,13 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
     // Pressed state tracking — sources that are currently held. Used to fire press / release pairs.
     private readonly HashSet<(MappingInputKind, int)> _heldSources = new();
 
+    // Activator bookkeeping — per-mapping timestamps / latch state so press / long-press /
+    // double-tap / toggle / pulse can all coexist in a single profile.
+    private readonly Dictionary<InputMapping, long> _activatorPressedAt = new();
+    private readonly Dictionary<InputMapping, long> _activatorLastReleaseAt = new();
+    private readonly HashSet<InputMapping> _toggleHeld = new();
+    private readonly Dictionary<InputMapping, long> _pulseUntil = new();
+
     // Mouse-to-stick state
     private long _lastMouseDeltaTickMs;
     private int _accumulatedMouseDx, _accumulatedMouseDy;
@@ -59,6 +66,110 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
     }
 
     public ControllerMappingProfile? ActiveProfile => _activeProfile;
+
+    /// <summary>
+    ///     Replace <see cref="_activeProfile"/> AND fire <see cref="PropertyChanged"/> for
+    ///     <see cref="ActiveProfile"/> so subscribers (the mapping page's "Engine: …" status line)
+    ///     repaint when the engine picks a different profile. Without this the UI would only react
+    ///     to <see cref="Status"/> changes and never reflect which profile is live.
+    ///     <para>
+    ///     Also takes ownership of every virtual-pad channel the profile targets (Pause + Resume
+    ///     on the shared <see cref="GamepadManager.GamepadSender"/>). Without that step the sender's
+    ///     <c>SyncLoop</c> would mirror the physical pad's state onto the virtual pad every 1 ms,
+    ///     immediately overwriting whatever we just wrote — so e.g. pressing <c>W</c> looked like
+    ///     nothing happened in the gamepad tester. Pause/Resume scopes the sync mirror to channels
+    ///     the mapping engine does NOT own.
+    ///     </para>
+    /// </summary>
+    private void SetActiveProfile(ControllerMappingProfile? p)
+    {
+        if (ReferenceEquals(_activeProfile, p)) return;
+        if (_activeProfile != null) ResumeOwnedChannels(_activeProfile);
+        _activeProfile = p;
+        if (p != null) PauseOwnedChannels(p);
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ActiveProfile)));
+    }
+
+    /// <summary>
+    ///     Pause every virtual-pad channel that <paramref name="profile"/> writes to. Once paused,
+    ///     the shared sender's <c>SyncLoop</c> no longer mirrors the physical pad onto that
+    ///     channel — meaning our <c>SetButton/Slider/Axis</c> writes survive instead of being
+    ///     instantly overwritten.
+    /// </summary>
+    private static void PauseOwnedChannels(ControllerMappingProfile profile)
+    {
+        if (!VirtualReady) return;
+        var sender = GamepadManager.GamepadSender!;
+        foreach (var m in profile.Mappings)
+        {
+            if (!m.Enabled) continue;
+            switch (m.TargetKind)
+            {
+                case MappingInputKind.GamepadButton:
+                    sender.PauseSync(GamepadButtonFromId(m.TargetCode));
+                    break;
+                case MappingInputKind.GamepadTrigger:
+                    sender.PauseSync(m.TargetCode == 0 ? GamepadSlider.LeftTrigger : GamepadSlider.RightTrigger);
+                    break;
+                case MappingInputKind.GamepadStickDirection:
+                    var (ax, _) = AxisForStickDirection((GamepadStickDirection)m.TargetCode);
+                    sender.PauseSync(ax);
+                    break;
+            }
+        }
+        // Mouse-to-stick sentinel takes RightThumb X+Y regardless of source.
+        if (profile.Mappings.Any(m => m.Enabled
+                                       && m.SourceKind == MappingInputKind.MouseButton
+                                       && m.SourceCode == MouseMotionSentinel))
+        {
+            sender.PauseSync(GamepadAxis.RightThumbX);
+            sender.PauseSync(GamepadAxis.RightThumbY);
+        }
+    }
+
+    private static void ResumeOwnedChannels(ControllerMappingProfile profile)
+    {
+        if (!VirtualReady) return;
+        var sender = GamepadManager.GamepadSender!;
+        foreach (var m in profile.Mappings)
+        {
+            if (!m.Enabled) continue;
+            switch (m.TargetKind)
+            {
+                case MappingInputKind.GamepadButton:
+                    sender.ResumeSync(GamepadButtonFromId(m.TargetCode));
+                    break;
+                case MappingInputKind.GamepadTrigger:
+                    sender.ResumeSync(m.TargetCode == 0 ? GamepadSlider.LeftTrigger : GamepadSlider.RightTrigger);
+                    break;
+                case MappingInputKind.GamepadStickDirection:
+                    var (ax, _) = AxisForStickDirection((GamepadStickDirection)m.TargetCode);
+                    sender.ResumeSync(ax);
+                    break;
+            }
+        }
+        if (profile.Mappings.Any(m => m.Enabled
+                                       && m.SourceKind == MappingInputKind.MouseButton
+                                       && m.SourceCode == MouseMotionSentinel))
+        {
+            sender.ResumeSync(GamepadAxis.RightThumbX);
+            sender.ResumeSync(GamepadAxis.RightThumbY);
+        }
+    }
+
+    /// <summary>Helper — what axis/sign a stick direction maps onto.</summary>
+    private static (GamepadAxis Axis, short PositiveDir) AxisForStickDirection(GamepadStickDirection d) => d switch
+    {
+        GamepadStickDirection.LeftStickUp     => (GamepadAxis.LeftThumbY, +1),
+        GamepadStickDirection.LeftStickDown   => (GamepadAxis.LeftThumbY, -1),
+        GamepadStickDirection.LeftStickLeft   => (GamepadAxis.LeftThumbX, -1),
+        GamepadStickDirection.LeftStickRight  => (GamepadAxis.LeftThumbX, +1),
+        GamepadStickDirection.RightStickUp    => (GamepadAxis.RightThumbY, +1),
+        GamepadStickDirection.RightStickDown  => (GamepadAxis.RightThumbY, -1),
+        GamepadStickDirection.RightStickLeft  => (GamepadAxis.RightThumbX, -1),
+        GamepadStickDirection.RightStickRight => (GamepadAxis.RightThumbX, +1),
+        _ => (GamepadAxis.LeftThumbX, +1),
+    };
 
     // ============================================================================ LIFECYCLE ====
 
@@ -108,6 +219,10 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
         }
         IdleVirtual();
         _heldSources.Clear();
+        _activatorPressedAt.Clear();
+        _activatorLastReleaseAt.Clear();
+        _toggleHeld.Clear();
+        _pulseUntil.Clear();
         Status = "Stopped";
     }
 
@@ -185,6 +300,14 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
             // KB→Pad mouse-to-stick: drain accumulated delta and feed into virtual stick.
             ApplyMouseToStick(_activeProfile);
 
+            // Long-press / pulse follow-up tick.
+            TickActivators();
+
+            // Re-pause owned channels every tick (cheap — internal HashSet.Add). Necessary because
+            // the user can add/remove mappings while a profile is active and the sender doesn't
+            // know about those topology changes.
+            PauseOwnedChannels(_activeProfile);
+
             try { await Task.Delay(8, ct); } catch { break; }
         }
     }
@@ -194,22 +317,36 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
         // Master kill-switch — when the user toggles "Mapping active" off, drop the active
         // profile and idle the virtual pad. The engine loop keeps ticking but does nothing
         // until the user flips it back on (or hits the hotkey).
-        if (AppConfig.Current?.ToggleState?.MappingActive != true)
+        if (AppConfig.Current == null)
+        {
+            Status = "Waiting for config…";
+            SetActiveProfile(null);
+            return;
+        }
+        if (AppConfig.Current.ToggleState?.MappingActive != true)
         {
             if (_activeProfile != null)
             {
                 IdleVirtual();
                 _heldSources.Clear();
             }
-            _activeProfile = null;
+            Status = "Idle — master toggle is OFF";
+            SetActiveProfile(null);
             return;
         }
-        var profiles = AppConfig.Current?.ControllerMappingProfiles;
-        if (profiles == null) { _activeProfile = null; return; }
+        var profiles = AppConfig.Current.ControllerMappingProfiles;
+        if (profiles == null || profiles.Count == 0)
+        {
+            Status = "Idle — no mapping profiles defined";
+            SetActiveProfile(null);
+            return;
+        }
         var focused = PowerAim.Class.WindowFocusWatcher.Instance.CurrentProcessName;
+        bool anyEnabled = false;
         foreach (var p in profiles)
         {
             if (!p.Enabled) continue;
+            anyEnabled = true;
             if (!string.IsNullOrWhiteSpace(p.MatchProcess)
                 && !PowerAim.Class.ProcessMatcher.Matches(p.MatchProcess, focused))
                 continue;
@@ -218,7 +355,8 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
                 IdleVirtual();
                 _heldSources.Clear();
             }
-            _activeProfile = p;
+            SetActiveProfile(p);
+            Status = $"Running — '{p.Name}' active";
             return;
         }
         if (_activeProfile != null)
@@ -226,7 +364,10 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
             IdleVirtual();
             _heldSources.Clear();
         }
-        _activeProfile = null;
+        Status = anyEnabled
+            ? "Idle — enabled profile(s) exist but MatchProcess didn't match the focused window"
+            : "Idle — no profile has Enabled=true";
+        SetActiveProfile(null);
     }
 
     private static bool NeedsVirtualPad(ControllerMappingProfile p)
@@ -279,7 +420,122 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
             if (!m.Enabled) continue;
             if (m.SourceKind != kind || m.SourceCode != code) continue;
             if (!IsDirectionAllowed(m)) continue;
-            ApplyTarget(m, pressed);
+            if (!ModifierSatisfied(m)) continue;
+            ApplyActivator(m, pressed);
+        }
+    }
+
+    /// <summary>True when the mapping has no modifier set OR the modifier source is currently held.</summary>
+    private bool ModifierSatisfied(InputMapping m)
+    {
+        if (m.ModifierKind == MappingInputKind.None) return true;
+        return _heldSources.Contains((m.ModifierKind, m.ModifierCode))
+            || _padHeld.Contains(m.ModifierCode); // gamepad-source modifier
+    }
+
+    /// <summary>
+    ///     Translate raw source press/release into a target press/release using the configured
+    ///     <see cref="MappingActivator"/>. Press-style is the default and just forwards. Long-press,
+    ///     double-tap, toggle and pulse handle their own timing.
+    /// </summary>
+    private void ApplyActivator(InputMapping m, bool pressed)
+    {
+        long now = Environment.TickCount64;
+        switch (m.Activator)
+        {
+            case MappingActivator.Press:
+                ApplyTarget(m, pressed);
+                break;
+
+            case MappingActivator.LongPress:
+                if (pressed)
+                {
+                    _activatorPressedAt[m] = now;
+                    // Schedule a check — done in the loop tick so we don't need a dedicated timer.
+                }
+                else
+                {
+                    _activatorPressedAt.Remove(m);
+                    ApplyTarget(m, false); // release in case we'd already fired
+                }
+                break;
+
+            case MappingActivator.DoubleTap:
+                if (pressed)
+                {
+                    long last = _activatorLastReleaseAt.GetValueOrDefault(m, 0);
+                    if (now - last < 320)
+                    {
+                        ApplyTarget(m, true);
+                        _pulseUntil[m] = now + Math.Max(60, m.LongPressMs);
+                        _activatorLastReleaseAt[m] = 0;
+                    }
+                }
+                else
+                {
+                    _activatorLastReleaseAt[m] = now;
+                }
+                break;
+
+            case MappingActivator.Toggle:
+                if (pressed)
+                {
+                    if (_toggleHeld.Remove(m))
+                    {
+                        ApplyTarget(m, false);
+                    }
+                    else
+                    {
+                        _toggleHeld.Add(m);
+                        ApplyTarget(m, true);
+                    }
+                }
+                break;
+
+            case MappingActivator.Pulse:
+                if (pressed)
+                {
+                    ApplyTarget(m, true);
+                    _pulseUntil[m] = now + Math.Max(40, m.LongPressMs);
+                }
+                break;
+        }
+    }
+
+    /// <summary>
+    ///     Tick-driven activator follow-up: fires long-press targets once their hold time elapses
+    ///     and releases pulse/double-tap targets after their pulse duration. Called from
+    ///     <see cref="Loop"/>.
+    /// </summary>
+    private void TickActivators()
+    {
+        long now = Environment.TickCount64;
+        // Long-press follow-ups.
+        if (_activatorPressedAt.Count > 0)
+        {
+            // Snapshot to allow modifying the dictionary inside the loop.
+            foreach (var kv in _activatorPressedAt.ToArray())
+            {
+                var m = kv.Key;
+                if (now - kv.Value >= Math.Max(50, m.LongPressMs))
+                {
+                    ApplyTarget(m, true);
+                    _activatorPressedAt.Remove(m);
+                    _pulseUntil[m] = now + 80; // brief auto-release
+                }
+            }
+        }
+        // Pulse releases.
+        if (_pulseUntil.Count > 0)
+        {
+            foreach (var kv in _pulseUntil.ToArray())
+            {
+                if (now >= kv.Value)
+                {
+                    ApplyTarget(kv.Key, false);
+                    _pulseUntil.Remove(kv.Key);
+                }
+            }
         }
     }
 
@@ -387,12 +643,16 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
         try { state = _physicalPad.GetState(); }
         catch { return; }
         var flags = state.Gamepad.Buttons;
-        // Buttons.
+        // Buttons. CRITICAL: profiles persist gamepad source codes as XboxButtonId indices
+        // (A=10, RightThumb=7, …) — NOT as XInput bit flags (A=0x1000, RightThumb=0x80). Without
+        // this translation Pad→KB never fired because the SourceCode we compare against in
+        // DispatchPadButton lives in a completely different namespace than the raw flag value.
         foreach (GamepadButtonFlags f in Enum.GetValues<GamepadButtonFlags>())
         {
             if (f == GamepadButtonFlags.None) continue;
-            bool down = flags.HasFlag(f);
-            DispatchPadButton((int)f, down, profile);
+            int id = XboxButtonIdFromFlag(f);
+            if (id < 0) continue; // unknown flag, skip
+            DispatchPadButton(id, flags.HasFlag(f), profile);
         }
         // Triggers (digital threshold at 128).
         DispatchPadButton(unchecked((int)0x80000001), state.Gamepad.LeftTrigger  > 128, profile);
@@ -421,7 +681,8 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
             if (m.SourceKind != MappingInputKind.GamepadButton && m.SourceKind != MappingInputKind.GamepadTrigger) continue;
             if (m.SourceCode != code) continue;
             if (!IsDirectionAllowed(m)) continue;
-            ApplyTarget(m, down);
+            if (!ModifierSatisfied(m)) continue;
+            ApplyActivator(m, down);
         }
     }
 
@@ -437,7 +698,8 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
             if (m.SourceKind != MappingInputKind.GamepadStickDirection) continue;
             if (m.SourceCode != code) continue;
             if (!IsDirectionAllowed(m)) continue;
-            ApplyTarget(m, down);
+            if (!ModifierSatisfied(m)) continue;
+            ApplyActivator(m, down);
         }
     }
 
@@ -453,15 +715,20 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
             && m.TargetCode == MouseMotionSentinel);
         if (!wantsStickToMouse) return;
 
-        // Map -32768..32767 → -1..+1 with deadzone.
-        double dz = 0.18;
+        // Map -32768..32767 → -1..+1 with profile-controlled deadzone + response curve.
+        double dz = Math.Clamp(profile.StickDeadzone, 0.0, 0.5);
+        double ad = Math.Clamp(profile.StickAntiDeadzone, 0.0, 0.5);
+        double curve = Math.Max(0.5, profile.StickMouseExponent);
         double nx = state.Gamepad.RightThumbX / 32768.0;
         double ny = state.Gamepad.RightThumbY / 32768.0;
         double mag = Math.Sqrt(nx * nx + ny * ny);
         if (mag < dz) return;
-        double scale = profile.StickToMouseSensitivity * (mag - dz) / (1 - dz);
+        // Normalise to 0..1 after deadzone, then re-add anti-deadzone, then curve.
+        double t = (mag - dz) / (1 - dz);
+        t = ad + (1.0 - ad) * Math.Pow(t, curve);
+        double scale = profile.StickToMouseSensitivity * t / Math.Max(0.0001, mag);
         int dx = (int)Math.Round(nx * scale);
-        int dy = (int)Math.Round(-ny * scale);
+        int dy = (int)Math.Round((profile.InvertMouseY ? +1 : -1) * ny * scale);
         if (dx == 0 && dy == 0) return;
         MouseMoveRelative(dx, dy);
     }
@@ -532,4 +799,29 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
         if (code >= 0 && code < all.Length) return all[code];
         return GamepadButton.A;
     }
+
+    /// <summary>
+    ///     Map XInput's <see cref="GamepadButtonFlags"/> bit-flag value to the persistence-friendly
+    ///     <see cref="XboxButtonId"/> index. Used by <see cref="PollPhysicalPad"/> so the
+    ///     <c>SourceCode</c> we dispatch against matches what the profile stores. Returns -1 for
+    ///     unknown flags (the loop skips them).
+    /// </summary>
+    private static int XboxButtonIdFromFlag(GamepadButtonFlags f) => f switch
+    {
+        GamepadButtonFlags.DPadUp        => (int)XboxButtonId.Up,
+        GamepadButtonFlags.DPadDown      => (int)XboxButtonId.Down,
+        GamepadButtonFlags.DPadLeft      => (int)XboxButtonId.Left,
+        GamepadButtonFlags.DPadRight     => (int)XboxButtonId.Right,
+        GamepadButtonFlags.Start         => (int)XboxButtonId.Start,
+        GamepadButtonFlags.Back          => (int)XboxButtonId.Back,
+        GamepadButtonFlags.LeftThumb     => (int)XboxButtonId.LeftThumb,
+        GamepadButtonFlags.RightThumb    => (int)XboxButtonId.RightThumb,
+        GamepadButtonFlags.LeftShoulder  => (int)XboxButtonId.LeftShoulder,
+        GamepadButtonFlags.RightShoulder => (int)XboxButtonId.RightShoulder,
+        GamepadButtonFlags.A             => (int)XboxButtonId.A,
+        GamepadButtonFlags.B             => (int)XboxButtonId.B,
+        GamepadButtonFlags.X             => (int)XboxButtonId.X,
+        GamepadButtonFlags.Y             => (int)XboxButtonId.Y,
+        _ => -1,
+    };
 }

@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using PowerAim.Class.Native;
 using PowerAim.Config;
 using PowerAim.InputLogic;
 using PowerAim.InputLogic.Contracts;
@@ -86,6 +87,12 @@ public partial class GamepadDiagnosticsDialog
 
         // ---- Suggestion ----
         SuggestionText.Text = BuildSuggestion(sender, realSlot, mode);
+    }
+
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        this.HideForCaptureIfEnabled();
     }
 
     private static string BuildSuggestion(IGamepadSender? sender, int realSlot, string mode)

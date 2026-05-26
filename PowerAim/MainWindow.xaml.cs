@@ -890,6 +890,106 @@ public partial class MainWindow
     private void TriggerEditCancel_Click(object sender, RoutedEventArgs e) => CloseTriggerEditor(false);
     private void TriggerEditSave_Click(object sender, RoutedEventArgs e) => CloseTriggerEditor(true);
 
+    // ============================================================================ MAPPING EDITOR ====
+
+    private string? _mappingEditReturnTo;
+    private PowerAim.Config.ControllerMappingProfile? _mappingEditTarget;
+    private bool _mappingEditDirty;
+    private System.ComponentModel.PropertyChangedEventHandler? _mappingDirtyHandler;
+    private System.Collections.Specialized.NotifyCollectionChangedEventHandler? _mappingCollectionDirtyHandler;
+
+    /// <summary>
+    ///     Open the mapping editor for a profile. Saves on confirm, discards otherwise (with
+    ///     unsaved-changes warning). Mirrors the trigger-editor flow.
+    /// </summary>
+    public void OpenMappingEditor(PowerAim.Config.ControllerMappingProfile target)
+    {
+        _mappingEditReturnTo = CurrentMenu;
+        _mappingEditTarget = target;
+        // BeginEdit so Discard rolls the profile back to its pre-edit state.
+        target.BeginEdit();
+        MappingEditName.Text = target.Name ?? "";
+        _mappingEditDirty = false;
+        MappingEditDirty.Visibility = Visibility.Collapsed;
+
+        MappingEditor.Profile = target;
+
+        // Dirty tracking: any property or collection change marks the editor dirty so the user
+        // sees the * indicator and gets a "discard unsaved?" prompt on back/cancel.
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            if (!ReferenceEquals(_mappingEditTarget, target)) return;
+            _mappingDirtyHandler = (s, e) =>
+            {
+                _mappingEditDirty = true;
+                MappingEditDirty.Visibility = Visibility.Visible;
+                if (e.PropertyName == nameof(PowerAim.Config.ControllerMappingProfile.Name))
+                    MappingEditName.Text = target.Name ?? "";
+            };
+            target.PropertyChanged += _mappingDirtyHandler;
+
+            _mappingCollectionDirtyHandler = (s, e) =>
+            {
+                _mappingEditDirty = true;
+                MappingEditDirty.Visibility = Visibility.Visible;
+            };
+            target.Mappings.CollectionChanged += _mappingCollectionDirtyHandler;
+        }), System.Windows.Threading.DispatcherPriority.Background);
+
+        SetSidebarLocked(true);
+        _ = NavigateTo(nameof(MappingEditPage));
+    }
+
+    private void CloseMappingEditor(bool save)
+    {
+        var target = _mappingEditTarget;
+        var returnTo = _mappingEditReturnTo ?? nameof(MappingMenu);
+
+        if (!save && _mappingEditDirty)
+        {
+            var res = PowerAim.Visuality.MessageDialog.Show(
+                Locale.UnsavedChangesMessage,
+                Locale.UnsavedChanges,
+                PowerAim.Visuality.MessageDialog.DialogButtons.YesNoCancel,
+                PowerAim.Visuality.MessageDialog.DialogIcon.Warning,
+                owner: this,
+                defaultResult: PowerAim.Visuality.MessageDialog.DialogResult.Yes);
+            if (res == PowerAim.Visuality.MessageDialog.DialogResult.Cancel) return;
+            if (res == PowerAim.Visuality.MessageDialog.DialogResult.Yes) save = true;
+        }
+
+        if (target != null)
+        {
+            if (_mappingDirtyHandler != null)
+                target.PropertyChanged -= _mappingDirtyHandler;
+            if (_mappingCollectionDirtyHandler != null)
+                target.Mappings.CollectionChanged -= _mappingCollectionDirtyHandler;
+            if (save)
+            {
+                target.EndEdit();
+                // Persist immediately — the MappingPage's CollectionChanged auto-save covers
+                // add/remove, but inner-profile edits (renaming, mappings list, sliders) only
+                // mutate property state. Without this Save() the user would lose those edits on
+                // app exit unless they happen to trigger another save path.
+                AppConfig.Current?.Save();
+            }
+            else target.CancelEdit();
+        }
+        _mappingDirtyHandler = null;
+        _mappingCollectionDirtyHandler = null;
+        _mappingEditDirty = false;
+        MappingEditDirty.Visibility = Visibility.Collapsed;
+        MappingEditor.Profile = null;
+        _mappingEditTarget = null;
+
+        SetSidebarLocked(false);
+        _ = NavigateTo(returnTo);
+    }
+
+    private void MappingEditBack_Click(object sender, RoutedEventArgs e) => CloseMappingEditor(false);
+    private void MappingEditCancel_Click(object sender, RoutedEventArgs e) => CloseMappingEditor(false);
+    private void MappingEditSave_Click(object sender, RoutedEventArgs e) => CloseMappingEditor(true);
+
     private async Task RunBenchmarkClick()
     {
         var modelFile = AppConfig.Current?.LastLoadedModel;
@@ -1488,7 +1588,9 @@ public partial class MainWindow
                     locator.FileSelected += (sender, args) => Reload();
                 });
 
-
+            // Install button stays here because it triggers a heavy installer; the run-time
+            // buttons (Launch HidHide UI / Open Gamepad Tester / joy.cpl) moved into the diagnostic
+            // panel above so all live actions sit in one place.
             if (!File.Exists(HidHideHelper.GetHidHidePath()))
             {
                 GamepadSettingsConfig.AddButton(Locale.InstallHidHide, b =>
@@ -1496,58 +1598,16 @@ public partial class MainWindow
                     b.Reader.Click += (s, e) => WindowsHelper.RunResourceTool("HidHide_1.5.230_x64.exe", null, _ => Reload());
                 });
             }
-            else
-            {
-                GamepadSettingsConfig.AddButton(Locale.LaunchHidHideUI, b =>
-                {
-                    b.Reader.Click += (s, e) =>
-                    {
-                        var fileName = Path.Combine(Path.GetDirectoryName(HidHideHelper.GetHidHidePath()), "HidHideClient.exe");
-                        if (File.Exists(fileName))
-                            Process.Start(fileName);
-                    };
-                });
-            }
-
-            GamepadSettingsConfig.AddSeparator();
-
-            GamepadSettingsConfig.AddButton(Locale.ShowAndTestController, b =>
-            {
-                b.Reader.Click += (s, e) =>
-                {
-
-                    var startInfo = new ProcessStartInfo
-                    {
-                        FileName = "cmd.exe",
-                        Arguments = "/c joy.cpl",
-                        CreateNoWindow = true,
-                        UseShellExecute = false
-                    };
-                    Process.Start(startInfo);
-                };
-            });
         }
-
-        // Add test window button for all modes (except None)
-        if (AppConfig.Current.DropdownState.GamepadSendMode != GamepadSendMode.None)
-        {
-            if (AppConfig.Current.DropdownState.GamepadSendMode != GamepadSendMode.VJoy &&
-                AppConfig.Current.DropdownState.GamepadSendMode != GamepadSendMode.ViGEm &&
-                AppConfig.Current.DropdownState.GamepadSendMode != GamepadSendMode.Internal)
-            {
-                GamepadSettingsConfig.AddSeparator();
-            }
-            
-            GamepadSettingsConfig.AddButton("Open Gamepad Tester", b =>
-            {
-                b.Reader.Click += (s, e) =>
-                {
-                    _ = NavigateTo(nameof(GamepadTestPage));
-                };
-            });
-        }
-
     }
+
+    /// <summary>Helper used by <see cref="UILibrary.GamepadDiagnosticsPanel"/> to jump to the gamepad tester page.</summary>
+    public void OpenGamepadTester() => _ = NavigateTo(nameof(GamepadTestPage));
+
+    /// <summary>Helper used by <see cref="UILibrary.GamepadDiagnosticsPanel"/> to jump to the hidden-controllers page.</summary>
+    public void OpenHiddenControllersPage() => _ = NavigateTo(nameof(HiddenControllersPage));
+
+    private void BackToGamepadSettings_Click(object sender, RoutedEventArgs e) => _ = NavigateTo(nameof(GamepadSettings));
 
     private void LoadTools()
     {

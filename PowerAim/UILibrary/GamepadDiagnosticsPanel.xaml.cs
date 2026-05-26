@@ -64,36 +64,27 @@ public partial class GamepadDiagnosticsPanel : UserControl
             SlotsPanel.Children.Add(BuildSlotRow(i, connected, detail));
         }
 
-        // ---- Detected HID gamepads ----
-        DevicesPanel.Children.Clear();
+        // ---- Detected HID gamepads (summary only — full list lives on HiddenControllersPage) ----
         try
         {
             var devices = HidGamepadEnumerator.Enumerate();
-            if (devices.Count == 0)
+            int hidden = devices.Count(d => !d.Enabled);
+            DeviceSummary.Text = devices.Count switch
             {
-                DevicesPanel.Children.Add(new TextBlock
-                {
-                    Text = "No HID gaming devices detected.",
-                    FontFamily = new FontFamily("Segoe UI Variable Small"),
-                    FontSize = 11,
-                    Foreground = (Brush?)TryFindResource("FluentTextTertiary") ?? Brushes.Gray,
-                });
-            }
-            else
-            {
-                foreach (var d in devices)
-                    DevicesPanel.Children.Add(BuildDeviceRow(d));
-            }
+                0 => "No HID gaming devices detected.",
+                _ => $"{devices.Count} detected, {hidden} hidden. Click → for the full list with Hide / Show actions.",
+            };
         }
         catch (Exception ex)
         {
-            DevicesPanel.Children.Add(new TextBlock
-            {
-                Text = $"Device enumeration failed: {ex.Message}",
-                FontSize = 12,
-                Foreground = Brushes.Tomato,
-            });
+            DeviceSummary.Text = $"Device enumeration failed: {ex.Message}";
         }
+
+        // Mode-conditional buttons: only show 'Launch HidHide' when the binary exists.
+        var hidPathForBtn = PowerAim.InputLogic.HidHide.HidHideHelper.GetHidHidePath();
+        LaunchHidHideBtn.Visibility = (!string.IsNullOrEmpty(hidPathForBtn) && System.IO.File.Exists(hidPathForBtn))
+            ? Visibility.Visible
+            : Visibility.Collapsed;
 
         // ---- Sender ----
         SenderPanel.Children.Clear();
@@ -189,82 +180,6 @@ public partial class GamepadDiagnosticsPanel : UserControl
         return grid;
     }
 
-    private FrameworkElement BuildDeviceRow(DetectedGamepad d)
-    {
-        bool elevated = DeviceHide.IsElevated();
-
-        var border = new Border
-        {
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(4),
-            Padding = new Thickness(10, 6, 10, 6),
-            Margin = new Thickness(0, 0, 0, 4),
-            Opacity = d.Enabled ? 1.0 : 0.55,
-        };
-        border.SetResourceReference(Border.BorderBrushProperty, "FluentStroke");
-        border.SetResourceReference(Border.BackgroundProperty, "FluentSurface3");
-
-        var grid = new Grid();
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-        var info = new StackPanel();
-        var name = new TextBlock
-        {
-            Text = d.Enabled ? d.FriendlyName : $"{d.FriendlyName}    (HIDDEN)",
-            FontFamily = new FontFamily("Segoe UI Variable Text"),
-            FontWeight = FontWeights.SemiBold,
-            FontSize = 13,
-        };
-        name.SetResourceReference(TextBlock.ForegroundProperty,
-            d.Enabled ? "FluentTextPrimary" : "FluentTextTertiary");
-        info.Children.Add(name);
-        var sub = new TextBlock
-        {
-            Text = d.InstanceId,
-            FontFamily = new FontFamily("Cascadia Mono,Consolas"),
-            FontSize = 11,
-            TextTrimming = TextTrimming.CharacterEllipsis,
-        };
-        sub.SetResourceReference(TextBlock.ForegroundProperty, "FluentTextSecondary");
-        info.Children.Add(sub);
-        Grid.SetColumn(info, 0);
-        grid.Children.Add(info);
-
-        var btn = new Button
-        {
-            Content = d.Enabled ? "Hide from games" : "Show again",
-            MinHeight = 28,
-            Padding = new Thickness(10, 4, 10, 4),
-            Margin = new Thickness(8, 0, 0, 0),
-            IsEnabled = elevated,
-            ToolTip = elevated
-                ? (d.Enabled
-                    ? "Disable this device system-wide via CM_Disable_DevNode. Games stop seeing it; PowerAim's virtual pad can take XInput slot 0."
-                    : "Re-enable the device.")
-                : "Requires PowerAim to run as administrator. Use the 'Restart as admin' button in the top bar.",
-        };
-        btn.Click += (_, _) =>
-        {
-            try
-            {
-                bool ok = d.Enabled
-                    ? DeviceHide.TryDisable(d.InstanceId)
-                    : DeviceHide.TryEnable(d.InstanceId);
-                if (!ok)
-                    SuggestionText.Text = $"Could not {(d.Enabled ? "disable" : "enable")} '{d.FriendlyName}': {DeviceHide.LastError}";
-                else
-                    SuggestionText.Text = $"'{d.FriendlyName}' {(d.Enabled ? "hidden" : "shown")}. Windows refreshes XInput on next pump.";
-            }
-            catch (Exception ex) { SuggestionText.Text = $"Operation failed: {ex.Message}"; }
-            Refresh();
-        };
-        Grid.SetColumn(btn, 1);
-        grid.Children.Add(btn);
-        border.Child = grid;
-        return border;
-    }
-
     private FrameworkElement MakeKv(string key, string value, bool warn = false)
     {
         var grid = new Grid { Margin = new Thickness(0, 2, 0, 2) };
@@ -329,6 +244,52 @@ public partial class GamepadDiagnosticsPanel : UserControl
             ? "HidHide reset: cloak off, device-hide-list cleared, app-whitelist cleared. If your virtual pad was being mistakenly hidden, it should now be visible to games."
             : "HidHide reset attempted but the CLI returned an error. HidHide might not be installed — that's also fine, in which case nothing was hidden in the first place.";
         Refresh();
+    }
+
+    private void LaunchHidHide_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var cli = PowerAim.InputLogic.HidHide.HidHideHelper.GetHidHidePath();
+            if (string.IsNullOrEmpty(cli) || !System.IO.File.Exists(cli))
+            {
+                SuggestionText.Text = "HidHide isn't installed — install it from https://github.com/ViGEm/HidHide first.";
+                return;
+            }
+            var ui = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(cli) ?? "", "HidHideClient.exe");
+            if (System.IO.File.Exists(ui))
+                System.Diagnostics.Process.Start(ui);
+            else
+                SuggestionText.Text = "HidHideClient.exe not found next to the CLI. Reinstall HidHide.";
+        }
+        catch (Exception ex) { SuggestionText.Text = $"Could not launch HidHide UI: {ex.Message}"; }
+    }
+
+    private void OpenGamepadTester_Click(object sender, RoutedEventArgs e)
+    {
+        try { MainWindow.Instance?.OpenGamepadTester(); }
+        catch (Exception ex) { SuggestionText.Text = $"Navigation failed: {ex.Message}"; }
+    }
+
+    private void OpenJoyCpl_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "cmd.exe",
+                Arguments = "/c joy.cpl",
+                CreateNoWindow = true,
+                UseShellExecute = false,
+            });
+        }
+        catch (Exception ex) { SuggestionText.Text = $"Could not open joy.cpl: {ex.Message}"; }
+    }
+
+    private void OpenHiddenControllers_Click(object sender, RoutedEventArgs e)
+    {
+        try { MainWindow.Instance?.OpenHiddenControllersPage(); }
+        catch (Exception ex) { SuggestionText.Text = $"Navigation failed: {ex.Message}"; }
     }
 
     private async void TestPulse_Click(object sender, RoutedEventArgs e)

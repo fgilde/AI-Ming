@@ -72,23 +72,42 @@
                        FontSize="18"
                        Foreground="{DynamicResource FluentTextPrimary}" />
 
-            <Border Grid.Column="2"
-                    CornerRadius="14"
-                    Background="{DynamicResource FluentSurface3}"
-                    BorderBrush="{DynamicResource FluentStroke}"
-                    BorderThickness="1"
-                    Padding="10,4,12,4"
-                    VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal">
-                    <Ellipse x:Name="StatusDot" Width="8" Height="8" Fill="#E81123" Margin="0,0,6,0" VerticalAlignment="Center" />
-                    <TextBlock x:Name="ConnectionStatus"
-                               Text="Disconnected"
-                               FontFamily="Segoe UI Variable Small"
-                               FontSize="12"
-                               Foreground="{DynamicResource FluentTextPrimary}"
-                               VerticalAlignment="Center" />
-                </StackPanel>
-            </Border>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <Border CornerRadius="14"
+                        Background="{DynamicResource FluentSurface3}"
+                        BorderBrush="{DynamicResource FluentStroke}"
+                        BorderThickness="1"
+                        Padding="10,4,12,4"
+                        VerticalAlignment="Center"
+                        Margin="0,0,8,0">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse x:Name="StatusDot" Width="8" Height="8" Fill="#E81123" Margin="0,0,6,0" VerticalAlignment="Center" />
+                        <TextBlock x:Name="ConnectionStatus"
+                                   Text="Disconnected"
+                                   FontFamily="Segoe UI Variable Small"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource FluentTextPrimary}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+                <Button x:Name="PopOutButton"
+                        Style="{StaticResource FluentStandardButton}"
+                        Click="PopOut_Click"
+                        Padding="10,6,12,6"
+                        ToolTip="Open the tester in a separate, non-modal window so you can keep it visible while doing other things in PowerAim.">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE8A7;"
+                                   FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                                   FontSize="12"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Text="Pop out"
+                                   Margin="6,0,0,0"
+                                   VerticalAlignment="Center"
+                                   FontFamily="Segoe UI Variable Text"
+                                   FontSize="13" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
         </Grid>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">

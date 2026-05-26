@@ -58,6 +58,23 @@ public partial class GamepadTesterPanel : UserControl
         BackRequested?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>
+    ///     Open the tester in a stand-alone non-modal window so it stays visible while the user
+    ///     navigates to other PowerAim pages — useful for verifying KB→Pad mapping while editing
+    ///     the mapping profile, or watching live stick values while tuning sensitivities.
+    /// </summary>
+    private void PopOut_Click(object sender, RoutedEventArgs e)
+    {
+        // Re-use the existing GamepadTesterWindow if already open to avoid stacking copies.
+        if (PowerAim.Visuality.GamepadTesterWindow.Current is { } existing)
+        {
+            existing.Activate();
+            return;
+        }
+        var win = new PowerAim.Visuality.GamepadTesterWindow();
+        win.Show();
+    }
+
     private void InitializeController()
     {
         if (GamepadManager.GamepadReader != null &&
