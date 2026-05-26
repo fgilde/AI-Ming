@@ -33,13 +33,13 @@ public sealed class DxgiScreenCapture : ICapture
 
     /// <summary>Feature level fallback chain. 12_2 first (50-series GPUs), then walk down.</summary>
     private static readonly FeatureLevel[] FeatureLevels =
-    {
+    [
         FeatureLevel.Level_12_2,
         FeatureLevel.Level_12_1,
         FeatureLevel.Level_12_0,
         FeatureLevel.Level_11_1,
         FeatureLevel.Level_11_0,
-    };
+    ];
 
     private readonly object _captureLock = new();
 
@@ -164,7 +164,7 @@ public sealed class DxgiScreenCapture : ICapture
                         adapter,
                         DriverType.Unknown,
                         DeviceCreationFlags.BgraSupport,
-                        new[] { fl },
+                        [fl],
                         out _device,
                         out _context);
                     if (result.Success && _device != null)

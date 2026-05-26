@@ -12,13 +12,7 @@ namespace PowerAim.Config;
 /// </summary>
 public class AutoPlayProfile : EditableNotificationObject
 {
-    private string _name;
-    private bool _enabled;
     private string _matchProcess = "";
-    private string _gameContext;
-    private string _ollamaModel = "moondream";
-    private double _decisionInterval = 1.0;
-    private ObservableCollection<AutoPlayAction> _actions = new();
 
     private AutoPlayAction[] _originalActions;
 
@@ -72,10 +66,10 @@ public class AutoPlayProfile : EditableNotificationObject
     /// </summary>
     public string Name
     {
-        get => _name;
+        get;
         set
         {
-            if (SetProperty(ref _name, value))
+            if (SetProperty(ref field, value))
             {
                 RaisePropertyChanged(nameof(IsValid));
                 RaisePropertyChanged(nameof(IsActive));
@@ -88,10 +82,10 @@ public class AutoPlayProfile : EditableNotificationObject
     /// </summary>
     public bool Enabled
     {
-        get => _enabled;
+        get;
         set
         {
-            if (SetProperty(ref _enabled, value))
+            if (SetProperty(ref field, value))
                 RaisePropertyChanged(nameof(IsActive));
         }
     }
@@ -102,8 +96,8 @@ public class AutoPlayProfile : EditableNotificationObject
     /// </summary>
     public string GameContext
     {
-        get => _gameContext;
-        set => SetProperty(ref _gameContext, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     /// <summary>
@@ -112,9 +106,9 @@ public class AutoPlayProfile : EditableNotificationObject
     /// </summary>
     public string OllamaModel
     {
-        get => _ollamaModel;
-        set => SetProperty(ref _ollamaModel, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = "moondream";
 
     /// <summary>
     /// Minimum time in seconds between decisions.
@@ -123,27 +117,27 @@ public class AutoPlayProfile : EditableNotificationObject
     /// </summary>
     public double DecisionInterval
     {
-        get => _decisionInterval;
-        set => SetProperty(ref _decisionInterval, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = 1.0;
 
     /// <summary>
     /// Available actions for this profile
     /// </summary>
     public ObservableCollection<AutoPlayAction> Actions
     {
-        get => _actions;
+        get;
         set
         {
-            if (_actions != null)
-                _actions.CollectionChanged -= RaiseValidChange;
-            if (SetProperty(ref _actions, value))
+            if (field != null)
+                field.CollectionChanged -= RaiseValidChange;
+            if (SetProperty(ref field, value))
             {
                 value.CollectionChanged += RaiseValidChange;
                 RaiseValidChange(null, null);
             }
         }
-    }
+    } = new();
 
     private void RaiseValidChange(object? sender, NotifyCollectionChangedEventArgs e)
     {

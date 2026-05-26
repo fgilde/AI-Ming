@@ -44,7 +44,6 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
     // problem we kept chasing.
     private Controller? _physicalPad;
     private ControllerMappingProfile? _activeProfile;
-    private string _status = "Idle";
 
     // Pressed state tracking — sources that are currently held. Used to fire press / release pairs.
     private readonly HashSet<(MappingInputKind, int)> _heldSources = new();
@@ -62,9 +61,9 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
 
     public string Status
     {
-        get => _status;
-        private set { _status = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Status))); }
-    }
+        get;
+        private set { field = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Status))); }
+    } = "Idle";
 
     public ControllerMappingProfile? ActiveProfile => _activeProfile;
 

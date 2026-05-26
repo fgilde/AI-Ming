@@ -53,52 +53,42 @@ public enum MappingActivator
 /// </summary>
 public class InputMapping : BaseSettings
 {
-    private MappingInputKind _sourceKind;
-    private int _sourceCode;
-    private MappingInputKind _targetKind;
-    private int _targetCode;
-    private bool _enabled = true;
-    private MappingActivator _activator = MappingActivator.Press;
-    private int _longPressMs = 350;
-    private MappingInputKind _modifierKind = MappingInputKind.None;
-    private int _modifierCode;
-
     public MappingInputKind SourceKind
     {
-        get => _sourceKind;
-        set => SetField(ref _sourceKind, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public int SourceCode
     {
-        get => _sourceCode;
-        set => SetField(ref _sourceCode, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public MappingInputKind TargetKind
     {
-        get => _targetKind;
-        set => SetField(ref _targetKind, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public int TargetCode
     {
-        get => _targetCode;
-        set => SetField(ref _targetCode, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public bool Enabled
     {
-        get => _enabled;
-        set => SetField(ref _enabled, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = true;
 
     /// <summary>Press style — see <see cref="MappingActivator"/>.</summary>
     public MappingActivator Activator
     {
-        get => _activator;
-        set => SetField(ref _activator, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = MappingActivator.Press;
 
     /// <summary>
     ///     For <see cref="MappingActivator.LongPress"/>: hold time in ms.
@@ -107,9 +97,9 @@ public class InputMapping : BaseSettings
     /// </summary>
     public int LongPressMs
     {
-        get => _longPressMs;
-        set => SetField(ref _longPressMs, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = 350;
 
     /// <summary>
     ///     Optional second source that must be held for this mapping to fire. Lets you build
@@ -119,13 +109,13 @@ public class InputMapping : BaseSettings
     /// </summary>
     public MappingInputKind ModifierKind
     {
-        get => _modifierKind;
-        set => SetField(ref _modifierKind, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = MappingInputKind.None;
 
     public int ModifierCode
     {
-        get => _modifierCode;
-        set => SetField(ref _modifierCode, value);
+        get;
+        set => SetField(ref field, value);
     }
 }

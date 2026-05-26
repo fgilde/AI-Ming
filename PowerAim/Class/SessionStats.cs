@@ -31,30 +31,24 @@ public sealed class SessionStats : INotifyPropertyChanged
     public long TacticalActionsUsed => System.Threading.Interlocked.Read(ref _tacticalActionsUsed);
 
     // -------- Gauges (latest values) --------
-    private double _lastInferenceMs;
-    private double _instantFps;
-    private int _lastDetectionCount;
-    private string _lastIntent = "";
-    private string _activeTriggerName = "";
-    private string _activeProfileName = "";
 
     /// <summary>Time the last <c>Predict()</c> call took, in milliseconds.</summary>
-    public double LastInferenceMs { get => _lastInferenceMs; set => SetField(ref _lastInferenceMs, value); }
+    public double LastInferenceMs { get; set => SetField(ref field, value); }
 
     /// <summary>Rolling-average inference loop FPS over a short window.</summary>
-    public double InstantFps { get => _instantFps; set => SetField(ref _instantFps, value); }
+    public double InstantFps { get; set => SetField(ref field, value); }
 
     /// <summary>How many enemies the last frame saw.</summary>
-    public int LastDetectionCount { get => _lastDetectionCount; set => SetField(ref _lastDetectionCount, value); }
+    public int LastDetectionCount { get; set => SetField(ref field, value); }
 
     /// <summary>Most recent strategic intent from the Ollama layer ("default" when idle).</summary>
-    public string LastIntent { get => _lastIntent; set => SetField(ref _lastIntent, value ?? ""); }
+    public string LastIntent { get; set => SetField(ref field, value ?? ""); } = "";
 
     /// <summary>Name of the currently active ActionTrigger (if any).</summary>
-    public string ActiveTriggerName { get => _activeTriggerName; set => SetField(ref _activeTriggerName, value ?? ""); }
+    public string ActiveTriggerName { get; set => SetField(ref field, value ?? ""); } = "";
 
     /// <summary>Name of the currently active AutoPlay profile (if any).</summary>
-    public string ActiveProfileName { get => _activeProfileName; set => SetField(ref _activeProfileName, value ?? ""); }
+    public string ActiveProfileName { get; set => SetField(ref field, value ?? ""); } = "";
 
     /// <summary>Session start (UTC). Set on <see cref="Reset"/>.</summary>
     public DateTime StartedAt { get; private set; } = DateTime.UtcNow;

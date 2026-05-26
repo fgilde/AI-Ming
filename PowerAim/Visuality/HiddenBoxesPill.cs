@@ -69,12 +69,12 @@ public sealed class HiddenBoxesPill
         {
             HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Bottom,
-            Margin = new Thickness(0, 0, 24, 24),
-            CornerRadius = new CornerRadius(16),
-            Padding = new Thickness(12, 6, 12, 6),
+            Margin = new(0, 0, 24, 24),
+            CornerRadius = new(16),
+            Padding = new(12, 6, 12, 6),
             Cursor = Cursors.Hand,
             Visibility = Visibility.Collapsed,
-            BorderThickness = new Thickness(1),
+            BorderThickness = new(1),
             Effect = new System.Windows.Media.Effects.DropShadowEffect
             { BlurRadius = 14, Opacity = 0.3, ShadowDepth = 2 },
         };
@@ -85,17 +85,17 @@ public sealed class HiddenBoxesPill
         var icon = new TextBlock
         {
             Text = "", // view glyph
-            FontFamily = new FontFamily("Segoe Fluent Icons,Segoe MDL2 Assets"),
+            FontFamily = new("Segoe Fluent Icons,Segoe MDL2 Assets"),
             FontSize = 12,
             VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(0, 0, 6, 0),
+            Margin = new(0, 0, 6, 0),
         };
         icon.SetResourceReference(TextBlock.ForegroundProperty, "FluentAccent");
         sp.Children.Add(icon);
 
         var label = new TextBlock
         {
-            FontFamily = new FontFamily("Segoe UI Variable Text"),
+            FontFamily = new("Segoe UI Variable Text"),
             FontSize = 12,
             VerticalAlignment = VerticalAlignment.Center,
         };
@@ -115,12 +115,12 @@ public sealed class HiddenBoxesPill
             VerticalAlignment = VerticalAlignment.Bottom,
             // Positioned above the pill: pill margin-bottom is 24, pill height ≈ 32, so we
             // offset the flyout's bottom margin to skip past the pill plus a small gap.
-            Margin = new Thickness(0, 0, 24, 64),
-            CornerRadius = new CornerRadius(8),
-            Padding = new Thickness(8),
+            Margin = new(0, 0, 24, 64),
+            CornerRadius = new(8),
+            Padding = new(8),
             MinWidth = 240,
             Visibility = Visibility.Collapsed,
-            BorderThickness = new Thickness(1),
+            BorderThickness = new(1),
             Effect = new System.Windows.Media.Effects.DropShadowEffect
             { BlurRadius = 16, Opacity = 0.4, ShadowDepth = 2 },
         };
@@ -130,14 +130,14 @@ public sealed class HiddenBoxesPill
         var heading = new TextBlock
         {
             Text = Locale.HiddenSections,
-            FontFamily = new FontFamily("Segoe UI Variable Display"),
+            FontFamily = new("Segoe UI Variable Display"),
             FontWeight = FontWeights.SemiBold,
             FontSize = 12,
-            Margin = new Thickness(4, 2, 4, 6),
+            Margin = new(4, 2, 4, 6),
         };
         heading.SetResourceReference(TextBlock.ForegroundProperty, "FluentTextSecondary");
 
-        var items = new StackPanel { Margin = new Thickness(4) };
+        var items = new StackPanel { Margin = new(4) };
         card.Child = new StackPanel { Children = { heading, items } };
         itemsOut = items;
         return card;
@@ -145,7 +145,7 @@ public sealed class HiddenBoxesPill
 
     private static bool IsAncestor(DependencyObject ancestor, DependencyObject? node)
     {
-        for (int i = 0; i < 32 && node != null; i++)
+        for (int i = 0; i < 32 && node is not null; i++)
         {
             if (ReferenceEquals(node, ancestor)) return true;
             node = VisualTreeHelper.GetParent(node);
@@ -155,15 +155,15 @@ public sealed class HiddenBoxesPill
 
     public void Bind(PageLayoutManager? manager)
     {
-        if (_activeManager != null) _activeManager.LayoutChanged -= Refresh;
+        if (_activeManager is not null) _activeManager.LayoutChanged -= Refresh;
         _activeManager = manager;
-        if (manager != null) manager.LayoutChanged += Refresh;
+        if (manager is not null) manager.LayoutChanged += Refresh;
         Refresh();
     }
 
     public void Refresh()
     {
-        if (_activeManager == null)
+        if (_activeManager is null)
         {
             _pill.Visibility = Visibility.Collapsed;
             _flyout.Visibility = Visibility.Collapsed;
@@ -196,9 +196,9 @@ public sealed class HiddenBoxesPill
         var icon = new TextBlock
         {
             Text = "", // show glyph
-            FontFamily = new FontFamily("Segoe Fluent Icons,Segoe MDL2 Assets"),
+            FontFamily = new("Segoe Fluent Icons,Segoe MDL2 Assets"),
             FontSize = 11,
-            Margin = new Thickness(0, 0, 8, 0),
+            Margin = new(0, 0, 8, 0),
             VerticalAlignment = VerticalAlignment.Center,
         };
         icon.SetResourceReference(TextBlock.ForegroundProperty, "FluentTextSecondary");
@@ -207,7 +207,7 @@ public sealed class HiddenBoxesPill
         var name = new TextBlock
         {
             Text = box.DisplayName,
-            FontFamily = new FontFamily("Segoe UI Variable Text"),
+            FontFamily = new("Segoe UI Variable Text"),
             FontSize = 13,
             VerticalAlignment = VerticalAlignment.Center,
         };
@@ -216,9 +216,9 @@ public sealed class HiddenBoxesPill
 
         var row = new Border
         {
-            Padding = new Thickness(8, 6, 8, 6),
-            Margin = new Thickness(0, 0, 0, 2),
-            CornerRadius = new CornerRadius(4),
+            Padding = new(8, 6, 8, 6),
+            Margin = new(0, 0, 0, 2),
+            CornerRadius = new(4),
             Cursor = Cursors.Hand,
             Background = System.Windows.Media.Brushes.Transparent,
             Child = rowSp,
@@ -228,7 +228,7 @@ public sealed class HiddenBoxesPill
         row.MouseLeave += (_, _) => row.Background = System.Windows.Media.Brushes.Transparent;
         row.MouseLeftButtonUp += (_, e) =>
         {
-            if (_activeManager == null) return;
+            if (_activeManager is null) return;
             _activeManager.RestoreBox(box.Identifier);
             e.Handled = true;
             // Refresh will tear down this row, so we read identifier eagerly above. After

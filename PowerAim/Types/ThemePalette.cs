@@ -109,7 +109,7 @@ public class ThemePalette
 
     private static ThemePalette MakeDark(string name, Color accent, Color effect, Color mainTint)
     {
-        return new ThemePalette(name)
+        return new(name)
         {
             IsLight = false,
             MainColor = mainTint,
@@ -131,7 +131,7 @@ public class ThemePalette
 
     private static ThemePalette MakeLight(string name, Color accent, Color effect, Color mainTint)
     {
-        return new ThemePalette(name)
+        return new(name)
         {
             IsLight = true,
             MainColor = mainTint,

@@ -10,19 +10,15 @@ namespace PowerAim.Config;
 /// </summary>
 public class PageLayout : BaseSettings
 {
-    private ObservableCollection<string> _order = new();
-    private ObservableCollection<string> _hidden = new();
-    private Dictionary<int, List<string>> _columns = new();
-
     /// <summary>
     ///     [DEPRECATED — read on load for back-compat; new saves go through <see cref="Columns"/>.]
     ///     Flat top-to-bottom order across all hosts on the page.
     /// </summary>
     public ObservableCollection<string> Order
     {
-        get => _order;
-        set => SetField(ref _order, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = new();
 
     /// <summary>
     ///     Identifiers the user has hidden. Hidden boxes don't appear in the column ordering —
@@ -30,9 +26,9 @@ public class PageLayout : BaseSettings
     /// </summary>
     public ObservableCollection<string> Hidden
     {
-        get => _hidden;
-        set => SetField(ref _hidden, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = new();
 
     /// <summary>
     ///     Multi-column ordering. Column index maps to the host StackPanel's position within the
@@ -46,9 +42,9 @@ public class PageLayout : BaseSettings
     /// </summary>
     public Dictionary<int, List<string>> Columns
     {
-        get => _columns;
-        set => SetField(ref _columns, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = new();
 }
 
 /// <summary>
@@ -57,21 +53,19 @@ public class PageLayout : BaseSettings
 /// </summary>
 public class LayoutConfiguration : BaseSettings
 {
-    private Dictionary<string, PageLayout> _pages = new();
-
     public Dictionary<string, PageLayout> Pages
     {
-        get => _pages;
-        set => SetField(ref _pages, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = new();
 
     /// <summary>Get or create the layout entry for <paramref name="pageName"/>.</summary>
     public PageLayout For(string pageName)
     {
-        if (!_pages.TryGetValue(pageName, out var layout))
+        if (!Pages.TryGetValue(pageName, out var layout))
         {
             layout = new PageLayout();
-            _pages[pageName] = layout;
+            Pages[pageName] = layout;
         }
         return layout;
     }

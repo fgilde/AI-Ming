@@ -19,58 +19,50 @@ public enum CrosshairShape
 /// </summary>
 public class CrosshairSettings : BaseSettings
 {
-    private CrosshairShape _shape = CrosshairShape.Plus;
-    private int _size = 16;
-    private int _thickness = 2;
-    private int _gap = 4;
-    private string _color = "#FF8B5CF6";       // PowerAim accent purple
-    private string _outlineColor = "#FF000000";
-    private int _outlineThickness = 1;
-
     public CrosshairShape Shape
     {
-        get => _shape;
-        set => SetField(ref _shape, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = CrosshairShape.Plus;
 
     /// <summary>Total size of the crosshair in pixels.</summary>
     public int Size
     {
-        get => _size;
-        set => SetField(ref _size, Math.Clamp(value, 4, 200));
-    }
+        get;
+        set => SetField(ref field, Math.Clamp(value, 4, 200));
+    } = 16;
 
     public int Thickness
     {
-        get => _thickness;
-        set => SetField(ref _thickness, Math.Clamp(value, 1, 12));
-    }
+        get;
+        set => SetField(ref field, Math.Clamp(value, 1, 12));
+    } = 2;
 
     /// <summary>Center gap (Plus + Cross shapes).</summary>
     public int Gap
     {
-        get => _gap;
-        set => SetField(ref _gap, Math.Clamp(value, 0, 50));
-    }
+        get;
+        set => SetField(ref field, Math.Clamp(value, 0, 50));
+    } = 4;
 
     /// <summary>ARGB hex string e.g. <c>#FF8B5CF6</c>.</summary>
     public string Color
     {
-        get => _color;
-        set => SetField(ref _color, value ?? "#FFFFFFFF");
-    }
+        get;
+        set => SetField(ref field, value ?? "#FFFFFFFF");
+    } = "#FF8B5CF6";       // PowerAim accent purple
 
     public string OutlineColor
     {
-        get => _outlineColor;
-        set => SetField(ref _outlineColor, value ?? "#FF000000");
-    }
+        get;
+        set => SetField(ref field, value ?? "#FF000000");
+    } = "#FF000000";
 
     public int OutlineThickness
     {
-        get => _outlineThickness;
-        set => SetField(ref _outlineThickness, Math.Clamp(value, 0, 6));
-    }
+        get;
+        set => SetField(ref field, Math.Clamp(value, 0, 6));
+    } = 1;
 
     // Computed WPF Brush — DO NOT serialize. WPF's Brush.Transform.Inverse chains back on itself
     // and System.Text.Json walks straight into an "object cycle detected" at depth 64. The

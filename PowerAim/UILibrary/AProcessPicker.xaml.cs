@@ -12,23 +12,20 @@ namespace PowerAim.UILibrary
 {
     public partial class AProcessPicker : System.Windows.Controls.UserControl, INotifyPropertyChanged
     {
-        private ProcessModel _selectedProcessModel;
-
-        
         public AProcessPicker()
         {
             InitializeComponent();
             DataContext = this;
         }
 
-        
+
         public ProcessModel SelectedProcessModel
         {
-            get => _selectedProcessModel;
+            get;
             set
             {
-                if (Equals(value, _selectedProcessModel)) return;
-                _selectedProcessModel = value;
+                if (Equals(value, field)) return;
+                field = value;
                 OnPropertyChanged();
             }
         }
@@ -41,7 +38,7 @@ namespace PowerAim.UILibrary
                 var selectedProcess = processDialog.SelectedProcess;
                 if (selectedProcess != null)
                 {
-                    SelectedProcessModel = new ProcessModel { Process = selectedProcess };
+                    SelectedProcessModel = new() { Process = selectedProcess };
 
                 }
             }

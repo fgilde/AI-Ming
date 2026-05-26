@@ -28,18 +28,6 @@ public enum MappingDirection
 /// </summary>
 public class ControllerMappingProfile : EditableNotificationObject
 {
-    private string _name = "Profile";
-    private bool _enabled = false;
-    private string _matchProcess = "";
-    private ObservableCollection<InputMapping> _mappings = new();
-    private double _stickToMouseSensitivity = 12.0;
-    private double _mouseToStickSensitivity = 1.0;
-    private double _stickDeadzone = 0.15;
-    private double _stickAntiDeadzone = 0.0;
-    private double _stickResponseCurve = 1.0;
-    private double _stickMouseExponent = 1.4;
-    private bool _invertMouseY = false;
-
     public ControllerMappingProfile()
     {
         Id = Guid.NewGuid().ToFormattedId();
@@ -49,9 +37,9 @@ public class ControllerMappingProfile : EditableNotificationObject
 
     public string Name
     {
-        get => _name;
-        set => SetProperty(ref _name, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = "Profile";
 
     /// <summary>
     ///     Master switch — when on, this profile is a candidate for the engine. The engine still
@@ -59,8 +47,8 @@ public class ControllerMappingProfile : EditableNotificationObject
     /// </summary>
     public bool Enabled
     {
-        get => _enabled;
-        set => SetProperty(ref _enabled, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     /// <summary>
@@ -69,15 +57,15 @@ public class ControllerMappingProfile : EditableNotificationObject
     /// </summary>
     public string MatchProcess
     {
-        get => _matchProcess;
-        set => SetProperty(ref _matchProcess, value ?? "");
-    }
+        get;
+        set => SetProperty(ref field, value ?? "");
+    } = "";
 
     public ObservableCollection<InputMapping> Mappings
     {
-        get => _mappings;
-        set => SetProperty(ref _mappings, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = new();
 
     /// <summary>
     ///     How many screen-pixels per tick the engine moves the mouse when a stick-direction
@@ -85,9 +73,9 @@ public class ControllerMappingProfile : EditableNotificationObject
     /// </summary>
     public double StickToMouseSensitivity
     {
-        get => _stickToMouseSensitivity;
-        set => SetProperty(ref _stickToMouseSensitivity, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = 12.0;
 
     /// <summary>
     ///     Scale applied to mouse delta when synthesizing right-stick movement on the virtual
@@ -95,9 +83,9 @@ public class ControllerMappingProfile : EditableNotificationObject
     /// </summary>
     public double MouseToStickSensitivity
     {
-        get => _mouseToStickSensitivity;
-        set => SetProperty(ref _mouseToStickSensitivity, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = 1.0;
 
     /// <summary>
     ///     Dead-zone for stick→mouse and stick-direction mappings. Values 0.0 – 0.5; below this
@@ -105,9 +93,9 @@ public class ControllerMappingProfile : EditableNotificationObject
     /// </summary>
     public double StickDeadzone
     {
-        get => _stickDeadzone;
-        set => SetProperty(ref _stickDeadzone, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = 0.15;
 
     /// <summary>
     ///     Anti-dead-zone — minimum output applied as soon as the stick leaves the dead-zone.
@@ -116,8 +104,8 @@ public class ControllerMappingProfile : EditableNotificationObject
     /// </summary>
     public double StickAntiDeadzone
     {
-        get => _stickAntiDeadzone;
-        set => SetProperty(ref _stickAntiDeadzone, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     /// <summary>
@@ -126,9 +114,9 @@ public class ControllerMappingProfile : EditableNotificationObject
     /// </summary>
     public double StickResponseCurve
     {
-        get => _stickResponseCurve;
-        set => SetProperty(ref _stickResponseCurve, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = 1.0;
 
     /// <summary>
     ///     Separate exponent used specifically for stick→mouse motion. Lets you tune mouse feel
@@ -136,14 +124,14 @@ public class ControllerMappingProfile : EditableNotificationObject
     /// </summary>
     public double StickMouseExponent
     {
-        get => _stickMouseExponent;
-        set => SetProperty(ref _stickMouseExponent, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = 1.4;
 
     /// <summary>Invert Y axis when feeding the right stick into mouse motion (or vice versa).</summary>
     public bool InvertMouseY
     {
-        get => _invertMouseY;
-        set => SetProperty(ref _invertMouseY, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 }

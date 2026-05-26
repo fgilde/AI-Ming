@@ -40,7 +40,7 @@ public partial class MappingPage : System.Windows.Controls.UserControl
         MappingEngine.Instance.PropertyChanged += (_, _) =>
             Dispatcher.BeginInvoke(new Action(UpdateEngineStatus));
         // React to MappingActive flips so the status line refreshes (e.g. when toggled by hotkey).
-        if (AppConfig.Current?.ToggleState != null)
+        if (AppConfig.Current?.ToggleState is not null)
         {
             AppConfig.Current.ToggleState.PropertyChanged += (_, e) =>
             {
@@ -60,7 +60,7 @@ public partial class MappingPage : System.Windows.Controls.UserControl
     {
         if (_activeToggleBuilt) return;
         var bm = MainWindow.Instance?.BindingManager;
-        if (bm == null) return;
+        if (bm is null) return;
         ActiveHost.Children.Clear();
         ActiveHost.AddToggleWithKeyBind(Locale.MappingActive, "MappingActive", bm)
             .BindTo(() => AppConfig.Current.ToggleState.MappingActive);
@@ -90,7 +90,7 @@ public partial class MappingPage : System.Windows.Controls.UserControl
             }));
         };
         // If Current is already loaded (e.g. config reload), attach immediately.
-        if (AppConfig.Current != null)
+        if (AppConfig.Current is not null)
             AttachToActiveConfig(AppConfig.Current);
     }
 
@@ -100,9 +100,9 @@ public partial class MappingPage : System.Windows.Controls.UserControl
     private void AttachToActiveConfig(AppConfig cfg)
     {
         var profiles = cfg.ControllerMappingProfiles;
-        if (profiles == null) return;
+        if (profiles is null) return;
         // Detach from any previously-wired collection (config reload case).
-        if (_wiredProfiles != null && _autoSaveHandler != null)
+        if (_wiredProfiles is not null && _autoSaveHandler is not null)
         {
             try { _wiredProfiles.CollectionChanged -= _autoSaveHandler; } catch { }
         }
@@ -121,7 +121,7 @@ public partial class MappingPage : System.Windows.Controls.UserControl
         // Also persist when the master toggle is flipped — without this, MappingActive=true never
         // hits disk unless the user uses the Exit button (and we can't rely on that). Note we
         // don't gate this on IsMappingEditorOpen: the master toggle lives OUTSIDE the editor.
-        if (cfg.ToggleState != null)
+        if (cfg.ToggleState is not null)
         {
             cfg.ToggleState.PropertyChanged += (_, e) =>
             {

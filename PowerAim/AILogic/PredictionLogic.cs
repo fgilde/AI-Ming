@@ -190,7 +190,7 @@ public class PredictionLogic : IPredictionLogic
         if (_onnxModel == null) return;
         if (_isDynamicModel) return;
 
-        var expectedShape = new int[] { 1, 4 + _numClasses, _numDetections };
+        int[] expectedShape = [1, 4 + _numClasses, _numDetections];
         var outputMetadata = _onnxModel.OutputMetadata;
         bool ok = outputMetadata.Values.All(metadata => metadata.Dimensions.SequenceEqual(expectedShape));
         if (!ok)
@@ -257,18 +257,18 @@ public class PredictionLogic : IPredictionLogic
 
             if (filtered.Count == 0)
             {
-                return Array.Empty<Prediction>();
+                return [];
             }
 
             var (kdPoints, kdPredictions) = PrepareKDTreeData(filtered);
             if (kdPoints.Count == 0 || kdPredictions.Count == 0)
             {
-                return Array.Empty<Prediction>();
+                return [];
             }
 
             var tree = new KDTree<double, Prediction>(2, kdPoints.ToArray(), kdPredictions.ToArray(), Normalizer.SquaredDouble);
 
-            var centerPoint = new[] { _imageSize / 2.0, _imageSize / 2.0 };
+            double[] centerPoint = [_imageSize / 2.0, _imageSize / 2.0];
             var allNearest = tree.NearestNeighbors(centerPoint, Math.Min(kdPredictions.Count, maxResultCount)).Select(n => n.Item2).ToArray();
 
             foreach (var prediction in allNearest)
@@ -357,7 +357,7 @@ public class PredictionLogic : IPredictionLogic
         {
             float xCenter = p.Rectangle.X + p.Rectangle.Width / 2f;
             float yCenter = p.Rectangle.Y + p.Rectangle.Height / 2f;
-            kdPoints.Add(new double[] { xCenter, yCenter });
+            kdPoints.Add([xCenter, yCenter]);
         }
         return (kdPoints, predictions);
     }

@@ -31,7 +31,7 @@ public partial class DebugOverlay : Window
     public DebugOverlay()
     {
         InitializeComponent();
-        _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(120) };
+        _timer = new() { Interval = TimeSpan.FromMilliseconds(120) };
         _timer.Tick += OnTick;
     }
 
@@ -76,7 +76,7 @@ public partial class DebugOverlay : Window
     {
         if (visible)
         {
-            if (_instance == null)
+            if (_instance is null)
             {
                 _instance = new DebugOverlay();
                 _instance.Closed += (_, _) => _instance = null;
@@ -85,7 +85,7 @@ public partial class DebugOverlay : Window
         }
         else
         {
-            if (_instance != null)
+            if (_instance is not null)
             {
                 _instance.Close();
                 _instance = null;

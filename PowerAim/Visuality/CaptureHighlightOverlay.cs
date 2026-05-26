@@ -55,8 +55,8 @@ internal sealed class CaptureHighlightOverlay : Window
 
         _border = new System.Windows.Controls.Border
         {
-            BorderThickness = new Thickness(4),
-            CornerRadius = new CornerRadius(0),
+            BorderThickness = new(4),
+            CornerRadius = new(0),
             IsHitTestVisible = false
         };
         _border.SetResourceReference(System.Windows.Controls.Border.BorderBrushProperty, "FluentAccent");
@@ -73,12 +73,12 @@ internal sealed class CaptureHighlightOverlay : Window
 
     private static CaptureHighlightOverlay GetOrCreate()
     {
-        if (_instance == null)
+        if (_instance is null)
         {
             // Construct on the UI thread the Application is bound to.
             var owner = Application.Current?.MainWindow;
             _instance = new CaptureHighlightOverlay();
-            if (owner != null) _instance.Owner = owner;
+            if (owner is not null) _instance.Owner = owner;
         }
         return _instance;
     }
@@ -136,13 +136,13 @@ internal sealed class CaptureHighlightOverlay : Window
 
     public static void HideOverlay()
     {
-        if (_instance == null) return;
+        if (_instance is null) return;
         if (_instance.IsVisible) _instance.Hide();
     }
 
     public static void DisposeOverlay()
     {
-        if (_instance == null) return;
+        if (_instance is null) return;
         try { _instance.Close(); } catch { /* ignored */ }
         _instance = null;
     }
@@ -152,10 +152,10 @@ internal sealed class CaptureHighlightOverlay : Window
         // Best-effort: use the Application's main-window DPI. Mixed-DPI setups will be slightly
         // off but the overlay just has to roughly cover the target — pixel-perfect alignment isn't
         // required for a hover preview.
-        var src = Application.Current?.MainWindow != null
+        var src = Application.Current?.MainWindow is not null
             ? PresentationSource.FromVisual(Application.Current.MainWindow)
             : null;
-        if (src?.CompositionTarget != null)
+        if (src?.CompositionTarget is not null)
             return src.CompositionTarget.TransformToDevice.M11;
         return 1.0;
     }

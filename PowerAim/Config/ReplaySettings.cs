@@ -7,31 +7,26 @@ namespace PowerAim.Config;
 /// </summary>
 public class ReplaySettings : BaseSettings
 {
-    private bool _enabled = false;
-    private int _bufferSeconds = 3;
-    private int _jpegQuality = 70;
-    private string _exportFolder = "";
-
     /// <summary>When false, <see cref="PowerAim.AILogic.ReplayBuffer.Push"/> is a no-op.</summary>
     public bool Enabled
     {
-        get => _enabled;
-        set => SetField(ref _enabled, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     /// <summary>Approximate number of seconds of history to retain.</summary>
     public int BufferSeconds
     {
-        get => _bufferSeconds;
-        set => SetField(ref _bufferSeconds, Math.Clamp(value, 1, 30));
-    }
+        get;
+        set => SetField(ref field, Math.Clamp(value, 1, 30));
+    } = 3;
 
     /// <summary>JPEG quality (0..100). Lower = smaller buffer, more compression artefacts.</summary>
     public int JpegQuality
     {
-        get => _jpegQuality;
-        set => SetField(ref _jpegQuality, Math.Clamp(value, 10, 100));
-    }
+        get;
+        set => SetField(ref field, Math.Clamp(value, 10, 100));
+    } = 70;
 
     /// <summary>
     ///     Optional override for the export folder. Empty = use
@@ -39,7 +34,7 @@ public class ReplaySettings : BaseSettings
     /// </summary>
     public string ExportFolder
     {
-        get => _exportFolder;
-        set => SetField(ref _exportFolder, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = "";
 }

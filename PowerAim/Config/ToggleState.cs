@@ -2,8 +2,6 @@
 
 public class ToggleState : BaseSettings
 {
-    private bool _hideUIFromCapture = true;
-
     public bool AutoPlay
     {
         get;
@@ -197,9 +195,9 @@ public class ToggleState : BaseSettings
 
     public bool HideUIFromCapture
     {
-        get => _hideUIFromCapture;
-        set => SetField(ref _hideUIFromCapture, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = true;
 
     public bool ShowHelpTexts
     {

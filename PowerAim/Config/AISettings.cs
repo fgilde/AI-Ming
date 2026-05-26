@@ -9,13 +9,6 @@ namespace PowerAim.Config;
 /// </summary>
 public class AISettings : BaseSettings
 {
-    private ObservableCollection<int> _targetClassIds = new();
-    private TargetClassFilterMode _targetClassFilterMode = TargetClassFilterMode.AllClasses;
-    private bool _stickyAimEnabled = true;
-    private float _stickyAimMaxLockScore = 100f;
-    private float _stickyAimThreshold = 80f;
-    private ObservableCollection<DetectionMaskRegion> _ignoreRegions = new();
-
     /// <summary>
     ///     When <see cref="TargetClassFilterMode"/> is <see cref="TargetClassFilterMode.SpecificIds"/>,
     ///     only detections whose <c>ClassId</c> appears in this list will be considered. Ignored in
@@ -23,18 +16,18 @@ public class AISettings : BaseSettings
     /// </summary>
     public ObservableCollection<int> TargetClassIds
     {
-        get => _targetClassIds;
-        set => SetField(ref _targetClassIds, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = new();
 
     /// <summary>
     ///     How <see cref="TargetClassIds"/> should be interpreted at inference time.
     /// </summary>
     public TargetClassFilterMode TargetClassFilterMode
     {
-        get => _targetClassFilterMode;
-        set => SetField(ref _targetClassFilterMode, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = TargetClassFilterMode.AllClasses;
 
     /// <summary>
     ///     When enabled the aiming logic holds a target between frames based on a composite score
@@ -44,9 +37,9 @@ public class AISettings : BaseSettings
     /// </summary>
     public bool StickyAimEnabled
     {
-        get => _stickyAimEnabled;
-        set => SetField(ref _stickyAimEnabled, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = true;
 
     /// <summary>
     ///     Upper bound for the accumulated lock-score on the currently held target. Higher values
@@ -54,9 +47,9 @@ public class AISettings : BaseSettings
     /// </summary>
     public float StickyAimMaxLockScore
     {
-        get => _stickyAimMaxLockScore;
-        set => SetField(ref _stickyAimMaxLockScore, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = 100f;
 
     /// <summary>
     ///     Pixel radius (translated screen-space) within which the distance score contributes to a
@@ -65,9 +58,9 @@ public class AISettings : BaseSettings
     /// </summary>
     public float StickyAimThreshold
     {
-        get => _stickyAimThreshold;
-        set => SetField(ref _stickyAimThreshold, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = 80f;
 
     /// <summary>
     ///     Rectangular regions in normalized image-space whose contents are ignored by the prediction
@@ -77,9 +70,9 @@ public class AISettings : BaseSettings
     /// </summary>
     public ObservableCollection<DetectionMaskRegion> IgnoreRegions
     {
-        get => _ignoreRegions;
-        set => SetField(ref _ignoreRegions, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = new();
 }
 
 /// <summary>

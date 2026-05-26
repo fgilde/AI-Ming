@@ -22,7 +22,7 @@ namespace PowerAim.AILogic;
 public static class PerformanceBenchmark
 {
     /// <summary>Default candidate resolutions probed when the caller doesn't supply a list.</summary>
-    public static readonly IReadOnlyList<int> DefaultImageSizes = new[] { 320, 416, 512, 640, 800 };
+    public static readonly IReadOnlyList<int> DefaultImageSizes = [320, 416, 512, 640, 800];
 
     /// <summary>How many frames to run before measurement begins (lets JIT / EP warm up).</summary>
     private const int WarmupFrames = 5;
@@ -128,7 +128,7 @@ public static class PerformanceBenchmark
             var inputBuffer = new float[totalFloats];
             FillSyntheticTensor(inputBuffer);
 
-            var inputTensor = new DenseTensor<float>(inputBuffer, new[] { 1, 3, actualSize, actualSize });
+            var inputTensor = new DenseTensor<float>(inputBuffer, [1, 3, actualSize, actualSize]);
             var inputs = new List<NamedOnnxValue> { NamedOnnxValue.CreateFromTensor("images", inputTensor) };
 
             using var runOptions = new RunOptions();

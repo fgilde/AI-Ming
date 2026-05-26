@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Windows.Forms;
 using PowerAim.InputLogic;
 
@@ -6,13 +6,11 @@ namespace PowerAim.Config;
 
 public class BindingSettings : BaseSettings<StoredInputBinding>
 {
-    private ObservableCollection<StoredInputBinding> _aimKeyBindings = [MouseButtons.Right, Keys.LMenu];
-
     public ObservableCollection<StoredInputBinding> AimKeyBindings
     {
-        get => _aimKeyBindings;
-        set => SetField(ref _aimKeyBindings, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = [MouseButtons.Right, Keys.LMenu];
 
     public StoredInputBinding DynamicFOVKeybind { get => Get(MouseButtons.Left); set => Set(value); }
 
@@ -20,8 +18,8 @@ public class BindingSettings : BaseSettings<StoredInputBinding>
     public StoredInputBinding MagnifierKeybind { get => Get(); set => Set(value); }
     public StoredInputBinding MagnifierZoomInKeybind { get => Get(Keys.Add); set => Set(value); }
     public StoredInputBinding MagnifierZoomOutKeybind { get => Get(Keys.Subtract); set => Set(value); }
-    
-    
+
+
     public StoredInputBinding ModelSwitchKeybind { get => Get(); set => Set(value); }
 
     public StoredInputBinding AntiRecoilKeybind { get => Get(MouseButtons.Left); set => Set(value); }

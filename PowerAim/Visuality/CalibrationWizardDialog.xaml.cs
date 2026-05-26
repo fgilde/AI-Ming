@@ -104,7 +104,7 @@ public partial class CalibrationWizardDialog
     private async Task RunCalibration()
     {
         var capture = AIManager.Instance?.ImageCapture;
-        if (capture == null)
+        if (capture is null)
         {
             ShowError(Locale.NoCaptureSourceLoaded);
             return;
@@ -113,7 +113,7 @@ public partial class CalibrationWizardDialog
         // Suspend the aim/trigger loops while we move the mouse around.
         var toggle = AppConfig.Current?.ToggleState;
         bool wasActive = toggle?.GlobalActive == true;
-        if (wasActive && toggle != null)
+        if (wasActive && toggle is not null)
         {
             toggle.GlobalActive = false;
             _restoredGlobalActive = true;
@@ -122,7 +122,7 @@ public partial class CalibrationWizardDialog
         _step = Step.Running;
         UpdateChrome();
 
-        _cts = new CancellationTokenSource();
+        _cts = new();
         try
         {
             var result = await SensitivityCalibrator.CalibrateAsync(capture, moveAmount: 200, rounds: 6, _cts.Token);
@@ -148,7 +148,7 @@ public partial class CalibrationWizardDialog
         finally
         {
             // Restore the AI pipeline state we suspended.
-            if (_restoredGlobalActive && toggle != null)
+            if (_restoredGlobalActive && toggle is not null)
             {
                 toggle.GlobalActive = true;
                 _restoredGlobalActive = false;
@@ -191,7 +191,7 @@ public partial class CalibrationWizardDialog
     private void ApplySuggested()
     {
         var settings = AppConfig.Current?.SliderSettings;
-        if (settings == null || _lastResult == null || !_lastResult.Ok) return;
+        if (settings is null || _lastResult is null || !_lastResult.Ok) return;
         settings.MouseSensitivity = _lastResult.SuggestedSensitivity;
     }
 
@@ -209,7 +209,7 @@ public partial class CalibrationWizardDialog
     protected override void OnClosed(EventArgs e)
     {
         _cts?.Cancel();
-        if (_restoredGlobalActive && AppConfig.Current?.ToggleState != null)
+        if (_restoredGlobalActive && AppConfig.Current?.ToggleState is not null)
         {
             AppConfig.Current.ToggleState.GlobalActive = true;
             _restoredGlobalActive = false;

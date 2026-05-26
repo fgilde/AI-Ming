@@ -63,7 +63,7 @@ public partial class MessageDialog : UserControl
         var dialog = new MessageDialog();
         dialog.SetupContent(title, message, icon, buttons, defaultResult);
 
-        if (owner != null && owner.Content is Grid hostGrid && PresentationSource.FromVisual(owner) != null)
+        if (owner is not null && owner.Content is Grid hostGrid && PresentationSource.FromVisual(owner) is not null)
         {
             return dialog.ShowOverlay(owner, hostGrid);
         }
@@ -131,7 +131,7 @@ public partial class MessageDialog : UserControl
             _                   => ("", null)
         };
         IconGlyph.Text = glyph;
-        if (brush != null)
+        if (brush is not null)
         {
             brush.Freeze();
             IconHolder.Background = brush;
@@ -176,8 +176,8 @@ public partial class MessageDialog : UserControl
             Content = text,
             MinWidth = 96,
             MinHeight = 34,
-            Margin = new Thickness(8, 0, 0, 0),
-            Padding = new Thickness(14, 6, 14, 6)
+            Margin = new(8, 0, 0, 0),
+            Padding = new(14, 6, 14, 6)
         };
         btn.SetResourceReference(StyleProperty, accent ? "FluentAccentButton" : "FluentStandardButton");
         btn.Click += (_, _) => Complete(result);
@@ -197,7 +197,7 @@ public partial class MessageDialog : UserControl
     private static Window? TryGetActiveWindow()
     {
         var app = Application.Current;
-        if (app == null) return null;
+        if (app is null) return null;
         foreach (Window w in app.Windows)
         {
             if (w.IsActive) return w;
@@ -208,14 +208,14 @@ public partial class MessageDialog : UserControl
     private DialogResult ShowOverlay(Window owner, Grid hostGrid)
     {
         // Build the overlay host covering the entire content grid
-        _overlayHost = new Grid { ClipToBounds = true, IsHitTestVisible = true };
+        _overlayHost = new() { ClipToBounds = true, IsHitTestVisible = true };
 
         var rowCount = Math.Max(hostGrid.RowDefinitions.Count, 1);
         var colCount = Math.Max(hostGrid.ColumnDefinitions.Count, 1);
         Grid.SetRowSpan(_overlayHost, rowCount);
         Grid.SetColumnSpan(_overlayHost, colCount);
 
-        _dimmer = new Border
+        _dimmer = new()
         {
             Background = new SolidColorBrush(Color.FromArgb(0x66, 0, 0, 0)),
             Opacity = 0
@@ -224,12 +224,12 @@ public partial class MessageDialog : UserControl
         _dimmer.MouseLeftButtonDown += (_, _) => Complete(_escapeResult);
         _overlayHost.Children.Add(_dimmer);
 
-        _translate = new TranslateTransform(0, -200);
+        _translate = new(0, -200);
         RenderTransform = _translate;
         HorizontalAlignment = HorizontalAlignment.Center;
         VerticalAlignment = VerticalAlignment.Top;
         Opacity = 0;
-        Margin = new Thickness(0);
+        Margin = new(0);
         _overlayHost.Children.Add(this);
 
         hostGrid.Children.Add(_overlayHost);
@@ -270,7 +270,7 @@ public partial class MessageDialog : UserControl
         }), DispatcherPriority.Input);
 
         // Block until result
-        _frame = new DispatcherFrame();
+        _frame = new();
         try
         {
             Dispatcher.PushFrame(_frame);
@@ -284,7 +284,7 @@ public partial class MessageDialog : UserControl
 
     private DialogResult ShowAsWindow(Window? owner)
     {
-        _standalone = new Window
+        _standalone = new()
         {
             Content = this,
             WindowStyle = WindowStyle.None,
@@ -293,13 +293,13 @@ public partial class MessageDialog : UserControl
             SizeToContent = SizeToContent.WidthAndHeight,
             ResizeMode = ResizeMode.NoResize,
             ShowInTaskbar = false,
-            WindowStartupLocation = owner != null
+            WindowStartupLocation = owner is not null
                 ? WindowStartupLocation.CenterOwner
                 : WindowStartupLocation.CenterScreen,
             Owner = owner,
             Topmost = true
         };
-        Margin = new Thickness(16);
+        Margin = new(16);
         _standalone.PreviewKeyDown += (_, e) =>
         {
             if (e.Key == Key.Escape) { Complete(_escapeResult); e.Handled = true; }
@@ -319,14 +319,14 @@ public partial class MessageDialog : UserControl
         _completing = true;
         _result = result;
 
-        if (_standalone != null)
+        if (_standalone is not null)
         {
             _standalone.Close();
             return;
         }
 
         // Animate out
-        if (_overlayHost?.Parent is Panel parent && _translate != null)
+        if (_overlayHost?.Parent is Panel parent && _translate is not null)
         {
             var slide = new DoubleAnimation
             {
@@ -340,15 +340,15 @@ public partial class MessageDialog : UserControl
             slide.Completed += (_, _) =>
             {
                 parent.Children.Remove(_overlayHost);
-                if (_frame != null) _frame.Continue = false;
+                if (_frame is not null) _frame.Continue = false;
             };
             _translate.BeginAnimation(TranslateTransform.YProperty, slide);
             BeginAnimation(OpacityProperty, fade);
-            if (_dimmer != null) _dimmer.BeginAnimation(OpacityProperty, dimFade);
+            if (_dimmer is not null) _dimmer.BeginAnimation(OpacityProperty, dimFade);
         }
         else
         {
-            if (_frame != null) _frame.Continue = false;
+            if (_frame is not null) _frame.Continue = false;
         }
     }
 }

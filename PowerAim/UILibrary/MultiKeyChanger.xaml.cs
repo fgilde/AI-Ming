@@ -189,13 +189,13 @@ namespace UILibrary
             var propertyInfo = (PropertyInfo)memberExpression.Member;
             var owner = memberExpression.GetOwnerAs<INotifyPropertyChanged>();
 
-            Keys = new ObservableCollection<StoredInputBinding>(fn.Compile()());
+            Keys = new(fn.Compile()());
 
             owner.PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == propertyInfo.Name)
                 {
-                    Keys = new ObservableCollection<StoredInputBinding>(fn.Compile()());
+                    Keys = new(fn.Compile()());
                 }
             };
 

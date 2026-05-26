@@ -48,7 +48,7 @@ namespace Visuality
             Loaded += OnLoaded;
             AppConfig.BindToDataContext(this);
            
-            _mousePositionTimer = new DispatcherTimer
+            _mousePositionTimer = new()
             {
                 Interval = TimeSpan.FromMilliseconds(30) // Update alle 30 ms
             };
@@ -79,7 +79,7 @@ namespace Visuality
 
         private void OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            if ((bool)e.NewValue && AIManager.Instance?.ImageCapture?.CaptureArea != null)
+            if ((bool)e.NewValue && AIManager.Instance?.ImageCapture?.CaptureArea is not null)
             {
                 this.MoveTo(AIManager.Instance.ImageCapture.CaptureArea);
             }
@@ -112,7 +112,7 @@ namespace Visuality
                     var relativeX = targetX.Value - this.Left;
                     var relativeY = targetY.Value - this.Top;
 
-                    Circle.Margin = new Thickness(
+                    Circle.Margin = new(
                         relativeX - (Circle.Width / 2),
                         relativeY - (Circle.Height / 2),
                         0, 0);
@@ -120,7 +120,7 @@ namespace Visuality
             }
             else
             {
-                Circle.Margin = new Thickness(
+                Circle.Margin = new(
                     (this.ActualWidth - Circle.Width) / 2,
                     (this.ActualHeight - Circle.Height) / 2,
                     0, 0);

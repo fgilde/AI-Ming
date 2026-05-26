@@ -1,61 +1,52 @@
-﻿namespace PowerAim.Config;
+namespace PowerAim.Config;
 
 public class DropdownState: BaseSettings
 {
-    private string _gamepadProcess = "";
-    private PredictionMethod _predictionMethod = PredictionMethod.KalmanFilter;
-    private DetectionAreaType _detectionAreaType = DetectionAreaType.ClosestToCenter;
-    private AimingBoundariesAlignment _aimingBoundariesAlignment = AimingBoundariesAlignment.Top;
-    private MouseMovementMethod _mouseMovementMethod = MouseMovementMethod.MouseEvent;
-    private OverlayDrawingMethod _overlayDrawingMethod = OverlayDrawingMethod.WpfWindowCanvas;
-    private GamepadSendMode _gamepadSendMode = GamepadSendMode.ViGEm;
-    private MovementPathType _movementPathType = MovementPathType.Bezier;
-
     public MovementPathType MovementPathType
     {
-        get => _movementPathType;
-        set => SetField(ref _movementPathType, value);
-    }
-    
+        get;
+        set => SetField(ref field, value);
+    } = MovementPathType.Bezier;
+
     public GamepadSendMode GamepadSendMode
     {
-        get => _gamepadSendMode;
-        set => SetField(ref _gamepadSendMode, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = GamepadSendMode.ViGEm;
 
     public string GamepadProcess
     {
-        get => _gamepadProcess;
-        set => SetField(ref _gamepadProcess, value);
-    }
-    
-    public OverlayDrawingMethod OverlayDrawingMethod    
+        get;
+        set => SetField(ref field, value);
+    } = "";
+
+    public OverlayDrawingMethod OverlayDrawingMethod
     {
-        get => _overlayDrawingMethod;
-        set => SetField(ref _overlayDrawingMethod, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = OverlayDrawingMethod.WpfWindowCanvas;
 
     public PredictionMethod PredictionMethod
     {
-        get => _predictionMethod;
-        set => SetField(ref _predictionMethod, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = PredictionMethod.KalmanFilter;
 
     public DetectionAreaType DetectionAreaType
     {
-        get => _detectionAreaType;
-        set => SetField(ref _detectionAreaType, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = DetectionAreaType.ClosestToCenter;
 
     public AimingBoundariesAlignment AimingBoundariesAlignment
     {
-        get => _aimingBoundariesAlignment;
-        set => SetField(ref _aimingBoundariesAlignment, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = AimingBoundariesAlignment.Top;
 
     public MouseMovementMethod MouseMovementMethod
     {
-        get => _mouseMovementMethod;
-        set => SetField(ref _mouseMovementMethod, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = MouseMovementMethod.MouseEvent;
 }

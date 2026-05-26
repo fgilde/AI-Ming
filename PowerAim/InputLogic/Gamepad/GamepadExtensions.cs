@@ -46,7 +46,7 @@ namespace PowerAim.InputLogic
             if (_cache.TryGetValue(controller, out var res))
                 return res;
 
-            Guid xInputDevice = new Guid("EC87F1E3-C13B-4100-B5F7-8B84D54260CB");
+            Guid xInputDevice = new("EC87F1E3-C13B-4100-B5F7-8B84D54260CB");
             string deviceId = null;
 
             IntPtr deviceInfoSet = SetupDiGetClassDevs(ref xInputDevice, null, IntPtr.Zero, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
@@ -55,7 +55,7 @@ namespace PowerAim.InputLogic
 
             try
             {
-                SP_DEVINFO_DATA devInfoData = new SP_DEVINFO_DATA();
+                SP_DEVINFO_DATA devInfoData = new();
                 devInfoData.cbSize = (uint)Marshal.SizeOf(devInfoData);
 
                 for (uint i = 0; SetupDiEnumDeviceInfo(deviceInfoSet, i, ref devInfoData); i++)

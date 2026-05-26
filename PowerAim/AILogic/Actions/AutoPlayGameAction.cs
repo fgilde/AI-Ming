@@ -369,12 +369,12 @@ public class AutoPlayGameAction : BaseAction
         var direction = TryLearnedExploreDirection();
         if (direction != null) return direction;
 
-        var patterns = new[]
-        {
+        string[] patterns =
+        [
             "forward", "forward", "forward", "forward",
             "forward_left", "forward_right",
             "left", "right",
-        };
+        ];
         return patterns[_rng.Next(patterns.Length)];
     }
 
@@ -603,8 +603,8 @@ public class AutoPlayGameAction : BaseAction
 
     // Region name conventions the OCR cue layer recognizes. Users can name their regions any of
     // these (case-insensitive, substring match).
-    private static readonly string[] _ammoAliases   = { "ammo", "mag", "bullets", "magazine", "rounds" };
-    private static readonly string[] _healthAliases = { "health", "hp", "armor", "armour", "shield" };
+    private static readonly string[] _ammoAliases   = ["ammo", "mag", "bullets", "magazine", "rounds"];
+    private static readonly string[] _healthAliases = ["health", "hp", "armor", "armour", "shield"];
 
     private const double LowAmmoThreshold    = 6;
     private const double LowHealthThreshold  = 30;

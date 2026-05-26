@@ -15,7 +15,7 @@ public class GamepadSenderXInputEmu : IGamepadSender
 
     public GamepadSenderXInputEmu(string address = "127.0.0.1", int port = 13000)
     {
-        _udpClient = new UdpClient();
+        _udpClient = new();
         _address = address;
         _port = port;
     }

@@ -9,22 +9,17 @@ namespace PowerAim.Config;
 /// </summary>
 public class OcrSettings : BaseSettings
 {
-    private bool _enabled = false;
-    private int _intervalMs = 500;
-    private string _tessdataPath = "";
-    private ObservableCollection<OcrRegion> _regions = new();
-
     public bool Enabled
     {
-        get => _enabled;
-        set => SetField(ref _enabled, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public int IntervalMs
     {
-        get => _intervalMs;
-        set => SetField(ref _intervalMs, Math.Clamp(value, 100, 5000));
-    }
+        get;
+        set => SetField(ref field, Math.Clamp(value, 100, 5000));
+    } = 500;
 
     /// <summary>
     ///     Optional override for the Tesseract data folder. Empty = use the default
@@ -32,13 +27,13 @@ public class OcrSettings : BaseSettings
     /// </summary>
     public string TessdataPath
     {
-        get => _tessdataPath;
-        set => SetField(ref _tessdataPath, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = "";
 
     public ObservableCollection<OcrRegion> Regions
     {
-        get => _regions;
-        set => SetField(ref _regions, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = new();
 }

@@ -13,9 +13,9 @@ using System.Windows.Input;
 public class AutoTriggerAction : BaseAction
 {
     private Prediction? _lastPrediction;
-    private List<CancellationTokenSource> _autoTriggerCtsList = new();
-    private Dictionary<ActionTrigger, DateTime> _triggerCooldowns = new(); // Track cooldowns for each trigger
-    private Dictionary<ActionTrigger, KeyPressState> _triggerKeyStates = new(); // Store current key states for each trigger
+    private List<CancellationTokenSource> _autoTriggerCtsList = [];
+    private Dictionary<ActionTrigger, DateTime> _triggerCooldowns = []; // Track cooldowns for each trigger
+    private Dictionary<ActionTrigger, KeyPressState> _triggerKeyStates = []; // Store current key states for each trigger
 
     public AutoTriggerAction()
     {

@@ -31,7 +31,7 @@ public class OllamaClient : IOllamaClient
 
     public OllamaClient()
     {
-        _httpClient = new HttpClient();
+        _httpClient = new();
     }
 
     public bool IsAvailable => _isAvailable;

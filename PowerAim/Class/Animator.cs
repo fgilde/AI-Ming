@@ -63,21 +63,25 @@ namespace AimmyWPF.Class
 
         public static void WidthShift(Duration speed, Ellipse Circle, double OriginalSize, double NewSize)
         {
-            DoubleAnimation doubleanimation = new DoubleAnimation();
-            doubleanimation.From = new double?(OriginalSize);
-            doubleanimation.To = new double?(NewSize);
-            doubleanimation.Duration = speed;
-            doubleanimation.EasingFunction = new QuarticEase();
+            DoubleAnimation doubleanimation = new()
+            {
+                From = OriginalSize,
+                To = NewSize,
+                Duration = speed,
+                EasingFunction = new QuarticEase()
+            };
             Circle.BeginAnimation(FrameworkElement.WidthProperty, doubleanimation); ;
         }
 
         public static void HeightShift(Duration speed, Ellipse Circle, double OriginalSize, double NewSize)
         {
-            DoubleAnimation doubleanimation = new DoubleAnimation();
-            doubleanimation.From = new double?(OriginalSize);
-            doubleanimation.To = new double?(NewSize);
-            doubleanimation.Duration = speed;
-            doubleanimation.EasingFunction = new QuarticEase();
+            DoubleAnimation doubleanimation = new()
+            {
+                From = OriginalSize,
+                To = NewSize,
+                Duration = speed,
+                EasingFunction = new QuarticEase()
+            };
             Circle.BeginAnimation(FrameworkElement.HeightProperty, doubleanimation); ;
         }
     }

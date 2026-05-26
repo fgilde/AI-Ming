@@ -16,9 +16,7 @@ namespace Visuality
         private string[] IgnoreOnUpdate => [AppConfig.DefaultConfigPath, "bin\\configs\\Default Gamepad.cfg", "bin\\configs\\Default Keyboard.cfg"];
 
         private readonly UpdateManager _updateManager;
-        private bool _canClose = true;
-        private string _status;
-        
+
         protected override bool SaveRestorePosition => false;
 
         public string NewVersion { get; private set; }
@@ -26,15 +24,15 @@ namespace Visuality
 
         public string Status
         {
-            get => _status;
-            private set => SetField(ref _status, value);
+            get;
+            private set => SetField(ref field, value);
         }
 
-        public bool CanClose    
+        public bool CanClose
         {
-            get => _canClose;
-            private set => SetField(ref _canClose, value);
-        }
+            get;
+            private set => SetField(ref field, value);
+        } = true;
 
         public string Header => $"A new version {NewVersion} is available!";
 

@@ -59,7 +59,7 @@ namespace Visuality
         private void AdjustMargin()
         {
             int bottomMargin = BaseMargin + (openNoticeCount * (NoticeHeight + Spacing));
-            Notice.Margin = new Thickness(0, 0, 0, bottomMargin);
+            Notice.Margin = new(0, 0, 0, bottomMargin);
             Notice.Height = double.NaN;
         }
 
@@ -67,9 +67,9 @@ namespace Visuality
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
-                foreach (Window window in Application.Current.Windows.OfType<NoticeBar>())
+                foreach (var window in Application.Current.Windows.OfType<NoticeBar>())
                 {
-                    (window as NoticeBar)?.AdjustMargin();
+                    window.AdjustMargin();
                 }
             });
         }

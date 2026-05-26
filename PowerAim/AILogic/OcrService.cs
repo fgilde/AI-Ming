@@ -32,7 +32,6 @@ public sealed class OcrService : INotifyPropertyChanged, IDisposable
     private CancellationTokenSource? _cts;
     private Task? _loopTask;
     private readonly ConcurrentDictionary<string, OcrResult> _latest = new();
-    private string _lastError = "";
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -42,9 +41,9 @@ public sealed class OcrService : INotifyPropertyChanged, IDisposable
     /// <summary>Last error message from the engine (empty when OK).</summary>
     public string LastError
     {
-        get => _lastError;
-        private set { _lastError = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastError))); }
-    }
+        get;
+        private set { field = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastError))); }
+    } = "";
 
     /// <summary>
     ///     Default location PowerAim looks for <c>eng.traineddata</c>. Falls back to the

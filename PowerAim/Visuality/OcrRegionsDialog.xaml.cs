@@ -31,12 +31,12 @@ public partial class OcrRegionsDialog
         DataContext = this;
 
         var settings = AppConfig.Current?.OcrSettings;
-        if (settings != null)
+        if (settings is not null)
         {
             EngineEnabledBox.IsChecked = settings.Enabled;
         }
 
-        _previewTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
+        _previewTimer = new() { Interval = TimeSpan.FromMilliseconds(400) };
         _previewTimer.Tick += (_, _) => UpdatePreviewFromService();
         _previewTimer.Start();
 
@@ -65,7 +65,7 @@ public partial class OcrRegionsDialog
         RegionItems.Items.Clear();
         _rowByRegion.Clear();
         var settings = AppConfig.Current?.OcrSettings;
-        if (settings == null) return;
+        if (settings is null) return;
         foreach (var r in settings.Regions)
         {
             var row = BuildRow(r);
@@ -80,11 +80,11 @@ public partial class OcrRegionsDialog
         var border = new Border
         {
             BorderBrush = TryFindResource("FluentStroke") as Brush ?? Brushes.DimGray,
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(4),
+            BorderThickness = new(1),
+            CornerRadius = new(4),
             Background = TryFindResource("FluentSurface3") as Brush ?? Brushes.Black,
-            Padding = new Thickness(10, 8, 10, 8),
-            Margin = new Thickness(0, 0, 0, 4),
+            Padding = new(10, 8, 10, 8),
+            Margin = new(0, 0, 0, 4),
             Cursor = Cursors.Hand,
             Tag = r
         };
@@ -98,7 +98,7 @@ public partial class OcrRegionsDialog
         {
             IsChecked = r.Enabled,
             VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(0, 0, 8, 0)
+            Margin = new(0, 0, 8, 0)
         };
         enabledBox.Checked   += (_, _) => r.Enabled = true;
         enabledBox.Unchecked += (_, _) => r.Enabled = false;
@@ -109,7 +109,7 @@ public partial class OcrRegionsDialog
         var nameLabel = new TextBlock
         {
             Text = r.Name,
-            FontFamily = new FontFamily("Segoe UI Variable Text"),
+            FontFamily = new("Segoe UI Variable Text"),
             FontSize = 13,
             FontWeight = FontWeights.SemiBold,
             Foreground = TryFindResource("FluentTextPrimary") as Brush ?? Brushes.White
@@ -117,7 +117,7 @@ public partial class OcrRegionsDialog
         var subLabel = new TextBlock
         {
             Text = $"{r.Kind}  ·  {r.X},{r.Y}  {r.Width}×{r.Height}",
-            FontFamily = new FontFamily("Segoe UI Variable Small"),
+            FontFamily = new("Segoe UI Variable Small"),
             FontSize = 11,
             Foreground = TryFindResource("FluentTextSecondary") as Brush ?? Brushes.Gray
         };
@@ -136,7 +136,7 @@ public partial class OcrRegionsDialog
         foreach (var kv in _rowByRegion)
         {
             kv.Value.BorderBrush = ReferenceEquals(kv.Key, _selected) ? accent : stroke;
-            kv.Value.BorderThickness = new Thickness(ReferenceEquals(kv.Key, _selected) ? 2 : 1);
+            kv.Value.BorderThickness = new(ReferenceEquals(kv.Key, _selected) ? 2 : 1);
         }
     }
 
@@ -155,7 +155,7 @@ public partial class OcrRegionsDialog
         _suppressFieldUpdates = true;
         try
         {
-            if (_selected == null)
+            if (_selected is null)
             {
                 DetailHeader.Text = Locale.NoRegionSelected;
                 NameBox.IsEnabled = KindCombo.IsEnabled = XBox.IsEnabled = YBox.IsEnabled =
@@ -191,7 +191,7 @@ public partial class OcrRegionsDialog
 
     private void NameBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-        if (_suppressFieldUpdates || _selected == null) return;
+        if (_suppressFieldUpdates || _selected is null) return;
         _selected.Name = NameBox.Text;
         if (_rowByRegion.TryGetValue(_selected, out var row) && row.Child is Grid g
             && g.Children.Count >= 2 && g.Children[1] is StackPanel sp
@@ -204,14 +204,14 @@ public partial class OcrRegionsDialog
 
     private void KindCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_suppressFieldUpdates || _selected == null) return;
+        if (_suppressFieldUpdates || _selected is null) return;
         int idx = KindCombo.SelectedIndex;
         if (idx >= 0 && idx <= 2) _selected.Kind = (OcrRegionKind)idx;
     }
 
     private void CoordBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-        if (_suppressFieldUpdates || _selected == null) return;
+        if (_suppressFieldUpdates || _selected is null) return;
         if (sender is not TextBox tb) return;
         if (!int.TryParse(tb.Text, out int v)) return;
         switch (tb.Tag)
@@ -226,20 +226,20 @@ public partial class OcrRegionsDialog
 
     private void ThresholdSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        if (_suppressFieldUpdates || _selected == null) return;
+        if (_suppressFieldUpdates || _selected is null) return;
         _selected.Threshold = (int)e.NewValue;
         ThresholdText.Text = _selected.Threshold.ToString();
     }
 
     private void InvertBox_Toggle(object sender, RoutedEventArgs e)
     {
-        if (_suppressFieldUpdates || _selected == null) return;
+        if (_suppressFieldUpdates || _selected is null) return;
         _selected.Invert = InvertBox.IsChecked == true;
     }
 
     private void RefreshRowSubtitle()
     {
-        if (_selected == null) return;
+        if (_selected is null) return;
         if (_rowByRegion.TryGetValue(_selected, out var row) && row.Child is Grid g
             && g.Children.Count >= 2 && g.Children[1] is StackPanel sp
             && sp.Children.Count > 1 && sp.Children[1] is TextBlock t)
@@ -252,7 +252,7 @@ public partial class OcrRegionsDialog
 
     private void UpdatePreviewFromService()
     {
-        if (_selected == null) return;
+        if (_selected is null) return;
         if (OcrService.Instance.Latest.TryGetValue(_selected.Name, out var result))
         {
             PreviewText.Text = string.IsNullOrEmpty(result.Text) ? Locale.OcrEmpty : result.Text;
@@ -270,7 +270,7 @@ public partial class OcrRegionsDialog
     private void AddRegion_Click(object sender, RoutedEventArgs e)
     {
         var settings = AppConfig.Current?.OcrSettings;
-        if (settings == null) return;
+        if (settings is null) return;
         var fresh = new OcrRegion { Name = string.Format(Locale.OcrRegionDefaultNameFormat, settings.Regions.Count + 1) };
         settings.Regions.Add(fresh);
         RebuildList();
@@ -280,7 +280,7 @@ public partial class OcrRegionsDialog
     private void DeleteRegion_Click(object sender, RoutedEventArgs e)
     {
         var settings = AppConfig.Current?.OcrSettings;
-        if (settings == null || _selected == null) return;
+        if (settings is null || _selected is null) return;
         settings.Regions.Remove(_selected);
         _selected = null;
         RebuildList();
@@ -290,7 +290,7 @@ public partial class OcrRegionsDialog
 
     private void PickOnScreen_Click(object sender, RoutedEventArgs e)
     {
-        if (_selected == null) return;
+        if (_selected is null) return;
         // Hide ourselves so the user can see the HUD they want to crop. Restore on return.
         var prevVis = Visibility;
         Visibility = Visibility.Hidden;
@@ -317,7 +317,7 @@ public partial class OcrRegionsDialog
     private void EngineEnabled_Toggle(object sender, RoutedEventArgs e)
     {
         var settings = AppConfig.Current?.OcrSettings;
-        if (settings == null) return;
+        if (settings is null) return;
         settings.Enabled = EngineEnabledBox.IsChecked == true;
         UpdateStatus();
     }
@@ -340,7 +340,7 @@ public partial class OcrRegionsDialog
 
         // Also flip the engine on so the polling loop starts feeding the live preview.
         var settings = AppConfig.Current?.OcrSettings;
-        if (settings != null && !settings.Enabled)
+        if (settings is not null && !settings.Enabled)
         {
             settings.Enabled = true;
             EngineEnabledBox.IsChecked = true;

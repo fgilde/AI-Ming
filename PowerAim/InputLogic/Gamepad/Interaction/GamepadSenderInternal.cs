@@ -29,15 +29,15 @@ public class GamepadSenderInternal : IGamepadSender
     public GamepadSenderInternal()
     {
         // Initialize virtual states
-        foreach (GamepadButton button in Enum.GetValues(typeof(GamepadButton)))
+        foreach (var button in Enum.GetValues<GamepadButton>())
         {
             _virtualButtonStates[button] = false;
         }
-        foreach (GamepadSlider slider in Enum.GetValues(typeof(GamepadSlider)))
+        foreach (var slider in Enum.GetValues<GamepadSlider>())
         {
             _virtualSliderStates[slider] = 0;
         }
-        foreach (GamepadAxis axis in Enum.GetValues(typeof(GamepadAxis)))
+        foreach (var axis in Enum.GetValues<GamepadAxis>())
         {
             _virtualAxisStates[axis] = 0;
         }
@@ -213,7 +213,7 @@ public class GamepadSenderInternal : IGamepadSender
     {
         GamepadButtonFlags flags = 0;
 
-        foreach (GamepadButton button in Enum.GetValues(typeof(GamepadButton)))
+        foreach (var button in Enum.GetValues<GamepadButton>())
         {
             bool pressed;
             if (_pausedButtons.Contains(button))

@@ -26,7 +26,7 @@ namespace Visuality
 
         public void SetColorAnimation(Color fromColor, Color toColor, TimeSpan duration)
         {
-            ColorAnimation animation = new ColorAnimation(fromColor, toColor, duration);
+            ColorAnimation animation = new(fromColor, toColor, duration);
             SwitchMoving.Background.BeginAnimation(SolidColorBrush.ColorProperty, animation);
         }
 
@@ -53,13 +53,13 @@ namespace Visuality
             {
                 ExtraStrings = " (Found in Downloadable Model menu)";
                 SetColorAnimation((Color)SwitchMoving.Background.GetValue(SolidColorBrush.ColorProperty), EnableColor, AnimationDuration);
-                Animator.ObjectShift(AnimationDuration, SwitchMoving, SwitchMoving.Margin, new Thickness(0, 0, -1, 0));
+                Animator.ObjectShift(AnimationDuration, SwitchMoving, SwitchMoving.Margin, new(0, 0, -1, 0));
             }
             else
             {
                 ExtraStrings = "";
                 SetColorAnimation((Color)SwitchMoving.Background.GetValue(SolidColorBrush.ColorProperty), DisableColor, AnimationDuration);
-                Animator.ObjectShift(AnimationDuration, SwitchMoving, SwitchMoving.Margin, new Thickness(0, 0, 16, 0));
+                Animator.ObjectShift(AnimationDuration, SwitchMoving, SwitchMoving.Margin, new(0, 0, 16, 0));
             }
         }
 

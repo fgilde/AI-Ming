@@ -32,7 +32,7 @@ namespace Visuality
 
         private void OnConfigChange(object? sender, PropertyChangedEventArgs e)
         {
-            if(e.PropertyName == nameof(SliderSettings.MagnificationFactor) && magnifier != null)
+            if(e.PropertyName == nameof(SliderSettings.MagnificationFactor) && magnifier is not null)
             {
                 magnifier.Magnification = AppConfig.Current.SliderSettings.MagnificationFactor;
                 magnifier.UpdateMagnifier();
@@ -42,7 +42,7 @@ namespace Visuality
         private void DlgLoaded(object sender, RoutedEventArgs e)
         {
             DoCenter();
-            if(AIManager.Instance?.ImageCapture != null)
+            if(AIManager.Instance?.ImageCapture is not null)
                 AIManager.Instance.ImageCapture.PropertyChanged += ImageCaptureOnPropertyChanged;
             StartMagnification();
             this.HideForCaptureIfEnabled();
@@ -67,8 +67,10 @@ namespace Visuality
 
         private void StartMagnification()
         {
-            magnifier = new Magnifier(this);
-            magnifier.Magnification = AppConfig.Current.SliderSettings.MagnificationFactor;
+            magnifier = new Magnifier(this)
+            {
+                Magnification = AppConfig.Current.SliderSettings.MagnificationFactor
+            };
             magnifier.UpdateMagnifier();
         }
 

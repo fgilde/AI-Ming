@@ -32,7 +32,7 @@ public partial class RecoilPatternsDialog
         InitializeComponent();
         DataContext = this;
         var settings = AppConfig.Current?.AntiRecoilSettings;
-        if (settings != null)
+        if (settings is not null)
         {
             EnablePlaybackBox.IsChecked = settings.UsePatternRecoil;
             StrengthSlider.Value = settings.PatternStrength;
@@ -57,7 +57,7 @@ public partial class RecoilPatternsDialog
         PatternItems.Items.Clear();
         _rowByPattern.Clear();
         var patterns = AppConfig.Current?.AntiRecoilSettings?.Patterns;
-        if (patterns == null) return;
+        if (patterns is null) return;
 
         foreach (var p in patterns)
         {
@@ -73,11 +73,11 @@ public partial class RecoilPatternsDialog
         var border = new Border
         {
             BorderBrush = TryFindResource("FluentStroke") as Brush ?? Brushes.DimGray,
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(4),
+            BorderThickness = new(1),
+            CornerRadius = new(4),
             Background = TryFindResource("FluentSurface3") as Brush ?? Brushes.Black,
-            Padding = new Thickness(10, 8, 10, 8),
-            Margin = new Thickness(0, 0, 0, 4),
+            Padding = new(10, 8, 10, 8),
+            Margin = new(0, 0, 0, 4),
             Cursor = Cursors.Hand,
             Tag = p
         };
@@ -86,7 +86,7 @@ public partial class RecoilPatternsDialog
         var sp = new StackPanel();
         var nameLine = new TextBlock
         {
-            FontFamily = new FontFamily("Segoe UI Variable Text"),
+            FontFamily = new("Segoe UI Variable Text"),
             FontSize = 13,
             FontWeight = FontWeights.SemiBold,
             Foreground = TryFindResource("FluentTextPrimary") as Brush ?? Brushes.White,
@@ -94,7 +94,7 @@ public partial class RecoilPatternsDialog
         };
         var subLine = new TextBlock
         {
-            FontFamily = new FontFamily("Segoe UI Variable Small"),
+            FontFamily = new("Segoe UI Variable Small"),
             FontSize = 11,
             Foreground = TryFindResource("FluentTextSecondary") as Brush ?? Brushes.Gray,
             Text = string.IsNullOrEmpty(p.Weapon)
@@ -117,7 +117,7 @@ public partial class RecoilPatternsDialog
             bool isSelected = ReferenceEquals(kv.Key, _selected);
             bool isActive = kv.Key.Name == activeName && !string.IsNullOrEmpty(activeName);
             kv.Value.BorderBrush = isSelected ? accent : (isActive ? accent : stroke);
-            kv.Value.BorderThickness = new Thickness(isSelected || isActive ? 2 : 1);
+            kv.Value.BorderThickness = new(isSelected || isActive ? 2 : 1);
         }
     }
 
@@ -126,7 +126,7 @@ public partial class RecoilPatternsDialog
         _selected = p;
         // Selection also arms the pattern for playback — single click = use this one.
         var settings = AppConfig.Current?.AntiRecoilSettings;
-        if (settings != null) settings.ActivePatternName = p.Name;
+        if (settings is not null) settings.ActivePatternName = p.Name;
 
         UpdateRowHighlights();
         UpdateDetailPanel();
@@ -140,7 +140,7 @@ public partial class RecoilPatternsDialog
         _suppressFieldUpdates = true;
         try
         {
-            if (_selected == null)
+            if (_selected is null)
             {
                 NameBox.Text = "";
                 WeaponBox.Text = "";
@@ -163,11 +163,11 @@ public partial class RecoilPatternsDialog
 
     private void NameBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-        if (_suppressFieldUpdates || _selected == null) return;
+        if (_suppressFieldUpdates || _selected is null) return;
         var settings = AppConfig.Current?.AntiRecoilSettings;
         string oldName = _selected.Name;
         _selected.Name = NameBox.Text;
-        if (settings != null && settings.ActivePatternName == oldName)
+        if (settings is not null && settings.ActivePatternName == oldName)
             settings.ActivePatternName = NameBox.Text;
         // Refresh row label without rebuilding the whole list.
         if (_rowByPattern.TryGetValue(_selected, out var row) && row.Child is StackPanel sp
@@ -179,7 +179,7 @@ public partial class RecoilPatternsDialog
 
     private void WeaponBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-        if (_suppressFieldUpdates || _selected == null) return;
+        if (_suppressFieldUpdates || _selected is null) return;
         _selected.Weapon = WeaponBox.Text;
         if (_rowByPattern.TryGetValue(_selected, out var row) && row.Child is StackPanel sp
             && sp.Children.Count > 1 && sp.Children[1] is TextBlock subLabel)
@@ -195,7 +195,7 @@ public partial class RecoilPatternsDialog
     private void UpdatePreview()
     {
         PreviewCanvas.Children.Clear();
-        if (_selected == null || _selected.Samples.Count < 2) return;
+        if (_selected is null || _selected.Samples.Count < 2) return;
 
         double w = PreviewCanvas.ActualWidth > 0 ? PreviewCanvas.ActualWidth : 480;
         double h = PreviewCanvas.ActualHeight > 0 ? PreviewCanvas.ActualHeight : 220;
@@ -221,7 +221,7 @@ public partial class RecoilPatternsDialog
             X1 = 0, X2 = w, Y1 = cy, Y2 = cy,
             Stroke = new SolidColorBrush(Color.FromArgb(60, 200, 200, 200)),
             StrokeThickness = 1,
-            StrokeDashArray = new DoubleCollection { 4, 4 }
+            StrokeDashArray = [4, 4]
         };
         PreviewCanvas.Children.Add(zero);
 
@@ -248,7 +248,7 @@ public partial class RecoilPatternsDialog
         var legend = new TextBlock
         {
             Foreground = TryFindResource("FluentTextTertiary") as Brush ?? Brushes.Gray,
-            FontFamily = new FontFamily("Segoe UI Variable Small"),
+            FontFamily = new("Segoe UI Variable Small"),
             FontSize = 10,
             Text = Locale.RecoilPreviewLegend
         };
@@ -261,14 +261,14 @@ public partial class RecoilPatternsDialog
 
     private async void Record_Click(object sender, RoutedEventArgs e)
     {
-        if (_recordCts != null)
+        if (_recordCts is not null)
         {
             _recordCts.Cancel();
             return;
         }
 
         var capture = AIManager.Instance?.ImageCapture;
-        if (capture == null)
+        if (capture is null)
         {
             StatusText.Text = Locale.NoCaptureSourceLoadModelFirst;
             return;
@@ -276,13 +276,13 @@ public partial class RecoilPatternsDialog
 
         var toggle = AppConfig.Current?.ToggleState;
         bool wasActive = toggle?.GlobalActive == true;
-        if (wasActive && toggle != null)
+        if (wasActive && toggle is not null)
         {
             toggle.GlobalActive = false;
             _restoredGlobalActive = true;
         }
 
-        _recordCts = new CancellationTokenSource();
+        _recordCts = new();
         RecordButton.Content = Locale.RecordingClickToCancel;
         StatusText.Text = Locale.RecordingFireWeapon;
 
@@ -331,7 +331,7 @@ public partial class RecoilPatternsDialog
         }
         finally
         {
-            if (_restoredGlobalActive && toggle != null)
+            if (_restoredGlobalActive && toggle is not null)
             {
                 toggle.GlobalActive = true;
                 _restoredGlobalActive = false;
@@ -344,9 +344,9 @@ public partial class RecoilPatternsDialog
 
     private void Delete_Click(object sender, RoutedEventArgs e)
     {
-        if (_selected == null) return;
+        if (_selected is null) return;
         var settings = AppConfig.Current?.AntiRecoilSettings;
-        if (settings == null) return;
+        if (settings is null) return;
 
         bool wasActive = settings.ActivePatternName == _selected.Name;
         settings.Patterns.Remove(_selected);
@@ -360,14 +360,14 @@ public partial class RecoilPatternsDialog
     private void EnablePlayback_Toggle(object sender, RoutedEventArgs e)
     {
         var settings = AppConfig.Current?.AntiRecoilSettings;
-        if (settings == null) return;
+        if (settings is null) return;
         settings.UsePatternRecoil = EnablePlaybackBox.IsChecked == true;
     }
 
     private void Strength_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         var settings = AppConfig.Current?.AntiRecoilSettings;
-        if (settings == null) return;
+        if (settings is null) return;
         settings.PatternStrength = e.NewValue;
         StrengthText.Text = e.NewValue.ToString("0.00");
     }
@@ -386,7 +386,7 @@ public partial class RecoilPatternsDialog
     protected override void OnClosed(EventArgs e)
     {
         _recordCts?.Cancel();
-        if (_restoredGlobalActive && AppConfig.Current?.ToggleState != null)
+        if (_restoredGlobalActive && AppConfig.Current?.ToggleState is not null)
         {
             AppConfig.Current.ToggleState.GlobalActive = true;
             _restoredGlobalActive = false;

@@ -6,22 +6,15 @@ namespace PowerAim.Config;
 /// </summary>
 public class OllamaSettings : BaseSettings
 {
-    private string _baseUrl = "http://localhost:11434";
-    private int _timeoutSeconds = 30;
-    private double _temperature = 0.3;
-    private int _maxTokens = 100;
-    private int _imageMaxSize = 512;
-    private int _imageQuality = 70;
-
     /// <summary>
     /// Base URL of the Ollama server.
     /// Default: http://localhost:11434
     /// </summary>
     public string BaseUrl
     {
-        get => _baseUrl;
-        set => SetField(ref _baseUrl, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = "http://localhost:11434";
 
     /// <summary>
     /// Request timeout in seconds.
@@ -29,9 +22,9 @@ public class OllamaSettings : BaseSettings
     /// </summary>
     public int TimeoutSeconds
     {
-        get => _timeoutSeconds;
-        set => SetField(ref _timeoutSeconds, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = 30;
 
     /// <summary>
     /// LLM temperature (0.0 - 1.0).
@@ -40,9 +33,9 @@ public class OllamaSettings : BaseSettings
     /// </summary>
     public double Temperature
     {
-        get => _temperature;
-        set => SetField(ref _temperature, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = 0.3;
 
     /// <summary>
     /// Maximum tokens in response.
@@ -50,9 +43,9 @@ public class OllamaSettings : BaseSettings
     /// </summary>
     public int MaxTokens
     {
-        get => _maxTokens;
-        set => SetField(ref _maxTokens, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = 100;
 
     /// <summary>
     /// Maximum image dimension (width/height) for compression.
@@ -60,9 +53,9 @@ public class OllamaSettings : BaseSettings
     /// </summary>
     public int ImageMaxSize
     {
-        get => _imageMaxSize;
-        set => SetField(ref _imageMaxSize, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = 512;
 
     /// <summary>
     /// JPEG quality for image compression (1-100).
@@ -70,7 +63,7 @@ public class OllamaSettings : BaseSettings
     /// </summary>
     public int ImageQuality
     {
-        get => _imageQuality;
-        set => SetField(ref _imageQuality, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = 70;
 }

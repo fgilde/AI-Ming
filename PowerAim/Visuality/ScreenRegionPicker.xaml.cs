@@ -120,7 +120,7 @@ public partial class ScreenRegionPicker : Window
         else
         {
             var vs = SystemInformation.VirtualScreen;
-            _result = new System.Drawing.Rectangle(
+            _result = new(
                 (int)Math.Round(x * _dpi + vs.Left),
                 (int)Math.Round(y * _dpi + vs.Top),
                 (int)Math.Round(w * _dpi),
@@ -136,7 +136,7 @@ public partial class ScreenRegionPicker : Window
     public static System.Drawing.Rectangle? Pick(Window? owner = null)
     {
         var picker = new ScreenRegionPicker();
-        if (owner != null) picker.Owner = owner;
+        if (owner is not null) picker.Owner = owner;
         // We're explicitly not hiding the owner — the picker has a slight tint so the user can
         // still see what they're aiming at through it.
         picker.ShowDialog();

@@ -152,7 +152,7 @@ namespace PowerAim.UILibrary
             SetColorAnimation(currentColor, EnableColor, AnimationDuration);
             Animator.ObjectShift(AnimationDuration, SwitchMoving, SwitchMoving.Margin, OnPosition);
             Activated?.Invoke(this, EventArgs.Empty);
-            Changed?.Invoke(this, new EventArgs<bool>(true));
+            Changed?.Invoke(this, new(true));
             OnPropertyChanged(nameof(Checked));
         }
 
@@ -164,7 +164,7 @@ namespace PowerAim.UILibrary
             SetColorAnimation(currentColor, DisableColor, AnimationDuration);
             Animator.ObjectShift(AnimationDuration, SwitchMoving, SwitchMoving.Margin, OffPosition);
             Deactivated?.Invoke(this, EventArgs.Empty);
-            Changed?.Invoke(this, new EventArgs<bool>(false));
+            Changed?.Invoke(this, new(false));
             OnPropertyChanged(nameof(Checked));
         }
 

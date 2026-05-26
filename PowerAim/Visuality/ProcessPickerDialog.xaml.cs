@@ -55,11 +55,11 @@ namespace Visuality
         private void ProcessListBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             SelectedProcess = e.AddedItems.Count > 0 ? e.AddedItems[0] as Process : null;
-            ApplyButton.IsEnabled = SelectedProcess != null;
+            ApplyButton.IsEnabled = SelectedProcess is not null;
 
             // Highlight + foreground the picked process so the user can see exactly which window
             // they're about to wire into PowerAim. HideOverlay fires from OnClosed.
-            if (SelectedProcess != null)
+            if (SelectedProcess is not null)
             {
                 try
                 {

@@ -9,7 +9,7 @@ public struct RelativeRect : ISpanParsable<RelativeRect>
     public float LeftMarginPercentage { get; set; }
     public float TopMarginPercentage { get; set; }
 
-    public static RelativeRect Default => new RelativeRect(0.5f, 0.29f, 0.25f, 0.05f);
+    public static RelativeRect Default => new(0.5f, 0.29f, 0.25f, 0.05f);
 
     public RelativeRect(float widthPercentage, float heightPercentage, float leftMarginPercentage, float topMarginPercentage)
     {

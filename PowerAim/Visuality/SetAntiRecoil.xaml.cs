@@ -17,7 +17,7 @@ namespace Visuality
     public partial class SetAntiRecoil : Window
     {
         private MainWindow MainWin { get; set; }
-        private DispatcherTimer HoldDownTimer = new DispatcherTimer();
+        private DispatcherTimer HoldDownTimer = new();
         private DateTime LastClickTime;
         private int FireRate;
         private int ChangingFireRate;
@@ -33,7 +33,7 @@ namespace Visuality
             MainWin = MW;
 
             BulletBorder.Opacity = 0;
-            BulletBorder.Margin = new Thickness(0, 0, 0, -140);
+            BulletBorder.Margin = new(0, 0, 0, -140);
 
             HoldDownTimer.Tick += HoldDownTimerTicker;
             HoldDownTimer.Interval = TimeSpan.FromMilliseconds(1);
@@ -66,7 +66,7 @@ namespace Visuality
             FireRate = (int)(DateTime.Now - LastClickTime).TotalMilliseconds;
 
             Animator.Fade(BulletBorder);
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(350), BulletBorder, BulletBorder.Margin, new Thickness(0, 0, 0, 100));
+            Animator.ObjectShift(TimeSpan.FromMilliseconds(350), BulletBorder, BulletBorder.Margin, new(0, 0, 0, 100));
 
             UpdateFireRate();
         }
@@ -81,7 +81,7 @@ namespace Visuality
 
         private void UpdateFireRate()
         {
-            if (BulletNumberTextbox.Text != null && BulletNumberTextbox.Text.Any(char.IsDigit))
+            if (BulletNumberTextbox.Text is not null && BulletNumberTextbox.Text.Any(char.IsDigit))
             {
                 ChangingFireRate = (int)(FireRate / Convert.ToInt64(BulletNumberTextbox.Text));
             }
@@ -106,7 +106,7 @@ namespace Visuality
             SettingLabel.Content = Locale.AntiRecoilHelp;
 
             Animator.FadeOut(BulletBorder);
-            Animator.ObjectShift(TimeSpan.FromMilliseconds(350), BulletBorder, BulletBorder.Margin, new Thickness(0, 0, 0, -140));
+            Animator.ObjectShift(TimeSpan.FromMilliseconds(350), BulletBorder, BulletBorder.Margin, new(0, 0, 0, -140));
 
             HoldDownTimer.Start();
         }

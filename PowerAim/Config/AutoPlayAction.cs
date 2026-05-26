@@ -38,12 +38,6 @@ public enum AutoPlayActionType
 /// </summary>
 public class AutoPlayAction : EditableNotificationObject
 {
-    private string _name;
-    private string _description;
-    private ObservableCollection<StoredInputBinding> _keys = new();
-    private double _duration = 0.1;
-    private AutoPlayActionType _actionType = AutoPlayActionType.Continuous;
-
     private StoredInputBinding[] _originalKeys;
 
     public AutoPlayAction()
@@ -81,10 +75,10 @@ public class AutoPlayAction : EditableNotificationObject
     /// </summary>
     public string Name
     {
-        get => _name;
+        get;
         set
         {
-            if (SetProperty(ref _name, value))
+            if (SetProperty(ref field, value))
             {
                 RaisePropertyChanged(nameof(IsValid));
             }
@@ -97,8 +91,8 @@ public class AutoPlayAction : EditableNotificationObject
     /// </summary>
     public string Description
     {
-        get => _description;
-        set => SetProperty(ref _description, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     /// <summary>
@@ -106,18 +100,18 @@ public class AutoPlayAction : EditableNotificationObject
     /// </summary>
     public ObservableCollection<StoredInputBinding> Keys
     {
-        get => _keys;
+        get;
         set
         {
-            if (_keys != null)
-                _keys.CollectionChanged -= RaiseValidChange;
-            if (SetProperty(ref _keys, value))
+            if (field != null)
+                field.CollectionChanged -= RaiseValidChange;
+            if (SetProperty(ref field, value))
             {
                 value.CollectionChanged += RaiseValidChange;
                 RaiseValidChange(null, null);
             }
         }
-    }
+    } = new();
 
     private void RaiseValidChange(object? sender, NotifyCollectionChangedEventArgs e)
     {
@@ -129,18 +123,18 @@ public class AutoPlayAction : EditableNotificationObject
     /// </summary>
     public double Duration
     {
-        get => _duration;
-        set => SetProperty(ref _duration, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = 0.1;
 
     /// <summary>
     /// Type of action - determines how it's executed
     /// </summary>
     public AutoPlayActionType ActionType
     {
-        get => _actionType;
-        set => SetProperty(ref _actionType, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = AutoPlayActionType.Continuous;
 
     /// <summary>
     /// Whether this action has valid configuration

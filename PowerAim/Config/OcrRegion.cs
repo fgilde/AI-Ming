@@ -23,57 +23,47 @@ public enum OcrRegionKind
 /// </summary>
 public class OcrRegion : BaseSettings
 {
-    private string _name = "Region";
-    private int _x = 0;
-    private int _y = 0;
-    private int _width = 100;
-    private int _height = 40;
-    private bool _enabled = true;
-    private OcrRegionKind _kind = OcrRegionKind.Number;
-    private bool _invert = false;
-    private int _threshold = 140;
-
     public string Name
     {
-        get => _name;
-        set => SetField(ref _name, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = "Region";
 
     public int X
     {
-        get => _x;
-        set => SetField(ref _x, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public int Y
     {
-        get => _y;
-        set => SetField(ref _y, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public int Width
     {
-        get => _width;
-        set => SetField(ref _width, Math.Max(8, value));
-    }
+        get;
+        set => SetField(ref field, Math.Max(8, value));
+    } = 100;
 
     public int Height
     {
-        get => _height;
-        set => SetField(ref _height, Math.Max(8, value));
-    }
+        get;
+        set => SetField(ref field, Math.Max(8, value));
+    } = 40;
 
     public bool Enabled
     {
-        get => _enabled;
-        set => SetField(ref _enabled, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = true;
 
     public OcrRegionKind Kind
     {
-        get => _kind;
-        set => SetField(ref _kind, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = OcrRegionKind.Number;
 
     /// <summary>
     ///     Invert the binarized image before passing to OCR. Useful for white-on-dark HUDs where
@@ -81,14 +71,14 @@ public class OcrRegion : BaseSettings
     /// </summary>
     public bool Invert
     {
-        get => _invert;
-        set => SetField(ref _invert, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     /// <summary>Threshold (0..255) used when pre-binarizing the capture.</summary>
     public int Threshold
     {
-        get => _threshold;
-        set => SetField(ref _threshold, Math.Clamp(value, 0, 255));
-    }
+        get;
+        set => SetField(ref field, Math.Clamp(value, 0, 255));
+    } = 140;
 }

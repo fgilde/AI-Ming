@@ -15,9 +15,9 @@ public partial class GamepadTesterPanel : UserControl
     private const double TARGET_FPS = 60;
     private readonly DispatcherTimer _updateTimer;
     private Controller? _controller;
-    private readonly SolidColorBrush _pressedBrush = new SolidColorBrush(Color.FromArgb(255, 73, 215, 132));
-    private readonly SolidColorBrush _connectedDot = new SolidColorBrush(Color.FromArgb(255, 73, 215, 132));
-    private readonly SolidColorBrush _disconnectedDot = new SolidColorBrush(Color.FromArgb(255, 232, 17, 35));
+    private readonly SolidColorBrush _pressedBrush = new(Color.FromArgb(255, 73, 215, 132));
+    private readonly SolidColorBrush _connectedDot = new(Color.FromArgb(255, 73, 215, 132));
+    private readonly SolidColorBrush _disconnectedDot = new(Color.FromArgb(255, 232, 17, 35));
     private SolidColorBrush? _releasedBrush;
     private CancellationTokenSource? _sequenceCts;
     private bool _isSequenceRunning;
@@ -28,7 +28,7 @@ public partial class GamepadTesterPanel : UserControl
     {
         InitializeComponent();
 
-        _updateTimer = new DispatcherTimer
+        _updateTimer = new()
         {
             Interval = TimeSpan.FromTicks(TimeSpan.TicksPerSecond / (long)TARGET_FPS)
         };
@@ -43,7 +43,7 @@ public partial class GamepadTesterPanel : UserControl
     private void GamepadTesterPanel_Loaded(object sender, RoutedEventArgs e)
     {
         _releasedBrush = TryFindResource("FluentSurface3") as SolidColorBrush
-                         ?? new SolidColorBrush(Color.FromArgb(255, 44, 44, 44));
+                         ?? new(Color.FromArgb(255, 44, 44, 44));
         InitializeController();
         _updateTimer.Start();
     }
@@ -202,7 +202,7 @@ public partial class GamepadTesterPanel : UserControl
         _isSequenceRunning = true;
         StartSequenceButton.IsEnabled = false;
         StopSequenceButton.IsEnabled = true;
-        _sequenceCts = new CancellationTokenSource();
+        _sequenceCts = new();
 
         var timeout = (int)TimeoutSlider.Value;
         var sequenceTag = (SequenceSelector.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "DPad_Circle";

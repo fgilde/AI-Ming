@@ -12,7 +12,7 @@ namespace PowerAim.AILogic.Actions;
 
 public class OverlayAction : BaseAction
 {
-    private Form? _formOverlay = new Form();
+    private Form? _formOverlay = new();
     private DetectedPlayerWindow? _playerOverlay = new();
     private FOV? _fov = new();
     private bool _useForm = false;

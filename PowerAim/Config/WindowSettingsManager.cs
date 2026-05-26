@@ -6,15 +6,8 @@ using Point = System.Drawing.Point;
 
 namespace PowerAim.Config;
 
-public class WindowSettingsManager
+public class WindowSettingsManager(string settingsFilePath)
 {
-    private readonly string _settingsFilePath;
-
-    public WindowSettingsManager(string settingsFilePath)
-    {
-        _settingsFilePath = settingsFilePath;
-    }
-
     public void SaveWindowSettings(Window window, bool shouldShow = true)
     {
         try
@@ -33,7 +26,7 @@ public class WindowSettingsManager
 
             var options = new JsonSerializerOptions { WriteIndented = true };
             var json = JsonSerializer.Serialize(settings, options);
-            File.WriteAllText(_settingsFilePath, json);
+            File.WriteAllText(settingsFilePath, json);
         }
         catch (Exception e)
         {
@@ -46,9 +39,9 @@ public class WindowSettingsManager
     {
         try
         {
-            if (!File.Exists(_settingsFilePath)) return null;
+            if (!File.Exists(settingsFilePath)) return null;
 
-            var json = File.ReadAllText(_settingsFilePath);
+            var json = File.ReadAllText(settingsFilePath);
             return JsonSerializer.Deserialize<WindowSettings>(json);
         }
         catch (Exception e)

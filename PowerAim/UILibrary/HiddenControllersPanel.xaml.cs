@@ -24,7 +24,7 @@ public partial class HiddenControllersPanel : UserControl
     public HiddenControllersPanel()
     {
         InitializeComponent();
-        _refresh = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
+        _refresh = new() { Interval = TimeSpan.FromSeconds(2) };
         _refresh.Tick += (_, _) => Refresh();
         Loaded += (_, _) => { Refresh(); _refresh.Start(); };
         Unloaded += (_, _) => _refresh.Stop();

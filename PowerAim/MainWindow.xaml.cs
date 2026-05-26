@@ -126,7 +126,7 @@ public partial class MainWindow
         PowerAim.Theme.ThemeManager.Apply();
 
         _currentScrollViewer = FindName(nameof(AimMenu)) as FrameworkElement;
-        if (_currentScrollViewer == null) throw new NullReferenceException("CurrentScrollViewer is null");
+        if (_currentScrollViewer is null) throw new NullReferenceException("CurrentScrollViewer is null");
 
         _fileManager?.Dispose();
         _fileManager = new FileManager(ModelListBox, SelectedModelNotifier, ConfigsListBox, SelectedConfigNotifier);
@@ -134,7 +134,7 @@ public partial class MainWindow
         // Needed to import annotations into MakeSense
         if (!File.Exists("bin\\labels\\labels.txt")) File.WriteAllText("bin\\labels\\labels.txt", "Enemy");
 
-        if (BindingManager != null)
+        if (BindingManager is not null)
         {
             BindingManager.OnBindingPressed -= BindingOnKeyPressed;
             BindingManager.OnBindingReleased -= BindingOnKeyReleased;
@@ -182,7 +182,7 @@ public partial class MainWindow
             BindHiddenBoxesPillForCurrentPage();
         }), System.Windows.Threading.DispatcherPriority.Loaded);
 
-        if (isRecreating && menu != null)
+        if (isRecreating && menu is not null)
         {
             _ = NavigateTo(menu, false);
         }
@@ -234,7 +234,7 @@ public partial class MainWindow
 
     private void UpdateModelText()
     {
-        if (Config != null)
+        if (Config is not null)
             ModelContextMenu.Header = $"{Config.LastLoadedModel} ({AIManager?.PredictionLogic?.ExecutionProvider})";
     }
 
@@ -304,7 +304,7 @@ public partial class MainWindow
         AboutSpecs.Content =
             $"{GetProcessorName()} • {GetVideoControllerName()} • {GetFormattedMemorySize()}GB RAM";
 
-        if (GamepadTester != null)
+        if (GamepadTester is not null)
             GamepadTester.BackRequested += (_, _) => _ = NavigateTo(nameof(GamepadSettings));
 
         UpdateAdminButton();
@@ -326,7 +326,7 @@ public partial class MainWindow
 
     private static bool IsInsideInteractiveControl(DependencyObject node)
     {
-        for (int i = 0; i < 32 && node != null; i++)
+        for (int i = 0; i < 32 && node is not null; i++)
         {
             switch (node)
             {
@@ -398,7 +398,7 @@ public partial class MainWindow
     /// </summary>
     private void UpdateAdminButton()
     {
-        if (RestartAsAdminButton == null) return;
+        if (RestartAsAdminButton is null) return;
         RestartAsAdminButton.Visibility = PowerAim.Class.Native.DeviceHide.IsElevated()
             ? Visibility.Collapsed
             : Visibility.Visible;
@@ -410,10 +410,10 @@ public partial class MainWindow
     private PowerAim.Visuality.HiddenBoxesPill? _hiddenBoxesPill;
 
     private static readonly string[] _layoutManagedPages =
-    {
+    [
         "AimMenu", "ModelMenu", "SettingsMenu", "AutoPlayMenu",
         "Tools", "Logs", "AboutMenu", "GamepadSettings"
-    };
+    ];
 
     /// <summary>
     ///     Attach a <see cref="PowerAim.Visuality.PageLayoutManager"/> to whichever pages already
@@ -448,7 +448,7 @@ public partial class MainWindow
 
     private void EnsureHiddenBoxesPill()
     {
-        if (_hiddenBoxesPill != null) return;
+        if (_hiddenBoxesPill is not null) return;
         // Inject the pill into the outermost Grid that hosts the page area. The first child of
         // MainWindow is a Grid (the row/column layout); we put the pill there with high Z-index.
         if (Content is Grid root)
@@ -517,7 +517,7 @@ public partial class MainWindow
     private void RenderSearchResults(string query)
     {
         GlobalSearchResults.Items.Clear();
-        if (_searchIndex == null) return;
+        if (_searchIndex is null) return;
         var matches = PowerAim.Class.GlobalSearch.Filter(_searchIndex, query);
         if (matches.Count == 0)
         {
@@ -637,7 +637,7 @@ public partial class MainWindow
         if (sender is Button clickedButton && !_currentlySwitching)
         {
             var name = clickedButton.Tag?.ToString();
-            if (name != null && CurrentMenu != name)
+            if (name is not null && CurrentMenu != name)
             {
                 await NavigateTo(name, true, clickedButton);
             }
@@ -652,7 +652,7 @@ public partial class MainWindow
 
     private async Task NavigateTo(string name, bool animate = true, Button? clickedButton = null)
     {
-        if (SectionLabel != null)
+        if (SectionLabel is not null)
         {
             var section = string.Join(" ", name.Replace("Menu", "").SplitByUpperCase()).ToUpper();
             SectionLabel.Content = section == "AIM" ? Locale.MainSection : section;
@@ -660,7 +660,7 @@ public partial class MainWindow
 
         clickedButton ??= FindNavButton(name);
         _currentlySwitching = true;
-        if (clickedButton != null && MenuHighlighter?.Parent is UIElement highlighterParent)
+        if (clickedButton is not null && MenuHighlighter?.Parent is UIElement highlighterParent)
         {
             void Move()
             {
@@ -693,7 +693,7 @@ public partial class MainWindow
 
     private async Task SwitchScrollPanels(FrameworkElement movingScrollViewer, bool animate = true)
     {
-        if (_currentScrollViewer != null && _currentScrollViewer != movingScrollViewer)
+        if (_currentScrollViewer is not null && _currentScrollViewer != movingScrollViewer)
         {
             _currentScrollViewer.Visibility = Visibility.Collapsed;
             _currentScrollViewer.Opacity = 1;
@@ -749,11 +749,10 @@ public partial class MainWindow
 
     private static void FilterListBox(System.Windows.Controls.ListBox? list, string searchText)
     {
-        if (list == null) return;
+        if (list is null) return;
         foreach (var item in list.Items)
         {
-            var container = list.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
-            if (container == null) continue;
+            if (list.ItemContainerGenerator.ContainerFromItem(item) is not ListBoxItem container) continue;
             var match = string.IsNullOrEmpty(searchText) || (item?.ToString()?.ToLower().Contains(searchText) ?? false);
             container.Visibility = match ? Visibility.Visible : Visibility.Collapsed;
         }
@@ -761,7 +760,7 @@ public partial class MainWindow
 
     private static void FilterDownloadPanel(Panel? panel, string searchText)
     {
-        if (panel == null) return;
+        if (panel is null) return;
         foreach (var item in panel.Children.OfType<ADownloadGateway>())
         {
             var match = string.IsNullOrEmpty(searchText) || (item.Title.Content?.ToString()?.ToLower().Contains(searchText) ?? false);
@@ -879,12 +878,12 @@ public partial class MainWindow
 
     private void SetSidebarLocked(bool locked)
     {
-        if (Sidebar != null)
+        if (Sidebar is not null)
         {
             Sidebar.IsHitTestVisible = !locked;
             Sidebar.Opacity = locked ? 0.4 : 1.0;
         }
-        if (HamburgerButton != null) HamburgerButton.IsEnabled = !locked;
+        if (HamburgerButton is not null) HamburgerButton.IsEnabled = !locked;
     }
 
     private void TriggerEditBack_Click(object sender, RoutedEventArgs e) => CloseTriggerEditor(false);
@@ -1113,7 +1112,7 @@ public partial class MainWindow
         {
             case nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind):
                 AppConfig.Current.SliderSettings.OnPropertyChanged(nameof(AppConfig.Current.SliderSettings.ActualFovSize));
-                if (FOV.Instance != null)
+                if (FOV.Instance is not null)
                 {
                     Animator.WidthShift(TimeSpan.FromMilliseconds(500), FOV.Instance.Circle, FOV.Instance.Circle.ActualWidth, AppConfig.Current.SliderSettings.FOVSize);
                     Animator.HeightShift(TimeSpan.FromMilliseconds(500), FOV.Instance.Circle, FOV.Instance.Circle.ActualHeight, AppConfig.Current.SliderSettings.FOVSize);
@@ -1152,7 +1151,7 @@ public partial class MainWindow
 
             case nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind):
                 AppConfig.Current.SliderSettings.OnPropertyChanged(nameof(AppConfig.Current.SliderSettings.ActualFovSize));
-                if (FOV.Instance != null)
+                if (FOV.Instance is not null)
                 {
                     Animator.WidthShift(TimeSpan.FromMilliseconds(500), FOV.Instance.Circle, FOV.Instance.Circle.ActualWidth, AppConfig.Current.SliderSettings.ActualFovSize);
                     Animator.HeightShift(TimeSpan.FromMilliseconds(500), FOV.Instance.Circle, FOV.Instance.Circle.ActualHeight, AppConfig.Current.SliderSettings.ActualFovSize);
@@ -1407,10 +1406,10 @@ public partial class MainWindow
         }
         AppConfig.Current.AntiRecoilSettings.PropertyChanged += (s, e) =>
         {
-            if (e.PropertyName == nameof(AntiRecoilSettings.UseImageBasedAntiRecoil)
-                || e.PropertyName == nameof(AntiRecoilSettings.UsePatternRecoil)
-                || e.PropertyName == nameof(AntiRecoilSettings.ActivePatternName)
-                || e.PropertyName == nameof(AntiRecoilSettings.PatternStrength))
+            if (e.PropertyName is nameof(AntiRecoilSettings.UseImageBasedAntiRecoil)
+                or nameof(AntiRecoilSettings.UsePatternRecoil)
+                or nameof(AntiRecoilSettings.ActivePatternName)
+                or nameof(AntiRecoilSettings.PatternStrength))
                 Dispatcher.Invoke(UpdateAntiRecoilVisibility);
         };
         UpdateAntiRecoilVisibility();
@@ -1748,7 +1747,7 @@ public partial class MainWindow
         {
             var list = AppConfig.Current.ActiveProcessSettings.GameProcessPatterns;
             list.Clear();
-            foreach (var part in whitelistInput.Text.Split(new[] { ',', '|' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            foreach (var part in whitelistInput.Text.Split([',', '|'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                 list.Add(part);
         };
         ActiveProcessesSettings.Children.Add(whitelistInput);
@@ -1858,7 +1857,7 @@ public partial class MainWindow
         {
             replayStatus.Content = Locale.Exporting;
             var folder = await PowerAim.AILogic.ReplayBuffer.Instance.ExportAsync();
-            replayStatus.Content = folder == null
+            replayStatus.Content = folder is null
                 ? Locale.NothingToExportEmpty
                 : Locale.SavedToFormat.FormatWith(folder);
         };
@@ -2008,7 +2007,7 @@ public partial class MainWindow
                     var task = releaseManager.GetAvailableReleasesAsync(Constants.RepoOwner, Constants.RepoName);
                     var releases = await task;
                     var release = releases.FirstOrDefault(x => Version.Parse(x.TagName) == ApplicationConstants.ApplicationVersion);
-                    if (release != null)
+                    if (release is not null)
                     {
                         var manager = new UpdateManager();
                         manager.SetRelease(release, !ApplicationConstants.IsCudaBuild);
@@ -2038,20 +2037,20 @@ public partial class MainWindow
         var currentPalette = darkPaletteOptions.FirstOrDefault(p => p.Name == AppConfig.Current.ThemeName) ?? darkPaletteOptions[0];
         UISettings.AddDropdown(Locale.Theme, currentPalette, darkPaletteOptions, palette =>
         {
-            if (Config != null)
+            if (Config is not null)
                 Config.ThemeName = palette.Name;
             PowerAim.Theme.ThemeManager.Apply();
         });
         var currentActive = darkPaletteOptions.FirstOrDefault(p => p.Name == AppConfig.Current.ActiveThemeName) ?? darkPaletteOptions[0];
         UISettings.AddDropdown(Locale.ThemeWhenActive, currentActive, darkPaletteOptions, palette =>
         {
-            if (Config != null)
+            if (Config is not null)
                 Config.ActiveThemeName = palette.Name;
             PowerAim.Theme.ThemeManager.Apply();
         });
         UISettings.AddDropdown<AppThemeMode>(Locale.ThemeMode, AppConfig.Current.ThemeMode, mode =>
         {
-            if (Config != null)
+            if (Config is not null)
                 Config.ThemeMode = mode;
             PowerAim.Theme.ThemeManager.Apply();
         });
@@ -2168,16 +2167,16 @@ public partial class MainWindow
     {
         // Fork must be first — it is the tie-break winner when commit dates collide
         // (see FileManager.RetrieveAndMergeFromRepos).
-        var repos = new (string owner, string repo, string subPath)[]
-        {
+        (string owner, string repo, string subPath)[] repos =
+        [
             (ApplicationConstants.RepoOwner, ApplicationConstants.RepoName, "models"),
             (ApplicationConstants.UpstreamRepoOwner, ApplicationConstants.UpstreamRepoName, "models"),
-        };
-        var configRepos = new (string owner, string repo, string subPath)[]
-        {
+        ];
+        (string owner, string repo, string subPath)[] configRepos =
+        [
             (ApplicationConstants.RepoOwner, ApplicationConstants.RepoName, "configs"),
             (ApplicationConstants.UpstreamRepoOwner, ApplicationConstants.UpstreamRepoName, "configs"),
-        };
+        ];
 
         try
         {
@@ -2404,7 +2403,7 @@ public partial class MainWindow
     {
         var args = e.Value;
         var modelToLoad = args.Sender.Tag?.ToString();
-        if (modelToLoad != null)
+        if (modelToLoad is not null)
         {
             try
             {
@@ -2421,7 +2420,7 @@ public partial class MainWindow
     {
         var args = e.Value;
         var configToLoad = args.Sender.Tag?.ToString();
-        if (configToLoad != null)
+        if (configToLoad is not null)
         {
             try
             {
@@ -2437,12 +2436,12 @@ public partial class MainWindow
     private MagnifierDialog? _magnifier;
     private void ToggleMagnifier(bool? show = null)
     {
-        if (_magnifier == null && show is null or true)
+        if (_magnifier is null && show is null or true)
         {
             _magnifier = new MagnifierDialog();
             _magnifier.Show();
         }
-        else if (_magnifier != null && show is null or false)
+        else if (_magnifier is not null && show is null or false)
         {
             _magnifier.Close();
             _magnifier = null;

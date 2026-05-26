@@ -54,8 +54,6 @@ namespace PowerAim.UILibrary
             css?.CheckProcess();
         }
         
-        private ImageSource _capturePreview;
-
         public Brush ScreenForeground => CaptureSource.TargetType == CaptureTargetType.Screen ? Brushes.Green : Brushes.White;
         public Brush ProcessForeground => IsProcess ? IsValidProcess ? Brushes.Green : Brushes.Red : Brushes.White;
 
@@ -67,8 +65,8 @@ namespace PowerAim.UILibrary
 
         public ImageSource CapturePreview
         {
-            get => _capturePreview;
-            private set => SetField(ref _capturePreview, value);
+            get;
+            private set => SetField(ref field, value);
         }
 
         public CaptureSourceSelect()
@@ -158,7 +156,7 @@ namespace PowerAim.UILibrary
         {
             if(_processWatcher == null)
             {
-                _processWatcher = new ProcessWatcher();
+                _processWatcher = new();
                 _processWatcher.NewProcessesStarted += OnNewProcessesStarted;
                 _processWatcher.Start();
             }

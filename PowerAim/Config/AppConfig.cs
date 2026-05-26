@@ -23,32 +23,15 @@ public class AppConfig : BaseSettings
     [JsonIgnore]
     public string? Path
     {
-        get => _path;
-        set => SetField(ref _path, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public static AppConfig Current { get; private set; }
 
     public string LastLoadedModel { get; set; } = "N/A";
-    
+
     public string LastLoadedConfig = "N/A";
-    private CaptureSource _captureSource = AILogic.CaptureSource.MainScreen();
-    private string? _path;
-    private string? _language;
-    private ObservableCollection<ActionTrigger> _triggers = new ()
-    {
-        new ActionTrigger()
-        {
-            Name = "Primary Fire",
-            Enabled = true,
-            TriggerKeys = [GamepadSlider.LeftTrigger, MouseButtons.Right],
-            TriggerKeysOperator = KeyOperator.Or,
-            Delay = 0,
-            BreakTime = 0,
-            ExecutionIntersectionCheck = TriggerCheck.HeadIntersectingCenter,
-            ExecutionIntersectionArea = RelativeRect.Default
-        },
-    };
     public string SuggestedModelName => SliderSettings.SuggestedModel;
     
     public string ThemeName { get; set; } = ThemePalette.PurplePalette.Name;
@@ -71,14 +54,12 @@ public class AppConfig : BaseSettings
     public AutoPlayLearningSettings AutoPlayLearningSettings { get; set; } = new AutoPlayLearningSettings();
     public LayoutConfiguration LayoutConfiguration { get; set; } = new LayoutConfiguration();
 
-    private ObservableCollection<ControllerMappingProfile> _controllerMappingProfiles = new();
     public ObservableCollection<ControllerMappingProfile> ControllerMappingProfiles
     {
-        get => _controllerMappingProfiles;
-        set => SetField(ref _controllerMappingProfiles, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = new();
 
-    private MappingDirection _mappingDirection = MappingDirection.Both;
     /// <summary>
     ///     Which direction the mapping engine should apply right now. Independent of profile
     ///     contents — a single profile can declare button↔key pairs and the user toggles which
@@ -86,17 +67,34 @@ public class AppConfig : BaseSettings
     /// </summary>
     public MappingDirection MappingDirection
     {
-        get => _mappingDirection;
-        set => SetField(ref _mappingDirection, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = MappingDirection.Both;
 
     public ObservableCollection<ActionTrigger> Triggers
     {
-        get => _triggers;
-        set => SetField(ref _triggers, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = new()
+    {
+        new ActionTrigger()
+        {
+            Name = "Primary Fire",
+            Enabled = true,
+            TriggerKeys = [GamepadSlider.LeftTrigger, MouseButtons.Right],
+            TriggerKeysOperator = KeyOperator.Or,
+            Delay = 0,
+            BreakTime = 0,
+            ExecutionIntersectionCheck = TriggerCheck.HeadIntersectingCenter,
+            ExecutionIntersectionArea = RelativeRect.Default
+        },
+    };
 
-    private ObservableCollection<AutoPlayProfile> _autoPlayProfiles = new()
+    public ObservableCollection<AutoPlayProfile> AutoPlayProfiles
+    {
+        get;
+        set => SetField(ref field, value);
+    } = new()
     {
         new AutoPlayProfile
         {
@@ -121,23 +119,17 @@ public class AppConfig : BaseSettings
         }
     };
 
-    public ObservableCollection<AutoPlayProfile> AutoPlayProfiles
-    {
-        get => _autoPlayProfiles;
-        set => SetField(ref _autoPlayProfiles, value);
-    }
-
     public string? Language
     {
-        get => _language;
-        set => SetField(ref _language, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     public CaptureSource CaptureSource
     {
-        get => _captureSource;
-        set => SetField(ref _captureSource, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = AILogic.CaptureSource.MainScreen();
 
     public static AppConfig Load(string? path = null)
     {

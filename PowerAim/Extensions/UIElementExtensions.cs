@@ -74,7 +74,7 @@ public static class UIElementExtensions
     }
     public static ICollection<MenuItem> ToMenuItems(this ListBox listBox, Action<MenuItem> onClick, Func<int, MenuItem, KeyGesture?> keyBindFn = null)
     {
-        var menuItems = new List<MenuItem>();
+        List<MenuItem> menuItems = [];
         var index = 0;
         foreach (object item in listBox.Items)
         {
@@ -173,7 +173,7 @@ public static class UIElementExtensions
     public static T[] FindParents<T>(this UIElement element, Func<T, bool>? predicate = null) where T : UIElement
     {
         predicate ??= _ => true;
-        var parents = new List<T>();
+        List<T> parents = [];
 
         DependencyObject current = element;
         while (current != null)
@@ -191,7 +191,7 @@ public static class UIElementExtensions
     public static T[] FindChildren<T>(this UIElement element, Func<T, bool>? predicate = null) where T : UIElement
     {
         predicate ??= _ => true;
-        var children = new List<T>();
+        List<T> children = [];
 
         int childCount = VisualTreeHelper.GetChildrenCount(element);
         for (int i = 0; i < childCount; i++)

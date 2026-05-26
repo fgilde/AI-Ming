@@ -19,7 +19,6 @@ public class ApplicationConstants : Constants
         }
     }
 
-    private static ThemePalette _theme = ThemePalette.DarkPalette;
     public static Visibility DebugVisibility => IsDebug ? Visibility.Visible : Visibility.Collapsed;
     public static string ApplicationVersionStr => $"v{ApplicationVersion}";
     public static Version? ApplicationVersion => typeof(ApplicationConstants).Assembly.GetName().Version;
@@ -33,10 +32,10 @@ public class ApplicationConstants : Constants
 
     public static ThemePalette Theme
     {
-        get => _theme;
+        get => field;
         set
         {
-            _theme = value;
+            field = value;
             OnStaticPropertyChanged(nameof(Theme));
             OnStaticPropertyChanged(nameof(MainColor));
             OnStaticPropertyChanged(nameof(AccentColor));
@@ -55,7 +54,7 @@ public class ApplicationConstants : Constants
             OnStaticPropertyChanged(nameof(Foreground));
             OnStaticPropertyChanged(nameof(IsLightTheme));
         }
-    }
+    } = ThemePalette.DarkPalette;
 
     public static event PropertyChangedEventHandler? StaticPropertyChanged;
 

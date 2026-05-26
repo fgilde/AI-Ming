@@ -77,8 +77,8 @@ public partial class GamepadDiagnosticsDialog
         SenderPanel.Children.Add(MakeKv("Active send-mode", mode));
         SenderPanel.Children.Add(MakeKv("Sender instance", sender?.GetType().Name ?? "(null — Gamepad off?)"));
         SenderPanel.Children.Add(MakeKv("Sender.CanWork",
-            sender == null ? "false" : sender.CanWork.ToString(),
-            warn: sender == null || !sender.CanWork));
+            sender is null ? "false" : sender.CanWork.ToString(),
+            warn: sender is null || !sender.CanWork));
         SenderPanel.Children.Add(MakeKv("AutoHideController", AppConfig.Current?.ToggleState?.AutoHideController.ToString() ?? "?"));
         SenderPanel.Children.Add(MakeKv("UseControllerForAim", AppConfig.Current?.ToggleState?.UseControllerForAim.ToString() ?? "?"));
         var hidPath = PowerAim.InputLogic.HidHide.HidHideHelper.GetHidHidePath();
@@ -97,7 +97,7 @@ public partial class GamepadDiagnosticsDialog
 
     private static string BuildSuggestion(IGamepadSender? sender, int realSlot, string mode)
     {
-        if (sender == null)
+        if (sender is null)
             return "GamepadManager has no sender. Initialise it via Settings → Gamepad → 'Send-mode' (ViGEm is the default).";
         if (!sender.CanWork)
             return "Sender exists but CanWork=false — the ViGEm bus driver is probably not installed. Get it from https://github.com/ViGEm/ViGEmBus/releases and reboot.";
@@ -123,7 +123,7 @@ public partial class GamepadDiagnosticsDialog
             ? (TryFindResource("FluentAccent") as Brush ?? Brushes.LimeGreen)
             : new SolidColorBrush(Color.FromArgb(80, 200, 200, 200));
 
-        var grid = new Grid { Margin = new Thickness(0, 2, 0, 2) };
+        var grid = new Grid { Margin = new(0, 2, 0, 2) };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -133,7 +133,7 @@ public partial class GamepadDiagnosticsDialog
             Width = 10, Height = 10,
             Fill = dot.Color,
             VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(0, 0, 8, 0),
+            Margin = new(0, 0, 8, 0),
         };
         Grid.SetColumn(dotHost, 0);
         grid.Children.Add(dotHost);
@@ -141,11 +141,11 @@ public partial class GamepadDiagnosticsDialog
         var label = new TextBlock
         {
             Text = $"Slot {index}",
-            FontFamily = new FontFamily("Segoe UI Variable Text"),
+            FontFamily = new("Segoe UI Variable Text"),
             FontWeight = FontWeights.SemiBold,
             FontSize = 13,
             VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(0, 0, 14, 0),
+            Margin = new(0, 0, 14, 0),
         };
         label.SetResourceReference(TextBlock.ForegroundProperty, "FluentTextPrimary");
         Grid.SetColumn(label, 1);
@@ -154,7 +154,7 @@ public partial class GamepadDiagnosticsDialog
         var details = new TextBlock
         {
             Text = detail,
-            FontFamily = new FontFamily("Cascadia Mono,Consolas"),
+            FontFamily = new("Cascadia Mono,Consolas"),
             FontSize = 12,
             VerticalAlignment = VerticalAlignment.Center,
         };
@@ -167,14 +167,14 @@ public partial class GamepadDiagnosticsDialog
 
     private FrameworkElement MakeKv(string key, string value, bool warn = false)
     {
-        var grid = new Grid { Margin = new Thickness(0, 2, 0, 2) };
+        var grid = new Grid { Margin = new(0, 2, 0, 2) };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(180) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
         var k = new TextBlock
         {
             Text = key,
-            FontFamily = new FontFamily("Segoe UI Variable Text"), FontSize = 13,
+            FontFamily = new("Segoe UI Variable Text"), FontSize = 13,
             VerticalAlignment = VerticalAlignment.Center,
         };
         k.SetResourceReference(TextBlock.ForegroundProperty, "FluentTextSecondary");
@@ -184,7 +184,7 @@ public partial class GamepadDiagnosticsDialog
         var v = new TextBlock
         {
             Text = value,
-            FontFamily = new FontFamily("Cascadia Mono,Consolas"), FontSize = 12,
+            FontFamily = new("Cascadia Mono,Consolas"), FontSize = 12,
             FontWeight = warn ? FontWeights.SemiBold : FontWeights.Normal,
             VerticalAlignment = VerticalAlignment.Center,
         };
@@ -204,7 +204,7 @@ public partial class GamepadDiagnosticsDialog
     private async void TestPulse_Click(object sender, RoutedEventArgs e)
     {
         var s = GamepadManager.GamepadSender;
-        if (s == null || !s.CanWork)
+        if (s is null || !s.CanWork)
         {
             SuggestionText.Text = "Sender unavailable — can't fire a pulse. See the suggestions above.";
             return;

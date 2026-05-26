@@ -18,7 +18,7 @@ namespace PowerAim.InputLogic
 
     public class InputSender
     {
-        private static InputSimulator _inputSimulator = new InputSimulator();
+        private static InputSimulator _inputSimulator = new();
 
         // ===========================================================================
         //  Crosshair / aim movement — routes either through MouseManager (synth mouse)
@@ -185,12 +185,12 @@ namespace PowerAim.InputLogic
 
             if (sendMode == KeyboardSendMode.WindowsSendInputByKeyCode)
             {
-                List<INPUT> inputs = new List<INPUT>();
+                List<INPUT> inputs = [];
 
                 if (pressState == KeyPressState.DownAndUp || pressState == KeyPressState.Down)
                 {
                     // Key down event
-                    INPUT downInput = new INPUT
+                    INPUT downInput = new()
                     {
                         type = (uint)InputEventFlags.INPUT_KEYBOARD,
                         u = new InputUnion
@@ -208,7 +208,7 @@ namespace PowerAim.InputLogic
                 if (pressState == KeyPressState.DownAndUp || pressState == KeyPressState.Up)
                 {
                     // Key up event
-                    INPUT upInput = new INPUT
+                    INPUT upInput = new()
                     {
                         type = (uint)InputEventFlags.INPUT_KEYBOARD,
                         u = new InputUnion
@@ -231,12 +231,12 @@ namespace PowerAim.InputLogic
             else if (sendMode == KeyboardSendMode.WindowsSendInputByScanCode)
             {
                 ushort scanCode = (ushort)MapVirtualKey((uint)keyArgs.KeyCode, 0);
-                List<INPUT> inputs = new List<INPUT>();
+                List<INPUT> inputs = [];
 
                 if (pressState == KeyPressState.DownAndUp || pressState == KeyPressState.Down)
                 {
                     // Key down event
-                    INPUT downInput = new INPUT
+                    INPUT downInput = new()
                     {
                         type = (uint)InputEventFlags.INPUT_KEYBOARD,
                         u = new InputUnion
@@ -254,7 +254,7 @@ namespace PowerAim.InputLogic
                 if (pressState == KeyPressState.DownAndUp || pressState == KeyPressState.Up)
                 {
                     // Key up event
-                    INPUT upInput = new INPUT
+                    INPUT upInput = new()
                     {
                         type = (uint)InputEventFlags.INPUT_KEYBOARD,
                         u = new InputUnion

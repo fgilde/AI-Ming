@@ -26,7 +26,6 @@ namespace PowerAim.UILibrary
     public partial class AKeyChanger : INotifyPropertyChanged, IDisposable
     {
         private string _text;
-        private string _keyConfigPrefix;
 
         public event EventHandler<EventArgs<(AKeyChanger Sender, string Key, StoredInputBinding KeyBinding)>> GlobalKeyPressed;
         public event EventHandler<EventArgs<(AKeyChanger Sender, StoredInputBinding KeyBinding, StoredInputBinding OldValue)>> KeyBindChanged;
@@ -97,7 +96,7 @@ namespace PowerAim.UILibrary
                 newValue.SetMinTime(oldValue.MinTime);
 
             ((AKeyChanger)d).SetContent(newValue);
-            ((AKeyChanger)d).KeyBindChanged?.Invoke(d, new EventArgs<(AKeyChanger Sender, StoredInputBinding KeyBinding, StoredInputBinding OldValue)>(((AKeyChanger)d, newValue, oldValue)));
+            ((AKeyChanger)d).KeyBindChanged?.Invoke(d, new(((AKeyChanger)d, newValue, oldValue)));
             ((AKeyChanger)d).OnPropertyChanged(nameof(ShowTimeEdit));
             ((AKeyChanger)d).OnPropertyChanged(nameof(HasTimeValue));
         }
@@ -139,8 +138,8 @@ namespace PowerAim.UILibrary
 
         public string KeyConfigPrefix
         {
-            get => _keyConfigPrefix;
-            set => SetField(ref _keyConfigPrefix, value);
+            get;
+            set => SetField(ref field, value);
         }
 
 

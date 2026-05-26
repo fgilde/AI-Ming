@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using PowerAim.AILogic;
 using PowerAim.Types;
 
@@ -6,11 +6,6 @@ namespace PowerAim.Models;
 
 public class RelativeRectModel : INotifyPropertyChanged
 {
-    private float _widthPercentage;
-    private float _heightPercentage;
-    private float _leftMarginPercentage;
-    private float _topMarginPercentage;
-
     public RelativeRectModel(RelativeRect rect): this(rect.WidthPercentage, rect.HeightPercentage, rect.LeftMarginPercentage, rect.TopMarginPercentage)
     {}
 
@@ -24,40 +19,40 @@ public class RelativeRectModel : INotifyPropertyChanged
 
     public float WidthPercentage
     {
-        get => _widthPercentage;
+        get;
         set
         {
-            _widthPercentage = value;
+            field = value;
             OnPropertyChanged(nameof(WidthPercentage));
         }
     }
 
     public float HeightPercentage
     {
-        get => _heightPercentage;
+        get;
         set
         {
-            _heightPercentage = value;
+            field = value;
             OnPropertyChanged(nameof(HeightPercentage));
         }
     }
 
     public float LeftMarginPercentage
     {
-        get => _leftMarginPercentage;
+        get;
         set
         {
-            _leftMarginPercentage = value;
+            field = value;
             OnPropertyChanged(nameof(LeftMarginPercentage));
         }
     }
 
     public float TopMarginPercentage
     {
-        get => _topMarginPercentage;
+        get;
         set
         {
-            _topMarginPercentage = value;
+            field = value;
             OnPropertyChanged(nameof(TopMarginPercentage));
         }
     }

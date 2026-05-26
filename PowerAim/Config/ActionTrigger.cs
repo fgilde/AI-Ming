@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Windows.Forms;
@@ -13,22 +13,7 @@ namespace PowerAim.Config;
 
 public class ActionTrigger : EditableNotificationObject
 {
-    private string _name;
-    private bool _enabled;
-    private bool _chargeMode;
     private string _matchProcess = "";
-
-    private ObservableCollection<StoredInputBinding> _actions = [MouseButtons.Left, GamepadSlider.RightTrigger];
-    private ObservableCollection<StoredInputBinding> _antiTriggerKeys = new();
-    private ObservableCollection<StoredInputBinding> _triggerKeys = new();
-    private double _delay;
-    private double _breakTime;
-    private TriggerCheck _executionIntersectionCheck = TriggerCheck.HeadIntersectingCenter;
-    private TriggerCheck _beginIntersectionCheck;
-    private RelativeRect _beginIntersectionArea;
-    private RelativeRect _executionIntersectionArea = RelativeRect.Default;
-    private bool _needsDetection = true;
-    private TriggerExecutionMode _executionMode = TriggerExecutionMode.Simultaneous;
 
     public ActionTrigger()
     {
@@ -55,8 +40,6 @@ public class ActionTrigger : EditableNotificationObject
     private StoredInputBinding[] _originalActions;
     private StoredInputBinding[] _originalKeys;
     private StoredInputBinding[] _originalAntiKeys;
-    private KeyOperator _triggerKeysOperator;
-    private KeyOperator _antiTriggerKeysOperator;
 
     public override void BeginEdit()
     {
@@ -85,37 +68,37 @@ public class ActionTrigger : EditableNotificationObject
 
     public KeyOperator TriggerKeysOperator
     {
-        get => _triggerKeysOperator;
-        set => SetProperty(ref _triggerKeysOperator, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public KeyOperator AntiTriggerKeysOperator
     {
-        get => _antiTriggerKeysOperator;
-        set => SetProperty(ref _antiTriggerKeysOperator, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public TriggerExecutionMode ExecutionMode
     {
-        get => _executionMode;
-        set => SetProperty(ref _executionMode, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = TriggerExecutionMode.Simultaneous;
 
     public bool NeedsDetection
     {
-        get => _needsDetection;
-        set => SetProperty(ref _needsDetection, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = true;
 
     /// <summary>
     /// Name of your trigger
     /// </summary>
     public string Name
     {
-        get => _name;
+        get;
         set
         {
-            if (SetProperty(ref _name, value))
+            if (SetProperty(ref field, value))
             {
                 RaisePropertyChanged(nameof(IsValid));
                 RaisePropertyChanged(nameof(IsActive));
@@ -128,10 +111,10 @@ public class ActionTrigger : EditableNotificationObject
     /// </summary>
     public bool Enabled
     {
-        get => _enabled;
+        get;
         set
         {
-            if (SetProperty(ref _enabled, value))
+            if (SetProperty(ref field, value))
                 RaisePropertyChanged(nameof(IsActive));
         }
     }
@@ -141,8 +124,8 @@ public class ActionTrigger : EditableNotificationObject
     /// </summary>
     public bool ChargeMode
     {
-        get => _chargeMode;
-        set => SetProperty(ref _chargeMode, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
 
@@ -151,18 +134,18 @@ public class ActionTrigger : EditableNotificationObject
     /// </summary>
     public ObservableCollection<StoredInputBinding> Actions
     {
-        get => _actions;
+        get;
         set
         {
-            if(_actions != null)
-                _actions.CollectionChanged -= RaiseValidChange;
-            if (SetProperty(ref _actions, value))
+            if(field != null)
+                field.CollectionChanged -= RaiseValidChange;
+            if (SetProperty(ref field, value))
             {
                 value.CollectionChanged += RaiseValidChange;
                 RaiseValidChange(null, null);
             }
         }
-    }
+    } = [MouseButtons.Left, GamepadSlider.RightTrigger];
 
     private void RaiseValidChange(object? sender, NotifyCollectionChangedEventArgs e)
     {
@@ -175,26 +158,26 @@ public class ActionTrigger : EditableNotificationObject
     /// </summary>
     public ObservableCollection<StoredInputBinding> TriggerKeys
     {
-        get => _triggerKeys;
-        set => SetProperty(ref _triggerKeys, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = new();
 
     /// <summary>
     /// Keys that will ensure not hold before trigger is executed
     /// </summary>
     public ObservableCollection<StoredInputBinding> AntiTriggerKeys
     {
-        get => _antiTriggerKeys;
-        set => SetProperty(ref _antiTriggerKeys, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = new();
 
     /// <summary>
     /// Delay before trigger is executed
     /// </summary>
     public double Delay
     {
-        get => _delay;
-        set => SetProperty(ref _delay, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     /// <summary>
@@ -202,8 +185,8 @@ public class ActionTrigger : EditableNotificationObject
     /// </summary>
     public double BreakTime
     {
-        get => _breakTime;
-        set => SetProperty(ref _breakTime, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     /// <summary>
@@ -211,8 +194,8 @@ public class ActionTrigger : EditableNotificationObject
     /// </summary>
     public TriggerCheck BeginIntersectionCheck
     {
-        get => _beginIntersectionCheck;
-        set => SetProperty(ref _beginIntersectionCheck, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     /// <summary>
@@ -220,8 +203,8 @@ public class ActionTrigger : EditableNotificationObject
     /// </summary>
     public RelativeRect BeginIntersectionArea
     {
-        get => _beginIntersectionArea;
-        set => SetProperty(ref _beginIntersectionArea, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
 
@@ -230,18 +213,18 @@ public class ActionTrigger : EditableNotificationObject
     /// </summary>
     public TriggerCheck ExecutionIntersectionCheck
     {
-        get => _executionIntersectionCheck;
-        set => SetProperty(ref _executionIntersectionCheck, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = TriggerCheck.HeadIntersectingCenter;
 
     /// <summary>
     /// Intersection area for the detected object before trigger is executed only if <see cref="ExecutionIntersectionCheck"/> is set to <see cref="TriggerCheck.HeadIntersectingCenter"/>
     /// </summary>
     public RelativeRect ExecutionIntersectionArea
     {
-        get => _executionIntersectionArea;
-        set => SetProperty(ref _executionIntersectionArea, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = RelativeRect.Default;
 
     public bool IsValid => !string.IsNullOrWhiteSpace(Name) && Actions.Any(a => a is { IsValid: true });
     /// <summary>

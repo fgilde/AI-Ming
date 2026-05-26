@@ -66,7 +66,7 @@ public sealed class ReplayBuffer : INotifyPropertyChanged
                 Height = p.Rectangle.Height,
                 CenterXTranslated = p.CenterXTranslated,
                 CenterYTranslated = p.CenterYTranslated
-            }).ToArray() ?? Array.Empty<ReplayPrediction>()
+            }).ToArray() ?? []
         };
 
         lock (_lock)
@@ -164,10 +164,10 @@ public class ReplayFrame
 {
     public DateTime CapturedAt { get; init; }
     [JsonIgnore]
-    public byte[] JpegBytes { get; init; } = Array.Empty<byte>();
+    public byte[] JpegBytes { get; init; } = [];
     public int Width { get; init; }
     public int Height { get; init; }
-    public ReplayPrediction[] Predictions { get; init; } = Array.Empty<ReplayPrediction>();
+    public ReplayPrediction[] Predictions { get; init; } = [];
 }
 
 /// <summary>JSON-friendly projection of <see cref="Prediction"/>.</summary>

@@ -22,29 +22,25 @@ public class RecoilSample
 /// </summary>
 public class RecoilPattern : BaseSettings
 {
-    private string _name = "Pattern";
-    private string _weapon = "";
-    private ObservableCollection<RecoilSample> _samples = new();
-
     public string Name
     {
-        get => _name;
-        set => SetField(ref _name, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = "Pattern";
 
     /// <summary>Free-text weapon label (e.g. "AK-47", "Vandal"). Purely informational.</summary>
     public string Weapon
     {
-        get => _weapon;
-        set => SetField(ref _weapon, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = "";
 
     public ObservableCollection<RecoilSample> Samples
     {
-        get => _samples;
-        set => SetField(ref _samples, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = new();
 
     /// <summary>Total recorded duration in ms. Used for the UI display.</summary>
-    public int DurationMs => _samples.Count == 0 ? 0 : _samples[^1].TimeMs;
+    public int DurationMs => Samples.Count == 0 ? 0 : Samples[^1].TimeMs;
 }

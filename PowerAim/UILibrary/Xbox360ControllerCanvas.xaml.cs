@@ -214,7 +214,7 @@ public partial class Xbox360ControllerCanvas : UserControl
         Canvas.SetTop(box, y);
         box.MouseLeftButtonDown += (_, e) =>
         {
-            HotspotClicked?.Invoke(this, new Hotspot(kind, code, label));
+            HotspotClicked?.Invoke(this, new(kind, code, label));
             e.Handled = true;
         };
         HostCanvas.Children.Add(box);
@@ -247,7 +247,7 @@ public partial class Xbox360ControllerCanvas : UserControl
         Canvas.SetTop(box, cy - diameter / 2);
         box.MouseLeftButtonDown += (_, e) =>
         {
-            HotspotClicked?.Invoke(this, new Hotspot(kind, code, label));
+            HotspotClicked?.Invoke(this, new(kind, code, label));
             e.Handled = true;
         };
         HostCanvas.Children.Add(box);
@@ -282,7 +282,7 @@ public partial class Xbox360ControllerCanvas : UserControl
         Canvas.SetTop(box, cy - diameter / 2);
         box.MouseLeftButtonDown += (_, e) =>
         {
-            HotspotClicked?.Invoke(this, new Hotspot(kind, code, label));
+            HotspotClicked?.Invoke(this, new(kind, code, label));
             e.Handled = true;
         };
         HostCanvas.Children.Add(box);

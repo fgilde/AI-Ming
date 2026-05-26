@@ -13,17 +13,16 @@ public abstract class BaseDialog : Window, INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
     public IDictionary<string, string> Texts => Locale.GetAll();
     protected virtual bool SaveRestorePosition => true;
-    private WindowSettings _settings;
 
     public WindowSettings Settings
     {
-        get => _settings;
-        protected set => SetField(ref _settings, value);
+        get;
+        protected set => SetField(ref field, value);
     }
 
     internal virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        PropertyChanged?.Invoke(this, new(propertyName));
     }
 
     protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
@@ -49,15 +48,15 @@ public abstract class BaseDialog : Window, INotifyPropertyChanged
 
     private void EnsureWindowChrome()
     {
-        if (WindowStyle == WindowStyle.None && WindowChrome.GetWindowChrome(this) == null && !AllowsTransparency)
+        if (WindowStyle == WindowStyle.None && WindowChrome.GetWindowChrome(this) is null && !AllowsTransparency)
         {
             WindowChrome.SetWindowChrome(this, new WindowChrome
             {
                 CaptionHeight = 0,
                 ResizeBorderThickness = ResizeMode == ResizeMode.NoResize ? new Thickness(0) : new Thickness(6),
-                GlassFrameThickness = new Thickness(-1),
+                GlassFrameThickness = new(-1),
                 UseAeroCaptionButtons = false,
-                CornerRadius = new CornerRadius(0)
+                CornerRadius = new(0)
             });
         }
     }

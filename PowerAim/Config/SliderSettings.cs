@@ -1,12 +1,9 @@
-﻿using InputLogic;
+using InputLogic;
 
 namespace PowerAim.Config;
 
 public class SliderSettings : BaseSettings
 {
-    private double _fovSize = 640;
-    private double _dynamicFovSize = 200;
-
     /// <summary>
     ///     Maximum inference frames-per-second the AI loop is allowed to run at. <c>0</c> means
     ///     unlimited (the loop runs as fast as <see cref="PredictionLogic" /> will let it). Useful
@@ -28,12 +25,12 @@ public class SliderSettings : BaseSettings
     public double ActualFovSize =>
         AppConfig.Current.ToggleState.DynamicFOV &&
         InputBindingManager.IsHoldingBinding(nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind))
-            ? _dynamicFovSize
-            : _fovSize;
+            ? DynamicFOVSize
+            : FOVSize;
 
-    public double FOVSize { get => _fovSize; set => SetField(ref _fovSize, value); }
+    public double FOVSize { get; set => SetField(ref field, value); } = 640;
 
-    public double DynamicFOVSize { get => _dynamicFovSize; set => SetField(ref _dynamicFovSize, value); }
+    public double DynamicFOVSize { get; set => SetField(ref field, value); } = 200;
 
     public double MouseSensitivity { get; set => SetField(ref field, value); } = 0.90;
 

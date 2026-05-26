@@ -10,15 +10,13 @@ namespace Visuality
 {
     public partial class AutoPlayActionEditDialog : BaseDialog
     {
-        private AutoPlayAction _action;
-
         public AutoPlayAction Action
         {
-            get => _action;
+            get;
             set
             {
-                _action = value;
-                _action?.BeginEdit();
+                field = value;
+                field?.BeginEdit();
                 OnPropertyChanged();
                 UpdateDynamicUi();
             }
@@ -32,7 +30,7 @@ namespace Visuality
 
         private void UpdateDynamicUi()
         {
-            if (Action == null) return;
+            if (Action is null) return;
 
             DurationPanel.RemoveAll();
 

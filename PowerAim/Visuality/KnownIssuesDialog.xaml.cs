@@ -32,7 +32,7 @@ namespace Visuality
                 var settings = issues.GetWindowSettings();
                 if (!force && settings?.ShouldShow == false)
                     return;
-                if (owner != null)
+                if (owner is not null)
                 {
                     issues.Owner = owner;
                 }

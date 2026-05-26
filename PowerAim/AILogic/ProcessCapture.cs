@@ -15,7 +15,6 @@ namespace PowerAim.AILogic;
 public class ProcessCapture : ICapture
 {
     private readonly int _processId;
-    private Rectangle _captureArea;
     private bool _isTopMostSet = false;
 
     public ProcessCapture(Process? process) : this(process?.Id ?? 0)
@@ -34,8 +33,8 @@ public class ProcessCapture : ICapture
 
     public Rectangle CaptureArea
     {
-        get => _captureArea;
-        private set => SetField(ref _captureArea, value);
+        get;
+        private set => SetField(ref field, value);
     }
 
     public Bitmap Capture(Rectangle detectionBox)

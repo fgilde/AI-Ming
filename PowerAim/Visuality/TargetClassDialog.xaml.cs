@@ -47,9 +47,9 @@ public partial class TargetClassDialog
             {
                 Text = Locale.GetAll().TryGetValue("NoModelLoaded", out var nm) ? nm : "No model loaded.",
                 Foreground = TryFindResource("FluentTextSecondary") as Brush ?? Brushes.Gray,
-                FontFamily = new FontFamily("Segoe UI Variable Text"),
+                FontFamily = new("Segoe UI Variable Text"),
                 FontSize = 13,
-                Margin = new Thickness(10, 16, 10, 16),
+                Margin = new(10, 16, 10, 16),
                 HorizontalAlignment = HorizontalAlignment.Center
             });
             return;
@@ -59,9 +59,9 @@ public partial class TargetClassDialog
         {
             var cb = new CheckBox
             {
-                Margin = new Thickness(8, 4, 8, 4),
+                Margin = new(8, 4, 8, 4),
                 Foreground = TryFindResource("FluentTextPrimary") as Brush ?? Brushes.White,
-                FontFamily = new FontFamily("Segoe UI Variable Text"),
+                FontFamily = new("Segoe UI Variable Text"),
                 FontSize = 13,
                 Content = $"  {kv.Key}  ·  {kv.Value}"
             };
@@ -73,7 +73,7 @@ public partial class TargetClassDialog
     private void LoadCurrentSelection()
     {
         var settings = AppConfig.Current?.AISettings;
-        if (settings == null) return;
+        if (settings is null) return;
 
         if (settings.TargetClassFilterMode == TargetClassFilterMode.SpecificIds)
         {
@@ -92,7 +92,7 @@ public partial class TargetClassDialog
     {
         // RbSpecific is null while XAML is still being parsed (the IsChecked="True" on RbAll fires
         // Checked before named-element assignment completes). Guard against that.
-        if (RbSpecific == null) return;
+        if (RbSpecific is null) return;
         bool specific = RbSpecific.IsChecked == true;
         foreach (var cb in _classBoxes.Values) cb.IsEnabled = specific;
     }
@@ -102,7 +102,7 @@ public partial class TargetClassDialog
     private void Save_Click(object sender, RoutedEventArgs e)
     {
         var settings = AppConfig.Current?.AISettings;
-        if (settings == null) { Close(); return; }
+        if (settings is null) { Close(); return; }
 
         if (RbSpecific.IsChecked == true)
         {

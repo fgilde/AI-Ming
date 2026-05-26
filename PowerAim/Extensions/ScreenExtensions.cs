@@ -340,7 +340,7 @@ public static class ScreenExtensions
         string deviceName = screen.DeviceName;
 
         // We use EnumDisplayDevices to retrieve the real monitor name.
-        DISPLAY_DEVICE d = new DISPLAY_DEVICE();
+        DISPLAY_DEVICE d = new();
         d.cb = Marshal.SizeOf(d);
 
         for (uint id = 0; EnumDisplayDevices(deviceName, id, ref d, 0); id++)

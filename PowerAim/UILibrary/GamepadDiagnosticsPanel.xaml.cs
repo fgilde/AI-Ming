@@ -34,7 +34,7 @@ public partial class GamepadDiagnosticsPanel : UserControl
     public GamepadDiagnosticsPanel()
     {
         InitializeComponent();
-        _refresh = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(700) };
+        _refresh = new() { Interval = TimeSpan.FromMilliseconds(700) };
         _refresh.Tick += (_, _) => Refresh();
         Loaded += (_, _) => { Refresh(); _refresh.Start(); };
         Unloaded += (_, _) => _refresh.Stop();

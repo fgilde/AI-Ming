@@ -37,7 +37,7 @@ public partial class CrosshairOverlay : Window
         InitializeComponent();
         // Live-update on settings change.
         var settings = AppConfig.Current?.CrosshairSettings;
-        if (settings != null) settings.PropertyChanged += (_, _) => Dispatcher.BeginInvoke(new Action(Render));
+        if (settings is not null) settings.PropertyChanged += (_, _) => Dispatcher.BeginInvoke(new Action(Render));
         Loaded += (_, _) => { PositionOnPrimaryCenter(); Render(); };
     }
 
@@ -53,7 +53,7 @@ public partial class CrosshairOverlay : Window
     private void PositionOnPrimaryCenter()
     {
         var screen = Screen.PrimaryScreen;
-        if (screen == null) return;
+        if (screen is null) return;
         // Convert physical screen pixels to WPF DIPs.
         var src = PresentationSource.FromVisual(this);
         double dpi = src?.CompositionTarget?.TransformToDevice.M11 ?? 1.0;
@@ -68,7 +68,7 @@ public partial class CrosshairOverlay : Window
     {
         CrosshairCanvas.Children.Clear();
         var s = AppConfig.Current?.CrosshairSettings;
-        if (s == null) return;
+        if (s is null) return;
 
         double w = CrosshairCanvas.Width;
         double cx = w / 2;
@@ -197,7 +197,7 @@ public partial class CrosshairOverlay : Window
     {
         if (visible)
         {
-            if (_instance == null)
+            if (_instance is null)
             {
                 _instance = new CrosshairOverlay();
                 _instance.Closed += (_, _) => _instance = null;
@@ -206,7 +206,7 @@ public partial class CrosshairOverlay : Window
         }
         else
         {
-            if (_instance != null)
+            if (_instance is not null)
             {
                 _instance.Close();
                 _instance = null;

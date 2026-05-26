@@ -4,15 +4,8 @@ using System.Windows.Controls;
 
 namespace PowerAim;
 
-public class TextBoxStreamWriter : TextWriter
+public class TextBoxStreamWriter(TextBox output) : TextWriter
 {
-    private readonly TextBox _output;
-
-    public TextBoxStreamWriter(TextBox output)
-    {
-        _output = output;
-    }
-
     public override void Write(char value)
     {
         //base.Write(value);
@@ -22,10 +15,10 @@ public class TextBoxStreamWriter : TextWriter
     public override void Write(string value)
     {
        // base.Write(value);
-        _output.Dispatcher.BeginInvoke(new Action(() =>
+        output.Dispatcher.BeginInvoke(new Action(() =>
         {
             // Add text to the beginning of the TextBox
-            _output.Text = value + _output.Text;
+            output.Text = value + output.Text;
         }));
     }
 

@@ -83,7 +83,7 @@ public sealed class PageLayoutManager
         // Style might be set inline or via SetResourceReference — both end up with the same
         // Style instance under the same key. Compare by reference against the app-resource.
         var fluent = Application.Current.TryFindResource("FluentCard") as Style;
-        return fluent != null && ReferenceEquals(b.Style, fluent);
+        return fluent is not null && ReferenceEquals(b.Style, fluent);
     }
 
     private static IEnumerable<Border> WalkBorders(DependencyObject root)
@@ -125,7 +125,7 @@ public sealed class PageLayoutManager
 
         // Add a little top padding to the inner content so the chrome row doesn't visually
         // collide with the first ATitle.
-        if (inner.Margin == new Thickness(0)) inner.Margin = new Thickness(0, 6, 0, 0);
+        if (inner.Margin == new Thickness(0)) inner.Margin = new(0, 6, 0, 0);
     }
 
     /// <summary>
@@ -143,7 +143,7 @@ public sealed class PageLayoutManager
             Orientation = Orientation.Horizontal,
             HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(0, 14, 24, 0),
+            Margin = new(0, 14, 24, 0),
         };
         Panel.SetZIndex(row, 10);
 
@@ -163,9 +163,9 @@ public sealed class PageLayoutManager
         var hide = new Button
         {
             Width = 12, Height = 12,
-            Margin = new Thickness(4, 0, 4, 0),
+            Margin = new(4, 0, 4, 0),
             Background = System.Windows.Media.Brushes.Transparent,
-            BorderThickness = new Thickness(0),
+            BorderThickness = new(0),
             ToolTip = "Hide this section",
             Template = MakeChromeButtonTemplate("") // E8BB = ×
         };
@@ -216,7 +216,7 @@ public sealed class PageLayoutManager
     public void RestoreBox(string identifier)
     {
         var box = _boxes.FirstOrDefault(b => b.Identifier == identifier);
-        if (box == null) return;
+        if (box is null) return;
         box.Border.Visibility = Visibility.Visible;
         var layout = AppConfig.Current.LayoutConfiguration.For(_pageName);
         layout.Hidden.Remove(identifier);
@@ -252,8 +252,8 @@ public sealed class PageLayoutManager
         var m = new Border
         {
             Height = 3,
-            Margin = new Thickness(8, 2, 8, 2),
-            CornerRadius = new CornerRadius(2),
+            Margin = new(8, 2, 8, 2),
+            CornerRadius = new(2),
             IsHitTestVisible = false,
         };
         m.SetResourceReference(Border.BackgroundProperty, "FluentAccent");
@@ -262,12 +262,12 @@ public sealed class PageLayoutManager
 
     private void OnDragDelta(BoxRef box, DragDeltaEventArgs e)
     {
-        if (_dragging == null || _dropMarker == null) return;
+        if (_dragging is null || _dropMarker is null) return;
 
         // 1) Find which host (column) the mouse is currently over. Falls back to source host
         //    when mouse is between columns / outside any known column.
         var targetHost = ResolveTargetHost(box.HostPanel);
-        if (targetHost == null) return;
+        if (targetHost is null) return;
 
         // 2) Migrate the marker to the right column if needed.
         if (!ReferenceEquals(_dropHost, targetHost))
@@ -312,10 +312,10 @@ public sealed class PageLayoutManager
 
     private void OnDragCompleted(BoxRef box)
     {
-        if (_dragging == null) return;
+        if (_dragging is null) return;
 
         // Commit: move the source Border into the target column at the target index.
-        if (_dropHost != null && _dropIndex >= 0)
+        if (_dropHost is not null && _dropIndex >= 0)
         {
             var sourceHost = box.HostPanel;
             sourceHost.Children.Remove(box.Border);
@@ -337,14 +337,14 @@ public sealed class PageLayoutManager
             }
 
             // Remove marker, then insert the Border at the resolved slot.
-            if (_dropMarker != null) _dropHost.Children.Remove(_dropMarker);
+            if (_dropMarker is not null) _dropHost.Children.Remove(_dropMarker);
             effective = Math.Clamp(effective, 0, _dropHost.Children.Count);
             _dropHost.Children.Insert(effective, box.Border);
 
             // Rebind the box's host so further operations know where it lives now.
             box.HostPanel = _dropHost;
         }
-        else if (_dropMarker != null)
+        else if (_dropMarker is not null)
         {
             // No valid drop position computed — just take the marker out.
             (_dropHost ?? box.HostPanel).Children.Remove(_dropMarker);
@@ -369,7 +369,7 @@ public sealed class PageLayoutManager
             if (host.Children[i] is not FrameworkElement s) continue;
             if (ReferenceEquals(s, self) || ReferenceEquals(s, marker)) continue;
             if (s.Visibility != Visibility.Visible) continue;
-            double top = s.TranslatePoint(new Point(0, 0), host).Y;
+            double top = s.TranslatePoint(new(0, 0), host).Y;
             double mid = top + s.ActualHeight / 2.0;
             if (mouseY < mid) return i;
         }
@@ -381,7 +381,7 @@ public sealed class PageLayoutManager
     private void PersistCurrentOrder()
     {
         var layout = AppConfig.Current?.LayoutConfiguration?.For(_pageName);
-        if (layout == null) return;
+        if (layout is null) return;
 
         // Rebuild Columns from scratch based on the current visual state. Each known host
         // becomes a column. Hidden boxes don't appear here — they're tracked separately in
@@ -409,13 +409,13 @@ public sealed class PageLayoutManager
     private void ApplyPersistedLayout()
     {
         var layout = AppConfig.Current?.LayoutConfiguration?.For(_pageName);
-        if (layout == null) return;
+        if (layout is null) return;
 
         // 1) Hide whatever the user previously hid.
         foreach (var id in layout.Hidden.ToArray())
         {
             var box = _boxes.FirstOrDefault(b => b.Identifier == id);
-            if (box != null) box.Border.Visibility = Visibility.Collapsed;
+            if (box is not null) box.Border.Visibility = Visibility.Collapsed;
         }
 
         // 2) Restore columns. Newer config = layout.Columns (per-column lists). Older config
@@ -447,7 +447,7 @@ public sealed class PageLayoutManager
             foreach (var id in kv.Value)
             {
                 var box = _boxes.FirstOrDefault(b => b.Identifier == id);
-                if (box == null || box.Border.Visibility != Visibility.Visible) continue;
+                if (box is null || box.Border.Visibility != Visibility.Visible) continue;
                 // Pull from current host and insert into target host.
                 if (!ReferenceEquals(box.HostPanel, host))
                 {
@@ -490,7 +490,7 @@ public sealed class PageLayoutManager
             foreach (var id in finalOrder)
             {
                 var box = group.FirstOrDefault(b => b.Identifier == id);
-                if (box == null) continue;
+                if (box is null) continue;
                 int currentIndex = host.Children.IndexOf(box.Border);
                 if (currentIndex < 0) continue;
                 if (currentIndex != targetIndex)

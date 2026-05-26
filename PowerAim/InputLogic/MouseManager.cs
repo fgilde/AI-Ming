@@ -19,7 +19,7 @@ namespace InputLogic
     {
 
         private static DateTime LastClickTime = DateTime.MinValue;
-        private static Random _random = new Random();
+        private static Random _random = new();
         private const int WHEEL_DELTA = 120; 
         private static double previousX = 0;
         private static double previousY = 0;

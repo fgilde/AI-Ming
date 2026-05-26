@@ -9,10 +9,6 @@ namespace PowerAim.Config;
 /// </summary>
 public class ActiveProcessSettings : BaseSettings
 {
-    private bool _autoPauseOnFocusLoss = true;
-    private bool _autoSwitchProfile = true;
-    private ObservableCollection<string> _gameProcessPatterns = new();
-
     /// <summary>
     ///     When true, the AI loop pauses while the foreground window is a recognised non-game
     ///     (browser, terminal, our own app, …) or doesn't match one of the configured
@@ -20,9 +16,9 @@ public class ActiveProcessSettings : BaseSettings
     /// </summary>
     public bool AutoPauseOnFocusLoss
     {
-        get => _autoPauseOnFocusLoss;
-        set => SetField(ref _autoPauseOnFocusLoss, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = true;
 
     /// <summary>
     ///     When true, ActionTrigger / AutoPlayProfile entries with a non-empty
@@ -31,9 +27,9 @@ public class ActiveProcessSettings : BaseSettings
     /// </summary>
     public bool AutoSwitchProfile
     {
-        get => _autoSwitchProfile;
-        set => SetField(ref _autoSwitchProfile, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = true;
 
     /// <summary>
     ///     User-defined whitelist of process-name patterns that count as "games". Wildcards
@@ -43,7 +39,7 @@ public class ActiveProcessSettings : BaseSettings
     /// </summary>
     public ObservableCollection<string> GameProcessPatterns
     {
-        get => _gameProcessPatterns;
-        set => SetField(ref _gameProcessPatterns, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = new();
 }

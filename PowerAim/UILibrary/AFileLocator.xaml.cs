@@ -12,7 +12,7 @@ namespace UILibrary
     /// </summary>
     public partial class AFileLocator : UserControl
     {
-        private OpenFileDialog openFileDialog = new OpenFileDialog();
+        private OpenFileDialog openFileDialog = new();
         private string main_dictionary_path { get; set; }
         private string OFDFilter = "All files (*.*)|*.*";
         private string DefaultLocationExtension = "";
@@ -44,7 +44,7 @@ namespace UILibrary
             {
                 FileLocationTextbox.Text = openFileDialog.FileName;
                 AppConfig.Current.FileLocationState[main_dictionary_path] = openFileDialog.FileName;
-                FileSelected?.Invoke(this, new EventArgs<string>(openFileDialog.FileName));
+                FileSelected?.Invoke(this, new(openFileDialog.FileName));
             }
         }
     }

@@ -382,7 +382,7 @@ public partial class MappingEdit : UserControl
     {
         if (Profile == null) return;
         // Start with a blank kb→kb row — user records both sides.
-        Profile.Mappings.Add(new InputMapping
+        Profile.Mappings.Add(new()
         {
             SourceKind = MappingInputKind.KeyboardKey,
             SourceCode = 0,
@@ -401,7 +401,7 @@ public partial class MappingEdit : UserControl
             && m.SourceCode == (int)GamepadStickDirection.RightStickRight
             && m.TargetKind == MappingInputKind.MouseButton
             && m.TargetCode == MappingBindingConverter.MouseMotionSentinel)) return;
-        Profile.Mappings.Add(new InputMapping
+        Profile.Mappings.Add(new()
         {
             SourceKind = MappingInputKind.GamepadStickDirection,
             SourceCode = (int)GamepadStickDirection.RightStickRight,
@@ -419,7 +419,7 @@ public partial class MappingEdit : UserControl
             && m.SourceCode == MappingBindingConverter.MouseMotionSentinel
             && m.TargetKind == MappingInputKind.GamepadStickDirection
             && m.TargetCode == (int)GamepadStickDirection.RightStickRight)) return;
-        Profile.Mappings.Add(new InputMapping
+        Profile.Mappings.Add(new()
         {
             SourceKind = MappingInputKind.MouseButton,
             SourceCode = MappingBindingConverter.MouseMotionSentinel,

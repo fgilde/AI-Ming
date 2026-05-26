@@ -38,7 +38,7 @@ public partial class DetectionMasksDialog
         InitializeComponent();
         DataContext = this;
         var src = AppConfig.Current?.AISettings?.IgnoreRegions;
-        if (src != null)
+        if (src is not null)
         {
             foreach (var m in src)
             {
@@ -80,11 +80,11 @@ public partial class DetectionMasksDialog
         var border = new Border
         {
             BorderBrush = TryFindResource("FluentStroke") as Brush ?? Brushes.DimGray,
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(4),
+            BorderThickness = new(1),
+            CornerRadius = new(4),
             Background = TryFindResource("FluentSurface3") as Brush ?? Brushes.Black,
-            Padding = new Thickness(8, 6, 8, 6),
-            Margin = new Thickness(0, 0, 0, 4),
+            Padding = new(8, 6, 8, 6),
+            Margin = new(0, 0, 0, 4),
             Cursor = Cursors.Hand,
             Tag = mask
         };
@@ -99,7 +99,7 @@ public partial class DetectionMasksDialog
         {
             IsChecked = mask.Enabled,
             VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(0, 0, 8, 0)
+            Margin = new(0, 0, 8, 0)
         };
         enabledBox.Checked += (_, _) => { mask.Enabled = true; RedrawPreview(); };
         enabledBox.Unchecked += (_, _) => { mask.Enabled = false; RedrawPreview(); };
@@ -110,7 +110,7 @@ public partial class DetectionMasksDialog
         {
             Text = mask.Name,
             VerticalAlignment = VerticalAlignment.Center,
-            FontFamily = new FontFamily("Segoe UI Variable Text"),
+            FontFamily = new("Segoe UI Variable Text"),
             FontSize = 13,
             MinHeight = 26
         };
@@ -122,11 +122,11 @@ public partial class DetectionMasksDialog
         var deleteBtn = new Button
         {
             Content = "",
-            FontFamily = new FontFamily("Segoe Fluent Icons,Segoe MDL2 Assets"),
+            FontFamily = new("Segoe Fluent Icons,Segoe MDL2 Assets"),
             FontSize = 12,
             Width = 28,
             Height = 28,
-            Margin = new Thickness(6, 0, 0, 0),
+            Margin = new(6, 0, 0, 0),
             Background = Brushes.Transparent,
             BorderBrush = Brushes.Transparent
         };
@@ -145,7 +145,7 @@ public partial class DetectionMasksDialog
         foreach (var kv in _rowByMask)
         {
             kv.Value.BorderBrush = ReferenceEquals(kv.Key, _selected) ? accent : stroke;
-            kv.Value.BorderThickness = new Thickness(ReferenceEquals(kv.Key, _selected) ? 2 : 1);
+            kv.Value.BorderThickness = new(ReferenceEquals(kv.Key, _selected) ? 2 : 1);
         }
     }
 
@@ -173,7 +173,7 @@ public partial class DetectionMasksDialog
         _suppressSliderUpdate = true;
         try
         {
-            if (_selected == null)
+            if (_selected is null)
             {
                 SelectedHeader.Text = Locale.NoMaskSelected;
                 XSlider.IsEnabled = YSlider.IsEnabled = WSlider.IsEnabled = HSlider.IsEnabled = false;
@@ -196,7 +196,7 @@ public partial class DetectionMasksDialog
 
     private void OnSliderChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        if (_suppressSliderUpdate || _selected == null) return;
+        if (_suppressSliderUpdate || _selected is null) return;
         // Clamp so X+W and Y+H stay within [0,1].
         if (sender == XSlider) _selected.X = Math.Min(e.NewValue, 1.0 - _selected.Width);
         else if (sender == YSlider) _selected.Y = Math.Min(e.NewValue, 1.0 - _selected.Height);
@@ -277,7 +277,7 @@ public partial class DetectionMasksDialog
 
     private void BeginDragMove(Point pos)
     {
-        if (_selected == null) return;
+        if (_selected is null) return;
         _isDragging = true;
         _isDrawingNew = false;
         _dragStart = pos;
@@ -289,7 +289,7 @@ public partial class DetectionMasksDialog
 
     private void Preview_MouseMove(object sender, MouseEventArgs e)
     {
-        if (!_isDragging || _selected == null) return;
+        if (!_isDragging || _selected is null) return;
         var pos = e.GetPosition(PreviewCanvas);
         double dx = (pos.X - _dragStart.X) / PreviewHost.Width;
         double dy = (pos.Y - _dragStart.Y) / PreviewHost.Height;
@@ -348,7 +348,7 @@ public partial class DetectionMasksDialog
     private void Save_Click(object sender, RoutedEventArgs e)
     {
         var settings = AppConfig.Current?.AISettings;
-        if (settings == null) { Close(); return; }
+        if (settings is null) { Close(); return; }
 
         settings.IgnoreRegions.Clear();
         foreach (var m in _working) settings.IgnoreRegions.Add(m);

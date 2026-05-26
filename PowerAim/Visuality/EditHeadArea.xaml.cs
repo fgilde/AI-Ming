@@ -38,46 +38,42 @@ namespace Visuality
             }
         }
 
-        private double _rectWidth;
         public double RectWidth
         {
-            get { return _rectWidth; }
+            get;
             set
             {
-                _rectWidth = value;
+                field = value;
                 OnPropertyChanged(nameof(RectWidth));
             }
         }
 
-        private double _rectHeight;
         public double RectHeight
         {
-            get { return _rectHeight; }
+            get;
             set
             {
-                _rectHeight = value;
+                field = value;
                 OnPropertyChanged(nameof(RectHeight));
             }
         }
 
-        private double _rectLeft;
         public double RectLeft
         {
-            get { return _rectLeft; }
+            get;
             set
             {
-                _rectLeft = value;
+                field = value;
                 OnPropertyChanged(nameof(RectLeft));
             }
         }
 
-        private double _rectTop;
         public double RectTop
         {
-            get { return _rectTop; }
+            get;
             set
             {
-                _rectTop = value;
+                field = value;
                 OnPropertyChanged(nameof(RectTop));
             }
         }
@@ -88,7 +84,7 @@ namespace Visuality
         public EditHeadArea(RelativeRectModel relativeRect, Action<RelativeRectModel> onSave = null) : this()
         {
             _relativeRect = relativeRect;
-            if (onSave != null)
+            if (onSave is not null)
             {
                 SaveButton.Click += (sender, args) => onSave(RelativeRect);
             }
@@ -197,7 +193,7 @@ namespace Visuality
 
         private void Slider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            if(TopText == null) return;
+            if(TopText is null) return;
             TopText.Text = $"Top: ({RelativeRect.TopMarginPercentage * 100:F2}) %";
             LeftText.Text = $"Left: ({RelativeRect.LeftMarginPercentage * 100:F2} %)";
             WidthText.Text = $"Width: ({RelativeRect.WidthPercentage * 100:F2} %)";

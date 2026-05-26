@@ -67,16 +67,16 @@ internal static class OnnxHelper
         switch (preferredProvider)
         {
             case OnnxExecutionProvider.TensorRT:
-                fallbackOrder = new[] { OnnxExecutionProvider.TensorRT, OnnxExecutionProvider.Cuda, OnnxExecutionProvider.DirectML, OnnxExecutionProvider.Cpu };
+                fallbackOrder = [OnnxExecutionProvider.TensorRT, OnnxExecutionProvider.Cuda, OnnxExecutionProvider.DirectML, OnnxExecutionProvider.Cpu];
                 break;
             case OnnxExecutionProvider.Cuda:
-                fallbackOrder = new[] { OnnxExecutionProvider.Cuda, OnnxExecutionProvider.DirectML, OnnxExecutionProvider.Cpu };
+                fallbackOrder = [OnnxExecutionProvider.Cuda, OnnxExecutionProvider.DirectML, OnnxExecutionProvider.Cpu];
                 break;
             case OnnxExecutionProvider.DirectML:
-                fallbackOrder = new[] { OnnxExecutionProvider.DirectML, OnnxExecutionProvider.Cpu };
+                fallbackOrder = [OnnxExecutionProvider.DirectML, OnnxExecutionProvider.Cpu];
                 break;
             default:
-                fallbackOrder = new[] { OnnxExecutionProvider.Cpu };
+                fallbackOrder = [OnnxExecutionProvider.Cpu];
                 break;
         }
 

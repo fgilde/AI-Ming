@@ -31,7 +31,7 @@ public static class AutoPauseManager
     ///     hasn't configured a custom whitelist.
     /// </summary>
     public static readonly string[] DefinitelyNotGames =
-    {
+    [
         // browsers
         "chrome", "firefox", "msedge", "opera", "brave", "vivaldi", "iexplore",
         // devtools
@@ -43,7 +43,7 @@ public static class AutoPauseManager
         "explorer", "taskmgr", "control", "snippingtool", "calc",
         // media
         "vlc", "mpc-hc64", "spotify",
-    };
+    ];
 
     /// <summary>
     ///     Should the AI action loop run right now? Returns <c>true</c> by default; only goes

@@ -19,19 +19,16 @@ namespace PowerAim.UILibrary
     /// </summary>
     public partial class AColorChanger : INotifyPropertyChanged
     {
-        private Color _color;
-        private string _title;
-
         public Color Color
         {
-            get => _color;
-            set => SetField(ref _color, value);
+            get;
+            set => SetField(ref field, value);
         }
 
         public string Title
         {
-            get => _title;
-            set => SetField(ref _title, value);
+            get;
+            set => SetField(ref field, value);
         }
 
         public AColorChanger()

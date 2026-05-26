@@ -61,7 +61,7 @@ namespace Visuality
 
         private void UpdateHeadArea()
         {
-            if (HeadRelativeArea == null)
+            if (HeadRelativeArea is null)
             {
                 HeadAreaBorder.Visibility = Visibility.Collapsed;
                 return;
@@ -130,7 +130,7 @@ namespace Visuality
                 Dispatcher.Invoke(() => DrawPredictionCanvas(prediction));
                 return;
             }
-            if(prediction == null)             {
+            if(prediction is null)             {
                 DetectedPlayerConfidence.Opacity = 0;
                 DetectedPlayerFocus.Opacity = 0;
                 DetectedTracers.Opacity = 0;
@@ -154,7 +154,7 @@ namespace Visuality
                 DetectedPlayerConfidence.Content = $"{Math.Round((prediction.Confidence * 100), 2)}%";
 
                 var labelEstimatedHalfWidth = DetectedPlayerConfidence.ActualWidth / 2.0;
-                DetectedPlayerConfidence.Margin = new Thickness(centerX - labelEstimatedHalfWidth, centerY - DetectedPlayerConfidence.ActualHeight - 2, 0, 0);
+                DetectedPlayerConfidence.Margin = new(centerX - labelEstimatedHalfWidth, centerY - DetectedPlayerConfidence.ActualHeight - 2, 0, 0);
             }
 
             var showTracers = AppConfig.Current.ToggleState.ShowTracers;
@@ -170,7 +170,7 @@ namespace Visuality
             Canvas.Opacity = AppConfig.Current.SliderSettings.Opacity;
 
             DetectedPlayerFocus.Opacity = 1;
-            DetectedPlayerFocus.Margin = new Thickness(centerX - (lastDetectionBox.Width / 2.0), centerY, 0, 0);
+            DetectedPlayerFocus.Margin = new(centerX - (lastDetectionBox.Width / 2.0), centerY, 0, 0);
             DetectedPlayerFocus.Width = lastDetectionBox.Width;
             DetectedPlayerFocus.Height = lastDetectionBox.Height;
 

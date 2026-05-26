@@ -1,44 +1,33 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 
 namespace PowerAim.Config;
 
 public class AntiRecoilSettings : BaseSettings
 {
-    private int _holdTime = 10;
-    private int _fireRate = 200;
-    private int _yRecoil = 10;
-    private int _xRecoil = 0;
-    private double _autoStrength = 0.85;
-    private bool _useImageBasedAntiRecoil = false;
-    private ObservableCollection<RecoilPattern> _patterns = new();
-    private string _activePatternName = "";
-    private double _patternStrength = 1.0;
-    private bool _usePatternRecoil = false;
-
     public int HoldTime
     {
-        get => _holdTime;
-        set => SetField(ref _holdTime, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = 10;
 
     public int FireRate
     {
-        get => _fireRate;
-        set => SetField(ref _fireRate, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = 200;
 
     /// <summary>Legacy manual Y-recoil compensation. Unused by the new auto-detect mode.</summary>
     public int YRecoil
     {
-        get => _yRecoil;
-        set => SetField(ref _yRecoil, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = 10;
 
     /// <summary>Legacy manual X-recoil compensation. Unused by the new auto-detect mode.</summary>
     public int XRecoil
     {
-        get => _xRecoil;
-        set => SetField(ref _xRecoil, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     /// <summary>
@@ -48,9 +37,9 @@ public class AntiRecoilSettings : BaseSettings
     /// </summary>
     public double AutoStrength
     {
-        get => _autoStrength;
-        set => SetField(ref _autoStrength, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = 0.85;
 
     /// <summary>
     ///     <b>BETA.</b> Switches the engine from the legacy pattern-based anti-recoil (manual
@@ -60,8 +49,8 @@ public class AntiRecoilSettings : BaseSettings
     /// </summary>
     public bool UseImageBasedAntiRecoil
     {
-        get => _useImageBasedAntiRecoil;
-        set => SetField(ref _useImageBasedAntiRecoil, value);
+        get;
+        set => SetField(ref field, value);
     }
 
     /// <summary>
@@ -70,9 +59,9 @@ public class AntiRecoilSettings : BaseSettings
     /// </summary>
     public ObservableCollection<RecoilPattern> Patterns
     {
-        get => _patterns;
-        set => SetField(ref _patterns, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = new();
 
     /// <summary>
     ///     Name of the pattern that <c>RecoilPatternPlaybackAction</c> should replay while the user
@@ -80,9 +69,9 @@ public class AntiRecoilSettings : BaseSettings
     /// </summary>
     public string ActivePatternName
     {
-        get => _activePatternName;
-        set => SetField(ref _activePatternName, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = "";
 
     /// <summary>
     ///     Scale factor applied to each playback sample. <c>1.0</c> = exact recorded compensation,
@@ -91,9 +80,9 @@ public class AntiRecoilSettings : BaseSettings
     /// </summary>
     public double PatternStrength
     {
-        get => _patternStrength;
-        set => SetField(ref _patternStrength, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = 1.0;
 
     /// <summary>
     ///     Master switch for pattern-based recoil playback. Independent of
@@ -101,7 +90,7 @@ public class AntiRecoilSettings : BaseSettings
     /// </summary>
     public bool UsePatternRecoil
     {
-        get => _usePatternRecoil;
-        set => SetField(ref _usePatternRecoil, value);
+        get;
+        set => SetField(ref field, value);
     }
 }

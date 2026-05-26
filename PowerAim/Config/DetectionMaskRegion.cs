@@ -12,52 +12,45 @@ namespace PowerAim.Config;
 /// </summary>
 public class DetectionMaskRegion : BaseSettings
 {
-    private string _name = "Mask";
-    private double _x = 0.0;
-    private double _y = 0.0;
-    private double _width = 0.2;
-    private double _height = 0.1;
-    private bool _enabled = true;
-
     public string Name
     {
-        get => _name;
-        set => SetField(ref _name, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = "Mask";
 
     /// <summary>Normalized left edge (0..1).</summary>
     public double X
     {
-        get => _x;
-        set => SetField(ref _x, System.Math.Clamp(value, 0.0, 1.0));
+        get;
+        set => SetField(ref field, System.Math.Clamp(value, 0.0, 1.0));
     }
 
     /// <summary>Normalized top edge (0..1).</summary>
     public double Y
     {
-        get => _y;
-        set => SetField(ref _y, System.Math.Clamp(value, 0.0, 1.0));
+        get;
+        set => SetField(ref field, System.Math.Clamp(value, 0.0, 1.0));
     }
 
     /// <summary>Normalized width (0..1).</summary>
     public double Width
     {
-        get => _width;
-        set => SetField(ref _width, System.Math.Clamp(value, 0.0, 1.0));
-    }
+        get;
+        set => SetField(ref field, System.Math.Clamp(value, 0.0, 1.0));
+    } = 0.2;
 
     /// <summary>Normalized height (0..1).</summary>
     public double Height
     {
-        get => _height;
-        set => SetField(ref _height, System.Math.Clamp(value, 0.0, 1.0));
-    }
+        get;
+        set => SetField(ref field, System.Math.Clamp(value, 0.0, 1.0));
+    } = 0.1;
 
     public bool Enabled
     {
-        get => _enabled;
-        set => SetField(ref _enabled, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = true;
 
     /// <summary>
     ///     True if <paramref name="x"/> / <paramref name="y"/> (image-space pixels) fall inside the
@@ -65,11 +58,11 @@ public class DetectionMaskRegion : BaseSettings
     /// </summary>
     public bool Contains(float x, float y, int imageSize)
     {
-        if (!_enabled || imageSize <= 0) return false;
-        double left = _x * imageSize;
-        double top = _y * imageSize;
-        double right = left + _width * imageSize;
-        double bottom = top + _height * imageSize;
+        if (!Enabled || imageSize <= 0) return false;
+        double left = X * imageSize;
+        double top = Y * imageSize;
+        double right = left + Width * imageSize;
+        double bottom = top + Height * imageSize;
         return x >= left && x <= right && y >= top && y <= bottom;
     }
 }

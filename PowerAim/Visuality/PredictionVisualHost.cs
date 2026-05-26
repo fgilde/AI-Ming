@@ -14,7 +14,7 @@ public class PredictionVisualHost : FrameworkElement
 
     public PredictionVisualHost()
     {
-        _children = new VisualCollection(this);
+        _children = new(this);
     }
 
     public void DrawPredictions(IEnumerable<Prediction> predictions, Rect? targetArea = null)
