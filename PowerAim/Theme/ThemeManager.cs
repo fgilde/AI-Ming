@@ -55,20 +55,8 @@ public static class ThemeManager
     {
         if (AppConfig.Current == null) return;
         var globalActive = AppConfig.Current.ToggleState?.GlobalActive ?? false;
-        var paletteName = globalActive ? AppConfig.Current.ActiveThemeName : AppConfig.Current.ThemeName;
-        ApplicationConstants.Theme = Resolve(paletteName);
+        var accent = globalActive ? AppConfig.Current.ActiveAccentColorValue : AppConfig.Current.AccentColorValue;
+        ApplicationConstants.Theme = ThemePalette.FromAccent(accent, ResolveIsLight());
         Applied?.Invoke(null, EventArgs.Empty);
-    }
-
-    public static ThemePalette Resolve(string paletteName)
-    {
-        var wantLight = ResolveIsLight();
-        var pool = ThemePalette.ByMode(wantLight);
-        var match = pool.FirstOrDefault(p => string.Equals(p.Name, paletteName, StringComparison.OrdinalIgnoreCase));
-        if (match != null) return match;
-
-        var fallback = ThemePalette.All.FirstOrDefault(p =>
-            string.Equals(p.Name, paletteName, StringComparison.OrdinalIgnoreCase) && p.IsLight == wantLight);
-        return fallback ?? (wantLight ? ThemePalette.DarkPaletteLight : ThemePalette.DarkPalette);
     }
 }

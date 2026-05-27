@@ -34,15 +34,24 @@ namespace PowerAim.UILibrary
             Colors.Magenta, Colors.DeepPink, Colors.Gray
         ];
 
+        private bool _swatchesSet;
+
         public AColorChanger()
         {
             InitializeComponent();
             DataContext = this;
-            Loaded += (_, _) => Picker.SetSwatches(DefaultSwatches);
+            Loaded += (_, _) =>
+            {
+                if (!_swatchesSet) Picker.SetSwatches(DefaultSwatches);
+            };
         }
 
         /// <summary>Replace the quick-fill swatches shown under the picker (e.g. the theme accent palette).</summary>
-        public void SetSwatches(IEnumerable<Color> colors) => Picker.SetSwatches(colors);
+        public void SetSwatches(IEnumerable<Color> colors)
+        {
+            _swatchesSet = true;
+            Picker.SetSwatches(colors);
+        }
 
         public AColorChanger(string title) : this()
         {

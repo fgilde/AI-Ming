@@ -32,18 +32,42 @@ public class ThemePalette
 
     public override string ToString() => Name;
 
-    public static ThemePalette ThemeForActive
-    {
-        get
-        {
-            var active = All.FirstOrDefault(x => x.Name == AppConfig.Current.ActiveThemeName && x.IsLight == IsCurrentLight)
-                         ?? All.FirstOrDefault(x => x.Name == AppConfig.Current.ActiveThemeName)
-                         ?? (IsCurrentLight ? GreenPaletteLight : GreenPalette);
-            return active;
-        }
-    }
+    /// <summary>
+    ///     The palette used for the "global active" accent state — derived live from the user's
+    ///     chosen active accent colour (see <see cref="AppConfig.ActiveAccentColorValue"/>) rather
+    ///     than a named preset.
+    /// </summary>
+    public static ThemePalette ThemeForActive => FromAccent(AppConfig.Current.ActiveAccentColorValue, IsCurrentLight);
 
     private static bool IsCurrentLight => ApplicationConstants.Theme?.IsLight ?? false;
+
+    /// <summary>
+    ///     Builds a palette from a single accent colour on top of the neutral dark/light base. The
+    ///     effect colour (used for glows / gradients) and the deep main tint are derived from the
+    ///     accent so the whole UI follows whatever the user picks.
+    /// </summary>
+    public static ThemePalette FromAccent(Color accent, bool isLight)
+    {
+        var effect = isLight ? Mix(accent, Colors.White, 0.35) : Mix(accent, Colors.White, 0.55);
+        var mainTint = isLight ? Mix(accent, Colors.White, 0.92) : Scale(accent, 0.22);
+        return isLight
+            ? MakeLight("Custom", accent, effect, mainTint)
+            : MakeDark("Custom", accent, effect, mainTint);
+    }
+
+    /// <summary>Linear blend of two colours (t = 0 → a, t = 1 → b). Alpha forced opaque.</summary>
+    private static Color Mix(Color a, Color b, double t)
+    {
+        t = t < 0 ? 0 : t > 1 ? 1 : t;
+        return Color.FromRgb(
+            (byte)Math.Round(a.R + (b.R - a.R) * t),
+            (byte)Math.Round(a.G + (b.G - a.G) * t),
+            (byte)Math.Round(a.B + (b.B - a.B) * t));
+    }
+
+    /// <summary>Scales a colour's RGB channels toward black (factor &lt; 1) for a deep tint.</summary>
+    private static Color Scale(Color c, double factor)
+        => Color.FromRgb((byte)Math.Round(c.R * factor), (byte)Math.Round(c.G * factor), (byte)Math.Round(c.B * factor));
 
     // ---- Dark variants (default) ----------------------------------------------------------------
     public static ThemePalette PurplePalette = MakeDark("Purple",

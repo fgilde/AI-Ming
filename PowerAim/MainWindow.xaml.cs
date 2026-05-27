@@ -2060,21 +2060,27 @@ public partial class MainWindow
             }
         }, toStringFn: info => info.EnglishName);
 
-        var darkPaletteOptions = ThemePalette.ByMode(false);
-        var currentPalette = darkPaletteOptions.FirstOrDefault(p => p.Name == AppConfig.Current.ThemeName) ?? darkPaletteOptions[0];
-        UISettings.AddDropdown(Locale.Theme, currentPalette, darkPaletteOptions, palette =>
+        // Accent colour is freely pickable now; the named palettes survive only as quick-fill swatches.
+        var accentSwatches = ThemePalette.ByMode(false).Select(p => p.AccentColor).ToArray();
+
+        var accentPicker = UISettings.AddColorChanger(Locale.AccentColor);
+        accentPicker.BindTo(() => AppConfig.Current.AccentColorValue);
+        accentPicker.SetSwatches(accentSwatches);
+        accentPicker.PropertyChanged += (_, e) =>
         {
-            if (Config is not null)
-                Config.ThemeName = palette.Name;
-            PowerAim.Theme.ThemeManager.Apply();
-        });
-        var currentActive = darkPaletteOptions.FirstOrDefault(p => p.Name == AppConfig.Current.ActiveThemeName) ?? darkPaletteOptions[0];
-        UISettings.AddDropdown(Locale.ThemeWhenActive, currentActive, darkPaletteOptions, palette =>
+            if (e.PropertyName == nameof(UILibrary.AColorChanger.Color))
+                PowerAim.Theme.ThemeManager.Apply();
+        };
+
+        var activeAccentPicker = UISettings.AddColorChanger(Locale.AccentColorWhenActive);
+        activeAccentPicker.BindTo(() => AppConfig.Current.ActiveAccentColorValue);
+        activeAccentPicker.SetSwatches(accentSwatches);
+        activeAccentPicker.PropertyChanged += (_, e) =>
         {
-            if (Config is not null)
-                Config.ActiveThemeName = palette.Name;
-            PowerAim.Theme.ThemeManager.Apply();
-        });
+            if (e.PropertyName == nameof(UILibrary.AColorChanger.Color))
+                PowerAim.Theme.ThemeManager.Apply();
+        };
+
         UISettings.AddDropdown<AppThemeMode>(Locale.ThemeMode, AppConfig.Current.ThemeMode, mode =>
         {
             if (Config is not null)

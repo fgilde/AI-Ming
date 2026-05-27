@@ -2,6 +2,8 @@
   "AIConfidenceFontSize": "AI Confidence Font Size",
   "AIMinimumConfidence": "AI Minimum Confidence",
   "About": "About",
+  "AccentColor": "Accent color",
+  "AccentColorWhenActive": "Accent color when active",
   "ActionName": "Action Name",
   "ActionNameHelp": "The name the AI will use to trigger this action. Use underscores, no spaces.",
   "ActionNamePlaceholder": "e.g. move_left, jump, attack...",

@@ -34,8 +34,35 @@ public class AppConfig : BaseSettings
     public string LastLoadedConfig = "N/A";
     public string SuggestedModelName => SliderSettings.SuggestedModel;
     
-    public string ThemeName { get; set; } = ThemePalette.PurplePalette.Name;
-    public string ActiveThemeName { get; set; } = ThemePalette.GreenPalette.Name;
+    /// <summary>User-chosen accent colour (ARGB hex). Drives the whole theme on top of the neutral base.</summary>
+    public string AccentColorHex { get; set; } = ColorToHex(ThemePalette.PurplePalette.AccentColor);
+
+    /// <summary>Accent colour used while the global "active" toggle is on (ARGB hex).</summary>
+    public string ActiveAccentColorHex { get; set; } = ColorToHex(ThemePalette.GreenPalette.AccentColor);
+
+    /// <summary><see cref="System.Windows.Media.Color"/> view over <see cref="AccentColorHex"/> for the picker.</summary>
+    [JsonIgnore]
+    public System.Windows.Media.Color AccentColorValue
+    {
+        get => HexToColor(AccentColorHex, ThemePalette.PurplePalette.AccentColor);
+        set => AccentColorHex = ColorToHex(value);
+    }
+
+    [JsonIgnore]
+    public System.Windows.Media.Color ActiveAccentColorValue
+    {
+        get => HexToColor(ActiveAccentColorHex, ThemePalette.GreenPalette.AccentColor);
+        set => ActiveAccentColorHex = ColorToHex(value);
+    }
+
+    private static string ColorToHex(System.Windows.Media.Color c) => $"#{c.A:X2}{c.R:X2}{c.G:X2}{c.B:X2}";
+
+    private static System.Windows.Media.Color HexToColor(string hex, System.Windows.Media.Color fallback)
+    {
+        try { return (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex); }
+        catch { return fallback; }
+    }
+
     public AppThemeMode ThemeMode { get; set; } = AppThemeMode.System;
     public BindingSettings BindingSettings { get; set; } = new BindingSettings();
     public SliderSettings SliderSettings { get; set; } = new SliderSettings();
