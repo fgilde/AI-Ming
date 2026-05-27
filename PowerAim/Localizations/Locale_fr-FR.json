@@ -611,6 +611,8 @@
   "RemoveMapping": "Supprimer ce mappage",
   "ReplayBuffer": "Buffer de rediffusion",
   "RequestTimeout": "Délai d'expiration de la requête",
+  "RequireGlobalActiveForKeybinds": "Raccourcis uniquement si Global Active est activé",
+  "RequireGlobalActiveForKeybindsTooltip": "Si activé, tous les raccourcis globaux (bascules, déclencheurs, mappage et raccourcis modèle/config) ne se déclenchent que lorsque Global Active est activé. Le raccourci Global Active fonctionne toujours pour pouvoir le réactiver.",
   "RequiresAdminTooltip": "Nécessite PowerAim exécuté en administrateur. Utilise le bouton 'Redémarrer en admin' dans la barre supérieure.",
   "Reset": "Réinitialiser",
   "ResetHidHideCloak": "Réinitialiser le cloak HidHide",

@@ -611,6 +611,8 @@
   "RemoveMapping": "Eliminar esta asignación",
   "ReplayBuffer": "Búfer de repetición",
   "RequestTimeout": "Tiempo de espera de la solicitud",
+  "RequireGlobalActiveForKeybinds": "Atajos solo con Global Active activo",
+  "RequireGlobalActiveForKeybindsTooltip": "Cuando está activo, todos los atajos globales (toggles, disparadores, mapeo y atajos de modelo/config) solo se activan mientras Global Active está habilitado. El atajo de Global Active siempre funciona para poder reactivarlo.",
   "RequiresAdminTooltip": "Requiere ejecutar PowerAim como administrador. Usa el botón 'Reiniciar como admin' en la barra superior.",
   "Reset": "Restablecer",
   "ResetHidHideCloak": "Restablecer ocultación de HidHide",

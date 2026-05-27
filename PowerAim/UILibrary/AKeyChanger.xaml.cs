@@ -63,6 +63,21 @@ namespace PowerAim.UILibrary
         public static readonly DependencyProperty CanRemoveBindingProperty =
             DependencyProperty.Register(nameof(CanRemoveBinding), typeof(bool), typeof(AKeyChanger), new PropertyMetadata(true));
 
+        public static readonly DependencyProperty IgnoreGlobalActiveGateProperty =
+            DependencyProperty.Register(nameof(IgnoreGlobalActiveGate), typeof(bool), typeof(AKeyChanger), new PropertyMetadata(false));
+
+        /// <summary>
+        ///     When true, this key changer always fires its binding, ignoring the
+        ///     <see cref="ToggleState.RequireGlobalActiveForKeybinds"/> gate. Set this on the
+        ///     Global Active toggle's changer so the user can always switch Global Active back on
+        ///     by hotkey even while the gate would otherwise suppress every other keybind.
+        /// </summary>
+        public bool IgnoreGlobalActiveGate
+        {
+            get => (bool)GetValue(IgnoreGlobalActiveGateProperty);
+            set => SetValue(IgnoreGlobalActiveGateProperty, value);
+        }
+
         public static readonly DependencyProperty BindingManagerProperty =
             DependencyProperty.Register(nameof(BindingManager), typeof(InputBindingManager), typeof(AKeyChanger),
                 new PropertyMetadata(null));
@@ -193,6 +208,15 @@ namespace PowerAim.UILibrary
             {
                 if (KeyBind.Is<MouseEventArgs>() && (IsMouseOver || ContextMenu.IsOpen))
                     return;
+
+                // Optional "keybinds only while Global Active" gate. Read live (not bound) so the
+                // decision always reflects the current state at press time. The Global Active
+                // toggle's own changer opts out via IgnoreGlobalActiveGate — otherwise the user
+                // could never switch Global Active back on by hotkey.
+                if (!IgnoreGlobalActiveGate
+                    && AppConfig.Current?.ToggleState is { RequireGlobalActiveForKeybinds: true, GlobalActive: false })
+                    return;
+
                 var args = new EventArgs<(AKeyChanger Sender, string Key, StoredInputBinding KeyBinding)>((this, key, KeyBind));
                 GlobalKeyPressed?.Invoke(this, args);
             }

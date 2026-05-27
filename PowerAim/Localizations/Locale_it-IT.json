@@ -611,6 +611,8 @@
   "RemoveMapping": "Rimuovi questa mappatura",
   "ReplayBuffer": "Buffer di replay",
   "RequestTimeout": "Timeout richiesta",
+  "RequireGlobalActiveForKeybinds": "Scorciatoie solo con Global Active attivo",
+  "RequireGlobalActiveForKeybindsTooltip": "Se attivo, tutte le scorciatoie globali (interruttori, trigger, mapping e scorciatoie modello/config) si attivano solo mentre Global Active è abilitato. La scorciatoia di Global Active funziona sempre così puoi riattivarlo.",
   "RequiresAdminTooltip": "Richiede PowerAim in esecuzione come amministratore. Usa il pulsante 'Riavvia come admin' nella barra superiore.",
   "Reset": "Reimposta",
   "ResetHidHideCloak": "Reset cloak HidHide",

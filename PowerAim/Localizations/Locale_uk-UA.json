@@ -611,6 +611,8 @@
   "RemoveMapping": "Видалити це мапування",
   "ReplayBuffer": "Буфер повтору",
   "RequestTimeout": "Тайм-аут запиту",
+  "RequireGlobalActiveForKeybinds": "Гарячі клавіші лише за увімкненого Global Active",
+  "RequireGlobalActiveForKeybindsTooltip": "Коли увімкнено, усі глобальні гарячі клавіші (перемикачі, тригери, маппінг і клавіші моделі/конфігурації) спрацьовують лише за ввімкненого Global Active. Сама гаряча клавіша Global Active працює завжди, щоб ви могли знову її ввімкнути.",
   "RequiresAdminTooltip": "Вимагає запуску PowerAim як адміністратора. Скористайся кнопкою 'Перезапустити як адмін' на верхній панелі.",
   "Reset": "Скинути",
   "ResetHidHideCloak": "Скинути маскування HidHide",

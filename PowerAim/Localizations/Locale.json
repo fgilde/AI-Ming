@@ -594,6 +594,8 @@
   "RemoveMapping": "Remove this mapping",
   "ReplayBuffer": "Replay Buffer",
   "RequestTimeout": "Request Timeout",
+  "RequireGlobalActiveForKeybinds": "Keybinds only while Global Active",
+  "RequireGlobalActiveForKeybindsTooltip": "When on, every global keybind (toggle, trigger, mapping and model/config hotkeys) only fires while Global Active is enabled. The Global Active hotkey itself always works so you can switch it back on.",
   "RequiresAdminTooltip": "Requires PowerAim running as administrator. Use the 'Restart as admin' button in the top bar.",
   "Reset": "Reset",
   "ResetHidHideCloak": "Reset HidHide cloak",

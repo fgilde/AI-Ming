@@ -611,6 +611,8 @@
   "RemoveMapping": "Удалить это сопоставление",
   "ReplayBuffer": "Буфер реплея",
   "RequestTimeout": "Таймаут запроса",
+  "RequireGlobalActiveForKeybinds": "Горячие клавиши только при включённом Global Active",
+  "RequireGlobalActiveForKeybindsTooltip": "Когда включено, все глобальные горячие клавиши (переключатели, триггеры, маппинг и клавиши модели/конфигурации) срабатывают только при включённом Global Active. Сама горячая клавиша Global Active работает всегда, чтобы вы могли снова его включить.",
   "RequiresAdminTooltip": "Требуется запуск PowerAim от администратора. Используй кнопку 'Перезапустить от админа' в верхней панели.",
   "Reset": "Сброс",
   "ResetHidHideCloak": "Сбросить маскировку HidHide",

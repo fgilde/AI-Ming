@@ -277,7 +277,13 @@ public partial class MainWindow
         {
             toggle.BindTo(() => AppConfig.Current.ToggleState.GlobalActive);
             toggle.Changed += (s, e) => SetActive(e.Value);
-        }, border => border.Background = Brushes.Transparent, changer => changer.CanEditMinTime = false);
+        }, border => border.Background = Brushes.Transparent, changer =>
+        {
+            changer.CanEditMinTime = false;
+            // The Global Active hotkey must always work, even when the "keybinds only while Global
+            // Active" gate is on — otherwise there'd be no way to switch it back on by hotkey.
+            changer.IgnoreGlobalActiveGate = true;
+        });
     }
 
     public void SetActive(bool active)
@@ -1241,6 +1247,9 @@ public partial class MainWindow
 
     private void BindingOnKeyPressed(string bindingId)
     {
+        if (AppConfig.Current?.ToggleState is { RequireGlobalActiveForKeybinds: true, GlobalActive: false })
+            return;
+
         switch (bindingId)
         {
             case nameof(AppConfig.Current.BindingSettings.MagnifierZoomInKeybind):
@@ -2215,6 +2224,9 @@ public partial class MainWindow
         UISettings.AddToggle(Locale.ShowToggleNotifications)
             .InitWith(t => t.ToolTip = Locale.ShowToggleNotificationsTooltip)
             .BindTo(() => AppConfig.Current.ToggleState.ShowToggleNotifications);
+        UISettings.AddToggle(Locale.RequireGlobalActiveForKeybinds)
+            .InitWith(t => t.ToolTip = Locale.RequireGlobalActiveForKeybindsTooltip)
+            .BindTo(() => AppConfig.Current.ToggleState.RequireGlobalActiveForKeybinds);
 
         var hideCaptureToggle = UISettings.AddToggle(Locale.HideUIFromCapture);
         hideCaptureToggle.BindTo(() => AppConfig.Current.ToggleState.HideUIFromCapture);

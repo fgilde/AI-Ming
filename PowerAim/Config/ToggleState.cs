@@ -225,6 +225,18 @@ public class ToggleState : BaseSettings
         set => SetField(ref field, value);
     } = true;
 
+    /// <summary>
+    ///     When true, global keybinds (toggle hotkeys, trigger/mapping enable hotkeys, model &amp;
+    ///     config switch hotkeys, …) only fire while <see cref="GlobalActive"/> is on. The Global
+    ///     Active hotkey itself is always exempt (via <see cref="UILibrary.AKeyChanger.IgnoreGlobalActiveGate"/>)
+    ///     so it can still be switched back on. Off by default — keybinds work regardless of Global Active.
+    /// </summary>
+    public bool RequireGlobalActiveForKeybinds
+    {
+        get;
+        set => SetField(ref field, value);
+    } = true;
+
     public bool UITopMost
     {
         get;

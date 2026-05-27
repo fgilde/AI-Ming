@@ -611,6 +611,8 @@
   "RemoveMapping": "Bu eşlemeyi kaldır",
   "ReplayBuffer": "Tekrar Tamponu",
   "RequestTimeout": "İstek Zaman Aşımı",
+  "RequireGlobalActiveForKeybinds": "Kısayollar yalnızca Global Active açıkken",
+  "RequireGlobalActiveForKeybindsTooltip": "Açıkken, tüm genel kısayollar (anahtarlar, tetikleyiciler, eşleme ve model/yapılandırma kısayolları) yalnızca Global Active etkinken çalışır. Global Active kısayolunun kendisi her zaman çalışır, böylece tekrar açabilirsin.",
   "RequiresAdminTooltip": "PowerAim'in yönetici olarak çalıştırılmasını gerektirir. Üst çubuktaki 'Yönetici olarak yeniden başlat' düğmesini kullanın.",
   "Reset": "Sıfırla",
   "ResetHidHideCloak": "HidHide cloak'u sıfırla",

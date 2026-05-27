@@ -611,6 +611,8 @@
   "RemoveMapping": "移除此映射",
   "ReplayBuffer": "回放缓冲区",
   "RequestTimeout": "请求超时",
+  "RequireGlobalActiveForKeybinds": "仅在 Global Active 开启时启用快捷键",
+  "RequireGlobalActiveForKeybindsTooltip": "开启后，所有全局快捷键（开关、触发器、映射以及模型/配置快捷键）仅在 Global Active 启用时才会触发。Global Active 快捷键本身始终有效，方便你重新开启。",
   "RequiresAdminTooltip": "需要 PowerAim 以管理员身份运行。请使用顶部栏中的“以管理员身份重启”按钮。",
   "Reset": "重置",
   "ResetHidHideCloak": "重置 HidHide 伪装",
