@@ -158,8 +158,22 @@ public class GamepadSenderViGEm : IGamepadSender
         return this;
     }
 
+    // Map PowerAim's GamepadButton to the canvas-facing XboxButtonId index (same names, different
+    // numeric values) so the debug visualizer can light the right hotspot.
+    private static int ToXboxButtonId(GamepadButton b) => b switch
+    {
+        GamepadButton.Up => 0, GamepadButton.Down => 1, GamepadButton.Left => 2, GamepadButton.Right => 3,
+        GamepadButton.Start => 4, GamepadButton.Back => 5,
+        GamepadButton.LeftThumb => 6, GamepadButton.RightThumb => 7,
+        GamepadButton.LeftShoulder => 8, GamepadButton.RightShoulder => 9,
+        GamepadButton.A => 10, GamepadButton.B => 11, GamepadButton.X => 12, GamepadButton.Y => 13,
+        _ => -1
+    };
+
     public IGamepadSender SetButtonState(GamepadButton button, bool pressed, GamepadSyncState gamepadSyncState = GamepadSyncState.None)
     {
+        if (PowerAim.InputLogic.InputEventBus.Enabled)
+            PowerAim.InputLogic.InputEventBus.GamepadButton(ToXboxButtonId(button), pressed);
         if (gamepadSyncState == GamepadSyncState.Paused)
             PauseSync(button);
         _actions.Add(() => _virtualController?.SetButtonState(button.ToXbox360Button(), pressed));
@@ -170,6 +184,8 @@ public class GamepadSenderViGEm : IGamepadSender
 
     public IGamepadSender SetSliderValue(GamepadSlider slider, byte value, GamepadSyncState gamepadSyncState = GamepadSyncState.None)
     {
+        if (PowerAim.InputLogic.InputEventBus.Enabled)
+            PowerAim.InputLogic.InputEventBus.GamepadTrigger(slider == GamepadSlider.LeftTrigger ? 0 : 1, value / 255.0);
         if (gamepadSyncState == GamepadSyncState.Paused)
             PauseSync(slider);
         _actions.Add(() => _virtualController?.SetSliderValue(slider.ToXbox360Slider(), value));
@@ -180,6 +196,8 @@ public class GamepadSenderViGEm : IGamepadSender
 
     public IGamepadSender SetAxisValue(GamepadAxis axis, short value, GamepadSyncState gamepadSyncState = GamepadSyncState.None)
     {
+        if (PowerAim.InputLogic.InputEventBus.Enabled)
+            PowerAim.InputLogic.InputEventBus.GamepadAxis((int)axis, value / 32767.0);
         if (gamepadSyncState == GamepadSyncState.Paused)
             PauseSync(axis);
         _actions.Add(() => _virtualController?.SetAxisValue(axis.ToXbox360Axis(), value));

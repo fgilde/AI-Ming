@@ -62,6 +62,9 @@ namespace PowerAim.InputLogic
         {
             if (!GamepadAimActive)
             {
+                // Coarse aim direction for the debug visualizer (mouse path); the gamepad path is
+                // captured at the right-stick instead.
+                InputEventBus.MouseMove(detectedX - area.Width / 2.0, detectedY - area.Height / 2.0);
                 MouseManager.MoveCrosshair(detectedX, detectedY, area);
                 return;
             }
@@ -143,6 +146,7 @@ namespace PowerAim.InputLogic
             if (evt.Is<MouseEventArgs>())
             {
                 MouseEventArgs mouseArgs = evt.MouseEventArgs;
+                ReportMouse(mouseArgs.Button, pressState);
                 if (mouseArgs.Button == MouseButtons.Left)
                 {
                     if (pressState == KeyPressState.Down)
@@ -167,6 +171,23 @@ namespace PowerAim.InputLogic
         }
 
 
+        /// <summary>Mirror a synthetic mouse-button send to the debug input visualizer.</summary>
+        private static void ReportMouse(MouseButtons button, KeyPressState pressState)
+        {
+            int code = button switch
+            {
+                MouseButtons.Left => 0,
+                MouseButtons.Right => 1,
+                MouseButtons.Middle => 2,
+                MouseButtons.XButton1 => 3,
+                MouseButtons.XButton2 => 4,
+                _ => -1
+            };
+            if (code < 0) return;
+            if (pressState is KeyPressState.Down or KeyPressState.DownAndUp) InputEventBus.MouseButton(code, true);
+            if (pressState is KeyPressState.Up or KeyPressState.DownAndUp) InputEventBus.MouseButton(code, false);
+        }
+
         [DllImport("user32.dll", SetLastError = true)]
         private static extern uint MapVirtualKey(uint uCode, uint uMapType);
 
@@ -175,11 +196,17 @@ namespace PowerAim.InputLogic
             if(sendMode == KeyboardSendMode.UseInputSimulator)
             {
                 if(pressState == KeyPressState.DownAndUp || pressState == KeyPressState.Down)
+                {
                     _inputSimulator.Keyboard.KeyDown((VirtualKeyCode)keyArgs.KeyCode);
+                    InputEventBus.Key((int)keyArgs.KeyCode, true);
+                }
                 if (pressState == KeyPressState.DownAndUp)
                     await Task.Delay(MouseManager.GetRandomDelay());
                 if (pressState == KeyPressState.DownAndUp || pressState == KeyPressState.Up)
+                {
                     _inputSimulator.Keyboard.KeyUp((VirtualKeyCode)keyArgs.KeyCode);
+                    InputEventBus.Key((int)keyArgs.KeyCode, false);
+                }
                 return;
             }
 

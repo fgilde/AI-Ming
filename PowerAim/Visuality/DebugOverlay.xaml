@@ -82,6 +82,19 @@
                 <TextBlock Grid.Row="6" Grid.Column="0" Text="Process"    Style="{StaticResource DebugLabel}" />
                 <TextBlock Grid.Row="6" Grid.Column="1" x:Name="ProcessText" Style="{StaticResource DebugValue}" />
             </Grid>
+
+            <!-- Sent-input visualizer (added on demand when ShowInputVisualizer is on) -->
+            <StackPanel x:Name="InputSection" Visibility="Collapsed" Margin="0,8,0,0">
+                <Border Background="#22FFFFFF" Height="1" Margin="0,0,0,6" />
+                <TextBlock x:Name="InputHeader"
+                           Text="Sent input"
+                           Foreground="#8B5CF6"
+                           FontFamily="Segoe UI Variable Display"
+                           FontWeight="SemiBold"
+                           FontSize="11"
+                           Margin="0,0,0,6" />
+                <ContentControl x:Name="InputHost" />
+            </StackPanel>
         </StackPanel>
     </Border>
 </Window>

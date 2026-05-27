@@ -20,6 +20,7 @@ public partial class DebugOverlay : Window
 {
     private static DebugOverlay? _instance;
     private readonly DispatcherTimer _timer;
+    private PowerAim.UILibrary.InputVisualizerPanel? _inputViz;
 
     [DllImport("user32.dll", SetLastError = true)] private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
     [DllImport("user32.dll")] private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
@@ -65,6 +66,23 @@ public partial class DebugOverlay : Window
         ProcessText.Text = string.IsNullOrEmpty(WindowFocusWatcher.Instance.CurrentProcessName)
             ? "—"
             : WindowFocusWatcher.Instance.CurrentProcessName;
+
+        // Lazily add / remove the input visualizer. Adding the panel flips InputEventBus.Enabled on
+        // (via the panel's Loaded handler); removing it turns the senders' reporting back off.
+        bool showViz = PowerAim.Config.AppConfig.Current?.ToggleState?.ShowInputVisualizer == true;
+        if (showViz && _inputViz == null)
+        {
+            InputHeader.Text = PowerAim.Locale.SentInput;
+            _inputViz = new PowerAim.UILibrary.InputVisualizerPanel();
+            InputHost.Content = _inputViz;
+            InputSection.Visibility = Visibility.Visible;
+        }
+        else if (!showViz && _inputViz != null)
+        {
+            InputHost.Content = null;
+            _inputViz = null;
+            InputSection.Visibility = Visibility.Collapsed;
+        }
     }
 
     /// <summary>

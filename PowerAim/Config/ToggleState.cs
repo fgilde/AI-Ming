@@ -24,6 +24,16 @@ public class ToggleState : BaseSettings
         }
     }
 
+    /// <summary>
+    ///     Show the live "sent input" visualizer (keyboard + mouse + controller diagrams) inside the
+    ///     debug overlay. Off by default — it's a deeper diagnostic than the stats readout.
+    /// </summary>
+    public bool ShowInputVisualizer
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
     /// <summary>Show the topmost <see cref="Visuality.CrosshairOverlay"/>.</summary>
     public bool ShowCrosshairOverlay
     {
