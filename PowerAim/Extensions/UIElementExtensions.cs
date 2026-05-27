@@ -293,6 +293,12 @@ public static class UIElementExtensions
             {
                 updating = true;
                 toggle.ToggleState();
+                if (AppConfig.Current.ToggleState.ShowToggleNotifications && !string.IsNullOrWhiteSpace(title))
+                {
+                    var fmt = toggle.Checked ? PowerAim.Locale.ToggleTurnedOnFormat : PowerAim.Locale.ToggleTurnedOffFormat;
+                    try { new global::Visuality.NoticeBar(string.Format(fmt, title), 1800).Show(); }
+                    catch { /* notice bar is best-effort feedback only */ }
+                }
                 Task.Delay(300).ContinueWith(_ => updating = false);
             }
         };

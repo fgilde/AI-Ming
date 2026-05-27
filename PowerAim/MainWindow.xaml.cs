@@ -2090,6 +2090,9 @@ public partial class MainWindow
 
         UISettings.AddToggle(Locale.UITopMost).BindTo(() => AppConfig.Current.ToggleState.UITopMost);
         UISettings.AddToggle(Locale.ShowHelpTexts).BindTo(() => AppConfig.Current.ToggleState.ShowHelpTexts);
+        UISettings.AddToggle(Locale.ShowToggleNotifications)
+            .InitWith(t => t.ToolTip = Locale.ShowToggleNotificationsTooltip)
+            .BindTo(() => AppConfig.Current.ToggleState.ShowToggleNotifications);
 
         var hideCaptureToggle = UISettings.AddToggle(Locale.HideUIFromCapture);
         hideCaptureToggle.BindTo(() => AppConfig.Current.ToggleState.HideUIFromCapture);

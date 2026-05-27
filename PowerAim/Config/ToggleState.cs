@@ -205,6 +205,16 @@ public class ToggleState : BaseSettings
         set => SetField(ref field, value);
     } = true;
 
+    /// <summary>
+    ///     When a toggle is flipped via its global keybind, briefly show a notice bar telling the
+    ///     user the new on/off state (so they get feedback without alt-tabbing back to PowerAim).
+    /// </summary>
+    public bool ShowToggleNotifications
+    {
+        get;
+        set => SetField(ref field, value);
+    } = true;
+
     public bool UITopMost
     {
         get;
