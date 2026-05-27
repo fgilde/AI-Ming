@@ -70,7 +70,7 @@ public class AutoTriggerAction : BaseAction
             return; // Skip this trigger if it is still in cooldown
         }
 
-        if (TriggerKeysStateCorrect(trigger))
+        if (TriggerKeysStateCorrect(trigger) && OcrConditionsMet(trigger))
         {
             if (trigger.ChargeMode)
             {
@@ -158,6 +158,65 @@ public class AutoTriggerAction : BaseAction
         }
 
         return null;
+    }
+
+    /// <summary>
+    ///     Gate the trigger on its optional OCR conditions. Only enforced while the OCR engine is on;
+    ///     all conditions must hold (AND). A region with no reading yet blocks the trigger.
+    /// </summary>
+    private static bool OcrConditionsMet(ActionTrigger trigger)
+    {
+        var conditions = trigger.OcrConditions;
+        if (conditions == null || conditions.Count == 0) return true;
+        if (AppConfig.Current.OcrSettings is not { Enabled: true }) return true; // OCR off → don't block
+
+        var latest = OcrService.Instance.Latest;
+        foreach (var cond in conditions)
+        {
+            if (string.IsNullOrWhiteSpace(cond.RegionName)) continue;
+            if (!latest.TryGetValue(cond.RegionName, out var reading)) return false; // no reading yet
+            if (!EvaluateOcrCondition(cond, reading)) return false;
+        }
+
+        return true;
+    }
+
+    private static bool EvaluateOcrCondition(OcrTriggerCondition cond, OcrResult reading)
+    {
+        switch (cond.Comparison)
+        {
+            case OcrComparison.Contains:
+                return (reading.Text ?? "").Contains(cond.Value, StringComparison.OrdinalIgnoreCase);
+            case OcrComparison.NotContains:
+                return !(reading.Text ?? "").Contains(cond.Value, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Equality can be numeric or textual depending on what both sides parse to.
+        bool haveNumbers = reading.Number.HasValue &&
+                           double.TryParse(cond.Value, System.Globalization.NumberStyles.Any,
+                               System.Globalization.CultureInfo.InvariantCulture, out var target);
+        double left = reading.Number ?? 0;
+        double right = haveNumbers
+            ? double.Parse(cond.Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture)
+            : 0;
+
+        switch (cond.Comparison)
+        {
+            case OcrComparison.GreaterThan: return haveNumbers && left > right;
+            case OcrComparison.GreaterOrEqual: return haveNumbers && left >= right;
+            case OcrComparison.LessThan: return haveNumbers && left < right;
+            case OcrComparison.LessOrEqual: return haveNumbers && left <= right;
+            case OcrComparison.Equals:
+                return haveNumbers
+                    ? Math.Abs(left - right) < 0.0001
+                    : string.Equals((reading.Text ?? "").Trim(), (cond.Value ?? "").Trim(), StringComparison.OrdinalIgnoreCase);
+            case OcrComparison.NotEquals:
+                return haveNumbers
+                    ? Math.Abs(left - right) >= 0.0001
+                    : !string.Equals((reading.Text ?? "").Trim(), (cond.Value ?? "").Trim(), StringComparison.OrdinalIgnoreCase);
+            default:
+                return true;
+        }
     }
 
     private bool TriggerKeysStateCorrect(ActionTrigger trigger)

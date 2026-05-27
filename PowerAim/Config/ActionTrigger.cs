@@ -40,12 +40,15 @@ public class ActionTrigger : EditableNotificationObject
     private StoredInputBinding[] _originalActions;
     private StoredInputBinding[] _originalKeys;
     private StoredInputBinding[] _originalAntiKeys;
+    private OcrTriggerCondition[] _originalOcrConditions;
 
     public override void BeginEdit()
     {
         _originalActions = Actions?.ToArray() ?? [];
         _originalKeys = TriggerKeys?.ToArray() ?? [];
         _originalAntiKeys = AntiTriggerKeys?.ToArray() ?? [];
+        // Deep-copy: the editor mutates condition rows in place, so a shallow snapshot wouldn't revert.
+        _originalOcrConditions = OcrConditions?.Select(c => c.Clone()).ToArray() ?? [];
         base.BeginEdit();
     }
 
@@ -55,6 +58,7 @@ public class ActionTrigger : EditableNotificationObject
         TriggerKeys = new ObservableCollection<StoredInputBinding>(_originalKeys);
         AntiTriggerKeys = new ObservableCollection<StoredInputBinding>(_originalAntiKeys);
         Actions = new ObservableCollection<StoredInputBinding>(_originalActions);
+        OcrConditions = new ObservableCollection<OcrTriggerCondition>(_originalOcrConditions);
     }
 
     protected override void RaisePropertyChanged(string propertyName)
@@ -166,6 +170,17 @@ public class ActionTrigger : EditableNotificationObject
     /// Keys that will ensure not hold before trigger is executed
     /// </summary>
     public ObservableCollection<StoredInputBinding> AntiTriggerKeys
+    {
+        get;
+        set => SetProperty(ref field, value);
+    } = new();
+
+    /// <summary>
+    ///     Optional OCR gates: the trigger only fires while every condition holds against the live
+    ///     <see cref="PowerAim.AILogic.OcrService.Latest"/> reading (e.g. ammo &gt; 5). Only enforced
+    ///     when the OCR engine is enabled; empty = no OCR gating.
+    /// </summary>
+    public ObservableCollection<OcrTriggerCondition> OcrConditions
     {
         get;
         set => SetProperty(ref field, value);

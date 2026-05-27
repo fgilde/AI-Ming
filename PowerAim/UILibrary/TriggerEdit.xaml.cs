@@ -123,6 +123,121 @@ namespace UILibrary
                     };
                 }).AsSimple().SetProperties(m => m.MinWidth = 80);
 
+            BuildOcrConditionsUi();
+        }
+
+        /// <summary>
+        ///     (Re)builds the optional OCR-condition rows. Each row is region + comparison + value +
+        ///     remove; an Add button appends a new condition. Rebuilt wholesale on add/remove for
+        ///     simplicity — the editor mutates the bound <see cref="OcrTriggerCondition"/> in place.
+        /// </summary>
+        private void BuildOcrConditionsUi()
+        {
+            OcrConditionsBox.Children.Clear();
+            if (Trigger == null) return;
+
+            var regionNames = AppConfig.Current.OcrSettings.Regions
+                .Select(r => r.Name).Where(n => !string.IsNullOrWhiteSpace(n)).ToList();
+
+            if (regionNames.Count == 0)
+            {
+                OcrConditionsBox.Children.Add(new TextBlock
+                {
+                    Text = Locale.OcrConditionsNoRegions,
+                    TextWrapping = TextWrapping.Wrap,
+                    Margin = new Thickness(2, 0, 0, 4),
+                    Foreground = (Brush)FindResource("FluentTextTertiary"),
+                    FontFamily = new FontFamily("Segoe UI Variable Small"),
+                    FontSize = 11
+                });
+                return;
+            }
+
+            foreach (var cond in Trigger.OcrConditions.ToList())
+                OcrConditionsBox.Children.Add(BuildOcrConditionRow(cond, regionNames));
+
+            var addBtn = new Button
+            {
+                Content = Locale.AddCondition,
+                Margin = new Thickness(0, 4, 0, 0),
+                Padding = new Thickness(12, 6, 12, 6),
+                HorizontalAlignment = HorizontalAlignment.Left
+            };
+            addBtn.SetResourceReference(FrameworkElement.StyleProperty, "FluentStandardButton");
+            addBtn.Click += (_, _) =>
+            {
+                Trigger.OcrConditions.Add(new OcrTriggerCondition { RegionName = regionNames.FirstOrDefault() ?? "" });
+                BuildOcrConditionsUi();
+            };
+            OcrConditionsBox.Children.Add(addBtn);
+        }
+
+        private FrameworkElement BuildOcrConditionRow(OcrTriggerCondition cond, List<string> regionNames)
+        {
+            var grid = new Grid { Margin = new Thickness(0, 0, 0, 6) };
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(86) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            var regionCombo = new ComboBox
+            {
+                ItemsSource = regionNames,
+                SelectedItem = regionNames.Contains(cond.RegionName) ? cond.RegionName : null,
+                Margin = new Thickness(0, 0, 6, 0),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            regionCombo.SelectionChanged += (_, _) => cond.RegionName = regionCombo.SelectedItem as string ?? "";
+            Grid.SetColumn(regionCombo, 0);
+            grid.Children.Add(regionCombo);
+
+            var compCombo = new ComboBox
+            {
+                ItemsSource = Enum.GetValues<OcrComparison>(),
+                SelectedItem = cond.Comparison,
+                Margin = new Thickness(0, 0, 6, 0),
+                MinWidth = 70,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            compCombo.SelectionChanged += (_, _) =>
+            {
+                if (compCombo.SelectedItem is OcrComparison c) cond.Comparison = c;
+            };
+            Grid.SetColumn(compCombo, 1);
+            grid.Children.Add(compCombo);
+
+            var valueBox = new TextBox
+            {
+                Text = cond.Value,
+                VerticalContentAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 6, 0)
+            };
+            valueBox.TextChanged += (_, _) => cond.Value = valueBox.Text;
+            Grid.SetColumn(valueBox, 2);
+            grid.Children.Add(valueBox);
+
+            var removeBtn = new Button
+            {
+                Content = new TextBlock
+                {
+                    Text = "",
+                    FontFamily = new FontFamily("Segoe Fluent Icons,Segoe MDL2 Assets"),
+                    FontSize = 12
+                },
+                Padding = new Thickness(8, 4, 8, 4),
+                VerticalAlignment = VerticalAlignment.Center,
+                ToolTip = Locale.Delete
+            };
+            removeBtn.SetResourceReference(FrameworkElement.StyleProperty, "FluentStandardButton");
+            removeBtn.Click += (_, _) =>
+            {
+                Trigger.OcrConditions.Remove(cond);
+                BuildOcrConditionsUi();
+            };
+            Grid.SetColumn(removeBtn, 3);
+            grid.Children.Add(removeBtn);
+
+            return grid;
         }
 
         public TriggerEdit()
