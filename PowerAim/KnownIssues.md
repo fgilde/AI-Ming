@@ -3,10 +3,9 @@
 
 ## Gamepad Functionality
 
-- **Gamepad Sending**: The feature for sending data via Gamepad is currently not completly done and still under active development.
-    This feature is only implemented in the Additional Trigger (TriggerAdditionalSend)
-    Later on, this feature will be implemented for Aiming and Main trigger as well.
-- **Controller Mapping**: Despite the issues with Gamepad sending, the controller mapping feature is fully functional and works as intended.
+- **Still Gamepad Sending**: Generell sending works with ViGem quite well, but game often didnt use the Virtual Controller.
+	We having problems to Hide correct Physical Controller to overwrite Slot with the virtual one.
+
 
 ---
 
