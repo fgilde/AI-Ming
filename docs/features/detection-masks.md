@@ -8,7 +8,7 @@ nav_order: 11
 
 Rectangular regions of the captured frame that the inference pipeline **ignores**. Use them to blank out HUD elements (ammo counters, minimaps, killfeed) that some models hallucinate enemies into.
 
-<!-- SCREENSHOT NEEDED (../images/detection-masks-dialog.png): Detection Masks dialog with one or two masks in the list (left), a preview canvas (right) showing the capture frame with red mask overlays, and the sliders below for precision edits. -->
+![Detection Masks dialog](../images/detection-masks-dialog.png)
 
 ## What it does
 

@@ -19,6 +19,10 @@ PowerAim started as a fork of [Babyhamsta/Aimmy](https://github.com/Babyhamsta/A
 
 PowerAim is **100% free**: no ads, no key system, no paywalled features. It is **source-available** but **not open source** — please do not make commercial forks.
 
+<p align="center">
+  <img src="docs/images/main.png" alt="PowerAim" width="800" />
+</p>
+
 ---
 
 ## 📖 Documentation

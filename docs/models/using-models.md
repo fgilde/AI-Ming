@@ -17,7 +17,11 @@ How to load, switch, and benchmark models inside PowerAim.
 
 A segmented switch at the top toggles between **Models** and **Configs**. Configs are saved `.cfg` presets — same store, separate folder.
 
-<!-- SCREENSHOT NEEDED (../images/models-tab.png): Models tab open with the local-models column on the left, the downloadable models on the right, and a segmented Models / Configs toggle at the top. -->
+![Models tab](../images/models-tab.png)
+
+The same segmented switch flips the view to **Configs** — saved `.cfg` presets pulled from the same stores into a separate folder.
+
+![Configs view](../images/configs-tab.png)
 
 ## Loading a model
 
@@ -62,7 +66,7 @@ The benchmark runs:
 3. Reports per-size FPS, latency, and GPU% in a results dialog
 4. Optionally applies the recommended size to `SliderSettings.ImageSize`
 
-<!-- SCREENSHOT NEEDED (../images/benchmark-results.png): Performance Benchmark results dialog with a per-size table (Resolution, FPS, ms, GPU%), the recommended size highlighted, and Apply / Cancel buttons. -->
+![Benchmark results dialog](../images/benchmark-results.png)
 
 {: .tip }
 Re-run the benchmark whenever you switch hardware, change drivers, or load a markedly different model. It's the most reliable way to find your sweet spot.
@@ -84,10 +88,12 @@ Multi-class models emit several class IDs per detection (e.g. `0 = Enemy`, `1 = 
 
 Open it via **Aim Tools → PredictionConfig → Target Classes**.
 
+![Target Classes dialog](../images/target-classes-dialog.png)
+
 | Mode | What it does |
 |:-----|:-------------|
-| **All Classes** | Aim at every detection regardless of class |
-| **Specific IDs** | Aim only at the checked class IDs |
+| **All classes** | Aim at every detection regardless of class |
+| **Only selected** | Aim only at the checked classes (e.g. just `Enemy`) |
 
 The dialog reads class names from the model metadata. If your model has no `names` field, classes show as `Class 0`, `Class 1`, etc.
 

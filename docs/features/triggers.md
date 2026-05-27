@@ -92,6 +92,28 @@ Use case: hold LMB while the enemy is in your wider FOV, then release the click 
 
 If **Needs Detection** is off, the trigger fires purely on the key state — useful for binding macros without a target requirement (e.g. "Press G + delay 500 ms + press LMB" = grenade-cook macro).
 
+### OCR conditions
+
+A trigger can be gated on a live [OCR]({{ '/features/ocr' | relative_url }}) region value, so it only fires while the HUD shows a particular state — for example, only fire while ammo is above 5, or only while health is at least 50.
+
+In the editor, the **OCR conditions (optional)** section lists one row per condition. Each row picks a defined OCR region, a comparison operator, and a target value:
+
+| Operator | Fires when the region… |
+|:---------|:-----------------------|
+| **Greater than** | parses as a number greater than the value |
+| **Greater or equal** | number ≥ the value |
+| **Less than** | number < the value |
+| **Less or equal** | number ≤ the value |
+| **Equals** | matches the value (numeric, or trimmed case-insensitive text) |
+| **Not equal** | does not match the value |
+| **Contains** | text contains the value (case-insensitive) |
+| **Not contains** | text does not contain the value |
+
+The numeric comparisons require the region to read as a number; the text comparisons work on the raw recognized text. All listed conditions must hold for the trigger to fire.
+
+{: .important }
+OCR conditions are **only enforced while the OCR engine is on** (Settings → HUD OCR → Enable HUD OCR). If OCR is off, the conditions are ignored and the trigger behaves as if they weren't set. You must [define the OCR regions]({{ '/features/ocr' | relative_url }}) first — the names you give regions are what you select here.
+
 ## Default profile
 
 PowerAim ships a default `Primary Fire` trigger:

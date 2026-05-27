@@ -30,6 +30,16 @@ When you take a still-missing screenshot, drop it in this folder with the exact 
 | `autoplay-edit-profile.png` | `features/autoplay.md` (Profiles section) |
 | `autoplay-edit-action.png` | `features/autoplay.md` (Actions section) |
 | `tools-page.png` | `configuration/keybinds-hotkeys.md` (Magnifier + HWID Spoofer) |
+| `models-tab.png` | `getting-started/first-aim.md`, `models/using-models.md` |
+| `configs-tab.png` | `models/using-models.md` (Models / Configs toggle) |
+| `capture-source-selector.png` | `getting-started/first-aim.md` |
+| `benchmark-results.png` | `models/using-models.md` |
+| `detection-masks-dialog.png` | `features/detection-masks.md` |
+| `session-stats-card.png` | `features/session-stats.md` |
+| `replay-card.png` | `features/replay-buffer.md` |
+| `crosshair-overlay.png` | `features/crosshair-overlay.md` |
+| `target-classes-dialog.png` | `models/using-models.md` (Target Classes) |
+| `main.png` | repo-root `README.md` (hero) |
 
 ## ⬜ Still needed
 
@@ -39,12 +49,6 @@ These pages currently have a `<!-- SCREENSHOT NEEDED (../images/<file>) -->` com
 
 | Filename | Description |
 |:---------|:------------|
-| `models-tab.png` | Models tab: local model list (left) + downloadable models strip (right), one model selected, Models/Configs toggle at top |
-| `capture-source-selector.png` | Title bar's capture-source picker open, showing monitors / windows with thumbnails |
-| `benchmark-results.png` | Performance Benchmark results dialog: per-size table (Resolution, FPS, ms, GPU%), recommended size highlighted, Apply/Cancel |
-| `detection-masks-dialog.png` | Detection Masks dialog: masks list (left), preview canvas with red mask overlays (right), sliders below |
-| `session-stats-card.png` | Settings page → Stats card: FPS, inference time, detections, shots fired, frames processed, session duration, Reset |
-| `replay-card.png` | Settings page → Replay Buffer card: toggle, buffer-length slider, JPEG-quality slider, Save/Clear, "Frames buffered: N" status |
 | `hidden-controllers-page.png` | Hidden Controllers subpage: 2–3 HID devices, each with name, status, Disable/Enable buttons |
 
 ### In-game overlays (need a game/demo running)
@@ -52,7 +56,6 @@ These pages currently have a `<!-- SCREENSHOT NEEDED (../images/<file>) -->` com
 | Filename | Description |
 |:---------|:------------|
 | `detected-player-overlay.png` | Game with detected-player boxes drawn over enemies (ESP overlay) |
-| `crosshair-overlay.png` | In-game with PowerAim's custom Plus crosshair (purple, 16 px, 4 px gap) over the game's reticle |
 | `debug-overlay.png` | Game with PowerAim's Debug Overlay in a corner: FPS, inference time, detection count, locked target |
 | `fov-ring.png` | Game with PowerAim's FOV ring drawn centered, showing radius + faint accent-color tint |
 

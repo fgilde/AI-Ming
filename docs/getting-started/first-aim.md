@@ -23,7 +23,7 @@ Click any model file (e.g. `Universal.onnx`). When loading completes you'll see:
 - The model's name appears in the bottom status bar
 - The Aim Tools sidebar entry becomes the obvious next stop
 
-<!-- SCREENSHOT NEEDED (../images/models-tab.png): Models tab showing both the local model list and the downloadable models strip, with one model selected. -->
+![Models tab](../images/models-tab.png)
 
 {: .tip }
 The bundled **Universal** models are good starting points — they're trained on a broad mix of FPS games. For a specific game, check the downloadable list for a game-specific model.
@@ -32,7 +32,7 @@ The bundled **Universal** models are good starting points — they're trained on
 
 Center of the title bar shows the current capture target — by default that's your main monitor. Click the monitor selector if you have multiple displays or want to capture a specific window.
 
-<!-- SCREENSHOT NEEDED (../images/capture-source-selector.png): Title bar's capture-source picker open, showing the list of monitors and windows with thumbnails. -->
+![Capture source selector](../images/capture-source-selector.png)
 
 ## 4. Pick the aim key
 

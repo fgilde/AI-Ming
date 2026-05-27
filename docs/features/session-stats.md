@@ -8,7 +8,7 @@ nav_order: 7
 
 A live metrics panel on the Settings page showing how PowerAim is performing during your session. It's the non-overlay version of the [Debug Overlay]({{ '/features/debug-overlay' | relative_url }}).
 
-<!-- SCREENSHOT NEEDED (../images/session-stats-card.png): Settings page → Stats card showing FPS, inference time, detections, shots fired, frames processed, tactical actions, session duration, and the Reset button. -->
+![Session Stats card](../images/session-stats-card.png)
 
 ## What it shows
 

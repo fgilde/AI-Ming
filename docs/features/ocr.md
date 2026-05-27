@@ -64,9 +64,29 @@ Tesseract needs an `eng.traineddata` language model. On first launch the dialog 
 - **500 ms is fine for health.** Don't drop the interval below 200 ms unless you really need it — OCR is CPU-bound and adds latency.
 - **Health = "75/100".** The Health kind strips spaces but preserves the slash so consumers can split it.
 
+## Aim-disengage rules
+
+OCR can also **pause aim assist** while a HUD region matches — for example, stop aiming while you're scoped, holding a knife, or in a menu. This avoids fighting the player during moments where assist is unwanted.
+
+Open it from the **Configure aim-disengage…** button on the HUD OCR card. Each rule has:
+
+| Field | What it does |
+|:------|:-------------|
+| **Region** | Which OCR region to watch |
+| **Comparison + value** | Same operator set as [trigger OCR conditions]({{ '/features/triggers#ocr-conditions' | relative_url }}) — e.g. *contains* `scoped`, or HP *less than* `20` |
+| **Match Process** | Optional process pattern to scope the rule to one game |
+| **Enabled** | Per-rule toggle |
+
+While **any** enabled rule matches, [Aim Assist]({{ '/features/aim-assist' | relative_url }}) is held off until the rule stops matching.
+
+{: .important }
+Like trigger conditions, aim-disengage rules are **only evaluated while the OCR engine is on**. If OCR is off, no rule pauses aim.
+
 ## Use cases
 
 - **Auto-reload when ammo is low.** A trigger reads OCR ammo, fires `R` when ammo < 5.
+- **Gate triggers on the HUD.** Use [OCR trigger conditions]({{ '/features/triggers#ocr-conditions' | relative_url }}) so a trigger only fires while ammo or health is in range.
+- **Pause aim while scoped or knifing.** An aim-disengage rule on a "weapon" region keeps assist from interfering during melee or aim-down-sights.
 - **AutoPlay aggression.** AutoPlay knows when health is low and biases toward retreat actions.
 - **Stream overlay.** Pipe OCR values out to your stream without OBS plugins.
 

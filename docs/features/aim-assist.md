@@ -31,6 +31,9 @@ If no aim key is held, steps 4–6 are skipped — PowerAim still draws ESP boxe
 
 The aim key chip supports multiple keys. By default it lists `Right Mouse Button` + `Left Alt` — either one arms the aim.
 
+{: .note }
+Aim assist can be **paused automatically by the HUD state**. If you set up [OCR aim-disengage rules]({{ '/features/ocr#aim-disengage-rules' | relative_url }}), assist is held off while a HUD region matches — e.g. while scoped or holding a knife — even though the aim key is held.
+
 ## Configuration options
 
 All sliders live on the **AimConfig** card (right column of Aim Tools).

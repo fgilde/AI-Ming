@@ -18,12 +18,20 @@ The Settings page has 9 cards. Some controls are also exposed on the relevant fe
 |:--------|:-------------|:--------|
 | **Switch to DirectML / CUDA** | One-click switch between the DirectML and CUDA release builds | — |
 | **Language** | UI language. 9 options: en, de, es, fr, it, ru, tr, uk, zh | System |
-| **Theme** | Color palette when idle (Global Active off) | Purple |
-| **Theme when Active** | Color palette when Global Active is on | Green |
+| **Accent color** | Free color picker for the UI accent while idle (Global Active off) | Purple |
+| **Accent color when active** | A separate accent used while **Global Active** is on | Green |
 | **Theme Mode** | Light / Dark / System-follow | System |
 | **UI Top Most** | Keep PowerAim window above other windows | On |
 | **Show Help Texts** | Show inline tooltips and help labels | On |
+| **Show toggle notifications** | When a toggle is flipped via its global keybind, briefly show an on-screen notice (e.g. "Aim Assist is now on") | On |
 | **Hide UI from Capture** | Use Win32 capture exclusion so OBS / NVIDIA ShadowPlay can't see PowerAim's window | On |
+
+{: .note }
+The old **Theme** / **Theme when Active** palette dropdowns have been replaced by free **accent-color** pickers. The 6 former palettes (Purple, Green, etc.) survive as quick-fill swatches inside the picker, so you can still pick them with one click — or choose any custom color. Light / Dark / System mode is unchanged.
+
+### In-app color picker
+
+Everywhere PowerAim asks for a color — the two accent colors above, the FOV ring color, the captured-area border color, the detected-player box color, and the crosshair fill / outline colors — it now opens its own **HSV color picker** instead of the old Windows color dialog. The picker has a saturation/value spectrum, a hue slider, a hex input, and a row of quick-fill swatches.
 
 {: .important }
 Disabling **Hide UI from Capture** is irreversible during the session — PowerAim warns you and asks for confirmation. The default protects you from inadvertently broadcasting PowerAim during a stream.
@@ -67,6 +75,7 @@ See [Crosshair Overlay]({{ '/features/crosshair-overlay' | relative_url }}) and 
 | Setting | What it does | Default |
 |:--------|:-------------|:--------|
 | **Show Debug Overlay** | Topmost diagnostic panel | Off |
+| **Show sent-input visualizer** | Inside the debug overlay, show a live keyboard + mouse + controller diagram of the input PowerAim is sending. See [Debug Overlay]({{ '/features/debug-overlay#sent-input-visualizer' | relative_url }}). | Off |
 | **Show Custom Crosshair** | Topmost custom crosshair | Off |
 | **Crosshair Shape** | Dot / Cross / Plus / Circle / CircleDot / T | Plus |
 | **Crosshair Size** | 4–80 px | 16 |

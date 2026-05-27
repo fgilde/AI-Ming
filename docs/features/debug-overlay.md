@@ -30,6 +30,18 @@ It also shows the Sticky-Aim lock state, the predicted aim point, and a tracer t
 
 You can also bind a global hotkey to flip it on/off via the keybind chip next to the toggle.
 
+## Sent-input visualizer
+
+**Settings → Overlays → Show sent-input visualizer** adds a live input diagram inside the debug overlay, showing exactly what PowerAim is sending — useful for confirming that triggers, mapping, and gamepad aim are emitting the inputs you expect.
+
+The visualizer draws:
+
+- A **keyboard + mouse** diagram — keys and mouse buttons glow as PowerAim presses them, and the mouse shows an arrow indicating the current aim-movement direction.
+- An **Xbox controller** diagram — face buttons / bumpers glow, the triggers fill as they're pulled, and the sticks deflect as PowerAim moves them (e.g. the right stick during [gamepad aim]({{ '/features/gamepad-aim' | relative_url }})).
+
+{: .tip }
+Turn this on while testing a [controller mapping]({{ '/features/controller-mapping' | relative_url }}) or a charge-mode [trigger]({{ '/features/triggers' | relative_url }}) — it's the fastest way to confirm the right button is firing at the right moment without alt-tabbing.
+
 ## Tips
 
 - **Run it once when setting up a new model.** If "Detections" stays at 0 in a game where you can see enemies, the model isn't recognizing the game's art style — switch models or use the [Models guide]({{ '/models/using-models' | relative_url }}).
