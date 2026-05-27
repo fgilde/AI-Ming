@@ -101,7 +101,7 @@
                     Style="{StaticResource FluentCard}"
                     Margin="0,0,8,0"
                     Padding="12">
-                <Border BorderBrush="{DynamicResource FluentAccent}"
+                <Border BorderBrush="DarkRed"
                         BorderThickness="2"
                         VerticalAlignment="Center"
                         HorizontalAlignment="Center"
@@ -111,7 +111,7 @@
                         CornerRadius="4">
                     <Canvas>
                         <Rectangle x:Name="GreenRectangle"
-                                   Stroke="{DynamicResource FluentAccent}"
+                                   Stroke="DarkGreen"
                                    StrokeThickness="2"
                                    Fill="Transparent"
                                    Width="{Binding Path=RectWidth, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
