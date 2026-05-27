@@ -98,6 +98,16 @@ public class AppConfig : BaseSettings
         set => SetField(ref field, value);
     } = MappingDirection.Both;
 
+    /// <summary>
+    ///     Per-game rules that pause aim assist while a HUD OCR reading matches (e.g. "scoped",
+    ///     "knife"). Evaluated by <see cref="PowerAim.AILogic.AimDisengage"/>.
+    /// </summary>
+    public ObservableCollection<AimDisengageRule> AimDisengageRules
+    {
+        get;
+        set => SetField(ref field, value);
+    } = new();
+
     public ObservableCollection<ActionTrigger> Triggers
     {
         get;

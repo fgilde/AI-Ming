@@ -175,48 +175,10 @@ public class AutoTriggerAction : BaseAction
         {
             if (string.IsNullOrWhiteSpace(cond.RegionName)) continue;
             if (!latest.TryGetValue(cond.RegionName, out var reading)) return false; // no reading yet
-            if (!EvaluateOcrCondition(cond, reading)) return false;
+            if (!OcrConditionEvaluator.Evaluate(cond.Comparison, cond.Value, reading)) return false;
         }
 
         return true;
-    }
-
-    private static bool EvaluateOcrCondition(OcrTriggerCondition cond, OcrResult reading)
-    {
-        switch (cond.Comparison)
-        {
-            case OcrComparison.Contains:
-                return (reading.Text ?? "").Contains(cond.Value, StringComparison.OrdinalIgnoreCase);
-            case OcrComparison.NotContains:
-                return !(reading.Text ?? "").Contains(cond.Value, StringComparison.OrdinalIgnoreCase);
-        }
-
-        // Equality can be numeric or textual depending on what both sides parse to.
-        bool haveNumbers = reading.Number.HasValue &&
-                           double.TryParse(cond.Value, System.Globalization.NumberStyles.Any,
-                               System.Globalization.CultureInfo.InvariantCulture, out var target);
-        double left = reading.Number ?? 0;
-        double right = haveNumbers
-            ? double.Parse(cond.Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture)
-            : 0;
-
-        switch (cond.Comparison)
-        {
-            case OcrComparison.GreaterThan: return haveNumbers && left > right;
-            case OcrComparison.GreaterOrEqual: return haveNumbers && left >= right;
-            case OcrComparison.LessThan: return haveNumbers && left < right;
-            case OcrComparison.LessOrEqual: return haveNumbers && left <= right;
-            case OcrComparison.Equals:
-                return haveNumbers
-                    ? Math.Abs(left - right) < 0.0001
-                    : string.Equals((reading.Text ?? "").Trim(), (cond.Value ?? "").Trim(), StringComparison.OrdinalIgnoreCase);
-            case OcrComparison.NotEquals:
-                return haveNumbers
-                    ? Math.Abs(left - right) >= 0.0001
-                    : !string.Equals((reading.Text ?? "").Trim(), (cond.Value ?? "").Trim(), StringComparison.OrdinalIgnoreCase);
-            default:
-                return true;
-        }
     }
 
     private bool TriggerKeysStateCorrect(ActionTrigger trigger)

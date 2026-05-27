@@ -1,0 +1,95 @@
+<visuality:BaseDialog x:Class="PowerAim.Visuality.AimDisengageDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:visuality="clr-namespace:PowerAim.Visuality"
+        mc:Ignorable="d"
+        Title="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimDisengageTitle'}"
+        Height="520"
+        Width="760"
+        WindowStyle="None"
+        Topmost="True"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        AllowsTransparency="False"
+        Background="{DynamicResource FluentSurface1}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="Titlebar_MouseLeftButtonDown">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0">
+                <TextBlock Text="&#xE7B3;"
+                           FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                           Foreground="{DynamicResource FluentAccent}"
+                           FontSize="14"
+                           VerticalAlignment="Center" />
+                <TextBlock Margin="10,0,0,0"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource FluentTextPrimary}"
+                           FontFamily="Segoe UI Variable Display"
+                           FontWeight="SemiBold"
+                           FontSize="13"
+                           Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimDisengageTitle'}" />
+            </StackPanel>
+            <Button HorizontalAlignment="Right"
+                    Background="Transparent" BorderBrush="Transparent" BorderThickness="0"
+                    Foreground="{DynamicResource FluentTextPrimary}"
+                    FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                    Content="&#xE8BB;" Width="46" Height="40" Padding="0" FontSize="10"
+                    VerticalAlignment="Top"
+                    Click="Close_Click">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd" Background="{TemplateBinding Background}">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#E81123" />
+                                            <Setter Property="Foreground" Value="White" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </Grid>
+
+        <TextBlock Grid.Row="1"
+                   Margin="16,4,16,12"
+                   TextWrapping="Wrap"
+                   Foreground="{DynamicResource FluentTextTertiary}"
+                   FontFamily="Segoe UI Variable Small"
+                   FontSize="12"
+                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimDisengageDescription'}" />
+
+        <ScrollViewer Grid.Row="2" Margin="16,0,16,0" VerticalScrollBarVisibility="Auto">
+            <StackPanel x:Name="RulesBox" />
+        </ScrollViewer>
+
+        <Grid Grid.Row="3" Margin="16,12,16,16">
+            <Button x:Name="AddBtn"
+                    HorizontalAlignment="Left"
+                    Padding="12,6,12,6"
+                    Style="{StaticResource FluentStandardButton}"
+                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AddRule'}"
+                    Click="Add_Click" />
+            <Button HorizontalAlignment="Right"
+                    Padding="16,6,16,6"
+                    Style="{StaticResource FluentAccentButton}"
+                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Close'}"
+                    Click="Close_Click" />
+        </Grid>
+    </Grid>
+</visuality:BaseDialog>

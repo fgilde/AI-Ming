@@ -106,8 +106,10 @@ public class AimingAction : BaseAction
 
     private void HandleAim(Prediction closestPrediction)
     {
-        if (AppConfig.Current.ToggleState.AimAssist && (!HasValidKey(AppConfig.Current.BindingSettings.AimKeyBindings)
-                                                        || AnyKeyIsHold(AppConfig.Current.BindingSettings.AimKeyBindings)))
+        if (AppConfig.Current.ToggleState.AimAssist
+            && (!HasValidKey(AppConfig.Current.BindingSettings.AimKeyBindings)
+                || AnyKeyIsHold(AppConfig.Current.BindingSettings.AimKeyBindings))
+            && !AimDisengage.ShouldPause())
         {
             var area = ImageCapture.CaptureArea;
             float scaleX = area.Width / 640f;

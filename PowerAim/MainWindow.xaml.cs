@@ -1854,6 +1854,12 @@ public partial class MainWindow
         {
             new PowerAim.Visuality.OcrRegionsDialog { Owner = this }.ShowDialog();
         };
+        HudOcrCard.AddButton(Locale.ConfigureAimDisengage)
+            .InitWith(b => b.ToolTip = Locale.AimDisengageDescription)
+            .Reader.Click += (_, _) =>
+        {
+            new PowerAim.Visuality.AimDisengageDialog { Owner = this }.ShowDialog();
+        };
         HudOcrCard.AddSeparator();
 
         // ===== Replay Buffer =====
