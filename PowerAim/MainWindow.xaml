@@ -22,7 +22,6 @@
         WindowStartupLocation="CenterScreen"
         AllowsTransparency="False"
         Background="{StaticResource FluentSurface1}"
-        MouseLeftButtonDown="Window_MouseLeftButtonDown"
         Icon="PowerAim.ico"
         Loaded="Window_Loaded"
         Closing="Window_Closing">
@@ -56,6 +55,7 @@
 
                 <!-- ================= TITLE BAR ================= -->
                 <Grid x:Name="Topbar"
+                      MouseLeftButtonDown="Window_MouseLeftButtonDown"
                       Grid.Row="0"
                       Background="{StaticResource FluentSurface1}">
                     <Grid.ColumnDefinitions>

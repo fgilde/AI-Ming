@@ -279,7 +279,8 @@ public partial class MainWindow
             toggle.Changed += (s, e) => SetActive(e.Value);
         }, border => border.Background = Brushes.Transparent, changer =>
         {
-            changer.CanEditMinTime = false;
+            changer.BindButton.Margin = new Thickness(14, 7, 2, 7);
+            changer.CanEditMinTime = true;
             // The Global Active hotkey must always work, even when the "keybinds only while Global
             // Active" gate is on — otherwise there'd be no way to switch it back on by hotkey.
             changer.IgnoreGlobalActiveGate = true;
@@ -338,6 +339,7 @@ public partial class MainWindow
         {
             switch (node)
             {
+                case PowerAim.UILibrary.AKeyChanger:                       // keybind editor (its min-time popup uses MouseUp)
                 case System.Windows.Controls.Primitives.ButtonBase:        // Button, ToggleButton, RepeatButton…
                 case System.Windows.Controls.Primitives.Thumb:             // layout-drag handles
                 case System.Windows.Controls.Primitives.Popup:             // search popup, hidden-sections popup

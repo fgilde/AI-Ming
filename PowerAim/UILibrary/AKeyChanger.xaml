@@ -32,6 +32,7 @@
                            FontSize="13" />
 
                     <Border HorizontalAlignment="Right"
+                            x:Name="BindButton"
                             Margin="5,7,2,7"
                             BorderBrush="{DynamicResource FluentStroke}"
                             BorderThickness="1"
