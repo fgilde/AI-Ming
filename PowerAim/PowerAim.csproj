@@ -92,10 +92,13 @@
 
   <ItemGroup Condition="'$(IsCuda)' == 'false'">
     <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.19.2" />
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2792.45" />
   </ItemGroup>
 
   <ItemGroup>
+    <!-- WebView2 backs the in-app Help page; it is unrelated to CUDA so it must be referenced in
+         BOTH variants. (It used to live in the IsCuda==false group, which broke the CUDA release
+         build with MC3074: the markup compiler couldn't resolve wv2:WebView2 in HelpPanel.xaml.) -->
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2792.45" />
     <PackageReference Include="SharpDX" Version="4.2.0" />
     <PackageReference Include="SharpDX.DirectInput" Version="4.2.0" />
     <PackageReference Include="H.InputSimulator" Version="1.4.2" />
