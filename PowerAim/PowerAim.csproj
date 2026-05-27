@@ -72,18 +72,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
-    <None Include="bin\configs\Default.cfg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="bin\models\default.onnx">
+    <None Include="Resources\default.onnx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <!--<None Include="bin\configs\Default.cfg" Condition="Exists('bin\configs\Default.cfg')">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="bin\models\default.onnx" Condition="Exists('bin\models\default.onnx')">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>-->
   </ItemGroup>
 
   <ItemGroup Condition="'$(IsCuda)' == 'true'">

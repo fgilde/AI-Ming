@@ -514,13 +514,9 @@
                                     <ColumnDefinition />
                                 </Grid.ColumnDefinitions>
                                 <Grid Grid.ColumnSpan="2"
-                                      HorizontalAlignment="Center"
+                                      HorizontalAlignment="Stretch"
                                       Visibility="{Binding Path=IsNotModelLoaded, Converter={StaticResource boolToVis }}">
-                                    <Border Style="{StaticResource FluentCard}">
-                                        <TextBlock Foreground="{StaticResource FluentTextSecondary}"
-                                                   Style="{StaticResource FluentBody}"
-                                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='NoModelOrNoCaptureSourceError'}" />
-                                    </Border>
+                                    <uiLibrary:NoModelCard IsLoading="{Binding ModelLoadPending}" />
                                 </Grid>
                                 <StackPanel x:Name="ASP1"
                                             Visibility="{Binding Path=IsModelLoaded, Converter={StaticResource boolToVis }}"

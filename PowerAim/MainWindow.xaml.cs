@@ -254,14 +254,68 @@ public partial class MainWindow
         if (File.Exists(modelPath) && !FileManager.CurrentlyLoadingModel &&
             FileManager.AIManager?.IsModelLoaded != true)
         {
+            // A model is about to load — keep the empty-state card in its "loading" look so the
+            // "no model" message doesn't flash during the brief load.
+            ModelLoadPending = true;
             _ = _fileManager.LoadModel(Path.GetFileName(modelPath), modelPath);
         }
+        else if (!IsModelLoaded)
+        {
+            // Nothing to load (no model file present) — reveal the empty-state message now.
+            ModelLoadPending = false;
+        }
         UpdateModelText();
+    }
+
+    /// <summary>
+    ///     Copies the bundled default model (<c>Resources\default.onnx</c>, shipped next to the exe)
+    ///     into <c>bin\models\</c> if it isn't there yet, then loads it. Backs the "Load default
+    ///     model" button on <see cref="UILibrary.NoModelCard"/>. Throws a localized
+    ///     <see cref="FileNotFoundException"/> if the bundled file is missing so the card can show it.
+    /// </summary>
+    public async Task LoadDefaultModelAsync()
+    {
+        var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+        var modelsDir = Path.Combine(baseDir, "bin", "models");
+        Directory.CreateDirectory(modelsDir);
+        var dest = Path.Combine(modelsDir, ApplicationConstants.DefaultModel);
+
+        if (!File.Exists(dest))
+        {
+            var src = Path.Combine(baseDir, "Resources", ApplicationConstants.DefaultModel);
+            if (!File.Exists(src))
+                throw new FileNotFoundException(Locale.LoadDefaultModelMissing);
+            File.Copy(src, dest);
+        }
+
+        // Switch the empty-state card to its loading look while the model spins up.
+        ModelLoadPending = true;
+        await _fileManager.LoadModel(ApplicationConstants.DefaultModel,
+            Path.Combine("bin/models", ApplicationConstants.DefaultModel));
     }
 
 
     public bool IsModelLoaded => FileManager.AIManager?.IsModelLoaded ?? false;
     public bool IsNotModelLoaded => !IsModelLoaded;
+
+    /// <summary>
+    ///     True while a model load is in flight (and at startup before the first load attempt
+    ///     resolves). Drives <see cref="UILibrary.NoModelCard"/>'s loading spinner so the "no model"
+    ///     message doesn't flash during the brief startup load. Set to false once a load resolves
+    ///     (success or failure) or when there is nothing to load.
+    /// </summary>
+    public bool ModelLoadPending
+    {
+        get;
+        private set
+        {
+            if (field != value)
+            {
+                field = value;
+                OnPropertyChanged(nameof(ModelLoadPending));
+            }
+        }
+    } = true;
 
     private void LoadGlobalUI()
     {
@@ -432,7 +486,13 @@ public partial class MainWindow
     /// </summary>
     private void AttachLayoutManagers()
     {
-        _pageLayouts.Clear();
+        // Do NOT clear _pageLayouts here. CreateUI() re-runs on every config load / language
+        // change, but it only repopulates the inner StackPanels — the FluentCard Borders, named
+        // panels and their already-attached chrome (drag + hide-×) survive. Throwing the managers
+        // away and re-Attaching would yield empty new managers (DiscoverBoxes skips borders already
+        // tagged from the first attach) while the × buttons still drive the old manager — so the
+        // hidden-boxes pill would never update. Keeping the existing managers keeps the pill bound
+        // to the same manager the × buttons use. EnsurePageAttached skips pages already attached.
         foreach (var name in _layoutManagedPages)
             EnsurePageAttached(name);
     }
@@ -1858,6 +1918,12 @@ public partial class MainWindow
         BuildSettingsExtras();
     }
 
+    // Tracked across rebuilds: CreateUI() re-runs on every config load / language change, so we
+    // tear down the previous stats timer + event subscriptions instead of stacking duplicates.
+    private System.Windows.Threading.DispatcherTimer? _statsTimer;
+    private System.ComponentModel.PropertyChangedEventHandler? _replayStatusHandler;
+    private System.ComponentModel.PropertyChangedEventHandler? _learnStatusHandler;
+
     /// <summary>
     ///     Builds the new Settings-page cards added by the feature batch:
     ///     <list type="bullet">
@@ -1868,6 +1934,23 @@ public partial class MainWindow
     /// </summary>
     private void BuildSettingsExtras()
     {
+        // CreateUI() re-runs on every config load / language change. Clear these cards first so we
+        // rebuild instead of appending duplicates, and tear down the previous stats timer + event
+        // subscriptions (otherwise each language switch stacks another timer / handler on orphaned
+        // controls).
+        ActiveProcessesSettings.RemoveAll();
+        OverlaySettings.RemoveAll();
+        StatsCard.RemoveAll();
+        HudOcrCard.RemoveAll();
+        ReplayCard.RemoveAll();
+        LearningCard.RemoveAll();
+
+        _statsTimer?.Stop();
+        if (_replayStatusHandler != null)
+            PowerAim.AILogic.ReplayBuffer.Instance.PropertyChanged -= _replayStatusHandler;
+        if (_learnStatusHandler != null)
+            PowerAim.AILogic.AutoPlayLearningModel.Instance.PropertyChanged -= _learnStatusHandler;
+
         // ===== Active Processes (Auto-Pause + per-game profile switch) =====
         ActiveProcessesSettings.AddTitle(Locale.ActiveProcesses, true);
         ActiveProcessesSettings.AddToggle(Locale.AutoPauseOnFocusLoss)
@@ -1950,8 +2033,8 @@ public partial class MainWindow
             StatsCard.Children.Add(l);
         }
 
-        var statsTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
-        statsTimer.Tick += (_, _) =>
+        _statsTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
+        _statsTimer.Tick += (_, _) =>
         {
             var s = PowerAim.Class.SessionStats.Instance;
             fpsLabel.Content      = $"{Locale.StatFpsLabel,-19} {s.InstantFps:0.0}";
@@ -1962,7 +2045,7 @@ public partial class MainWindow
             tacticalLabel.Content = $"{Locale.StatTacticalActions,-19} {s.TacticalActionsUsed}";
             durationLabel.Content = $"{Locale.StatSession,-19} {s.Duration:hh\\:mm\\:ss}";
         };
-        statsTimer.Start();
+        _statsTimer.Start();
 
         StatsCard.AddButton(Locale.ResetStats).Reader.Click += (_, _) => PowerAim.Class.SessionStats.Instance.Reset();
         StatsCard.AddToggle(Locale.AdaptiveKalmanLead)
@@ -2009,9 +2092,10 @@ public partial class MainWindow
             Content = Locale.FramesBufferedZero
         };
         ReplayCard.Children.Add(replayStatus);
-        PowerAim.AILogic.ReplayBuffer.Instance.PropertyChanged += (_, _) =>
+        _replayStatusHandler = (_, _) =>
             Dispatcher.BeginInvoke(new Action(() =>
                 replayStatus.Content = Locale.FramesBufferedFormat.FormatWith(PowerAim.AILogic.ReplayBuffer.Instance.FrameCount)));
+        PowerAim.AILogic.ReplayBuffer.Instance.PropertyChanged += _replayStatusHandler;
 
         ReplayCard.AddButton(Locale.SaveReplayBuffer).Reader.Click += async (_, _) =>
         {
@@ -2048,8 +2132,9 @@ public partial class MainWindow
         };
         UpdateLearnStatus(learnStatus);
         LearningCard.Children.Add(learnStatus);
-        PowerAim.AILogic.AutoPlayLearningModel.Instance.PropertyChanged += (_, _) =>
+        _learnStatusHandler = (_, _) =>
             Dispatcher.BeginInvoke(new Action(() => UpdateLearnStatus(learnStatus)));
+        PowerAim.AILogic.AutoPlayLearningModel.Instance.PropertyChanged += _learnStatusHandler;
 
         LearningCard.AddButton(Locale.SaveModel).Reader.Click += (_, _) =>
         {
@@ -2524,7 +2609,10 @@ public partial class MainWindow
     internal override void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         if (propertyName == nameof(IsModelLoaded))
+        {
             OnPropertyChanged(nameof(IsNotModelLoaded));
+            ModelLoadPending = false; // the load attempt resolved (loaded or failed)
+        }
         base.OnPropertyChanged(propertyName);
     }
 

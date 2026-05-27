@@ -1,0 +1,119 @@
+<UserControl x:Class="PowerAim.UILibrary.NoModelCard"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="clr-namespace:PowerAim.UILibrary"
+             mc:Ignorable="d">
+    <Border Style="{StaticResource FluentCard}"
+            HorizontalAlignment="Stretch">
+        <Grid>
+            <!-- Loading state: shown at startup while a model is loading, so the empty-state
+                 message doesn't flash before the model is ready. -->
+            <StackPanel x:Name="LoadingPanel"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Margin="0,16,0,16">
+                <ProgressBar IsIndeterminate="True"
+                             Height="6"
+                             Width="240"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             Foreground="{DynamicResource FluentAccent}" />
+                <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='LoadingModel'}"
+                           Style="{StaticResource FluentBody}"
+                           Foreground="{DynamicResource FluentTextSecondary}"
+                           HorizontalAlignment="Center"
+                           Margin="0,12,0,0" />
+            </StackPanel>
+
+            <!-- Empty state: shown once we know there is really no model loaded. -->
+            <StackPanel x:Name="EmptyPanel" Visibility="Collapsed">
+                <!-- Icon -->
+                <TextBlock Text="&#xE7BA;"
+                           FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                           FontSize="34"
+                           HorizontalAlignment="Center"
+                           Foreground="{DynamicResource FluentAccent}"
+                           Margin="0,4,0,12" />
+
+                <!-- Title -->
+                <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='NoModelLoadedTitle'}"
+                           HorizontalAlignment="Center"
+                           FontFamily="Segoe UI Variable Display"
+                           FontWeight="SemiBold"
+                           FontSize="18"
+                           Foreground="{DynamicResource FluentTextPrimary}"
+                           Margin="0,0,0,8" />
+
+                <!-- Intro -->
+                <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='NoModelLoadedBody'}"
+                           Style="{StaticResource FluentBody}"
+                           Foreground="{DynamicResource FluentTextSecondary}"
+                           TextWrapping="Wrap"
+                           TextAlignment="Center"
+                           MaxWidth="460"
+                           Margin="0,0,0,14" />
+
+                <!-- Requirements -->
+                <StackPanel HorizontalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                        <TextBlock Text="&#x2022;"
+                                   Foreground="{DynamicResource FluentAccent}"
+                                   FontSize="14"
+                                   VerticalAlignment="Top"
+                                   Margin="0,0,8,0" />
+                        <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='NoModelRequirementModel'}"
+                                   Style="{StaticResource FluentCaption}"
+                                   Foreground="{DynamicResource FluentTextSecondary}"
+                                   TextWrapping="Wrap"
+                                   MaxWidth="430" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#x2022;"
+                                   Foreground="{DynamicResource FluentAccent}"
+                                   FontSize="14"
+                                   VerticalAlignment="Top"
+                                   Margin="0,0,8,0" />
+                        <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='NoModelRequirementCapture'}"
+                                   Style="{StaticResource FluentCaption}"
+                                   Foreground="{DynamicResource FluentTextSecondary}"
+                                   TextWrapping="Wrap"
+                                   MaxWidth="430" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Action -->
+                <Button x:Name="LoadDefaultButton"
+                        Style="{StaticResource FluentAccentButton}"
+                        HorizontalAlignment="Center"
+                        MinWidth="200"
+                        MinHeight="36"
+                        Margin="0,18,0,0"
+                        Padding="14,6,14,6"
+                        Click="LoadDefault_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE896;"
+                                   FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                                   FontSize="13"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Margin="8,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='LoadDefaultModel'}" />
+                    </StackPanel>
+                </Button>
+
+                <!-- Status / error -->
+                <TextBlock x:Name="StatusText"
+                           HorizontalAlignment="Center"
+                           Style="{StaticResource FluentCaption}"
+                           Foreground="Tomato"
+                           TextWrapping="Wrap"
+                           TextAlignment="Center"
+                           MaxWidth="460"
+                           Margin="0,10,0,0"
+                           Visibility="Collapsed" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

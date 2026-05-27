@@ -1,17 +1,12 @@
 ﻿using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Forms;
 using PowerAim.AILogic;
 using PowerAim.InputLogic;
 using PowerAim.InputLogic.Contracts;
-using PowerAim.InputLogic.HidHide;
-using PowerAim.MouseMovementLibraries.GHubSupport.dist;
 using PowerAim.Types;
 using Newtonsoft.Json;
-using Nextended.Core.Extensions;
-using YamlDotNet.Serialization;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 
@@ -125,6 +120,42 @@ public class AppConfig : BaseSettings
             BreakTime = 0,
             ExecutionIntersectionCheck = TriggerCheck.HeadIntersectingCenter,
             ExecutionIntersectionArea = RelativeRect.Default
+        },
+        new ActionTrigger()
+        {
+            Name = "Rapid Fire",
+            Enabled = false,
+            NeedsDetection = false,
+            TriggerKeys = [GamepadSlider.LeftTrigger, MouseButtons.Right],
+            TriggerKeysOperator = KeyOperator.Or,
+            Actions = [MouseButtons.Left, GamepadSlider.RightTrigger],
+            Delay = 0,
+            BreakTime = 0,
+            ExecutionIntersectionCheck = TriggerCheck.None,
+        },
+        new ActionTrigger()
+        {
+            Name = "Auto Throw",
+            Enabled = false,
+            NeedsDetection = true,
+            AntiTriggerKeys = [GamepadSlider.LeftTrigger, MouseButtons.Right],
+            AntiTriggerKeysOperator = KeyOperator.And,
+            Actions = [Keys.O, GamepadButton.RightShoulder],
+            Delay = 0,
+            BreakTime = 0,
+            ExecutionIntersectionCheck = TriggerCheck.IntersectingCenter,
+        },
+        new ActionTrigger()
+        {
+            Name = "Ping",
+            Enabled = true,
+            NeedsDetection = true,
+            TriggerKeys = [GamepadSlider.LeftTrigger],
+            TriggerKeysOperator = KeyOperator.And,
+            Actions = [MouseButtons.Middle, GamepadButton.Up],
+            Delay = 0,
+            BreakTime = 1,
+            ExecutionIntersectionCheck = TriggerCheck.IntersectingCenter,
         },
     };
 
