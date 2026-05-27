@@ -116,7 +116,8 @@ public partial class GamepadTesterPanel : UserControl
         }
 
         State state;
-        if (GamepadManager.GamepadSender is GamepadSenderInternal internalSender)
+        // RawSender is the unwrapped concrete sender (GamepadSender is the reporting decorator).
+        if (GamepadManager.RawSender is GamepadSenderInternal internalSender)
             state = internalSender.CurrentVirtualState;
         else
             state = _controller.GetState();

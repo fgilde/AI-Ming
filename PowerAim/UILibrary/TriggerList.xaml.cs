@@ -77,7 +77,11 @@ namespace UILibrary
             var args = e.Value;
             if (args.Sender.Tag is ActionTrigger trigger)
             {
+               // Swallow duplicate events from a double-subscribed keybind control (otherwise the
+               // trigger toggles twice = net zero, and the notice fires twice off/on).
+               if (!KeybindToggleGuard.ShouldHandle(trigger)) return;
                trigger.Enabled = !trigger.Enabled;
+               Notifier.Notify(trigger.Name, trigger.Enabled);
             }
         }
 

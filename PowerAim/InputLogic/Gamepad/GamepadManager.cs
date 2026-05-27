@@ -13,7 +13,16 @@ public static class GamepadManager
     private static bool _controllerHidden;
     public static bool CanRead { get; private set; }
     public static IGamepadReader? GamepadReader { get; private set; }
+
+    /// <summary>
+    ///     The sender used for all output. This is a <see cref="ReportingGamepadSender"/> wrapper
+    ///     around the concrete sender so the debug input visualizer sees every emitted input
+    ///     regardless of send mode. Use <see cref="RawSender"/> when you need the underlying type.
+    /// </summary>
     public static IGamepadSender? GamepadSender { get; private set; }
+
+    /// <summary>The unwrapped concrete sender (e.g. for <c>is GamepadSenderInternal</c> checks).</summary>
+    public static IGamepadSender? RawSender { get; private set; }
 
     public static bool CanSend => GamepadSender?.CanWork ?? false;
 
@@ -28,7 +37,9 @@ public static class GamepadManager
 
         try
         {
-            GamepadSender = CreateSender();
+            RawSender = CreateSender();
+            // Wrap so the debug input visualizer observes every send, for any send mode.
+            GamepadSender = RawSender == null ? null : new ReportingGamepadSender(RawSender);
             // Pass the physical controller along, but the sender now tolerates a missing one —
             // it'll still pump direct SetButton/Axis calls so the aim pipeline can drive the
             // virtual pad even when no real controller is plugged in.
@@ -46,6 +57,7 @@ public static class GamepadManager
             // false, and the UI's "Use controller for aim" toggle gates itself accordingly.
             Console.WriteLine($"[GamepadManager] Init failed: {e.Message}");
             GamepadSender = null;
+            RawSender = null;
         }
         finally
         {
@@ -123,6 +135,8 @@ public static class GamepadManager
             GamepadReader?.Controller.Show();
         // GamepadReader?.Dispose();
         GamepadSender?.Dispose();
+        GamepadSender = null;
+        RawSender = null;
         CanRead = false;
     }
 

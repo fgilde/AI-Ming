@@ -1,8 +1,5 @@
-﻿using System.Collections.ObjectModel;
-using System.Drawing;
-using System.Runtime.CompilerServices;
+﻿using System.Drawing;
 using PowerAim.UILibrary;
-using Class;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -16,16 +13,10 @@ using Nextended.Core.Helper;
 using UILibrary;
 using Microsoft.Xaml.Behaviors.Core;
 using Nextended.UI.Helper;
-using System.Runtime.InteropServices;
 using System.Windows.Interop;
-using Accord.Diagnostics;
 using Brushes = System.Windows.Media.Brushes;
 using Color = System.Windows.Media.Color;
-using FontFamily = System.Windows.Media.FontFamily;
-using Point = System.Windows.Point;
 using Size = System.Windows.Size;
-using PowerAim.Class.Native;
-using Nextended.UI.WPF.Converters;
 
 namespace PowerAim.Extensions;
 
@@ -293,12 +284,7 @@ public static class UIElementExtensions
             {
                 updating = true;
                 toggle.ToggleState();
-                if (AppConfig.Current.ToggleState.ShowToggleNotifications && !string.IsNullOrWhiteSpace(title))
-                {
-                    var fmt = toggle.Checked ? PowerAim.Locale.ToggleTurnedOnFormat : PowerAim.Locale.ToggleTurnedOffFormat;
-                    try { new global::Visuality.NoticeBar(string.Format(fmt, title), 1800).Show(); }
-                    catch { /* notice bar is best-effort feedback only */ }
-                }
+                PowerAim.Notifier.Notify(title, toggle.Checked);
                 Task.Delay(300).ContinueWith(_ => updating = false);
             }
         };

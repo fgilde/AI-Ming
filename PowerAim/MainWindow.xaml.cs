@@ -1784,9 +1784,10 @@ public partial class MainWindow
         OverlaySettings.AddToggleWithKeyBind(Locale.ShowDebugOverlay, nameof(Locale.ShowDebugOverlay), BindingManager)
             .InitWith(t => t.ToolTip = Locale.ShowDebugOverlayTooltip)
             .BindTo(() => AppConfig.Current.ToggleState.ShowDebugOverlay);
-        OverlaySettings.AddToggle(Locale.ShowInputVisualizer)
+        OverlaySettings.AddToggleWithKeyBind(Locale.ShowInputVisualizer, nameof(Locale.ShowInputVisualizer), BindingManager) 
             .InitWith(t => t.ToolTip = Locale.ShowInputVisualizerTooltip)
             .BindTo(() => AppConfig.Current.ToggleState.ShowInputVisualizer);
+
 
         OverlaySettings.AddToggleWithKeyBind(Locale.ShowCustomCrosshair, nameof(Locale.ShowCustomCrosshair), BindingManager)
             .InitWith(t => t.ToolTip = Locale.ShowCustomCrosshairTooltip)

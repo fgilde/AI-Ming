@@ -45,7 +45,12 @@ public partial class MappingProfileList : System.Windows.Controls.UserControl
     private void ApplyBindingEnabled(object? sender, EventArgs<(AKeyChanger Sender, string Key, StoredInputBinding KeyBinding)> e)
     {
         if (e.Value.Sender.Tag is ControllerMappingProfile profile)
+        {
+            // Swallow duplicate events from a double-subscribed keybind control (see KeybindToggleGuard).
+            if (!KeybindToggleGuard.ShouldHandle(profile)) return;
             profile.Enabled = !profile.Enabled;
+            Notifier.Notify(profile.Name, profile.Enabled);
+        }
     }
 
     private void EditProfile_Click(object sender, RoutedEventArgs e)

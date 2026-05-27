@@ -144,7 +144,7 @@ public partial class ColorPickerControl : UserControl
         }
     }
 
-    private void Swatch_Click(object sender, RoutedEventArgs e)
+    private void Swatch_Click(object sender, MouseButtonEventArgs e)
     {
         if (sender is FrameworkElement { Tag: Color c })
         {
