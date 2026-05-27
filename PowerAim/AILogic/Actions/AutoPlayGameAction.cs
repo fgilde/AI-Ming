@@ -89,6 +89,11 @@ public class AutoPlayGameAction : BaseAction
 
     private readonly Random _rng = new();
 
+    // ------ Live context fed into the strategic prompt ----
+    private volatile int _lastEnemyCount;                 // detections on the most recent frame
+    private readonly Queue<string> _recentIntents = new(); // last few strategic modes (for variety)
+    private readonly object _recentIntentsLock = new();
+
     // ============================================================================ CONSTANTS ====
 
     private const double AimReleaseDelayMs   = 700;
@@ -153,6 +158,8 @@ public class AutoPlayGameAction : BaseAction
 
         EnsureSubscribed(profile);
         if (_mapDirty) { RebuildActionMap(profile); _mapDirty = false; }
+
+        _lastEnemyCount = predictions.Length; // surfaced to the strategic prompt
 
         ProcessScheduledReleases();
 
@@ -670,6 +677,7 @@ public class AutoPlayGameAction : BaseAction
                         if (intent != null)
                         {
                             lock (_intentLock) _intent = intent;
+                            RememberIntent(intent);
                             Log($"Intent: {intent.Mode} dir={intent.Direction} action={intent.ActionHint}");
                         }
                         bmp.Dispose();
@@ -680,7 +688,7 @@ public class AutoPlayGameAction : BaseAction
                     Log($"Strategic query failed: {ex.Message}");
                 }
 
-                var waitSec = Math.Max(2.0, profile.DecisionInterval);
+                var waitSec = Math.Max(0.5, profile.DecisionInterval);
                 await SafeDelay(TimeSpan.FromSeconds(waitSec), ct);
             }
         }
@@ -709,14 +717,50 @@ public class AutoPlayGameAction : BaseAction
         var sb = new System.Text.StringBuilder();
         sb.Append("You are guiding an AI bot playing ").Append(ctx).Append('.').Append('\n');
         sb.Append("Look at the current frame and produce ONE single-line JSON with the bot's tactical intent.\n");
+
+        AppendSituation(sb);
+
         sb.Append("Allowed shapes:\n");
         sb.Append("  {\"mode\":\"explore\",\"direction\":\"forward\"|\"backward\"|\"left\"|\"right\"}\n");
         sb.Append("  {\"mode\":\"engage\",\"priority\":\"left\"|\"right\"|\"center\"}\n");
         sb.Append("  {\"mode\":\"retreat\"}\n");
         sb.Append("  {\"mode\":\"hold\"}\n");
         sb.Append("  {\"mode\":\"tactical\",\"action\":\"<name>\"}    where <name> is one of: ").Append(tactical).Append('\n');
+        sb.Append("Avoid repeating the same mode every time; vary your decisions to keep the bot moving.\n");
         sb.Append("Reply with the JSON only, no other text.");
         return sb.ToString();
+    }
+
+    /// <summary>
+    ///     Appends the live "current situation" block to the strategic prompt: how many enemies the
+    ///     detector currently sees, any OCR HP/ammo readings, and the bot's recent intent history.
+    ///     Gives the vision model grounded numbers it can't reliably read off a downscaled frame, and
+    ///     lets it react to its own recent choices instead of oscillating.
+    /// </summary>
+    private void AppendSituation(System.Text.StringBuilder sb)
+    {
+        sb.Append("Current situation:\n");
+        int enemies = _lastEnemyCount;
+        sb.Append("  - enemies detected on screen: ").Append(enemies).Append('\n');
+
+        if (AppConfig.Current?.OcrSettings?.Enabled == true)
+        {
+            var ocr = OcrService.Instance.Latest;
+            if (ocr.Count > 0)
+            {
+                double? ammo = TryReadOcrNumber(ocr, _ammoAliases);
+                if (ammo.HasValue)
+                    sb.Append("  - ammo (OCR): ").Append(ammo.Value.ToString("0")).Append('\n');
+                double? health = TryReadOcrNumber(ocr, _healthAliases);
+                if (health.HasValue)
+                    sb.Append("  - health (OCR): ").Append(health.Value.ToString("0")).Append('\n');
+            }
+        }
+
+        string[] recent;
+        lock (_recentIntentsLock) recent = _recentIntents.ToArray();
+        if (recent.Length > 0)
+            sb.Append("  - your recent decisions (oldest→newest): ").Append(string.Join(", ", recent)).Append('\n');
     }
 
     private static readonly Regex IntentRegex = new(
@@ -732,6 +776,17 @@ public class AutoPlayGameAction : BaseAction
         var dir = m.Groups["dir"].Success ? m.Groups["dir"].Value.ToLowerInvariant() : null;
         var act = m.Groups["act"].Success ? m.Groups["act"].Value : null;
         return new StrategicIntent(mode, dir, act, DateTime.Now);
+    }
+
+    /// <summary>Keep a short rolling history of strategic modes so the next prompt can ask for variety.</summary>
+    private void RememberIntent(StrategicIntent intent)
+    {
+        var label = string.IsNullOrEmpty(intent.Direction) ? intent.Mode : $"{intent.Mode}/{intent.Direction}";
+        lock (_recentIntentsLock)
+        {
+            _recentIntents.Enqueue(label);
+            while (_recentIntents.Count > 5) _recentIntents.Dequeue();
+        }
     }
 
     private static async Task SafeDelay(int ms, CancellationToken ct)

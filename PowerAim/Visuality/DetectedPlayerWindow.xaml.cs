@@ -167,8 +167,6 @@ namespace Visuality
                 DetectedTracers.Y2 = centerY + lastDetectionBox.Height;
             }
 
-            Canvas.Opacity = AppConfig.Current.SliderSettings.Opacity;
-
             DetectedPlayerFocus.Opacity = 1;
             DetectedPlayerFocus.Margin = new(centerX - (lastDetectionBox.Width / 2.0), centerY, 0, 0);
             DetectedPlayerFocus.Width = lastDetectionBox.Width;

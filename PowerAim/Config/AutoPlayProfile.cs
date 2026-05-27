@@ -119,7 +119,7 @@ public class AutoPlayProfile : EditableNotificationObject
     {
         get;
         set => SetProperty(ref field, value);
-    } = 1.0;
+    } = 0.5;
 
     /// <summary>
     /// Available actions for this profile

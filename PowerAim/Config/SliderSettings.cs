@@ -68,10 +68,6 @@ public class SliderSettings : BaseSettings
 
     public double BorderThickness { get; set => SetField(ref field, value); } = 1;
 
-    public double Opacity { get; set => SetField(ref field, value); } = 1;
-
-    public double FOVOpacity { get; set => SetField(ref field, value); } = 1;
-
     internal override void OnPropertyChanged(string? propertyName = null)
     {
         if (propertyName is nameof(FOVSize) or nameof(DynamicFOVSize))

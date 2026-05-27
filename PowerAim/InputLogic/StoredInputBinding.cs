@@ -31,9 +31,10 @@ public class StoredInputBinding
     public GamepadEventArgs? GamepadEventArgs { get; set; }
     public double MinTime { get; set; } = 0;
 
-    public void SetMinTime(double value)
+    public StoredInputBinding SetMinTime(double value)
     {
         MinTime = value;
+        return this;
     }
 
     public bool Is<T>() where T : EventArgs => typeof(T) switch

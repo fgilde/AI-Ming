@@ -53,13 +53,13 @@ namespace PowerAim.Other
         }
 
 
-        private static void Draw(Graphics graphics, RectangleF rect, float cornerRadius, MediaColor color, float opacity, float borderThickness) => Draw(graphics, rect, cornerRadius, color.ToDrawingColor(), opacity, borderThickness);
-        private static void Draw(Graphics graphics, RectangleF rect, float cornerRadius, Color color, float opacity, float borderThickness) => Draw(graphics, new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Width, (int)rect.Height), cornerRadius, color, opacity, borderThickness);
+        private static void Draw(Graphics graphics, RectangleF rect, float cornerRadius, MediaColor color, float borderThickness) => Draw(graphics, rect, cornerRadius, color.ToDrawingColor(), borderThickness);
+        private static void Draw(Graphics graphics, RectangleF rect, float cornerRadius, Color color, float borderThickness) => Draw(graphics, new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Width, (int)rect.Height), cornerRadius, color, borderThickness);
 
-        private static void Draw(Graphics graphics, Rectangle rect, float cornerRadius, MediaColor color, float opacity, float borderThickness) => Draw(graphics, rect, cornerRadius, color.ToDrawingColor(), opacity, borderThickness);
-        private static void Draw(Graphics graphics, Rectangle rect, float cornerRadius, Color color, float opacity, float borderThickness)
+        private static void Draw(Graphics graphics, Rectangle rect, float cornerRadius, MediaColor color, float borderThickness) => Draw(graphics, rect, cornerRadius, color.ToDrawingColor(), borderThickness);
+        private static void Draw(Graphics graphics, Rectangle rect, float cornerRadius, Color color, float borderThickness)
         {
-            var pen = new Pen(Color.FromArgb((int)(255 * opacity), color.R, color.G, color.B), borderThickness);
+            var pen = new Pen(color, borderThickness);
             var graphicsPath = new System.Drawing.Drawing2D.GraphicsPath();
             graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
@@ -76,21 +76,21 @@ namespace PowerAim.Other
             graphicsPath.Dispose();
         }
 
-        private static void DrawText(Graphics graphics, string text, RectangleF rect, Font font, Color color, float opacity) => DrawText(graphics, text, new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Width, (int)rect.Height), font, color, opacity);
-        private static void DrawText(Graphics graphics, string text, RectangleF rect, Font font, MediaColor color, float opacity) => DrawText(graphics, text, new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Width, (int)rect.Height), font, color, opacity);
-        private static void DrawText(Graphics graphics, string text, Rectangle rect, Font font, MediaColor color, float opacity) => DrawText(graphics, text, rect, font, color.ToDrawingColor(), opacity);
-        private static void DrawText(Graphics graphics, string text, Rectangle rect, Font font, Color color, float opacity)
+        private static void DrawText(Graphics graphics, string text, RectangleF rect, Font font, Color color) => DrawText(graphics, text, new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Width, (int)rect.Height), font, color);
+        private static void DrawText(Graphics graphics, string text, RectangleF rect, Font font, MediaColor color) => DrawText(graphics, text, new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Width, (int)rect.Height), font, color);
+        private static void DrawText(Graphics graphics, string text, Rectangle rect, Font font, MediaColor color) => DrawText(graphics, text, rect, font, color.ToDrawingColor());
+        private static void DrawText(Graphics graphics, string text, Rectangle rect, Font font, Color color)
         {
             graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            var brush = new SolidBrush(Color.FromArgb((int)(255 * opacity), color.R, color.G, color.B));
+            var brush = new SolidBrush(color);
             var textSize = graphics.MeasureString(text, font);
             graphics.DrawString(text, font, brush, rect.X + (rect.Width - textSize.Width) / 2, rect.Y - textSize.Height - 2);
             brush.Dispose();
         }
 
-        private static void Draw(Graphics graphics, PointF start, PointF end, System.Windows.Media.Color color, float thickness, float opacity = 1)
+        private static void Draw(Graphics graphics, PointF start, PointF end, System.Windows.Media.Color color, float thickness)
         {
-            var pen = new Pen(Color.FromArgb((int)(255 * opacity), color.R, color.G, color.B), thickness);
+            var pen = new Pen(color.ToDrawingColor(), thickness);
             graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             graphics.DrawLine(pen, start, end);
             pen.Dispose();
@@ -114,7 +114,6 @@ namespace PowerAim.Other
             var rect = prediction.TranslatedRectangle;
             var config = AppConfig.Current;
             var color = config.ColorState.DetectedPlayerColor;
-            var opacity = config.SliderSettings.Opacity;
             var borderThickness = config.SliderSettings.BorderThickness;
             var font = new Font("Consolas", config.SliderSettings.AIConfidenceFontSize);
 
@@ -124,12 +123,12 @@ namespace PowerAim.Other
                 rect.Y += targetArea.Value.Top;
             }
 
-            Draw(graphics, rect, (float)config.SliderSettings.CornerRadius, color, (float)opacity, (float)borderThickness);
+            Draw(graphics, rect, (float)config.SliderSettings.CornerRadius, color, (float)borderThickness);
 
             if (config.ToggleState.ShowAIConfidence)
             {
                 var confidenceText = $"{Math.Round((prediction.Confidence * 100), 2)}%";
-                DrawText(graphics, confidenceText, rect, font, color, (float)opacity);
+                DrawText(graphics, confidenceText, rect, font, color);
             }
 
             if (config.ToggleState.ShowTracers)
@@ -160,7 +159,7 @@ namespace PowerAim.Other
                 string widthText = $"{rect.Width:F1}";
                 var widthRect = new Rectangle((int)rect.X, (int)(rect.Y + rect.Height + 2), (int)rect.Width, font.Height);
                 var font2 = new Font("Consolas", 10);
-                DrawText(graphics, widthText, widthRect, font2, color, (float)opacity);
+                DrawText(graphics, widthText, widthRect, font2, color);
 
 
                 string heightText = $"{rect.Height:F1}";
@@ -168,7 +167,7 @@ namespace PowerAim.Other
 
                 graphics.TranslateTransform(heightRect.X, heightRect.Y + heightRect.Height);
                 graphics.RotateTransform(-90);
-                DrawText(graphics, heightText, new Rectangle(0, 0, heightRect.Height, heightRect.Width), font2, color, (float)opacity);
+                DrawText(graphics, heightText, new Rectangle(0, 0, heightRect.Height, heightRect.Width), font2, color);
 
                 graphics.ResetTransform();
             }
@@ -184,7 +183,6 @@ namespace PowerAim.Other
             var rect = prediction.TranslatedRectangle;
             var config = AppConfig.Current;
             var color = config.ColorState.DetectedPlayerColor;
-            var opacity = config.SliderSettings.Opacity;
             var borderThickness = config.SliderSettings.BorderThickness;
             var font = new Font("Consolas", config.SliderSettings.AIConfidenceFontSize);
 
@@ -194,12 +192,12 @@ namespace PowerAim.Other
                 rect.Y += targetArea.Value.Top;
             }
 
-            Draw(graphics, rect, (float)config.SliderSettings.CornerRadius, color, (float)opacity, (float)borderThickness);
+            Draw(graphics, rect, (float)config.SliderSettings.CornerRadius, color, (float)borderThickness);
 
             if (config.ToggleState.ShowAIConfidence)
             {
                 var confidenceText = $"{Math.Round((prediction.Confidence * 100), 2)}%";
-                DrawText(graphics, confidenceText, rect, font, color, (float)opacity);
+                DrawText(graphics, confidenceText, rect, font, color);
             }
 
             if (config.ToggleState.ShowTracers)

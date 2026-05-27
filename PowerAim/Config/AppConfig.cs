@@ -10,6 +10,7 @@ using PowerAim.InputLogic.HidHide;
 using PowerAim.MouseMovementLibraries.GHubSupport.dist;
 using PowerAim.Types;
 using Newtonsoft.Json;
+using Nextended.Core.Extensions;
 using YamlDotNet.Serialization;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
@@ -138,20 +139,24 @@ public class AppConfig : BaseSettings
             Name = "FPS Default",
             Enabled = false,
             OllamaModel = "moondream",
-            DecisionInterval = 0.3,
+            DecisionInterval = 0.5,
             GameContext = "First-person shooter game. Control a player: move, jump, sprint, aim, shoot enemies. Enemies are other players/characters. Move towards objectives, engage enemies when visible, take cover when needed. Be aggressive - keep moving and shooting.",
             Actions = new ObservableCollection<AutoPlayAction>
             {
-                new AutoPlayAction { Name = "move_forward", Description = "Move forward - use when path is clear or approaching enemies/objectives", Keys = [Keys.W, GamepadButton.Up], ActionType = AutoPlayActionType.Continuous },
-                new AutoPlayAction { Name = "move_backward", Description = "Move backward - use to retreat from danger or reposition", Keys = [Keys.S, GamepadButton.Down], ActionType = AutoPlayActionType.Continuous },
-                new AutoPlayAction { Name = "move_left", Description = "Strafe left - use to dodge or circle enemies", Keys = [Keys.A, GamepadButton.Left], ActionType = AutoPlayActionType.Continuous },
-                new AutoPlayAction { Name = "move_right", Description = "Strafe right - use to dodge or circle enemies", Keys = [Keys.D, GamepadButton.Right], ActionType = AutoPlayActionType.Continuous },
-                new AutoPlayAction { Name = "sprint", Description = "Sprint faster - combine with movement when covering distance", Keys = [Keys.ShiftKey, GamepadButton.LeftThumb], ActionType = AutoPlayActionType.Modifier },
-                new AutoPlayAction { Name = "jump", Description = "Jump - use to clear obstacles or gain height advantage", Keys = [Keys.Space, GamepadButton.A], ActionType = AutoPlayActionType.Instant },
-                new AutoPlayAction { Name = "shoot", Description = "Fire weapon - use when enemy is visible on screen", Keys = [MouseButtons.Left, GamepadSlider.RightTrigger], ActionType = AutoPlayActionType.Continuous },
-                new AutoPlayAction { Name = "aim", Description = "Aim down sights - use for precision when enemy is at medium/long range", Keys = [MouseButtons.Right, GamepadSlider.LeftTrigger], ActionType = AutoPlayActionType.Modifier },
-                new AutoPlayAction { Name = "reload", Description = "Reload weapon - use when safe and ammo might be low", Keys = [Keys.R, GamepadButton.X], ActionType = AutoPlayActionType.Instant },
-                new AutoPlayAction { Name = "crouch", Description = "Crouch - use for cover or stealth", Keys = [Keys.ControlKey, GamepadButton.B], ActionType = AutoPlayActionType.Toggle },
+                new() { Name = "move_forward", Description = "Move forward - use when path is clear or approaching enemies/objectives", Keys = [Keys.W, GamepadButton.Up], ActionType = AutoPlayActionType.Continuous },
+                new() { Name = "move_backward", Description = "Move backward - use to retreat from danger or reposition", Keys = [Keys.S, GamepadButton.Down], ActionType = AutoPlayActionType.Continuous },
+                new() { Name = "move_left", Description = "Strafe left - use to dodge or circle enemies", Keys = [Keys.A, GamepadButton.Left], ActionType = AutoPlayActionType.Continuous },
+                new() { Name = "move_right", Description = "Strafe right - use to dodge or circle enemies", Keys = [Keys.D, GamepadButton.Right], ActionType = AutoPlayActionType.Continuous },
+                new() { Name = "sprint", Description = "Sprint faster - combine with movement when covering distance", Keys = [Keys.ShiftKey, GamepadButton.LeftThumb], ActionType = AutoPlayActionType.Modifier },
+                new() { Name = "jump", Description = "Jump - use to clear obstacles or gain height advantage", Keys = [Keys.Space, GamepadButton.A], ActionType = AutoPlayActionType.Instant },
+                new() { Name = "shoot", Description = "Fire weapon - use when enemy is visible on screen", Keys = [MouseButtons.Left, GamepadSlider.RightTrigger], ActionType = AutoPlayActionType.Continuous },
+                new() { Name = "aim", Description = "Aim down sights - use for precision when enemy is at medium/long range", Keys = [MouseButtons.Right, GamepadSlider.LeftTrigger], ActionType = AutoPlayActionType.Modifier },
+                new() { Name = "reload", Description = "Reload weapon - use when safe and ammo might be low", Keys = [Keys.R, GamepadButton.X], ActionType = AutoPlayActionType.Instant },
+                new() { Name = "crouch", Description = "Crouch - use for cover or stealth", Keys = [Keys.ControlKey, GamepadButton.B], ActionType = AutoPlayActionType.Toggle },
+                new() { Name = "interact", Description = "Interact / use / pick up - near doors, items, objectives, or to plant/defuse", Keys = [Keys.E, ((StoredInputBinding)GamepadButton.X).SetMinTime(0.4)], ActionType = AutoPlayActionType.Instant },
+                new() { Name = "melee", Description = "Melee attack - when an enemy is point-blank and you're out of ammo or it's faster", Keys = [Keys.V, GamepadButton.RightThumb], ActionType = AutoPlayActionType.Instant },
+                new() { Name = "grenade", Description = "Throw a grenade - against grouped enemies or to flush out cover", Keys = [Keys.G, GamepadButton.RightShoulder], ActionType = AutoPlayActionType.Instant },
+                new() { Name = "switch_weapon", Description = "Switch weapon - when the current weapon is empty or wrong for the range", Keys = [Keys.Q, GamepadButton.Y], ActionType = AutoPlayActionType.Instant },
             }
         }
     };

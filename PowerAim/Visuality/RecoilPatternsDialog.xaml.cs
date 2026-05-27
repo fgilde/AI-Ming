@@ -21,6 +21,9 @@ namespace PowerAim.Visuality;
 /// </summary>
 public partial class RecoilPatternsDialog
 {
+    /// <summary>Seconds of "get ready" countdown before recording actually begins.</summary>
+    private const int StartCountdownSeconds = 5;
+
     private RecoilPattern? _selected;
     private readonly Dictionary<RecoilPattern, Border> _rowByPattern = new();
     private CancellationTokenSource? _recordCts;
@@ -284,7 +287,6 @@ public partial class RecoilPatternsDialog
 
         _recordCts = new();
         RecordButton.Content = Locale.RecordingClickToCancel;
-        StatusText.Text = Locale.RecordingFireWeapon;
 
         var progress = new Progress<double>(v =>
             StatusText.Text = string.Format(Locale.RecordingProgressFormat, (int)(v * 100)));
@@ -303,6 +305,16 @@ public partial class RecoilPatternsDialog
 
         try
         {
+            // Give the user time to switch to the game, aim at a wall and start spraying before we
+            // begin sampling. The countdown is shown live in the status line.
+            if (!await CountdownAsync(StartCountdownSeconds,
+                    s => StatusText.Text = string.Format(Locale.RecordingCountdownFormat, s), _recordCts.Token))
+            {
+                StatusText.Text = Locale.Cancelled;
+                return;
+            }
+            StatusText.Text = Locale.RecordingFireWeapon;
+
             var name = string.Format(Locale.PatternDefaultNameFormat, (AppConfig.Current?.AntiRecoilSettings?.Patterns?.Count ?? 0) + 1);
             var pattern = await RecoilPatternRecorder.RecordAsync(
                 capture,
@@ -340,6 +352,22 @@ public partial class RecoilPatternsDialog
             _recordCts = null;
             RecordButton.Content = Locale.RecordPattern2s;
         }
+    }
+
+    /// <summary>
+    ///     Counts down <paramref name="seconds"/> seconds, calling <paramref name="show"/> once per
+    ///     second with the remaining count. Returns <c>false</c> if cancelled, <c>true</c> if it ran
+    ///     to completion.
+    /// </summary>
+    private static async Task<bool> CountdownAsync(int seconds, Action<int> show, CancellationToken ct)
+    {
+        for (int s = seconds; s > 0; s--)
+        {
+            show(s);
+            try { await Task.Delay(1000, ct); }
+            catch (OperationCanceledException) { return false; }
+        }
+        return !ct.IsCancellationRequested;
     }
 
     private void Delete_Click(object sender, RoutedEventArgs e)

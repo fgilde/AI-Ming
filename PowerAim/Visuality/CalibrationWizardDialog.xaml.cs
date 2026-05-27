@@ -20,6 +20,9 @@ public partial class CalibrationWizardDialog
 {
     private enum Step { Welcome, Running, Result, Error }
 
+    /// <summary>Seconds of "get ready" countdown before the wizard starts moving the mouse.</summary>
+    private const int StartCountdownSeconds = 5;
+
     private Step _step = Step.Welcome;
     private CancellationTokenSource? _cts;
     private CalibrationResult? _lastResult;
@@ -125,6 +128,16 @@ public partial class CalibrationWizardDialog
         _cts = new();
         try
         {
+            // Give the user a few seconds to switch to the game and line up their aim before we
+            // start moving the mouse for them. The countdown is shown in the running panel.
+            if (!await CountdownAsync(StartCountdownSeconds,
+                    s => RunningStatus.Text = string.Format(Locale.CalibrationCountdownFormat, s), _cts.Token))
+            {
+                ShowError(Locale.Cancelled);
+                return;
+            }
+            RunningStatus.Text = Locale.CalibrationRunning;
+
             var result = await SensitivityCalibrator.CalibrateAsync(capture, moveAmount: 200, rounds: 6, _cts.Token);
             _lastResult = result;
 
@@ -141,6 +154,10 @@ public partial class CalibrationWizardDialog
                 ShowResult(result);
             }
         }
+        catch (OperationCanceledException)
+        {
+            ShowError(Locale.Cancelled);
+        }
         catch (Exception ex)
         {
             ShowError(ex.Message);
@@ -156,6 +173,22 @@ public partial class CalibrationWizardDialog
             _cts?.Dispose();
             _cts = null;
         }
+    }
+
+    /// <summary>
+    ///     Counts down <paramref name="seconds"/> seconds, calling <paramref name="show"/> once per
+    ///     second with the remaining count so the UI can display it. Returns <c>false</c> if the
+    ///     countdown was cancelled, <c>true</c> if it completed.
+    /// </summary>
+    private static async Task<bool> CountdownAsync(int seconds, Action<int> show, CancellationToken ct)
+    {
+        for (int s = seconds; s > 0; s--)
+        {
+            show(s);
+            try { await Task.Delay(1000, ct); }
+            catch (OperationCanceledException) { return false; }
+        }
+        return !ct.IsCancellationRequested;
     }
 
     private void ShowResult(CalibrationResult result)

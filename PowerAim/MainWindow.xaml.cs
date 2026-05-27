@@ -817,6 +817,10 @@ public partial class MainWindow
     private bool _triggerEditDirty;
     private System.ComponentModel.PropertyChangedEventHandler? _triggerDirtyHandler;
 
+    // Keeps the FOV-size sliders' max in lockstep with the active model ImageSize.
+    private System.ComponentModel.INotifyPropertyChanged? _fovMaxSettings;
+    private System.ComponentModel.PropertyChangedEventHandler? _fovMaxHandler;
+
     public void OpenTriggerEditor(PowerAim.Config.ActionTrigger target, bool isNew, Action<PowerAim.Config.ActionTrigger?> commit)
     {
         _triggerEditReturnTo = CurrentMenu;
@@ -900,6 +904,95 @@ public partial class MainWindow
         commit?.Invoke(save ? target : null);
         _ = NavigateTo(returnTo);
     }
+
+    // ===== AutoPlay profile editor (in-window page, analog to the trigger editor) =====
+    private global::UILibrary.AutoPlayProfileEdit? _autoPlayEditor;
+    private string? _autoPlayEditReturnTo;
+    private PowerAim.Config.AutoPlayProfile? _autoPlayEditTarget;
+    private bool _autoPlayEditIsNew;
+    private Action<PowerAim.Config.AutoPlayProfile?>? _autoPlayEditCommit;
+    private bool _autoPlayEditDirty;
+    private System.ComponentModel.PropertyChangedEventHandler? _autoPlayDirtyHandler;
+
+    public void OpenAutoPlayEditor(PowerAim.Config.AutoPlayProfile target, bool isNew, Action<PowerAim.Config.AutoPlayProfile?> commit)
+    {
+        _autoPlayEditReturnTo = CurrentMenu;
+        _autoPlayEditTarget = target;
+        _autoPlayEditIsNew = isNew;
+        _autoPlayEditCommit = commit;
+        if (!isNew) target.BeginEdit();
+        AutoPlayEditTitle.Text = isNew ? Locale.AddAutoPlayProfile : Locale.EditAutoPlayProfile;
+        AutoPlayEditName.Text = target.Name ?? "";
+        _autoPlayEditDirty = false;
+        AutoPlayEditDirty.Visibility = Visibility.Collapsed;
+        if (_autoPlayEditor == null)
+        {
+            _autoPlayEditor = new global::UILibrary.AutoPlayProfileEdit();
+            AutoPlayEditorHost.Content = _autoPlayEditor;
+        }
+        _autoPlayEditor.Profile = target;
+
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            if (!ReferenceEquals(_autoPlayEditTarget, target)) return;
+            _autoPlayDirtyHandler = (s, e) =>
+            {
+                _autoPlayEditDirty = true;
+                AutoPlayEditDirty.Visibility = Visibility.Visible;
+                if (e.PropertyName == nameof(PowerAim.Config.AutoPlayProfile.Name))
+                    AutoPlayEditName.Text = target.Name ?? "";
+            };
+            target.PropertyChanged += _autoPlayDirtyHandler;
+        }), System.Windows.Threading.DispatcherPriority.Background);
+
+        SetSidebarLocked(true);
+        _ = NavigateTo(nameof(AutoPlayEditPage));
+    }
+
+    private void CloseAutoPlayEditor(bool save)
+    {
+        var target = _autoPlayEditTarget;
+        var isNew = _autoPlayEditIsNew;
+        var commit = _autoPlayEditCommit;
+        var returnTo = _autoPlayEditReturnTo ?? nameof(AutoPlayMenu);
+
+        if (!save && _autoPlayEditDirty)
+        {
+            var res = PowerAim.Visuality.MessageDialog.Show(
+                Locale.UnsavedChangesMessage,
+                Locale.UnsavedChanges,
+                PowerAim.Visuality.MessageDialog.DialogButtons.YesNoCancel,
+                PowerAim.Visuality.MessageDialog.DialogIcon.Warning,
+                owner: this,
+                defaultResult: PowerAim.Visuality.MessageDialog.DialogResult.Yes);
+            if (res == PowerAim.Visuality.MessageDialog.DialogResult.Cancel) return;
+            if (res == PowerAim.Visuality.MessageDialog.DialogResult.Yes) save = true;
+        }
+
+        if (target != null && _autoPlayDirtyHandler != null)
+            target.PropertyChanged -= _autoPlayDirtyHandler;
+        _autoPlayDirtyHandler = null;
+        _autoPlayEditDirty = false;
+        AutoPlayEditDirty.Visibility = Visibility.Collapsed;
+
+        if (target != null && !isNew)
+        {
+            if (save) target.EndEdit();
+            else target.CancelEdit();
+        }
+
+        SetSidebarLocked(false);
+        _autoPlayEditTarget = null;
+        _autoPlayEditCommit = null;
+        // Intentionally NOT clearing _autoPlayEditor.Profile: the panel's UpdateDynamicUi binds to
+        // Profile.DecisionInterval without a null-guard, so null would throw. The next open replaces it.
+        commit?.Invoke(save ? target : null);
+        _ = NavigateTo(returnTo);
+    }
+
+    private void AutoPlayEditBack_Click(object sender, RoutedEventArgs e) => CloseAutoPlayEditor(false);
+    private void AutoPlayEditCancel_Click(object sender, RoutedEventArgs e) => CloseAutoPlayEditor(false);
+    private void AutoPlayEditSave_Click(object sender, RoutedEventArgs e) => CloseAutoPlayEditor(true);
 
     private void SetSidebarLocked(bool locked)
     {
@@ -1485,9 +1578,30 @@ public partial class MainWindow
         FOVConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind), () => keybind.DynamicFOVKeybind, BindingManager);
         FOVConfig.AddColorChanger(Locale.FOVColor).BindTo(() => AppConfig.Current.ColorState.FOVColor);
 
-        FOVConfig.AddSlider(Locale.FOVSize, Locale.Size, 1, 1, 10, 640).BindTo(() => AppConfig.Current.SliderSettings.FOVSize);
-        FOVConfig.AddSlider(Locale.DynamicFOVSize, Locale.Size, 1, 1, 10, 640).BindTo(() => AppConfig.Current.SliderSettings.DynamicFOVSize);
-        FOVConfig.AddSlider(Locale.FOVOpacity, Locale.FOVOpacity, 0.1, 0.1, 0, 1).BindTo(() => AppConfig.Current.SliderSettings.FOVOpacity);
+        // FOV is a centered crop INSIDE the model-input (ImageSize) image, so its useful ceiling is
+        // exactly the current ImageSize. Track it live: a dynamic-model override (e.g. 740, 1200)
+        // widens the FOV range to match; a smaller model narrows it. (Fixed models stay at their
+        // baked size, e.g. 640.)
+        int fovMax = Math.Max(10, AppConfig.Current.SliderSettings.ImageSize);
+        var fovSizeSlider = FOVConfig.AddSlider(Locale.FOVSize, Locale.Size, 1, 1, 10, fovMax);
+        fovSizeSlider.BindTo(() => AppConfig.Current.SliderSettings.FOVSize);
+        var dynFovSizeSlider = FOVConfig.AddSlider(Locale.DynamicFOVSize, Locale.Size, 1, 1, 10, fovMax);
+        dynFovSizeSlider.BindTo(() => AppConfig.Current.SliderSettings.DynamicFOVSize);
+
+        if (_fovMaxSettings != null && _fovMaxHandler != null)
+            _fovMaxSettings.PropertyChanged -= _fovMaxHandler;
+        _fovMaxSettings = AppConfig.Current.SliderSettings;
+        _fovMaxHandler = (_, e) =>
+        {
+            if (e.PropertyName != nameof(PowerAim.Config.SliderSettings.ImageSize)) return;
+            Dispatcher.Invoke(() =>
+            {
+                int m = Math.Max(10, AppConfig.Current.SliderSettings.ImageSize);
+                fovSizeSlider.Maximum = m;
+                dynFovSizeSlider.Maximum = m;
+            });
+        };
+        _fovMaxSettings.PropertyChanged += _fovMaxHandler;
 
         FOVConfig.AddSeparator();
         FOVConfig.Visibility = GetVisibilityFor(nameof(FOVConfig));
@@ -1537,8 +1651,6 @@ public partial class MainWindow
         ESPConfig.AddSlider(Locale.CornerRadius, Locale.Radius, 1, 1, 0, 100).BindTo(() => AppConfig.Current.SliderSettings.CornerRadius);
 
         ESPConfig.AddSlider(Locale.BorderThickness, Locale.Thickness, 0.1, 1, 0.1, 10).BindTo(() => AppConfig.Current.SliderSettings.BorderThickness);
-
-        ESPConfig.AddSlider(Locale.Opacity, Locale.Opacity, 0.1, 0.1, 0, 1).BindTo(() => AppConfig.Current.SliderSettings.Opacity);
 
         ESPConfig.AddSeparator();
         ESPConfig.Visibility = GetVisibilityFor(nameof(ESPConfig));

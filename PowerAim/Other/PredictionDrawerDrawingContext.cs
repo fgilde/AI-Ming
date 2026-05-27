@@ -20,7 +20,6 @@ namespace PowerAim.Other
             var rect = prediction.TranslatedRectangle.ToRect();
             var config = AppConfig.Current;
             var color = config.ColorState.DetectedPlayerColor;
-            var opacity = config.SliderSettings.Opacity;
             var borderThickness = config.SliderSettings.BorderThickness;
             var cornerRadius = config.SliderSettings.CornerRadius;
 
@@ -31,13 +30,13 @@ namespace PowerAim.Other
             }
 
             // Draw the main rectangle with rounded corners
-            DrawRoundedRectangle(dc, rect, cornerRadius, color, opacity, borderThickness);
+            DrawRoundedRectangle(dc, rect, cornerRadius, color, borderThickness);
 
             // Draw AI confidence text if enabled
             if (config.ToggleState.ShowAIConfidence)
             {
                 var confidenceText = $"{Math.Round((prediction.Confidence * 100), 2)}%";
-                DrawText(dc, confidenceText, rect, config.SliderSettings.AIConfidenceFontSize, color, opacity);
+                DrawText(dc, confidenceText, rect, config.SliderSettings.AIConfidenceFontSize, color);
             }
 
             // Draw tracers if enabled
@@ -49,7 +48,7 @@ namespace PowerAim.Other
                 Point tracerStart = targetArea?.GetBottomCenter().ToPoint() ?? System.Windows.Forms.Screen.PrimaryScreen!.Bounds.GetBottomCenter().ToPoint();
                 Point tracerEnd = new Point(centerX, bottomY);
 
-                DrawLine(dc, tracerStart, tracerEnd, color, 2, opacity);
+                DrawLine(dc, tracerStart, tracerEnd, color, 2);
             }
 
             // Draw trigger head area if enabled
@@ -69,13 +68,13 @@ namespace PowerAim.Other
             // Draw sizes if enabled
             if (config.ToggleState.ShowSizes)
             {
-                DrawSizes(dc, rect, color, opacity);
+                DrawSizes(dc, rect, color);
             }
         }
 
-        private static void DrawRoundedRectangle(DrawingContext dc, Rect rect, double cornerRadius, Color color, double opacity, double borderThickness)
+        private static void DrawRoundedRectangle(DrawingContext dc, Rect rect, double cornerRadius, Color color, double borderThickness)
         {
-            var pen = new Pen(new SolidColorBrush(color) { Opacity = opacity }, borderThickness);
+            var pen = new Pen(new SolidColorBrush(color), borderThickness);
             var brush = Brushes.Transparent;
 
             var geometry = new StreamGeometry();
@@ -103,7 +102,7 @@ namespace PowerAim.Other
             dc.DrawGeometry(brush, pen, geometry);
         }
 
-        private static void DrawText(DrawingContext dc, string text, Rect rect, double fontSize, Color color, double opacity)
+        private static void DrawText(DrawingContext dc, string text, Rect rect, double fontSize, Color color)
         {
             var formattedText = new FormattedText(
                 text,
@@ -111,7 +110,7 @@ namespace PowerAim.Other
                 FlowDirection.LeftToRight,
                 new Typeface("Consolas"),
                 fontSize,
-                new SolidColorBrush(color) { Opacity = opacity },
+                new SolidColorBrush(color),
                 VisualTreeHelper.GetDpi(Application.Current.MainWindow).PixelsPerDip);
 
             var textWidth = formattedText.Width;
@@ -122,9 +121,9 @@ namespace PowerAim.Other
             dc.DrawText(formattedText, new Point(x, y));
         }
 
-        private static void DrawLine(DrawingContext dc, Point start, Point end, Color color, double thickness, double opacity)
+        private static void DrawLine(DrawingContext dc, Point start, Point end, Color color, double thickness)
         {
-            var pen = new Pen(new SolidColorBrush(color) { Opacity = opacity }, thickness);
+            var pen = new Pen(new SolidColorBrush(color), thickness);
             dc.DrawLine(pen, start, end);
         }
 
@@ -134,10 +133,10 @@ namespace PowerAim.Other
             dc.DrawRectangle(null, pen, rect);
         }
 
-        private static void DrawSizes(DrawingContext dc, Rect rect, Color color, double opacity)
+        private static void DrawSizes(DrawingContext dc, Rect rect, Color color)
         {
             var fontSize = 10.0;
-            var brush = new SolidColorBrush(color) { Opacity = opacity };
+            var brush = new SolidColorBrush(color);
 
             // Draw width text
             string widthText = $"{rect.Width:F1}";

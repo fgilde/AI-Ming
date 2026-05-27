@@ -112,8 +112,13 @@ public class AimingAction : BaseAction
             && !AimDisengage.ShouldPause())
         {
             var area = ImageCapture.CaptureArea;
-            float scaleX = area.Width / 640f;
-            float scaleY = area.Height / 640f;
+            // Map model-space detection coords (0..imageSize) to screen pixels. Use the ACTUAL model
+            // input size — hardcoding 640 mis-scaled the mouse move whenever a dynamic-shape model
+            // ran at a non-640 ImageSize (detection/overlay were already correct, only the aim move
+            // was off). Identical to the old behaviour for the default fixed-640 model.
+            float modelSize = Math.Max(1, global::PowerAim.AILogic.PredictionLogic.IMAGE_SIZE);
+            float scaleX = area.Width / modelSize;
+            float scaleY = area.Height / modelSize;
 
             CalculateCoordinates(closestPrediction, scaleX, scaleY);
             if (AppConfig.Current.ToggleState.Predictions)

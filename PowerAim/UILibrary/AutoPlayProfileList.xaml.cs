@@ -39,27 +39,16 @@ namespace UILibrary
         private void EditProfile_Click(object sender, RoutedEventArgs e)
         {
             if ((sender as FrameworkElement)?.Tag is AutoPlayProfile profile)
-            {
-                var dlg = new AutoPlayProfileEditDialog
-                {
-                    Title = Locale.EditAutoPlayProfile,
-                    Profile = profile
-                };
-                dlg.ShowDialog();
-            }
+                MainWindow.Instance.OpenAutoPlayEditor(profile, isNew: false, commit: _ => { });
         }
 
         private void AddProfile_Click(object sender, RoutedEventArgs e)
         {
-            var dlg = new AutoPlayProfileEditDialog
+            var draft = new AutoPlayProfile();
+            MainWindow.Instance.OpenAutoPlayEditor(draft, isNew: true, commit: saved =>
             {
-                Title = Locale.AddAutoPlayProfile,
-                Profile = new AutoPlayProfile()
-            };
-            if (dlg.ShowDialog() ?? false)
-            {
-                Profiles.Add(dlg.Profile);
-            }
+                if (saved != null) Profiles.Add(saved);
+            });
         }
 
         private void DeleteProfile_Click(object sender, RoutedEventArgs e)

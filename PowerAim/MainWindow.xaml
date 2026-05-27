@@ -1181,6 +1181,82 @@
                             </ScrollViewer>
                         </Grid>
 
+                        <!-- AutoPlay profile editor page (analog to TriggerEditPage) -->
+                        <Grid x:Name="AutoPlayEditPage" Visibility="Collapsed">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Border Grid.Row="0"
+                                    Background="{StaticResource FluentSurface1}"
+                                    BorderBrush="{StaticResource FluentStroke}"
+                                    BorderThickness="0,0,0,1"
+                                    Padding="20,12,20,12">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Button Grid.Column="0"
+                                            Style="{StaticResource FluentStandardButton}"
+                                            Click="AutoPlayEditBack_Click"
+                                            Padding="10,6,12,6">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Back'}" Margin="6,0,0,0" VerticalAlignment="Center" FontFamily="Segoe UI Variable Text" FontSize="13" />
+                                        </StackPanel>
+                                    </Button>
+                                    <StackPanel Grid.Column="1"
+                                                Orientation="Horizontal"
+                                                Margin="14,0,0,0"
+                                                VerticalAlignment="Center">
+                                        <TextBlock x:Name="AutoPlayEditTitle"
+                                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='EditAutoPlayProfile'}"
+                                                   Foreground="{DynamicResource FluentTextPrimary}"
+                                                   FontFamily="Segoe UI Variable Display"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="18" />
+                                        <TextBlock x:Name="AutoPlayEditName"
+                                                   Margin="8,0,0,0"
+                                                   Foreground="{DynamicResource FluentAccent}"
+                                                   FontFamily="Segoe UI Variable Display"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="18"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   MaxWidth="380" />
+                                        <TextBlock x:Name="AutoPlayEditDirty"
+                                                   Text=" *"
+                                                   Foreground="{DynamicResource FluentAccent}"
+                                                   FontFamily="Segoe UI Variable Display"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="18"
+                                                   Visibility="Collapsed" />
+                                    </StackPanel>
+                                    <Button Grid.Column="2"
+                                            x:Name="AutoPlayEditCancel"
+                                            Style="{StaticResource FluentStandardButton}"
+                                            Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Cancel'}"
+                                            MinWidth="90"
+                                            Margin="0,0,8,0"
+                                            Click="AutoPlayEditCancel_Click" />
+                                    <Button Grid.Column="3"
+                                            x:Name="AutoPlayEditSave"
+                                            Style="{StaticResource FluentAccentButton}"
+                                            Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Save'}"
+                                            MinWidth="100"
+                                            Click="AutoPlayEditSave_Click" />
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1"
+                                          Padding="20,16,20,16"
+                                          VerticalScrollBarVisibility="Auto"
+                                          PanningMode="VerticalOnly">
+                                <ContentControl x:Name="AutoPlayEditorHost" />
+                            </ScrollViewer>
+                        </Grid>
+
                         <!-- Help page hosting the embedded WebView2 docs viewer. Sidebar button
                              navigates here; pop-out button on the panel detaches into HelpWindow. -->
                         <Grid x:Name="HelpPage" Visibility="Collapsed" Margin="14">

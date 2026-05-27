@@ -32,8 +32,7 @@
                      VerticalAlignment="Top"
                      SizeChanged="OnWindowSizeChanged"
                      Width="{Binding SliderSettings.ActualFovSize}"
-                     Height="{Binding SliderSettings.ActualFovSize}"
-                     Opacity="{Binding SliderSettings.FOVOpacity}">
+                     Height="{Binding SliderSettings.ActualFovSize}">
                 <Ellipse.Stroke>
                     <SolidColorBrush Color="{Binding ColorState.FOVColor}"></SolidColorBrush>
                 </Ellipse.Stroke>
