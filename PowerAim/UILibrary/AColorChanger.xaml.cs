@@ -1,14 +1,9 @@
-﻿using PowerAim.AILogic;
-using PowerAim.Class;
-using PowerAim.Config;
-using Nextended.Core;
+﻿using Nextended.Core;
 using System.ComponentModel;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Threading.Channels;
 using System.Windows;
-using System.Windows.Forms;
 using System.Windows.Media;
 using PowerAim.Extensions;
 
@@ -31,11 +26,23 @@ namespace PowerAim.UILibrary
             set => SetField(ref field, value);
         }
 
+        /// <summary>Common quick-fill colours shown under the picker. A host can override via <see cref="SetSwatches"/>.</summary>
+        private static readonly Color[] DefaultSwatches =
+        [
+            Colors.White, Colors.Black, Colors.Red, Colors.OrangeRed, Colors.Orange, Colors.Gold,
+            Colors.Lime, Colors.Green, Colors.Cyan, Colors.DodgerBlue, Colors.Blue, Colors.BlueViolet,
+            Colors.Magenta, Colors.DeepPink, Colors.Gray
+        ];
+
         public AColorChanger()
         {
             InitializeComponent();
             DataContext = this;
+            Loaded += (_, _) => Picker.SetSwatches(DefaultSwatches);
         }
+
+        /// <summary>Replace the quick-fill swatches shown under the picker (e.g. the theme accent palette).</summary>
+        public void SetSwatches(IEnumerable<Color> colors) => Picker.SetSwatches(colors);
 
         public AColorChanger(string title) : this()
         {
@@ -85,11 +92,7 @@ namespace PowerAim.UILibrary
 
         private void ChangeColorClick(object sender, RoutedEventArgs e)
         {
-            ColorDialog colorDialog = new();
-            if (colorDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                Color = Color.FromArgb(colorDialog.Color.A, colorDialog.Color.R, colorDialog.Color.G, colorDialog.Color.B);
-            }
+            PickerPopup.IsOpen = !PickerPopup.IsOpen;
         }
     }
 }

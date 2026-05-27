@@ -77,6 +77,33 @@ public class CrosshairSettings : BaseSettings
     [Newtonsoft.Json.JsonIgnore]
     public Brush OutlineBrush => TryParseBrush(OutlineColor, Brushes.Black);
 
+    /// <summary>
+    ///     <see cref="Color"/>-typed view over the persisted <see cref="Color"/> hex string, so the
+    ///     in-app <c>AColorChanger</c> picker can bind to a Color directly. Not serialized — the hex
+    ///     string remains the source of truth.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    [Newtonsoft.Json.JsonIgnore]
+    public Color ColorValue
+    {
+        get => TryParseColor(Color, Colors.White);
+        set => Color = $"#{value.A:X2}{value.R:X2}{value.G:X2}{value.B:X2}";
+    }
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    [Newtonsoft.Json.JsonIgnore]
+    public Color OutlineColorValue
+    {
+        get => TryParseColor(OutlineColor, Colors.Black);
+        set => OutlineColor = $"#{value.A:X2}{value.R:X2}{value.G:X2}{value.B:X2}";
+    }
+
+    private static Color TryParseColor(string hex, Color fallback)
+    {
+        try { return (Color)ColorConverter.ConvertFromString(hex); }
+        catch { return fallback; }
+    }
+
     private static Brush TryParseBrush(string hex, SolidColorBrush fallback)
     {
         try

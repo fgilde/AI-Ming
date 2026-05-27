@@ -1800,6 +1800,8 @@ public partial class MainWindow
             .BindTo(() => AppConfig.Current.CrosshairSettings.Gap);
         OverlaySettings.AddSlider(Locale.CrosshairOutline, Locale.Pixels, 1, 1, 0, 4)
             .BindTo(() => AppConfig.Current.CrosshairSettings.OutlineThickness);
+        OverlaySettings.AddColorChanger(Locale.CrosshairColor).BindTo(() => AppConfig.Current.CrosshairSettings.ColorValue);
+        OverlaySettings.AddColorChanger(Locale.CrosshairOutlineColor).BindTo(() => AppConfig.Current.CrosshairSettings.OutlineColorValue);
         OverlaySettings.AddSeparator();
 
         // ===== Stats =====

@@ -43,6 +43,18 @@
                         Padding="0"
                         Height="40"
                         Margin="0" />
+
+                <Popup x:Name="PickerPopup"
+                       PlacementTarget="{Binding ElementName=ColorChangingBorder}"
+                       Placement="Bottom"
+                       HorizontalOffset="-244"
+                       AllowsTransparency="True"
+                       PopupAnimation="Fade"
+                       StaysOpen="False">
+                    <local:ColorPickerControl x:Name="Picker"
+                                              Margin="8"
+                                              SelectedColor="{Binding Color, Mode=TwoWay}" />
+                </Popup>
             </Grid>
         </Border>
     </Grid>
