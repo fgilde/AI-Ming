@@ -33,6 +33,18 @@ public class ApplicationConstants : Constants
     ///     by GitHub Pages on push. Update when the repo path changes.
     /// </summary>
     public const string DocsUrl = "https://fgilde.github.io/AI-Ming/";
+    public static Uri DocsUri = new Uri(DocsUrl);
+
+    // ---- Project / author links -----------------------------------------------------------
+    public const string Copyright    = "© Florian Gilde";
+    public static Uri AuthorUrl    = new Uri("https://www.gilde.org");
+    public const string RepoOwner    = "fgilde";
+    public const string RepoName     = "AI-Ming";
+    public const string RepoUrl      = "https://github.com/" + RepoOwner + "/" + RepoName;
+    public static Uri RepoUri = new Uri(RepoUrl);
+    public const string ReleasesUrl  = RepoUrl + "/releases";
+    public static Uri IssuesUrl    = new Uri(RepoUrl + "/issues");
+    public const string ReleasesApiUrl = "https://api.github.com/repos/" + RepoOwner + "/" + RepoName + "/releases";
 
     public static Visibility EasyModeHidden => EasyMode ? Visibility.Collapsed : Visibility.Visible;
     public static string[] DisabledFeatures => EasyMode ? ["AimAssist", "AntiRecoil", "ASP2", "AimConfig", "ARConfig"] : [];

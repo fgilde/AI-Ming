@@ -1031,6 +1031,155 @@
                                     </StackPanel>
                                 </Border>
                                 <StackPanel x:Name="CreditsPanel" Margin="0,10,0,0" />
+
+                                <!-- Project + author links -->
+                                <Border Style="{StaticResource FluentCard}" Margin="0,10,0,0" Padding="20">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AboutProject'}"
+                                                   FontFamily="Segoe UI Variable Display"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="14"
+                                                   Foreground="{StaticResource FluentTextPrimary}"
+                                                   Margin="0,0,0,12" />
+
+                                        <Grid Margin="0,0,0,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="140" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AboutCopyright'}"
+                                                       Foreground="{StaticResource FluentTextSecondary}"
+                                                       FontFamily="Segoe UI Variable Text"
+                                                       FontSize="12" />
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{x:Static poweraim:ApplicationConstants.Copyright}"
+                                                       Foreground="{StaticResource FluentTextPrimary}"
+                                                       FontFamily="Segoe UI Variable Text"
+                                                       FontSize="12" />
+                                        </Grid>
+
+                                        <Grid Margin="0,4,0,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="140" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AboutAuthorWebsite'}"
+                                                       Foreground="{StaticResource FluentTextSecondary}"
+                                                       FontFamily="Segoe UI Variable Text"
+                                                       FontSize="12"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" VerticalAlignment="Center"
+                                                       FontFamily="Segoe UI Variable Text"
+                                                       FontSize="12">
+                                                <Hyperlink NavigateUri="{x:Static poweraim:ApplicationConstants.AuthorUrl}"
+                                                           Foreground="{StaticResource FluentAccent}"
+                                                           RequestNavigate="AboutLink_RequestNavigate">
+                                                    <Run Text="www.gilde.org" />
+                                                </Hyperlink>
+                                            </TextBlock>
+                                        </Grid>
+
+                                        <Grid Margin="0,4,0,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="140" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AboutSourceCode'}"
+                                                       Foreground="{StaticResource FluentTextSecondary}"
+                                                       FontFamily="Segoe UI Variable Text"
+                                                       FontSize="12"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" VerticalAlignment="Center"
+                                                       FontFamily="Segoe UI Variable Text"
+                                                       FontSize="12">
+                                                <Hyperlink NavigateUri="{x:Static poweraim:ApplicationConstants.RepoUri}"
+                                                           Foreground="{StaticResource FluentAccent}"
+                                                           RequestNavigate="AboutLink_RequestNavigate">
+                                                    <Run Text="github.com/fgilde/AI-Ming" />
+                                                </Hyperlink>
+                                            </TextBlock>
+                                        </Grid>
+
+                                        <Grid Margin="0,4,0,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="140" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AboutIssues'}"
+                                                       Foreground="{StaticResource FluentTextSecondary}"
+                                                       FontFamily="Segoe UI Variable Text"
+                                                       FontSize="12"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" VerticalAlignment="Center"
+                                                       FontFamily="Segoe UI Variable Text"
+                                                       FontSize="12">
+                                                <Hyperlink NavigateUri="{x:Static poweraim:ApplicationConstants.IssuesUrl}"
+                                                           Foreground="{StaticResource FluentAccent}"
+                                                           RequestNavigate="AboutLink_RequestNavigate">
+                                                    <Run Text="Issues / report a bug" />
+                                                </Hyperlink>
+                                            </TextBlock>
+                                        </Grid>
+
+                                        <Grid Margin="0,4,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="140" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AboutDocumentation'}"
+                                                       Foreground="{StaticResource FluentTextSecondary}"
+                                                       FontFamily="Segoe UI Variable Text"
+                                                       FontSize="12"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" VerticalAlignment="Center"
+                                                       FontFamily="Segoe UI Variable Text"
+                                                       FontSize="12">
+                                                <Hyperlink NavigateUri="{x:Static poweraim:ApplicationConstants.DocsUri}"
+                                                           Foreground="{StaticResource FluentAccent}"
+                                                           RequestNavigate="AboutLink_RequestNavigate">
+                                                    <Run Text="fgilde.github.io/AI-Ming" />
+                                                </Hyperlink>
+                                            </TextBlock>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Releases: fetched from the GitHub API on first About visit and populated into ReleasesPanel. -->
+                                <Border Style="{StaticResource FluentCard}" Margin="0,10,0,0" Padding="20">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AboutReleases'}"
+                                                       FontFamily="Segoe UI Variable Display"
+                                                       FontWeight="SemiBold"
+                                                       FontSize="14"
+                                                       Foreground="{StaticResource FluentTextPrimary}"
+                                                       VerticalAlignment="Center" />
+                                            <Button Grid.Column="1"
+                                                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OpenOnGitHub'}"
+                                                    Style="{StaticResource FluentStandardButton}"
+                                                    Padding="10,4,12,4"
+                                                    Click="OpenReleasesOnGitHub_Click" />
+                                        </Grid>
+
+                                        <TextBlock x:Name="ReleasesStatus"
+                                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AboutReleasesLoading'}"
+                                                   Foreground="{StaticResource FluentTextTertiary}"
+                                                   FontFamily="Segoe UI Variable Small"
+                                                   FontSize="11"
+                                                   Margin="0,0,0,6" />
+                                        <StackPanel x:Name="ReleasesPanel" />
+                                    </StackPanel>
+                                </Border>
                             </StackPanel>
                         </ScrollViewer>
 

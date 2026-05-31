@@ -363,6 +363,7 @@ public partial class MainWindow
             GamepadTester.BackRequested += (_, _) => _ = NavigateTo(nameof(GamepadSettings));
 
         WireHelpPanel();
+        WireAboutPage();
 
         UpdateAdminButton();
     }
@@ -2390,6 +2391,201 @@ public partial class MainWindow
 
     }
 
+
+    // ============================================================================ ABOUT ====
+
+    private sealed record ReleaseInfo(string Tag, DateTime Published, string HtmlUrl, int TotalDownloads);
+
+    private List<ReleaseInfo>? _cachedReleases;
+    private bool _releasesFetchAttempted;
+    private bool _aboutPageWired;
+
+    /// <summary>
+    ///     Hooks the About page so the releases list gets fetched lazily on first visit (instead
+    ///     of paying the API round-trip at startup for users who never open About). Safe to call
+    ///     multiple times — idempotent via <see cref="_aboutPageWired"/>.
+    /// </summary>
+    private void WireAboutPage()
+    {
+        if (_aboutPageWired) return;
+        _aboutPageWired = true;
+        if (AboutMenu == null) return;
+        AboutMenu.IsVisibleChanged += (_, e) =>
+        {
+            if ((bool)e.NewValue) RefreshReleasesAsync();
+        };
+    }
+
+    /// <summary>
+    ///     Re-renders the releases card. Triggers a one-shot API fetch on first call and re-renders
+    ///     the cached data on every subsequent call (so language-change rebuilds re-localize the
+    ///     "X downloads" / "Open on GitHub" labels without re-hitting the API).
+    /// </summary>
+    private void RefreshReleasesAsync()
+    {
+        if (ReleasesPanel == null) return;
+        if (_cachedReleases is not null) { BuildReleaseRows(_cachedReleases); return; }
+        if (_releasesFetchAttempted) return;
+        _releasesFetchAttempted = true;
+        ReleasesStatus.Text = Locale.AboutReleasesLoading;
+        ReleasesStatus.Visibility = Visibility.Visible;
+        _ = LoadReleasesAsync();
+    }
+
+    private async Task LoadReleasesAsync()
+    {
+        try
+        {
+            using var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+            // GitHub's API rejects requests without a User-Agent.
+            http.DefaultRequestHeaders.UserAgent.ParseAdd("PowerAim");
+            var json = await http.GetStringAsync(ApplicationConstants.ReleasesApiUrl);
+
+            var releases = new List<ReleaseInfo>();
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            foreach (var el in doc.RootElement.EnumerateArray())
+            {
+                string tag = el.TryGetProperty("tag_name", out var t) ? (t.GetString() ?? "") : "";
+                string url = el.TryGetProperty("html_url", out var u) ? (u.GetString() ?? "") : "";
+                DateTime published = el.TryGetProperty("published_at", out var p) && DateTime.TryParse(p.GetString(), out var dt)
+                    ? dt : DateTime.MinValue;
+                int total = 0;
+                if (el.TryGetProperty("assets", out var assets) && assets.ValueKind == System.Text.Json.JsonValueKind.Array)
+                    foreach (var a in assets.EnumerateArray())
+                        if (a.TryGetProperty("download_count", out var dc) && dc.TryGetInt32(out var n))
+                            total += n;
+                releases.Add(new ReleaseInfo(tag, published, url, total));
+            }
+            _cachedReleases = releases;
+            Dispatcher.Invoke(() => BuildReleaseRows(releases));
+        }
+        catch (Exception ex)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                ReleasesStatus.Text = string.Format(Locale.AboutReleasesErrorFormat, ex.Message);
+                ReleasesStatus.Visibility = Visibility.Visible;
+            });
+        }
+    }
+
+    /// <summary>
+    ///     Build one row per release: tag (semibold) + published date + total download count +
+    ///     "Open on GitHub" button. Total downloads is the sum across every asset (DirectML zip,
+    ///     CUDA zip, Installer.exe, …) so users see the real reach of each release.
+    /// </summary>
+    private void BuildReleaseRows(List<ReleaseInfo> releases)
+    {
+        ReleasesPanel.Children.Clear();
+        if (releases.Count == 0)
+        {
+            ReleasesStatus.Text = Locale.AboutReleasesEmpty;
+            ReleasesStatus.Visibility = Visibility.Visible;
+            return;
+        }
+        ReleasesStatus.Visibility = Visibility.Collapsed;
+
+        foreach (var r in releases)
+        {
+            var row = new Border
+            {
+                Padding = new Thickness(10, 6, 8, 6),
+                Margin = new Thickness(0, 0, 0, 4),
+                CornerRadius = new CornerRadius(4),
+                Background = (System.Windows.Media.Brush)FindResource("FluentSurface2"),
+                BorderBrush = (System.Windows.Media.Brush)FindResource("FluentStroke"),
+                BorderThickness = new Thickness(1),
+            };
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(110) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            var tag = new TextBlock
+            {
+                Text = "v" + r.Tag,
+                FontFamily = new System.Windows.Media.FontFamily("Segoe UI Variable Text"),
+                FontWeight = FontWeights.SemiBold,
+                FontSize = 13,
+                Foreground = (System.Windows.Media.Brush)FindResource("FluentTextPrimary"),
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            Grid.SetColumn(tag, 0);
+            grid.Children.Add(tag);
+
+            var date = new TextBlock
+            {
+                Text = r.Published == DateTime.MinValue ? "" : r.Published.ToString("yyyy-MM-dd"),
+                FontFamily = new System.Windows.Media.FontFamily("Segoe UI Variable Small"),
+                FontSize = 11,
+                Foreground = (System.Windows.Media.Brush)FindResource("FluentTextTertiary"),
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            Grid.SetColumn(date, 1);
+            grid.Children.Add(date);
+
+            var dl = new TextBlock
+            {
+                Text = string.Format(Locale.AboutDownloadsFormat, r.TotalDownloads.ToString("N0")),
+                FontFamily = new System.Windows.Media.FontFamily("Cascadia Mono,Consolas"),
+                FontSize = 11,
+                Foreground = (System.Windows.Media.Brush)FindResource("FluentAccent"),
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 12, 0),
+            };
+            Grid.SetColumn(dl, 2);
+            grid.Children.Add(dl);
+
+            var open = new Button
+            {
+                Content = new TextBlock
+                {
+                    Text = "", // pop-out glyph
+                    FontFamily = new System.Windows.Media.FontFamily("Segoe Fluent Icons,Segoe MDL2 Assets"),
+                    FontSize = 11,
+                },
+                Padding = new Thickness(8, 4, 8, 4),
+                VerticalAlignment = VerticalAlignment.Center,
+                Tag = r.HtmlUrl,
+                ToolTip = Locale.OpenOnGitHub,
+            };
+            open.SetResourceReference(StyleProperty, "FluentStandardButton");
+            open.Click += (s, _) =>
+            {
+                if (s is FrameworkElement fe && fe.Tag is string url && !string.IsNullOrWhiteSpace(url))
+                    OpenUrl(url);
+            };
+            Grid.SetColumn(open, 3);
+            grid.Children.Add(open);
+
+            row.Child = grid;
+            ReleasesPanel.Children.Add(row);
+        }
+    }
+
+    private void AboutLink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+    {
+        OpenUrl(e.Uri?.ToString() ?? "");
+        e.Handled = true;
+    }
+
+    private void OpenReleasesOnGitHub_Click(object sender, RoutedEventArgs e)
+        => OpenUrl(ApplicationConstants.ReleasesUrl);
+
+    private static void OpenUrl(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return;
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true,
+            });
+        }
+        catch { /* user has no default browser / blocked — silently ignore */ }
+    }
 
     private void LoadCreditsMenu()
     {
