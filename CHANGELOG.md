@@ -5,6 +5,92 @@ All notable changes to PowerAim are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0.2]
+
+### Added
+
+- **Per-profile "Use Ollama" toggle in AutoPlay.** Each AutoPlay profile now has a
+  toggle that decides whether the Ollama strategic layer runs alongside the
+  heuristic. With it off, AutoPlay drives the game purely from the heuristic +
+  OCR cues — no LLM polling, no screenshot capture, no Ollama install required.
+  Flipping it mid-session is honoured live: switching off settles the intent to
+  default and idles the loop on a 5 s poll; switching back on restarts the
+  strategic layer from the next tick. The profile description in the list
+  surfaces the active mode (`(N actions, heuristic only)` vs. `(N actions,
+  moondream)`).
+- **Inference-GPU picker in the title bar.** A new chip in the header lets you
+  choose which DXGI adapter runs ONNX inference. On multi-GPU systems (e.g.
+  Intel iGPU + RTX 4090) you can keep detection off the GPU that's running the
+  game, which cuts the input lag from competing for cycles. The pill shows the
+  shortened adapter name (e.g. "RTX 4090"); the popup lists every detected GPU
+  with VRAM, has Refresh + "Open diagnostic log" buttons, and writes a
+  per-enumeration log to `%TEMP%\PowerAim_GpuEnum.log` so weird hardware setups
+  are debuggable without a debugger. The selected device id is persisted as
+  `AISettings.InferenceGpuDeviceId` and reloads the active model immediately on
+  change.
+- **Ollama UX in the AutoPlay profile editor.**
+  - Status indicator can now **start Ollama from the UI** (probes
+    `LocalAppData\Programs\Ollama`, `Program Files`, then `PATH`) or open
+    `ollama.com/download` if it isn't installed, depending on whether the
+    executable was found.
+  - Indicator **auto-detects externally-started Ollama** via a 4 s
+    `DispatcherTimer` — no more mashing Refresh after starting `ollama serve`
+    in a terminal.
+  - The Ollama-model TextBox is now an **editable ComboBox** populated with the
+    locally installed models (from `/api/tags`) plus a curated list of vision
+    models, so you can pick or type. A new **Pull** button next to it streams
+    `ollama pull <model>` progress (manifest → downloading → verifying →
+    success) into a live status line below the row.
+
+### Changed
+
+- **OnnxExecutionProvider plumbing** — `AppendExecutionProvider` /
+  `SetExecutionProvider` / `CanWork` now accept a `deviceId` int that's passed
+  straight to `AppendExecutionProvider_CUDA(deviceId)` /
+  `AppendExecutionProvider_DML(deviceId)`. The factory and `PredictionLogic`
+  read `AISettings.InferenceGpuDeviceId` and route inference accordingly. Old
+  callers default to device 0 (the previous behaviour).
+- **OllamaClient HttpClient is now process-wide static** so that a status
+  indicator getting disposed (navigation, language-change rebuild) can't kill
+  the shared HTTP pipe other callers are still using. Per-instance `Dispose()`
+  is a no-op now; the static client lives for the process lifetime.
+
+### Fixed
+
+- **Editable ComboBox no longer renders blank after a selection.** The global
+  ComboBox template in `Theme.xaml` was missing the WPF-mandatory
+  `PART_EditableTextBox` named part, so `IsEditable="True"` controls only ever
+  rendered `SelectionBoxItem` — which is empty for free-typed text or while a
+  TwoWay `Text` binding was mid-sync. The template now overlays a
+  `PART_EditableTextBox` on the ToggleButton's content column (transparent
+  background, chevron stays clickable), with a trigger that swaps visibility on
+  `IsEditable` and a style on the SelectionBoxItem presenter that hides it
+  when the TextBox is active. The AutoPlay model ComboBox finally shows what
+  you picked or typed.
+- **`Cannot access a disposed object` on Ollama start.** When the AutoPlay
+  status indicator was reloaded across a language change or navigation, the
+  previous instance's `Dispose()` had already torn down the shared HttpClient
+  — any in-flight `IsAvailable` / `GetModels` call on a sibling control then
+  blew up. Resolved by the static-HttpClient change above plus making the
+  control's `OnUnloaded` not dispose the client at all.
+- **Status indicator gets stuck on "Disconnected"** when the user started
+  `ollama serve` outside the app. Fixed by the periodic poll above.
+
+### Internal
+
+- New `AILogic/GpuAdapterEnumerator` — Vortice DXGI walker that lists every
+  hardware GPU (filters the Microsoft Basic Render / WARP software adapter via
+  raw `DXGI_ADAPTER_FLAG_SOFTWARE` bit instead of an enum cast that can throw
+  on some hosts), with VRAM + Vendor/Device IDs. Caches successful runs,
+  re-tries on failure, mirrors a structured per-adapter log to a temp file.
+- `OllamaClient` gained `FindOllamaExecutable()`, `TryStartServer()`,
+  `PullModelAsync(model, IProgress<PullProgress>, ct)` (NDJSON streaming
+  parser) and the `IsInstalled` / `DownloadUrl` / `RecommendedVisionModels`
+  static surface used by the new UX.
+- `OllamaStatusIndicator` gained Start / Install buttons and a 4-second
+  `DispatcherTimer` poll, both stopped on `Unloaded` so they don't leak across
+  UI rebuilds.
+
 ## [2.0.0.1]
 
 ### Added
