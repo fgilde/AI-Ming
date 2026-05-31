@@ -59,7 +59,7 @@ internal static class OnnxHelper
         }
     }
 
-    public static OnnxExecutionProvider SetExecutionProvider(this SessionOptions sessionOptions, OnnxExecutionProvider preferredProvider)
+    public static OnnxExecutionProvider SetExecutionProvider(this SessionOptions sessionOptions, OnnxExecutionProvider preferredProvider, int deviceId = 0)
     {
         //var sessionOptions = CreateDefaultSessionOptions();
         OnnxExecutionProvider[] fallbackOrder;
@@ -84,10 +84,10 @@ internal static class OnnxHelper
         {
             try
             {
-                if (CanWork(provider))
+                if (CanWork(provider, deviceId))
                 {
-                    sessionOptions.AppendExecutionProvider(provider);
-                    Console.WriteLine($"Initialized with provider {provider}");
+                    sessionOptions.AppendExecutionProvider(provider, deviceId);
+                    Console.WriteLine($"Initialized with provider {provider} on device {deviceId}");
                     return provider;
                 }
             }
@@ -100,18 +100,21 @@ internal static class OnnxHelper
         throw new InvalidOperationException("No suitable execution provider found.");
     }
 
-    public static SessionOptions AppendExecutionProvider(this SessionOptions options, OnnxExecutionProvider provider)
+    public static SessionOptions AppendExecutionProvider(this SessionOptions options, OnnxExecutionProvider provider, int deviceId = 0)
     {
+        // ORT's deviceId is the DXGI adapter index for DirectML and the CUDA ordinal for CUDA. CPU
+        // and TensorRT either have no concept of a per-device id or take it via a different config
+        // path, so deviceId is silently ignored for those two.
         switch (provider)
         {
             case OnnxExecutionProvider.Cpu:
                 options.AppendExecutionProvider_CPU();
                 break;
             case OnnxExecutionProvider.DirectML:
-                options.AppendExecutionProvider_DML();
+                options.AppendExecutionProvider_DML(deviceId);
                 break;
             case OnnxExecutionProvider.Cuda:
-                options.AppendExecutionProvider_CUDA();
+                options.AppendExecutionProvider_CUDA(deviceId);
                 break;
             case OnnxExecutionProvider.TensorRT:
                 options.AppendExecutionProvider_Tensorrt();
@@ -133,17 +136,17 @@ internal static class OnnxHelper
         };
     }
 
-    public static bool CanWork(OnnxExecutionProvider provider)
+    public static bool CanWork(OnnxExecutionProvider provider, int deviceId = 0)
     {
         try
         {
             CreateDefaultSessionOptions()
-                .AppendExecutionProvider(provider);
+                .AppendExecutionProvider(provider, deviceId);
             return true;
         }
         catch (Exception e)
         {
-            Console.WriteLine($"Failed to initialize provider {provider}. Message {e.Message}");
+            Console.WriteLine($"Failed to initialize provider {provider} on device {deviceId}. Message {e.Message}");
             return false;
         }
     }

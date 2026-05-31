@@ -38,7 +38,8 @@ internal static class OnnxModelSessionFactory
     public static OnnxModelLoadResult Load(
         string modelPath,
         OnnxExecutionProvider preferredProvider = OnnxExecutionProvider.Cuda,
-        SessionOptions? sessionOptions = null)
+        SessionOptions? sessionOptions = null,
+        int deviceId = 0)
     {
         SessionOptions options = sessionOptions ?? CreateDefaultOptions();
         bool ownsOptions = sessionOptions == null;
@@ -46,7 +47,7 @@ internal static class OnnxModelSessionFactory
         InferenceSession? session = null;
         try
         {
-            OnnxExecutionProvider actual = options.SetExecutionProvider(preferredProvider);
+            OnnxExecutionProvider actual = options.SetExecutionProvider(preferredProvider, deviceId);
             session = new InferenceSession(modelPath, options);
 
             var (imageSize, isDynamic) = DetectInputImageSize(session);

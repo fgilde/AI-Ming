@@ -310,6 +310,7 @@
   "ImageQuality": "Image Quality",
   "ImageSizeOverride": "Image Size Override",
   "ImageSizeOverrideHelp": "Only used for dynamic-shape models. Fixed-shape models always use the size baked into the ONNX file.",
+  "InferenceGpuTooltip": "Choose which GPU runs ONNX inference. Pick a secondary card to keep detection off the GPU your game is using.",
   "InitUIMessage": "Init UI",
   "InputSettings": "Input Settings",
   "InsertConfigNameHere": "Insert Config Name Here",

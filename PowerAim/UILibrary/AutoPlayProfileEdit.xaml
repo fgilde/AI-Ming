@@ -39,25 +39,49 @@
                     </StackPanel>
                 </Grid>
 
-                <!-- Ollama Model -->
+                <!-- Ollama Model — editable ComboBox so the user can either pick from the locally
+                     installed list (loaded async from /api/tags) or type any model name. The Pull
+                     button next to it fetches whatever's in the box from the Ollama registry,
+                     streaming progress into the line below. -->
                 <StackPanel x:Name="OllamaModelPanel" Margin="0 10 0 0">
                     <Label Foreground="{StaticResource Foreground}"
                            FontSize="13"
                            Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OllamaModel'}"
                            FontFamily="Segoe UI Variable Text" />
-                    <TextBox BorderThickness="1"
-                             Padding="3 5 1 5"
-                             Text="{Binding Profile.OllamaModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                             Margin="2, 5"
-                             Tag="moondream, llava:7b, qwen2.5-vl:7b..."
-                             FontFamily="Segoe UI Variable Text"
-                             Style="{DynamicResource placeHolder}"
-                             BorderBrush="{DynamicResource FluentStroke}"
-                             Background="Transparent"
-                             Foreground="{StaticResource Foreground}" />
+                    <Grid Margin="2,5,2,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ComboBox x:Name="ModelCombo"
+                                  Grid.Column="0"
+                                  IsEditable="True"
+                                  Text="{Binding Profile.OllamaModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                  BorderThickness="1"
+                                  BorderBrush="{DynamicResource FluentStroke}"
+                                  Padding="3,5,1,5"
+                                  FontFamily="Segoe UI Variable Text"
+                                  Foreground="{StaticResource Foreground}" />
+                        <Button Grid.Column="1"
+                                x:Name="PullModelButton"
+                                Margin="6,0,0,0"
+                                Padding="12,4,12,4"
+                                MinHeight="28"
+                                Style="{DynamicResource FluentStandardButton}"
+                                ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OllamaPullModelTooltip'}"
+                                Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OllamaPullModel'}"
+                                Click="PullModel_Click" />
+                    </Grid>
+                    <TextBlock x:Name="PullStatusText"
+                               Foreground="{DynamicResource FluentTextSecondary}"
+                               FontSize="11"
+                               Margin="2,4,0,0"
+                               TextWrapping="Wrap"
+                               Visibility="Collapsed"
+                               FontFamily="Segoe UI Variable Small" />
                     <TextBlock Foreground="{StaticResource Foreground}"
                                FontSize="11"
-                               Margin="2 0 0 10"
+                               Margin="2 4 0 10"
                                TextWrapping="Wrap"
                                Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OllamaModelRecommended'}"
                                Visibility="{Binding Converter={StaticResource helpVis}}"

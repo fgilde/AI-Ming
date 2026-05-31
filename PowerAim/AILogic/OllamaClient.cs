@@ -16,7 +16,14 @@ namespace PowerAim.AILogic;
 /// </summary>
 public class OllamaClient : IOllamaClient
 {
-    private readonly HttpClient _httpClient;
+    /// <summary>
+    ///     Process-wide HttpClient shared by every <see cref="OllamaClient"/> instance. Per the
+    ///     canonical guidance (HttpClient is meant to be long-lived), this avoids socket exhaustion
+    ///     and — more importantly here — prevents <see cref="ObjectDisposedException"/> when one
+    ///     control disposes its short-lived OllamaClient while another async operation is still in
+    ///     flight (we used to dispose the shared HttpClient via the per-instance Dispose).
+    /// </summary>
+    private static readonly HttpClient _httpClient = new();
     private bool _isAvailable;
     private string? _lastError;
     private string[] _availableModels = [];
@@ -29,9 +36,130 @@ public class OllamaClient : IOllamaClient
         "minicpm-v", "qwen2-vl", "qwen2.5-vl", "internvl2"
     ];
 
+    /// <summary>Curated vision-model suggestions shown in the AutoPlay profile editor.</summary>
+    public static IReadOnlyList<string> RecommendedVisionModels => KnownVisionModels;
+
+    /// <summary>URL of the official Ollama download page (Windows installer + docs).</summary>
+    public const string DownloadUrl = "https://ollama.com/download";
+
+    // =============================================================== Install / process ====
+
+    /// <summary>
+    ///     Locate the <c>ollama.exe</c> binary on the local machine. Probes the standard Windows
+    ///     install path first (the Ollama installer drops it under <c>%LocalAppData%\Programs\Ollama</c>),
+    ///     then Program Files, then the user's PATH via <c>where ollama</c>. Returns <c>null</c> if
+    ///     none of those produces a hit.
+    /// </summary>
+    public static string? FindOllamaExecutable()
+    {
+        string[] candidates =
+        {
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Ollama", "ollama.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),         "Ollama", "ollama.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),      "Ollama", "ollama.exe"),
+        };
+        foreach (var path in candidates)
+            if (!string.IsNullOrEmpty(path) && File.Exists(path)) return path;
+
+        // Fall back to PATH lookup via `where ollama` so unusual install locations still register.
+        try
+        {
+            using var p = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "where",
+                Arguments = "ollama",
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            });
+            if (p is not null)
+            {
+                p.WaitForExit(2000);
+                var first = p.StandardOutput.ReadLine();
+                if (!string.IsNullOrWhiteSpace(first) && File.Exists(first)) return first.Trim();
+            }
+        }
+        catch { /* `where` not available / blocked — ignore */ }
+        return null;
+    }
+
+    /// <summary>True if Ollama looks installed on this machine.</summary>
+    public static bool IsInstalled => FindOllamaExecutable() is not null;
+
+    /// <summary>
+    ///     Launch <c>ollama serve</c> in the background so the local HTTP API becomes reachable
+    ///     without the user having to drop to a terminal. Best-effort: returns the spawned process,
+    ///     or <c>null</c> if the executable couldn't be found or starting it failed. The server
+    ///     keeps running until the spawned process exits (e.g. when PowerAim exits, unless the
+    ///     server was already running independently).
+    /// </summary>
+    public static System.Diagnostics.Process? TryStartServer()
+    {
+        var exe = FindOllamaExecutable();
+        if (exe is null) return null;
+        try
+        {
+            return System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = exe,
+                Arguments = "serve",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden,
+            });
+        }
+        catch { return null; }
+    }
+
+    // =============================================================== Pull ====
+
+    public sealed record PullProgress(string Status, double Percent);
+
+    /// <summary>
+    ///     POSTs to <c>/api/pull</c> and streams the NDJSON progress lines back as
+    ///     <see cref="PullProgress"/> snapshots. Suitable for binding to a progress bar in the UI.
+    /// </summary>
+    public async Task PullModelAsync(string modelName, IProgress<PullProgress>? progress = null, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(modelName)) throw new ArgumentException("Model name required.", nameof(modelName));
+        var settings = AppConfig.Current?.OllamaSettings;
+        var baseUrl = settings?.BaseUrl ?? "http://localhost:11434";
+
+        using var req = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/api/pull")
+        {
+            Content = new StringContent(JsonSerializer.Serialize(new { name = modelName, stream = true }),
+                Encoding.UTF8, "application/json")
+        };
+        using var resp = await _httpClient.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct);
+        if (!resp.IsSuccessStatusCode)
+            throw new InvalidOperationException($"Pull request failed: HTTP {(int)resp.StatusCode}");
+
+        await using var stream = await resp.Content.ReadAsStreamAsync(ct);
+        using var reader = new StreamReader(stream, Encoding.UTF8);
+        string? line;
+        while ((line = await reader.ReadLineAsync(ct)) is not null)
+        {
+            if (string.IsNullOrWhiteSpace(line)) continue;
+            try
+            {
+                using var doc = JsonDocument.Parse(line);
+                var root = doc.RootElement;
+                string status = root.TryGetProperty("status", out var s) ? (s.GetString() ?? "") : "";
+                double pct = 0;
+                if (root.TryGetProperty("total", out var tot) && tot.TryGetInt64(out var total) && total > 0 &&
+                    root.TryGetProperty("completed", out var comp) && comp.TryGetInt64(out var done))
+                    pct = Math.Clamp(100.0 * done / total, 0, 100);
+                progress?.Report(new PullProgress(status, pct));
+            }
+            catch (JsonException) { /* skip malformed chunk */ }
+        }
+        // Refresh the local model cache so the new tag shows up immediately.
+        await IsAvailableAsync();
+    }
+
     public OllamaClient()
     {
-        _httpClient = new();
+        // HttpClient is process-wide static — see _httpClient field. No-op constructor.
     }
 
     public bool IsAvailable => _isAvailable;
@@ -216,7 +344,9 @@ public class OllamaClient : IOllamaClient
 
     public void Dispose()
     {
-        _httpClient.Dispose();
+        // No per-instance resources — the HttpClient is process-wide static. Intentionally a no-op
+        // so re-using a logically "disposed" OllamaClient (control reloaded after navigation) still
+        // works and never hits ObjectDisposedException.
     }
 }
 

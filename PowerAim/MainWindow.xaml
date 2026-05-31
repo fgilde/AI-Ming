@@ -161,6 +161,69 @@
                                 Click="RestartAsAdminButton_Click"
                                 Margin="0,0,4,0" />
 
+                        <!-- Inference-GPU picker — lets the user push ONNX inference onto a
+                             secondary card so it doesn't compete with the game for cycles on the
+                             primary GPU. Chip-styled to match SectionLabel. Hidden when only one
+                             adapter exists (or when DXGI enumeration failed). Toggled here triggers
+                             a model reload so the new device id is actually picked up. -->
+                        <Button x:Name="GpuPickerButton"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Padding="0"
+                                Margin="0,0,8,0"
+                                Visibility="Collapsed"
+                                WindowChrome.IsHitTestVisibleInChrome="True"
+                                Click="GpuPickerButton_Click"
+                                ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='InferenceGpuTooltip'}">
+                            <Border CornerRadius="{StaticResource PillCorner}"
+                                    Background="{StaticResource FluentSurface3}"
+                                    BorderBrush="{StaticResource FluentStroke}"
+                                    BorderThickness="1"
+                                    Padding="10,4,12,4">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="&#xEC4A;"
+                                               FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                                               FontSize="12"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,6,0"
+                                               Foreground="{StaticResource FluentTextSecondary}" />
+                                    <TextBlock x:Name="GpuPickerLabel"
+                                               Text="GPU"
+                                               MaxWidth="140"
+                                               TextTrimming="CharacterEllipsis"
+                                               VerticalAlignment="Center"
+                                               FontFamily="Segoe UI Variable Small"
+                                               FontWeight="SemiBold"
+                                               FontSize="11"
+                                               Foreground="{StaticResource FluentTextSecondary}" />
+                                    <TextBlock Text="&#xE70D;"
+                                               FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                                               FontSize="10"
+                                               VerticalAlignment="Center"
+                                               Margin="6,0,0,0"
+                                               Foreground="{StaticResource FluentTextTertiary}" />
+                                </StackPanel>
+                            </Border>
+                        </Button>
+                        <Popup x:Name="GpuPickerPopup"
+                               Placement="Bottom"
+                               PlacementTarget="{Binding ElementName=GpuPickerButton}"
+                               AllowsTransparency="True"
+                               PopupAnimation="Fade"
+                               StaysOpen="False">
+                            <Border Background="{StaticResource FluentSurface2}"
+                                    BorderBrush="{StaticResource FluentStroke}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="4"
+                                    MinWidth="260">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="16" ShadowDepth="2" Opacity="0.4" />
+                                </Border.Effect>
+                                <StackPanel x:Name="GpuPickerList" />
+                            </Border>
+                        </Popup>
+
                         <!-- Global search lupe -->
                         <Button x:Name="GlobalSearchButton"
                                 Content="&#xE721;"

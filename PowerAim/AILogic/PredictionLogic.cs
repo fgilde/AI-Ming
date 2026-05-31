@@ -103,7 +103,10 @@ public class PredictionLogic : IPredictionLogic
         _onnxModel?.Dispose();
         _onnxModel = null;
 
-        var loaded = OnnxModelSessionFactory.Load(modelPath, provider, sessionOptions);
+        // Read the user-selected GPU adapter (default 0 = primary). Lets users push inference onto
+        // a secondary card so the game's GPU isn't bottlenecked by detection workloads.
+        int deviceId = AppConfig.Current?.AISettings?.InferenceGpuDeviceId ?? 0;
+        var loaded = OnnxModelSessionFactory.Load(modelPath, provider, sessionOptions, deviceId);
         _onnxModel = loaded.Session;
         _outputNames = loaded.OutputNames;
         ExecutionProvider = loaded.ExecutionProvider;

@@ -68,6 +68,28 @@
                        Visibility="Collapsed"
                        FontFamily="Segoe UI Variable Small" />
 
+            <!-- Action row: shown only when Ollama isn't reachable. The buttons swap based on
+                 whether the executable is installed locally. -->
+            <StackPanel x:Name="ActionRow"
+                        Orientation="Horizontal"
+                        Margin="0,6,0,0"
+                        Visibility="Collapsed">
+                <Button x:Name="StartOllamaButton"
+                        Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OllamaStartServer'}"
+                        Style="{DynamicResource FluentAccentButton}"
+                        Padding="10,4,12,4"
+                        MinHeight="28"
+                        Visibility="Collapsed"
+                        Click="StartOllama_Click" />
+                <Button x:Name="InstallOllamaButton"
+                        Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OllamaInstall'}"
+                        Style="{DynamicResource FluentAccentButton}"
+                        Padding="10,4,12,4"
+                        MinHeight="28"
+                        Visibility="Collapsed"
+                        Click="InstallOllama_Click" />
+            </StackPanel>
+
             <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='InstallOllamaHint'}"
                        Foreground="{DynamicResource FluentTextTertiary}"
                        FontSize="10"

@@ -73,6 +73,20 @@ public class AISettings : BaseSettings
         get;
         set => SetField(ref field, value);
     } = new();
+
+    /// <summary>
+    ///     DXGI adapter index the ONNX inference session should run on. Passed straight through to
+    ///     <c>AppendExecutionProvider_CUDA(deviceId)</c> / <c>AppendExecutionProvider_DML(deviceId)</c>,
+    ///     so the meaning matches whatever Windows reports through <see cref="AILogic.GpuAdapterEnumerator"/>.
+    ///     Default <c>0</c> = primary GPU; setting this to a secondary card lets the user keep
+    ///     inference off the GPU the game is running on (reduces input lag on single-GPU systems with
+    ///     an integrated/secondary adapter, or just balances load on dual-GPU rigs).
+    /// </summary>
+    public int InferenceGpuDeviceId
+    {
+        get;
+        set => SetField(ref field, value);
+    } = 0;
 }
 
 /// <summary>
