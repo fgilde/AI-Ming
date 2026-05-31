@@ -32,8 +32,8 @@
     </Product>
     <Title>
     </Title>
-    <AssemblyName>CrosshairWhisperer</AssemblyName>
-    <Version>2.0.0.1</Version>
+    <AssemblyName>AI-Machine</AssemblyName>
+    <Version>2.0.0.2</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>False</SignAssembly>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
