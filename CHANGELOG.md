@@ -5,6 +5,103 @@ All notable changes to PowerAim are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0.1]
+
+### Added
+
+- **OCR regions overlay** with on-screen editing. A new toggle (with hotkey support)
+  in the HUD OCR settings paints a labelled rectangle on screen for every enabled
+  OCR region, showing the recognized value live. An "Edit" checkbox on the overlay
+  turns the rectangles into drag-to-move + resize-from-corner handles that write
+  straight back to the region's coordinates — no more eyeballing X/Y/W/H numbers
+  in the dialog. A "+" button (visible in edit mode) creates a fresh region at the
+  screen centre. The OCR regions configuration dialog now also has a **"Visual
+  edit"** button that hops directly into the overlay with edit mode on.
+- **Debug overlay OCR column.** Next to the existing FPS / inference / detection
+  stats, the debug overlay now lists every enabled OCR region with its live
+  recognized value. Hidden when OCR is off or no regions are configured.
+- **About page expansion.** New "Project" card with the source code, issues,
+  documentation and author website links, plus a "Releases" card that pulls every
+  release from GitHub and shows version · publish date · total download count ·
+  one-click "open on GitHub". Loads lazily on first About visit and caches for the
+  session.
+- **Aim-Disengage dialog UX.** Column headers (OCR region · Condition · Value ·
+  Game), inline placeholder hints in the value + game-pattern boxes, and a help
+  banner with a concrete worked example ("region 'state' contains 'scoped' → aim
+  assist pauses while the scope is active").
+
+### Changed
+
+- **LG Hub Downloader dialog redesigned** with the rest of the app's Fluent style
+  (proper titlebar, surface-card mirror list with icons, sub-labels, chevron
+  affordance, Fluent footer). The DragMove handler is on the titlebar instead of
+  the whole window, matching the other dialogs.
+- **About → Releases shows a real total** — the sum of every asset's downloads per
+  release (DirectML zip + CUDA zip + Installer.exe), not a single asset.
+
+### Fixed
+
+- **Scroll bar grabbing now works.** The window's 6px `WindowChrome` resize border
+  used to claim the last few pixels of any scroll bar — hovering over the thumb
+  flipped to the resize cursor and clicks initiated a window resize instead of
+  scrolling. The scroll bar style now opts the entire bar out of chrome hit-
+  testing, so scroll clicks land on the thumb and only the very edge outside the
+  bar still resizes.
+- **Razer Synapse detection ignored Synapse 4.** The "Razer Synapse" mouse-movement
+  method only probed the legacy `Razer Synapse` process name, so Synapse 4 (which
+  ships `RazerAppEngine` plus a `Razer Synapse Service` background process)
+  always reported "not installed". The check now probes every documented Razer
+  Synapse process name — `RazerAppEngine`, `Razer Synapse Service`,
+  `Razer Synapse Service Process`, `Razer Synapse`, `RazerCentralService` and
+  `Razer Central` — and counts any of them as "installed and running". The two
+  leftover `"Aimmy"` titles in the Razer dialogs were renamed to `"PowerAim"`.
+- **No-model screen no longer flashes at startup.** The "no model loaded" card now
+  shows a loading spinner while the initial model load is in flight, and only
+  flips to the empty-state message + "Load default model" button once the load
+  actually resolves with no model.
+- **Settings cards no longer duplicate on language switch.** The Active-Processes,
+  Overlays, Stats, HUD-OCR, Replay and AutoPlay-Learning cards used to append
+  their content on each language change instead of rebuilding. Each of them now
+  clears first. The stats `DispatcherTimer` and the `ReplayBuffer` /
+  `AutoPlayLearningModel` `PropertyChanged` subscriptions are torn down before
+  reassignment too, so language switches no longer stack orphan timers /
+  handlers on detached labels.
+- **"Hidden sections" pill reappears after a language switch.** Toggling section
+  visibility (the per-card × button) used to silently lose the pill after the UI
+  was rebuilt by a language change. The page-layout managers are now preserved
+  across rebuilds (the FluentCard borders + their already-attached chrome
+  survive), so the pill stays bound to the same manager the × buttons drive.
+- **Header keybind "min time" popup opens.** The Global Active hotkey's min-time
+  configuration popup couldn't open because the window's click-to-drag handler
+  swallowed the click before it reached the control. Key changers are now exempt
+  from window dragging — and clicking a header keybind no longer accidentally
+  starts dragging the window.
+- **AutoPlay default profile + bundled default model.** "FPS Default" now ships
+  with all four tactical actions (interact, melee, grenade, switch weapon) plus
+  the four extra triggers from the shipped config (Primary Fire, Rapid Fire,
+  Auto Throw, Ping). The bundled `default.onnx` model lives under
+  `Resources/` and the no-model card's "Load default model" button copies it
+  into `bin/models/` on demand.
+- **AutoPlay strategic layer gets real game context.** The Ollama vision prompt
+  now includes the current enemy count, OCR-read ammo/health (when matching
+  regions are configured) and a short rolling history of recent decisions, with
+  an instruction to vary them — so the bot stops oscillating or getting stuck in
+  one mode.
+
+### Internal
+
+- New constants in `ApplicationConstants` for the project URLs (`RepoUrl`,
+  `ReleasesUrl`, `IssuesUrl`, `AuthorUrl`, `Copyright`) so the About page and any
+  future "open on GitHub" buttons share one source of truth.
+- New `OcrRegionsOverlay.OpenInEditMode()` convenience entry point used by the
+  OCR-regions dialog's "Visual edit" button.
+- The page-layout-manager dictionary is no longer cleared on every `CreateUI`
+  rebuild — managers reuse their existing instrumentation, which avoids the
+  empty-new-manager / orphaned-chrome state that broke the hidden-sections pill
+  after a language switch.
+
+
+
 ### Added
 
 #### 🤖 AutoPlay (new)
