@@ -92,6 +92,8 @@
   "AutoPlayMenuTooltip": "AutoPlay (управление игрой ИИ)",
   "AutoPlayProfiles": "Профили AutoPlay",
   "AutoPlayToggleTooltip": "Включить управляемую ИИ игру с использованием моделей зрения Ollama",
+  "AutoPlayUseOllama": "Использовать стратегический слой Ollama",
+  "AutoPlayUseOllamaHint": "Когда выключено, AutoPlay работает только на эвристике + OCR-сигналах — без LLM-запросов и захвата экрана. Меньше CPU/сети, Ollama не требуется.",
   "AutoSwitchProfile": "Авто-переключение профиля по игре",
   "AutoSwitchProfileTooltip": "Когда у профиля Trigger / AutoPlay есть шаблон совпадения процесса, он активен только пока соответствующая игра на переднем плане.",
   "AutoTrigger": "Автоматический триггер",

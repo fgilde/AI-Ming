@@ -92,6 +92,8 @@
   "AutoPlayMenuTooltip": "AutoPlay (Contrôle de jeu IA)",
   "AutoPlayProfiles": "Profils AutoPlay",
   "AutoPlayToggleTooltip": "Activer le gameplay contrôlé par IA avec les modèles de vision Ollama",
+  "AutoPlayUseOllama": "Utiliser la couche stratégique Ollama",
+  "AutoPlayUseOllamaHint": "Désactivé, AutoPlay fonctionne uniquement avec heuristique + signaux OCR — pas de sondage LLM ni de capture d'écran. CPU/réseau moindre, Ollama non requis.",
   "AutoSwitchProfile": "Changer de profil automatiquement selon le jeu",
   "AutoSwitchProfileTooltip": "Quand un profil Trigger / AutoPlay a un motif Match-Process, il n'est actif que si le jeu correspondant est au premier plan.",
   "AutoTrigger": "Déclenchement automatique",

@@ -92,6 +92,8 @@
   "AutoPlayMenuTooltip": "AutoPlay (Controllo IA del gioco)",
   "AutoPlayProfiles": "Profili AutoPlay",
   "AutoPlayToggleTooltip": "Abilita il gameplay controllato dall'IA usando i modelli di visione Ollama",
+  "AutoPlayUseOllama": "Usa il livello strategico Ollama",
+  "AutoPlayUseOllamaHint": "Se disattivato, AutoPlay funziona solo con euristica + segnali OCR — niente polling LLM, niente cattura schermo. CPU/rete inferiore, Ollama non richiesto.",
   "AutoSwitchProfile": "Cambio profilo automatico per gioco",
   "AutoSwitchProfileTooltip": "Quando un profilo Trigger / AutoPlay ha un pattern Match-Process, è attivo solo quando il gioco corrispondente è in primo piano.",
   "AutoTrigger": "Grilletto automatico",

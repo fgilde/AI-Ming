@@ -553,13 +553,26 @@
                                                     <ColumnDefinition Width="32" />
                                                 </Grid.ColumnDefinitions>
                                                 <ContentPresenter Grid.Column="0"
+                                                                  x:Name="SelectionBoxPresenter"
                                                                   Content="{Binding SelectionBoxItem, RelativeSource={RelativeSource AncestorType={x:Type ComboBox}}}"
                                                                   ContentTemplate="{Binding SelectionBoxItemTemplate, RelativeSource={RelativeSource AncestorType={x:Type ComboBox}}}"
                                                                   ContentTemplateSelector="{Binding ItemTemplateSelector, RelativeSource={RelativeSource AncestorType={x:Type ComboBox}}}"
                                                                   Margin="{Binding Padding, RelativeSource={RelativeSource AncestorType={x:Type ComboBox}}}"
                                                                   VerticalAlignment="Center"
                                                                   HorizontalAlignment="Left"
-                                                                  TextElement.Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType={x:Type ComboBox}}}" />
+                                                                  TextElement.Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType={x:Type ComboBox}}}">
+                                                    <!-- Editable ComboBox: the typed text lives in PART_EditableTextBox below; hide
+                                                         the non-editable SelectionBoxItem presenter so the two don't overlap. -->
+                                                    <ContentPresenter.Style>
+                                                        <Style TargetType="ContentPresenter">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsEditable, RelativeSource={RelativeSource AncestorType={x:Type ComboBox}}}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </ContentPresenter.Style>
+                                                </ContentPresenter>
                                                 <Path Grid.Column="1"
                                                       x:Name="Chevron"
                                                       Data="M 0,0 L 4,4 L 8,0 Z"
@@ -584,6 +597,33 @@
                                     </ControlTemplate>
                                 </ToggleButton.Template>
                             </ToggleButton>
+                            <!-- WPF requires this exact name when IsEditable=True; it routes typed input
+                                 here and binds two-way to ComboBox.Text. Overlaid on top of the
+                                 ToggleButton's left column (chevron stays clickable on the right). -->
+                            <TextBox x:Name="PART_EditableTextBox"
+                                     Visibility="Collapsed"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     Foreground="{TemplateBinding Foreground}"
+                                     FontFamily="{TemplateBinding FontFamily}"
+                                     FontSize="{TemplateBinding FontSize}"
+                                     VerticalAlignment="Center"
+                                     HorizontalAlignment="Stretch"
+                                     Margin="12,0,32,0"
+                                     Padding="0"
+                                     CaretBrush="{TemplateBinding Foreground}"
+                                     Focusable="True"
+                                     IsTabStop="True"
+                                     Style="{x:Null}">
+                                <TextBox.Template>
+                                    <ControlTemplate TargetType="TextBox">
+                                        <ScrollViewer x:Name="PART_ContentHost"
+                                                      Background="Transparent"
+                                                      VerticalAlignment="Center"
+                                                      Focusable="False" />
+                                    </ControlTemplate>
+                                </TextBox.Template>
+                            </TextBox>
                             <Popup x:Name="Popup"
                                    Placement="Bottom"
                                    IsOpen="{TemplateBinding IsDropDownOpen}"
@@ -610,6 +650,12 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.4" />
+                            </Trigger>
+                            <!-- Editable ComboBox: reveal the inline TextBox so typed text actually
+                                 renders. The SelectionBoxItem ContentPresenter inside the ToggleButton
+                                 hides itself via its own Style trigger to avoid double-display. -->
+                            <Trigger Property="IsEditable" Value="True">
+                                <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

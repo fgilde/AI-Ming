@@ -92,6 +92,8 @@
   "AutoPlayMenuTooltip": "AutoPlay (KI-Spielsteuerung)",
   "AutoPlayProfiles": "AutoPlay-Profile",
   "AutoPlayToggleTooltip": "Aktiviere KI-gesteuertes Gameplay mit Ollama-Vision-Modellen",
+  "AutoPlayUseOllama": "Ollama-Strategie-Layer benutzen",
+  "AutoPlayUseOllamaHint": "Wenn aus, läuft AutoPlay rein auf Heuristik + OCR-Hinweisen — kein LLM-Polling, kein Screenshot-Capture. Weniger CPU/Netz, kein Ollama nötig.",
   "AutoSwitchProfile": "Profil automatisch nach Spiel wechseln",
   "AutoSwitchProfileTooltip": "Wenn ein Trigger- / AutoPlay-Profil ein Match-Process-Muster hat, ist es nur aktiv, während das passende Spiel im Vordergrund ist.",
   "AutoTrigger": "Automatischer Auslöser",

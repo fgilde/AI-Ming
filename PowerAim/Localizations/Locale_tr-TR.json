@@ -92,6 +92,8 @@
   "AutoPlayMenuTooltip": "AutoPlay (AI Oyun Kontrolü)",
   "AutoPlayProfiles": "AutoPlay Profilleri",
   "AutoPlayToggleTooltip": "Ollama görüntü modelleri kullanarak AI kontrollü oyunu etkinleştir",
+  "AutoPlayUseOllama": "Ollama stratejik katmanını kullan",
+  "AutoPlayUseOllamaHint": "Kapalıyken AutoPlay yalnızca sezgisel kurallar + OCR ipuçlarıyla çalışır — LLM sorgusu ve ekran yakalama yok. Daha az CPU/ağ kullanımı, Ollama gerekmez.",
   "AutoSwitchProfile": "Oyuna göre profili otomatik değiştir",
   "AutoSwitchProfileTooltip": "Bir Tetik / AutoPlay profilinin Match-Process deseni varsa, yalnızca eşleşen oyun ön plandayken aktiftir.",
   "AutoTrigger": "Otomatik Tetik",

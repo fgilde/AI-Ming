@@ -39,11 +39,28 @@
                     </StackPanel>
                 </Grid>
 
+                <!-- Per-profile opt-out for the Ollama strategic layer. When off, AutoPlay runs
+                     purely on heuristics + OCR cues — no HTTP polling, no screenshot capture for
+                     the LLM, no Ollama install required. Disables the model picker below. -->
+                <uiLibrary:AToggle Margin="0,15,0,0"
+                                   BorderBrush="Transparent" Background="Transparent"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AutoPlayUseOllama'}"
+                                   ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AutoPlayUseOllamaHint'}"
+                                   Checked="{Binding Profile.UseOllama, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBlock Foreground="{StaticResource Foreground}"
+                           FontSize="11"
+                           Margin="2,0,0,4"
+                           TextWrapping="Wrap"
+                           Visibility="{Binding Converter={StaticResource helpVis}}"
+                           Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AutoPlayUseOllamaHint'}"
+                           FontFamily="Segoe UI Variable Text" />
+
                 <!-- Ollama Model — editable ComboBox so the user can either pick from the locally
                      installed list (loaded async from /api/tags) or type any model name. The Pull
                      button next to it fetches whatever's in the box from the Ollama registry,
                      streaming progress into the line below. -->
-                <StackPanel x:Name="OllamaModelPanel" Margin="0 10 0 0">
+                <StackPanel x:Name="OllamaModelPanel" Margin="0 10 0 0"
+                            IsEnabled="{Binding Profile.UseOllama}">
                     <Label Foreground="{StaticResource Foreground}"
                            FontSize="13"
                            Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OllamaModel'}"

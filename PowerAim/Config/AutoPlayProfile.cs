@@ -101,6 +101,23 @@ public class AutoPlayProfile : EditableNotificationObject
     }
 
     /// <summary>
+    ///     When <c>true</c> (default) the strategic Ollama layer runs alongside the heuristic and
+    ///     biases its decisions. When <c>false</c> the strategic loop never starts — no HTTP polling,
+    ///     no screenshot capture for the LLM — and AutoPlay is driven by the heuristic + OCR cues
+    ///     only. Useful when Ollama isn't installed, when latency matters more than tactical hints,
+    ///     or for benchmarking the heuristic in isolation.
+    /// </summary>
+    public bool UseOllama
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value))
+                RaisePropertyChanged(nameof(Description));
+        }
+    } = true;
+
+    /// <summary>
     /// Ollama model to use for vision analysis.
     /// Recommended: "moondream" (fast), "llava:7b" (balanced), "qwen2.5-vl:7b" (quality)
     /// </summary>
@@ -183,5 +200,5 @@ public class AutoPlayProfile : EditableNotificationObject
     /// <summary>
     /// Display description for UI
     /// </summary>
-    public string Description => $"{Name ?? "New Profile"} ({Actions.Count(a => a.IsValid)} actions, {OllamaModel})";
+    public string Description => $"{Name ?? "New Profile"} ({Actions.Count(a => a.IsValid)} actions, {(UseOllama ? OllamaModel : "heuristic only")})";
 }

@@ -92,6 +92,8 @@
   "AutoPlayMenuTooltip": "AutoPlay (керування грою ШІ)",
   "AutoPlayProfiles": "Профілі AutoPlay",
   "AutoPlayToggleTooltip": "Увімкнути керовану ШІ гру через моделі бачення Ollama",
+  "AutoPlayUseOllama": "Використовувати стратегічний шар Ollama",
+  "AutoPlayUseOllamaHint": "Коли вимкнено, AutoPlay працює лише на евристиці + OCR-сигналах — без запитів до LLM і захоплення екрана. Менше CPU/мережі, Ollama не потрібна.",
   "AutoSwitchProfile": "Автоперемикання профілю за грою",
   "AutoSwitchProfileTooltip": "Якщо у профіля Trigger / AutoPlay є шаблон Match-Process, він активний лише поки відповідна гра у фокусі.",
   "AutoTrigger": "Автоматичний тригер",

@@ -67,6 +67,8 @@
   "AutoPlayMenuTooltip": "AutoPlay (AI Game Control)",
   "AutoPlayProfiles": "AutoPlay Profiles",
   "AutoPlayToggleTooltip": "Enable AI-controlled gameplay using Ollama vision models",
+  "AutoPlayUseOllama": "Use Ollama strategic layer",
+  "AutoPlayUseOllamaHint": "When off, AutoPlay runs purely on heuristics + OCR cues — no LLM polling, no screenshot capture. Lower CPU/network, no Ollama install required.",
   "AutoSwitchProfile": "Auto-switch profile by game",
   "AutoSwitchProfileTooltip": "When a Trigger / AutoPlay profile has a Match-Process pattern, it's only active while the matching game is in the foreground.",
   "AutoTrigger": "Auto Trigger",

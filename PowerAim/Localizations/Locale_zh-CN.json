@@ -92,6 +92,8 @@
   "AutoPlayMenuTooltip": "自动游玩 (AI 游戏控制)",
   "AutoPlayProfiles": "自动游玩配置文件",
   "AutoPlayToggleTooltip": "启用基于 Ollama 视觉模型的 AI 控制游戏",
+  "AutoPlayUseOllama": "使用 Ollama 战略层",
+  "AutoPlayUseOllamaHint": "关闭时,AutoPlay 仅依靠启发式 + OCR 提示运行 — 不再轮询 LLM、不再截图。占用更少 CPU/网络,无需安装 Ollama。",
   "AutoSwitchProfile": "按游戏自动切换配置文件",
   "AutoSwitchProfileTooltip": "当触发器/自动游玩配置文件设置了匹配进程模式时，仅在匹配的游戏在前台时激活。",
   "AutoTrigger": "自动触发",
