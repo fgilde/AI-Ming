@@ -9,13 +9,16 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using PowerAim.Config;
 using PowerAim.Class.Native;
+using PowerAim.Visuality;
 
 namespace Visuality;
 
 /// <summary>
-/// Interaction logic for LGDownloader.xaml
+///     Modal dialog offering download mirrors for Logitech G HUB. After download it verifies file
+///     size + MD5 hash, then hands off to the OS installer. Restyled with the Fluent dialog shell
+///     used elsewhere in the app (titlebar + body + footer via <see cref="BaseDialog"/>).
 /// </summary>
-public partial class LGDownloader : Window
+public partial class LGDownloader : BaseDialog
 {
     private const string CorrectHash = "33-DF-A8-5A-63-22-40-F8-73-F9-B8-E5-D9-8A-0C-A6";
     private const long CorrectFileSize = 41131424;
@@ -34,9 +37,9 @@ public partial class LGDownloader : Window
         Close();
     }
 
-    private void Border_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private void Titlebar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        DragMove();
+        if (e.ChangedButton == MouseButton.Left) DragMove();
     }
 
     #endregion Window Controls

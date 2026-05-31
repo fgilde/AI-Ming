@@ -9,18 +9,12 @@ public class ReleaseManager
     /// </summary>
     public static string? LastError { get; private set; }
 
-    /// <summary>
-    ///     Loads release tags into <paramref name="releases"/>. Tries the fork first, then falls
-    ///     back to the upstream Babyhamsta/Aimmy repo if the fork has no releases or the call
-    ///     failed (e.g. GitHub rate limit). The collection is updated on the UI thread.
-    /// </summary>
     public static async Task LoadReleasesAsync(ObservableCollection<GitHubRelease> releases)
     {
         LastError = null;
         var sources = new (string Owner, string Name)[]
         {
             (Constants.RepoOwner, Constants.RepoName),
-            (Constants.UpstreamRepoOwner, Constants.UpstreamRepoName)
         };
 
         var manager = new GithubManager();

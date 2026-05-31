@@ -214,6 +214,11 @@
             </Style>
             <Style TargetType="{x:Type ScrollBar}"
                    x:Key="{x:Type ScrollBar}">
+                <!-- ScrollBars sit at the very right/bottom edge of MainWindow, where the
+                     WindowChrome ResizeBorderThickness="6" otherwise claims the cursor for window
+                     resize and swallows clicks on the thumb. Opt the entire ScrollBar subtree out
+                     of chrome hit-testing so the bar is normally clickable. -->
+                <Setter Property="WindowChrome.IsHitTestVisibleInChrome" Value="True" />
                 <Setter Property="Stylus.IsPressAndHoldEnabled"
                         Value="False" />
                 <Setter Property="Stylus.IsFlicksEnabled"

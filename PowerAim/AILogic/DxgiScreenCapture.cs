@@ -3,10 +3,8 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using PowerAim.AILogic.Contracts;
-using SharpGen.Runtime;
 using Vortice.Direct3D;
 using Vortice.Direct3D11;
 using Vortice.DXGI;
@@ -14,17 +12,7 @@ using Vortice.DXGI;
 namespace PowerAim.AILogic;
 
 /// <summary>
-/// DXGI Desktop Duplication based screen capture (ported from upstream Babyhamsta/Aimmy
-/// CaptureManager). Provides a low-latency capture path via the GPU.
-/// <para>
-/// Falls back to <see cref="GdiScreenCapture"/> on first init failure or when the running
-/// hardware does not support a usable feature level. Uses a short-lived frame cache
-/// (default 8ms) so that very tight polling loops do not waste GPU work.
-/// </para>
-/// <para>
-/// Behaviour mirrors the upstream implementation: on a Duplication-Lost / Access-Lost result
-/// we perform a clean re-init of the duplication chain and try again on the next frame.
-/// </para>
+/// DXGI Desktop Duplication based screen capture
 /// </summary>
 public sealed class DxgiScreenCapture : ICapture
 {

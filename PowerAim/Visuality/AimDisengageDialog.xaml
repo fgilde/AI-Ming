@@ -66,13 +66,37 @@
             </Button>
         </Grid>
 
-        <TextBlock Grid.Row="1"
-                   Margin="16,4,16,12"
-                   TextWrapping="Wrap"
-                   Foreground="{DynamicResource FluentTextTertiary}"
-                   FontFamily="Segoe UI Variable Small"
-                   FontSize="12"
-                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimDisengageDescription'}" />
+        <StackPanel Grid.Row="1" Margin="16,4,16,12">
+            <TextBlock TextWrapping="Wrap"
+                       Foreground="{DynamicResource FluentTextSecondary}"
+                       FontFamily="Segoe UI Variable Text"
+                       FontSize="12"
+                       Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimDisengageDescription'}" />
+
+            <!-- Example help banner — explains the columns + a concrete usage so users know what
+                 belongs into "Value" and "Game". -->
+            <Border Background="{DynamicResource FluentSurface2}"
+                    BorderBrush="{DynamicResource FluentStroke}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="10,8,10,8"
+                    Margin="0,8,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="&#xE946;"
+                               FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                               FontSize="14"
+                               Foreground="{DynamicResource FluentAccent}"
+                               VerticalAlignment="Top"
+                               Margin="0,1,10,0" />
+                    <TextBlock TextWrapping="Wrap"
+                               Foreground="{DynamicResource FluentTextSecondary}"
+                               FontFamily="Segoe UI Variable Small"
+                               FontSize="12"
+                               LineHeight="18"
+                               Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimDisengageExampleHelp'}" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
 
         <ScrollViewer Grid.Row="2" Margin="16,0,16,0" VerticalScrollBarVisibility="Auto">
             <StackPanel x:Name="RulesBox" />

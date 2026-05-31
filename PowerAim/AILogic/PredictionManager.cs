@@ -10,9 +10,6 @@ namespace PowerAim.AILogic;
 /// Lead time can be derived from <see cref="AppConfig.Current.SliderSettings.PredictionLeadTime"/>
 /// and an optional mouse speed hint.
 ///
-/// Ported from upstream Babyhamsta/Aimmy commit 817b2c1 — replaces the
-/// previous Accord.Statistics.Running.KalmanFilter2D-based implementation
-/// which lacked any lead-time prediction.
 /// </summary>
 internal class KalmanPrediction
 {
@@ -357,7 +354,6 @@ internal class ShalloePredictionV2
 /// <summary>
 /// Central place for prediction tuning constants. These are exposed as
 /// static fields so future UI surfaces can bind to them without further
-/// API breakage; defaults match upstream Babyhamsta/Aimmy 817b2c1.
 /// </summary>
 internal static class PredictionSettings
 {

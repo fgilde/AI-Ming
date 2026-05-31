@@ -258,6 +258,7 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                 <CheckBox x:Name="EngineEnabledBox" Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OcrEngineRunning'}"
@@ -270,18 +271,25 @@
                            FontFamily="Segoe UI Variable Small" FontSize="11"
                            VerticalAlignment="Center" />
             </StackPanel>
-            <Button Grid.Column="1" Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DownloadTesseractData'}"
+            <Button Grid.Column="1"
+                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='VisualEdit'}"
+                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='VisualEditTooltip'}"
+                    MinWidth="140" MinHeight="34"
+                    Margin="0,0,8,0" Padding="14,6,14,6"
+                    Style="{DynamicResource FluentStandardButton}"
+                    Click="VisualEdit_Click" />
+            <Button Grid.Column="2" Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DownloadTesseractData'}"
                     MinWidth="180" MinHeight="34"
                     Margin="0,0,8,0" Padding="14,6,14,6"
                     Style="{DynamicResource FluentStandardButton}"
                     Click="Download_Click" />
-            <Button Grid.Column="2" Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='TestEngine'}"
+            <Button Grid.Column="3" Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='TestEngine'}"
                     MinWidth="120" MinHeight="34"
                     Margin="0,0,8,0" Padding="14,6,14,6"
                     Style="{DynamicResource FluentStandardButton}"
                     ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='TestEngineTooltip'}"
                     Click="Test_Click" />
-            <Button Grid.Column="3" Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Close'}"
+            <Button Grid.Column="4" Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Close'}"
                     MinWidth="96" MinHeight="34"
                     Padding="14,6,14,6"
                     Style="{DynamicResource FluentAccentButton}"

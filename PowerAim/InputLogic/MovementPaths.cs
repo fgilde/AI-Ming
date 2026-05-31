@@ -3,10 +3,7 @@ using System.Drawing;
 namespace PowerAim.InputLogic;
 
 /// <summary>
-///     Mouse-movement path helpers. Adapted from upstream Babyhamsta/Aimmy (commits 8b030b7, 6c9128a)
-///     into the fork's namespace. Used by <see cref="MouseManager"/> alongside the existing
-///     Cubic-Bezier path as humanizing alternatives. <see cref="PerlinNoise"/> requires the
-///     permutation table to be seeded once via <see cref="SeedPermutation"/>.
+///     Mouse-movement path helpers.
 /// </summary>
 public static class MovementPaths
 {

@@ -7,9 +7,8 @@ namespace PowerAim.AILogic;
 ///     Creates an <see cref="InferenceSession"/> with the requested execution provider, falling back
 ///     through DirectML → CUDA → CPU as needed. The loader also inspects the ONNX input metadata so
 ///     callers can drive <c>IMAGE_SIZE</c> dynamically instead of hard-coding 640.
-///     Adapted from upstream Babyhamsta/Aimmy (commits 3e153bc, 632cab6, c96fb70, 8a3139d) — extended
 ///     with input-shape detection (<see cref="OnnxModelLoadResult.InputImageSize"/> /
-///     <see cref="OnnxModelLoadResult.IsDynamicInput"/>) so the fork can support multiple square
+///     <see cref="OnnxModelLoadResult.IsDynamicInput"/>) so the we can support multiple square
 ///     YOLOv8 input resolutions without recompiling.
 /// </summary>
 internal static class OnnxModelSessionFactory

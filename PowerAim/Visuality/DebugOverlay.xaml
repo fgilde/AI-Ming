@@ -46,41 +46,68 @@
                        FontWeight="SemiBold"
                        FontSize="11"
                        Margin="0,0,0,6" />
+            <!-- Stats column on the left, OCR readout column on the right (added on demand). -->
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+                <Grid Grid.Column="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="FPS"        Style="{StaticResource DebugLabel}" />
-                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="FpsText"  Style="{StaticResource DebugValue}" />
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="FPS"        Style="{StaticResource DebugLabel}" />
+                    <TextBlock Grid.Row="0" Grid.Column="1" x:Name="FpsText"  Style="{StaticResource DebugValue}" />
 
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Inference"  Style="{StaticResource DebugLabel}" />
-                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="MsText"   Style="{StaticResource DebugValue}" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Inference"  Style="{StaticResource DebugLabel}" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" x:Name="MsText"   Style="{StaticResource DebugValue}" />
 
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Detections" Style="{StaticResource DebugLabel}" />
-                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="DetText"  Style="{StaticResource DebugValue}" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Detections" Style="{StaticResource DebugLabel}" />
+                    <TextBlock Grid.Row="2" Grid.Column="1" x:Name="DetText"  Style="{StaticResource DebugValue}" />
 
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="Shots"      Style="{StaticResource DebugLabel}" />
-                <TextBlock Grid.Row="3" Grid.Column="1" x:Name="ShotsText" Style="{StaticResource DebugValue}" />
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Shots"      Style="{StaticResource DebugLabel}" />
+                    <TextBlock Grid.Row="3" Grid.Column="1" x:Name="ShotsText" Style="{StaticResource DebugValue}" />
 
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="Intent"     Style="{StaticResource DebugLabel}" />
-                <TextBlock Grid.Row="4" Grid.Column="1" x:Name="IntentText" Style="{StaticResource DebugValue}" />
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Intent"     Style="{StaticResource DebugLabel}" />
+                    <TextBlock Grid.Row="4" Grid.Column="1" x:Name="IntentText" Style="{StaticResource DebugValue}" />
 
-                <TextBlock Grid.Row="5" Grid.Column="0" Text="Profile"    Style="{StaticResource DebugLabel}" />
-                <TextBlock Grid.Row="5" Grid.Column="1" x:Name="ProfileText" Style="{StaticResource DebugValue}" />
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Profile"    Style="{StaticResource DebugLabel}" />
+                    <TextBlock Grid.Row="5" Grid.Column="1" x:Name="ProfileText" Style="{StaticResource DebugValue}" />
 
-                <TextBlock Grid.Row="6" Grid.Column="0" Text="Process"    Style="{StaticResource DebugLabel}" />
-                <TextBlock Grid.Row="6" Grid.Column="1" x:Name="ProcessText" Style="{StaticResource DebugValue}" />
+                    <TextBlock Grid.Row="6" Grid.Column="0" Text="Process"    Style="{StaticResource DebugLabel}" />
+                    <TextBlock Grid.Row="6" Grid.Column="1" x:Name="ProcessText" Style="{StaticResource DebugValue}" />
+                </Grid>
+
+                <!-- OCR readout — populated on the tick when at least one enabled region exists. -->
+                <StackPanel x:Name="OcrSection"
+                            Grid.Column="1"
+                            Margin="18,0,0,0"
+                            Visibility="Collapsed">
+                    <TextBlock x:Name="OcrHeader"
+                               Text="OCR"
+                               Foreground="#8B5CF6"
+                               FontFamily="Segoe UI Variable Display"
+                               FontWeight="SemiBold"
+                               FontSize="11"
+                               Margin="0,0,0,4" />
+                    <Grid x:Name="OcrGrid">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                    </Grid>
+                </StackPanel>
             </Grid>
 
             <!-- Sent-input visualizer (added on demand when ShowInputVisualizer is on) -->

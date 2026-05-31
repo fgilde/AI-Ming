@@ -12,7 +12,6 @@ namespace PowerAim.AILogic;
 ///     Both an async (<see cref="WaitForNextFrameAsync"/>) and a sync (<see cref="Wait"/>) variant
 ///     are provided because the fork's <c>AIManager.AiLoop</c> mixes the two styles.
 ///
-///     Ported alongside <see cref="PerformanceBenchmark"/> from upstream Babyhamsta/Aimmy.
 /// </summary>
 public sealed class FpsCapHelper
 {

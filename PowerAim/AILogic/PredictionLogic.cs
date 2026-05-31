@@ -18,10 +18,6 @@ namespace PowerAim.AILogic;
 ///     ONNX inference pipeline. Detects the model's input resolution and class count at load time,
 ///     so the same code path now supports both fixed-shape YOLOv8 exports (e.g. 1×5×8400 for a
 ///     single-class 640px model) and dynamic-axis exports plus multi-class models
-///     (<c>[1, 4+numClasses, numDetections]</c>).
-///     Adapted from upstream Babyhamsta/Aimmy (dynamic model size: 21d8121, 3e153bc, a87ce22,
-///     632cab6; multi-class: 113cebe, c249de6) into the fork's
-///     <see cref="IPredictionLogic"/> contract.
 /// </summary>
 public class PredictionLogic : IPredictionLogic
 {

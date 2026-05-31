@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Threading;
 using PowerAim.Class;
 using PowerAim.Class.Native;
@@ -67,6 +68,8 @@ public partial class DebugOverlay : Window
             ? "—"
             : WindowFocusWatcher.Instance.CurrentProcessName;
 
+        UpdateOcrSection();
+
         // Lazily add / remove the input visualizer. Adding the panel flips InputEventBus.Enabled on
         // (via the panel's Loaded handler); removing it turns the senders' reporting back off.
         bool showViz = PowerAim.Config.AppConfig.Current?.ToggleState?.ShowInputVisualizer == true;
@@ -82,6 +85,60 @@ public partial class DebugOverlay : Window
             InputHost.Content = null;
             _inputViz = null;
             InputSection.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    /// <summary>
+    ///     Rebuilds the OCR readout column next to the stats: one row per enabled OCR region,
+    ///     showing the recognized text/value. Hidden entirely when OCR is off or there are no
+    ///     enabled regions.
+    /// </summary>
+    private void UpdateOcrSection()
+    {
+        var settings = PowerAim.Config.AppConfig.Current?.OcrSettings;
+        bool show = settings != null && settings.Enabled && settings.Regions.Any(r => r.Enabled);
+        if (!show)
+        {
+            if (OcrSection.Visibility != Visibility.Collapsed) OcrSection.Visibility = Visibility.Collapsed;
+            return;
+        }
+        OcrSection.Visibility = Visibility.Visible;
+
+        var latest = PowerAim.AILogic.OcrService.Instance.Latest;
+        var regions = settings!.Regions.Where(r => r.Enabled).ToList();
+
+        // Resize the row set to match the region count, reusing existing TextBlocks so the timer
+        // doesn't keep allocating + churning the visual tree every 120 ms.
+        while (OcrGrid.RowDefinitions.Count < regions.Count)
+        {
+            OcrGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            int row = OcrGrid.RowDefinitions.Count - 1;
+            var nameTb = new System.Windows.Controls.TextBlock { Style = (Style)FindResource("DebugLabel") };
+            var valueTb = new System.Windows.Controls.TextBlock { Style = (Style)FindResource("DebugValue") };
+            Grid.SetRow(nameTb, row); Grid.SetColumn(nameTb, 0);
+            Grid.SetRow(valueTb, row); Grid.SetColumn(valueTb, 1);
+            OcrGrid.Children.Add(nameTb);
+            OcrGrid.Children.Add(valueTb);
+        }
+        while (OcrGrid.RowDefinitions.Count > regions.Count)
+        {
+            int last = OcrGrid.RowDefinitions.Count - 1;
+            OcrGrid.RowDefinitions.RemoveAt(last);
+            // Remove the two TextBlocks for that row (name + value, last two children).
+            for (int k = 0; k < 2 && OcrGrid.Children.Count > 0; k++)
+                OcrGrid.Children.RemoveAt(OcrGrid.Children.Count - 1);
+        }
+
+        for (int i = 0; i < regions.Count; i++)
+        {
+            var r = regions[i];
+            // Children layout: row i has [name at 2i, value at 2i+1].
+            var nameTb = (System.Windows.Controls.TextBlock)OcrGrid.Children[2 * i];
+            var valueTb = (System.Windows.Controls.TextBlock)OcrGrid.Children[2 * i + 1];
+            nameTb.Text = string.IsNullOrEmpty(r.Name) ? "—" : r.Name;
+            valueTb.Text = latest.TryGetValue(r.Name ?? "", out var res) && !string.IsNullOrEmpty(res.Text)
+                ? res.Text
+                : "—";
         }
     }
 

@@ -6,10 +6,6 @@ namespace PowerAim.AILogic;
 
 /// <summary>
 ///     Hot-path math helpers used by the inference pipeline.
-///     Adapted from upstream Babyhamsta/Aimmy (commits 5ae44a4, 16d8173, f7bccf8) — namespace lifted to
-///     <c>PowerAim.AILogic</c> to match the fork's conventions and integrated with the fork's
-///     <see cref="Prediction"/> class which already exposes screen-translated centers via the
-///     <c>CenterXTranslated</c> / <c>CenterYTranslated</c> properties.
 /// </summary>
 public static class MathUtil
 {

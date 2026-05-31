@@ -39,12 +39,30 @@ internal class RZMouse
         return Razer_HID.Count != 0;
     }
 
+    /// <summary>
+    ///     Process names Razer uses across Synapse versions. The legacy "Razer Synapse" alone
+    ///     misses Synapse 4 (which ships <c>RazerAppEngine</c> as the main engine and
+    ///     <c>Razer Synapse Service</c> / <c>Razer Synapse Service Process</c> as the background
+    ///     service that actually exposes <c>rzctl.dll</c>). We treat any of these running as
+    ///     "Synapse is installed and running".
+    /// </summary>
+    private static readonly string[] RazerSynapseProcessNames =
+    {
+        "RazerAppEngine",              // Synapse 4 main engine (recommended)
+        "Razer Synapse Service",       // background service
+        "Razer Synapse Service Process",
+        "Razer Synapse",               // Synapse 3 legacy
+        "RazerCentralService",
+        "Razer Central"
+    };
+
     public static async Task<bool> CheckRazerSynapseInstall()
     {
-        var razerSynapseProcesses = Process.GetProcessesByName("Razer Synapse");
-        if (razerSynapseProcesses.Length == 0)
+        bool anyRunning = RazerSynapseProcessNames
+            .Any(name => Process.GetProcessesByName(name).Length > 0);
+        if (!anyRunning)
         {
-            var result = PowerAim.Visuality.MessageDialog.Show("Razer Synapse is not running, do you have it installed?", "Aimmy - Razer Synapse", PowerAim.Visuality.MessageDialog.DialogButtons.YesNo);
+            var result = PowerAim.Visuality.MessageDialog.Show("Razer Synapse is not running, do you have it installed?", "PowerAim - Razer Synapse", PowerAim.Visuality.MessageDialog.DialogButtons.YesNo);
             if (result == PowerAim.Visuality.MessageDialog.DialogResult.No)
             {
                 await InstallRazerSynapse();
@@ -116,7 +134,7 @@ internal class RZMouse
         }
         if (!CheckForRazerDevices())
         {
-            PowerAim.Visuality.MessageDialog.Show("No Razer Peripheral is detected, this Mouse Movement Method is unusable.", "Aimmy", PowerAim.Visuality.MessageDialog.DialogButtons.OK, PowerAim.Visuality.MessageDialog.DialogIcon.Warning);
+            PowerAim.Visuality.MessageDialog.Show("No Razer Peripheral is detected, this Mouse Movement Method is unusable.", "PowerAim", PowerAim.Visuality.MessageDialog.DialogButtons.OK, PowerAim.Visuality.MessageDialog.DialogIcon.Warning);
             return false;
         }
         try
@@ -125,7 +143,7 @@ internal class RZMouse
         }
         catch (Exception ex)
         {
-            PowerAim.Visuality.MessageDialog.Show($"Unfortunately, Razer Synapse mode cannot be ran sufficiently.\n{ex}", "Aimmy", PowerAim.Visuality.MessageDialog.DialogButtons.OK, PowerAim.Visuality.MessageDialog.DialogIcon.Error);
+            PowerAim.Visuality.MessageDialog.Show($"Unfortunately, Razer Synapse mode cannot be ran sufficiently.\n{ex}", "PowerAim", PowerAim.Visuality.MessageDialog.DialogButtons.OK, PowerAim.Visuality.MessageDialog.DialogIcon.Error);
             return false;
         }
     }

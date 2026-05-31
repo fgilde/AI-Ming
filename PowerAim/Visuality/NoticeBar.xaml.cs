@@ -1,5 +1,4 @@
 using PowerAim.Class;
-using AimmyWPF.Class;
 using System.Windows;
 using System.Windows.Interop;
 using PowerAim.Extensions;

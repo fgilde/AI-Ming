@@ -40,7 +40,7 @@ internal class DdxoftMain
         {
             if (new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator) == false)
             {
-                PowerAim.Visuality.MessageDialog.Show("The ddxoft Virtual Input Driver requires Aimmy to be run as an administrator, please close Aimmy and run it as administrator to use this movement method.", "Aimmy", PowerAim.Visuality.MessageDialog.DialogButtons.OK, PowerAim.Visuality.MessageDialog.DialogIcon.Warning);
+                PowerAim.Visuality.MessageDialog.Show("The ddxoft Virtual Input Driver requires PowerAim to be run as an administrator, please close PowerAim and run it as administrator to use this movement method.", "PowerAim", PowerAim.Visuality.MessageDialog.DialogButtons.OK, PowerAim.Visuality.MessageDialog.DialogIcon.Warning);
                 return false;
             }
 
@@ -52,7 +52,7 @@ internal class DdxoftMain
 
             if (ddxoftInstance.Load(ddxoftpath) != 1 || ddxoftInstance.btn!(0) != 1)
             {
-                PowerAim.Visuality.MessageDialog.Show("The ddxoft virtual input driver is not compatible with your PC, please try a different Mouse Movement Method.", "Aimmy", PowerAim.Visuality.MessageDialog.DialogButtons.OK, PowerAim.Visuality.MessageDialog.DialogIcon.Warning);
+                PowerAim.Visuality.MessageDialog.Show("The ddxoft virtual input driver is not compatible with your PC, please try a different Mouse Movement Method.", "PowerAim", PowerAim.Visuality.MessageDialog.DialogButtons.OK, PowerAim.Visuality.MessageDialog.DialogIcon.Warning);
                 return false;
             }
 
@@ -60,7 +60,7 @@ internal class DdxoftMain
         }
         catch (Exception ex)
         {
-            PowerAim.Visuality.MessageDialog.Show("Failed to load ddxoft virtual input driver.\n\n" + ex.ToString(), "Aimmy", PowerAim.Visuality.MessageDialog.DialogButtons.OK, PowerAim.Visuality.MessageDialog.DialogIcon.Error);
+            PowerAim.Visuality.MessageDialog.Show("Failed to load ddxoft virtual input driver.\n\n" + ex.ToString(), "PowerAim", PowerAim.Visuality.MessageDialog.DialogButtons.OK, PowerAim.Visuality.MessageDialog.DialogIcon.Error);
             return false;
         }
     }

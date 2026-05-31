@@ -359,6 +359,18 @@ public partial class OcrRegionsDialog
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
 
+    /// <summary>
+    ///     Closes this configuration dialog and opens the on-screen overlay in edit mode so the
+    ///     user can drag/resize regions directly on the live HUD. The overlay writes back to the
+    ///     same <see cref="OcrRegion"/> instances, so re-opening this dialog after editing surfaces
+    ///     the up-to-date coordinates.
+    /// </summary>
+    private void VisualEdit_Click(object sender, RoutedEventArgs e)
+    {
+        Close();
+        OcrRegionsOverlay.OpenInEditMode();
+    }
+
     private void Titlebar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (e.ChangedButton == MouseButton.Left) DragMove();

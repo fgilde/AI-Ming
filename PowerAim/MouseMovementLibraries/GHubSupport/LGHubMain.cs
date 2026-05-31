@@ -9,7 +9,7 @@ internal class LGHubMain
     {
         if (!RequirementsManager.CheckForGhub())
         {
-            PowerAim.Visuality.MessageDialog.Show("Unfortunately, LG HUB Mouse is not here.", "Aimmy", PowerAim.Visuality.MessageDialog.DialogButtons.OK, PowerAim.Visuality.MessageDialog.DialogIcon.Warning);
+            PowerAim.Visuality.MessageDialog.Show("Unfortunately, LG HUB Mouse is not here.", "PowerAim", PowerAim.Visuality.MessageDialog.DialogButtons.OK, PowerAim.Visuality.MessageDialog.DialogIcon.Warning);
             return false;
         }
 
@@ -23,13 +23,13 @@ internal class LGHubMain
             }
             catch (Exception ex)
             {
-                PowerAim.Visuality.MessageDialog.Show("Unfortunately, LG HUB Mouse Movement mode cannot be ran sufficiently.\n" + ex.ToString(), "Aimmy", PowerAim.Visuality.MessageDialog.DialogButtons.OK, PowerAim.Visuality.MessageDialog.DialogIcon.Error);
+                PowerAim.Visuality.MessageDialog.Show("Unfortunately, LG HUB Mouse Movement mode cannot be ran sufficiently.\n" + ex.ToString(), "PowerAim", PowerAim.Visuality.MessageDialog.DialogButtons.OK, PowerAim.Visuality.MessageDialog.DialogIcon.Error);
                 return false;
             }
         }
         else
         {
-            PowerAim.Visuality.MessageDialog.Show("Memory Integrity is enabled. Please disable it to use LG HUB Mouse Movement mode.", "Aimmy", PowerAim.Visuality.MessageDialog.DialogButtons.OK, PowerAim.Visuality.MessageDialog.DialogIcon.Warning);
+            PowerAim.Visuality.MessageDialog.Show("Memory Integrity is enabled. Please disable it to use LG HUB Mouse Movement mode.", "PowerAim", PowerAim.Visuality.MessageDialog.DialogButtons.OK, PowerAim.Visuality.MessageDialog.DialogIcon.Warning);
             return false;
         }
     }

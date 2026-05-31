@@ -81,9 +81,9 @@ namespace Other
 
         private static void ShowLGHubNotRunningMessage()
         {
-            if (PowerAim.Visuality.MessageDialog.Show("LG HUB is not running, is it installed?", "Aimmy - LG HUB Mouse Movement", PowerAim.Visuality.MessageDialog.DialogButtons.YesNo, PowerAim.Visuality.MessageDialog.DialogIcon.Error) == PowerAim.Visuality.MessageDialog.DialogResult.No)
+            if (PowerAim.Visuality.MessageDialog.Show("LG HUB is not running, is it installed?", "PowerAim - LG HUB Mouse Movement", PowerAim.Visuality.MessageDialog.DialogButtons.YesNo, PowerAim.Visuality.MessageDialog.DialogIcon.Error) == PowerAim.Visuality.MessageDialog.DialogResult.No)
             {
-                if (PowerAim.Visuality.MessageDialog.Show("Would you like to install it?", "Aimmy - LG HUB Mouse Movement", PowerAim.Visuality.MessageDialog.DialogButtons.YesNo) == PowerAim.Visuality.MessageDialog.DialogResult.Yes)
+                if (PowerAim.Visuality.MessageDialog.Show("Would you like to install it?", "PowerAim - LG HUB Mouse Movement", PowerAim.Visuality.MessageDialog.DialogButtons.YesNo) == PowerAim.Visuality.MessageDialog.DialogResult.Yes)
                 {
                     new LGDownloader().Show();
                 }
@@ -92,7 +92,7 @@ namespace Other
 
         private static void ShowLGHubImproperInstallMessage()
         {
-            if (PowerAim.Visuality.MessageDialog.Show("LG HUB install is improper, would you like to install it?", "Aimmy - LG HUB Mouse Movement", PowerAim.Visuality.MessageDialog.DialogButtons.YesNo) == PowerAim.Visuality.MessageDialog.DialogResult.Yes)
+            if (PowerAim.Visuality.MessageDialog.Show("LG HUB install is improper, would you like to install it?", "PowerAim - LG HUB Mouse Movement", PowerAim.Visuality.MessageDialog.DialogButtons.YesNo) == PowerAim.Visuality.MessageDialog.DialogResult.Yes)
             {
                 new LGDownloader().Show();
             }

@@ -48,6 +48,24 @@ public class ToggleState : BaseSettings
         }
     }
 
+    /// <summary>
+    ///     Show the topmost <see cref="Visuality.OcrRegionsOverlay"/> with a labelled rectangle for
+    ///     every enabled OCR region plus its live recognized value. The overlay also has an "edit
+    ///     mode" checkbox that makes the rectangles draggable + resizable.
+    /// </summary>
+    public bool ShowOcrRegionsOverlay
+    {
+        get;
+        set
+        {
+            if (SetField(ref field, value))
+            {
+                System.Windows.Application.Current?.Dispatcher?.BeginInvoke(new Action(() =>
+                    PowerAim.Visuality.OcrRegionsOverlay.ShowOrHide(value)));
+            }
+        }
+    }
+
     public bool EnsureCaptureForeground
     {
         get;

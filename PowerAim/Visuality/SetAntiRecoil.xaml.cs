@@ -1,6 +1,5 @@
 using PowerAim;
 using PowerAim.Class;
-using AimmyWPF.Class;
 using InputLogic;
 using System.Windows;
 using System.Windows.Threading;

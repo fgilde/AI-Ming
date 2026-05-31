@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
-using AimmyWPF.Class;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -11,6 +10,7 @@ using Color = System.Windows.Media.Color;
 using ColorConverter = System.Windows.Media.ColorConverter;
 using System.Reflection;
 using System.Windows.Controls;
+using PowerAim.Class;
 using PowerAim.Config;
 using PowerAim.Converter;
 using PowerAim.Extensions;

@@ -6,7 +6,7 @@ namespace PowerAim.Config;
 /// </summary>
 public enum MovementPathType
 {
-    /// <summary>Cubic Bezier with 1/3 and 2/3 control points — original Aimmy behaviour.</summary>
+    /// <summary>Cubic Bezier with 1/3 and 2/3 control points — original behaviour.</summary>
     Bezier,
 
     /// <summary>Straight linear interpolation. Fastest, no easing.</summary>

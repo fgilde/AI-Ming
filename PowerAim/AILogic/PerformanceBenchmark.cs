@@ -11,7 +11,6 @@ namespace PowerAim.AILogic;
 ///     window, and reports the achieved FPS / per-frame latency. Picks the highest resolution
 ///     whose measured FPS still clears a "playable" threshold.
 ///
-///     Adapted from upstream Babyhamsta/Aimmy (Performance Benchmark feature) into the fork's
 ///     architecture: we drive the session via <see cref="OnnxModelSessionFactory"/> so the
 ///     execution-provider fallback chain (DirectML → CUDA → CPU) and dynamic input-shape
 ///     detection used elsewhere in the pipeline are reused unchanged.

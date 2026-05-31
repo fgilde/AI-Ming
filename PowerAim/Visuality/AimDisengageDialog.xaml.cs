@@ -48,8 +48,47 @@ public partial class AimDisengageDialog
         }
 
         AddBtn.IsEnabled = true;
+        RulesBox.Children.Add(BuildHeaderRow());
         foreach (var rule in AppConfig.Current.AimDisengageRules.ToList())
             RulesBox.Children.Add(BuildRow(rule, regionNames));
+    }
+
+    /// <summary>
+    ///     Header strip above the rule cards: labels the columns so users know which textbox is
+    ///     "Value" (what the OCR reading must match) vs. "Game" (process-name pattern). Same grid
+    ///     widths as <see cref="BuildRow"/> so it lines up.
+    /// </summary>
+    private FrameworkElement BuildHeaderRow()
+    {
+        var headerGrid = new Grid { Margin = new Thickness(10, 0, 10, 6) };
+        headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(76) });
+        headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(150) });
+        headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        TextBlock Label(string text, int col, Thickness pad)
+        {
+            var tb = new TextBlock
+            {
+                Text = text,
+                Foreground = (Brush)FindResource("FluentTextTertiary"),
+                FontFamily = new FontFamily("Segoe UI Variable Small"),
+                FontSize = 11,
+                Margin = pad,
+            };
+            Grid.SetColumn(tb, col);
+            return tb;
+        }
+        // Column 0 = enabled checkbox — labelled "On" so users connect the dot.
+        headerGrid.Children.Add(Label(Locale.Enabled, 0, new Thickness(0, 0, 16, 0)));
+        headerGrid.Children.Add(Label(Locale.AimDisengageColumnRegion,     1, new Thickness(0, 0, 6, 0)));
+        headerGrid.Children.Add(Label(Locale.AimDisengageColumnComparison, 2, new Thickness(0, 0, 6, 0)));
+        headerGrid.Children.Add(Label(Locale.AimDisengageColumnValue,      3, new Thickness(0, 0, 6, 0)));
+        headerGrid.Children.Add(Label(Locale.AimDisengageColumnGame,       4, new Thickness(0, 0, 6, 0)));
+        // Column 5 = delete button — no label needed.
+        return headerGrid;
     }
 
     protected override void OnSourceInitialized(EventArgs e)
@@ -120,8 +159,12 @@ public partial class AimDisengageDialog
             Text = rule.Value,
             VerticalContentAlignment = VerticalAlignment.Center,
             Margin = new Thickness(0, 0, 6, 0),
-            ToolTip = Locale.AimDisengageValueHint
+            Tag = Locale.AimDisengageValuePlaceholder,
+            ToolTip = Locale.AimDisengageValueHint,
         };
+        // 'placeHolder' is a TextBox style defined in App.xaml that draws Tag as a grey
+        // placeholder while Text is empty — matches the GlobalSearchBox treatment.
+        if (TryFindResource("placeHolder") is Style ph) valueBox.Style = ph;
         valueBox.TextChanged += (_, _) => rule.Value = valueBox.Text;
         Grid.SetColumn(valueBox, 3);
         grid.Children.Add(valueBox);
@@ -131,8 +174,10 @@ public partial class AimDisengageDialog
             Text = rule.MatchProcess,
             VerticalContentAlignment = VerticalAlignment.Center,
             Margin = new Thickness(0, 0, 6, 0),
-            ToolTip = "cs2*, valorant, *fortnite*"
+            Tag = Locale.AimDisengageMatchProcessHint,
+            ToolTip = Locale.AimDisengageMatchProcessHint,
         };
+        if (TryFindResource("placeHolder") is Style phm) matchBox.Style = phm;
         matchBox.TextChanged += (_, _) => rule.MatchProcess = matchBox.Text;
         Grid.SetColumn(matchBox, 4);
         grid.Children.Add(matchBox);

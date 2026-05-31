@@ -10,8 +10,6 @@ namespace PowerAim.AILogic;
 ///     the fork's existing API (including the <c>CenterXTranslated</c> / <c>CenterYTranslated</c>
 ///     screen-normalized coordinates used by sticky-aim and the KD-tree selection in
 ///     <see cref="PredictionLogic"/>).
-///     Ported from upstream Babyhamsta/Aimmy (commit c249de6) — class-id filtering uses the
-///     fork's <see cref="AppConfig"/>-driven settings instead of upstream's free-text selector.
 /// </summary>
 internal static class PredictionFilter
 {

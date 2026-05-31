@@ -2,27 +2,22 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
 using PowerAim.Class;
-using PowerAim.Class.Native;
 using PowerAim.Config;
 using PowerAim.Extensions;
 using PowerAim.InputLogic;
 using PowerAim.InputLogic.HidHide;
-using PowerAim;
 using PowerAim.Localizations;
 using PowerAim.Models;
 using PowerAim.MouseMovementLibraries.GHubSupport;
 using PowerAim.Other;
 using PowerAim.Types;
 using PowerAim.UILibrary;
-using PowerAim.Visuality;
-using AimmyWPF.Class;
 using Core;
 using InputLogic;
 using Microsoft.Xaml.Behaviors.Core;
@@ -37,7 +32,6 @@ using Visuality;
 using Application = System.Windows.Application;
 using Brushes = System.Windows.Media.Brushes;
 using Button = System.Windows.Controls.Button;
-using MessageBox = System.Windows.MessageBox;
 using Panel = System.Windows.Controls.Panel;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 using TextBox = System.Windows.Controls.TextBox;
@@ -2060,6 +2054,9 @@ public partial class MainWindow
             .BindTo(() => AppConfig.Current.OcrSettings.Enabled);
         HudOcrCard.AddSlider(Locale.OcrInterval, Locale.MillisecondsShort, 50, 50, 100, 5000, true)
             .BindTo(() => AppConfig.Current.OcrSettings.IntervalMs);
+        HudOcrCard.AddToggleWithKeyBind(Locale.ShowOcrRegions, nameof(Locale.ShowOcrRegions), BindingManager)
+            .InitWith(t => t.ToolTip = Locale.ShowOcrRegionsTooltip)
+            .BindTo(() => AppConfig.Current.ToggleState.ShowOcrRegionsOverlay);
         HudOcrCard.AddButton(Locale.ConfigureOcrRegions).Reader.Click += (_, _) =>
         {
             new PowerAim.Visuality.OcrRegionsDialog { Owner = this }.ShowDialog();
@@ -2163,6 +2160,8 @@ public partial class MainWindow
             PowerAim.Visuality.DebugOverlay.ShowOrHide(true);
         if (AppConfig.Current.ToggleState.ShowCrosshairOverlay)
             PowerAim.Visuality.CrosshairOverlay.ShowOrHide(true);
+        if (AppConfig.Current.ToggleState.ShowOcrRegionsOverlay)
+            PowerAim.Visuality.OcrRegionsOverlay.ShowOrHide(true);
     }
 
     private static void UpdateLearnStatus(System.Windows.Controls.Label label)

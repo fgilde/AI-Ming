@@ -298,6 +298,10 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Width" Value="8" />
             <Setter Property="MinWidth" Value="8" />
+            <!-- Sits at the very right edge of the window where MainWindow's WindowChrome
+                 ResizeBorderThickness="6" otherwise claims the cursor for resize. Opt this
+                 element out of chrome hit-testing so scroll clicks always reach the bar. -->
+            <Setter Property="WindowChrome.IsHitTestVisibleInChrome" Value="True" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ScrollBar">

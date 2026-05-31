@@ -66,10 +66,10 @@ namespace Core
         public async Task DoUpdate(IProgress<double>? progressCallback = null, IEnumerable<string>? filesToIgnore = null)
         {
             string latestZipUrl = UpdateUrl;
-            // Download the newest release of Aimmy to %temp%
+            
             string tempPath = Path.GetTempPath();
-            string localZipPath = Path.Combine(tempPath, "AimmyUpdate.zip");
-            string extractPath = Path.Combine(tempPath, "AimmyUpdate");
+            string localZipPath = Path.Combine(tempPath, "PowerUpdate.zip");
+            string extractPath = Path.Combine(tempPath, "PowerUpdate");
 
             await DownloadZipAsync(latestZipUrl, localZipPath, progressCallback);
             await ExtractZipAsync(localZipPath, extractPath);

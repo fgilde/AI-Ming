@@ -9,14 +9,6 @@ namespace PowerAim.AILogic;
 ///     the highest-scoring one; when nothing close-enough is found it briefly keeps predicting the
 ///     last known target before releasing the lock.
 ///
-///     Adapted from upstream Babyhamsta/Aimmy <c>StickyAimSelector</c> (1e91b4e, 3294904, 817b2c1).
-///     Differences vs upstream:
-///       * uses this fork's <see cref="Prediction"/> shape (<c>CenterXTranslated/Y</c> in place of
-///         the upstream <c>ScreenCenterX/Y</c>);
-///       * delegates the scoring formula to <see cref="MathUtil.CalculateTargetScore"/> which is
-///         already shared with other targeting code;
-///       * <see cref="MaxLockScore"/> and the candidate <see cref="Threshold"/> are injected from
-///         <c>AppConfig.Current.AISettings</c> instead of being hard-coded constants.
 /// </summary>
 public sealed class StickyAimSelector
 {
