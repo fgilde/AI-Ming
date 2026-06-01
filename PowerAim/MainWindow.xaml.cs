@@ -1,12 +1,13 @@
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Globalization;
-using System.IO;
-using System.Runtime.CompilerServices;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Forms;
-using System.Windows.Input;
+using Core;
+using InputLogic;
+using Microsoft.Xaml.Behaviors.Core;
+using MouseMovementLibraries.ddxoftSupport;
+using MouseMovementLibraries.RazerSupport;
+using Nextended.Core;
+using Nextended.Core.Extensions;
+using Nextended.Core.Helper;
+using Nextended.UI.Helper;
+using Other;
 using PowerAim.Class;
 using PowerAim.Config;
 using PowerAim.Extensions;
@@ -18,16 +19,16 @@ using PowerAim.MouseMovementLibraries.GHubSupport;
 using PowerAim.Other;
 using PowerAim.Types;
 using PowerAim.UILibrary;
-using Core;
-using InputLogic;
-using Microsoft.Xaml.Behaviors.Core;
-using MouseMovementLibraries.ddxoftSupport;
-using MouseMovementLibraries.RazerSupport;
-using Nextended.Core;
-using Nextended.Core.Extensions;
-using Nextended.Core.Helper;
-using Nextended.UI.Helper;
-using Other;
+using PowerAim.Visuality;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Runtime.CompilerServices;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Forms;
+using System.Windows.Input;
 using UILibrary;
 using Visuality;
 using Application = System.Windows.Application;
@@ -357,6 +358,7 @@ public partial class MainWindow
         //  this.HideForCapture();
         _ = CheckUpdate(false);
         KnownIssuesDialog.ShowIf(this);
+        //SetupWizard.ShowIfFirstRun(this);
         AboutSpecs.Content =
             $"{GetProcessorName()} • {GetVideoControllerName()} • {GetFormattedMemorySize()}GB RAM";
 
@@ -928,7 +930,7 @@ public partial class MainWindow
             ?? MenuButtonsBottom?.Children.OfType<Button>().FirstOrDefault(b => b.Tag?.ToString() == name);
     }
 
-    private async Task NavigateTo(string name, bool animate = true, Button? clickedButton = null)
+    internal async Task NavigateTo(string name, bool animate = true, Button? clickedButton = null)
     {
         // Track the previously-active menu when entering the Help page so its Back button can
         // restore the user's location. Don't update on Help→Help re-entry (which would erase the
@@ -3225,5 +3227,10 @@ public partial class MainWindow
             }
             File.Delete(path);
         }
+    }
+
+    private void ShowWizzard_CLick(object sender, RoutedEventArgs e)
+    {
+        SetupWizard.ShowIfFirstRun(this, true);
     }
 }

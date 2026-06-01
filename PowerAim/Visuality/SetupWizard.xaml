@@ -1,0 +1,263 @@
+<visuality:BaseDialog x:Class="PowerAim.Visuality.SetupWizard"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:visuality="clr-namespace:PowerAim.Visuality"
+        xmlns:uiLibrary="clr-namespace:PowerAim.UILibrary"
+        mc:Ignorable="d"
+        Title="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupWizardTitle'}"
+        Height="640"
+        Width="820"
+        MinHeight="520"
+        MinWidth="640"
+        WindowStyle="None"
+        Topmost="False"
+        ResizeMode="CanResizeWithGrip"
+        WindowStartupLocation="CenterOwner"
+        AllowsTransparency="False"
+        Background="{StaticResource FluentSurface1}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="44" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Title bar -->
+        <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                <TextBlock Text="&#xE9F5;"
+                           FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                           Foreground="{DynamicResource FluentAccent}"
+                           FontSize="14" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupWizardTitle'}"
+                           Margin="10,0,0,0"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource FluentTextPrimary}"
+                           FontFamily="Segoe UI Variable Display"
+                           FontWeight="SemiBold"
+                           FontSize="13" />
+            </StackPanel>
+            <Button HorizontalAlignment="Right"
+                    Background="Transparent" BorderBrush="Transparent" BorderThickness="0"
+                    Foreground="{DynamicResource FluentTextPrimary}"
+                    FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                    Width="46" Height="44" Padding="0" FontSize="10"
+                    VerticalAlignment="Top"
+                    Content="&#xE8BB;"
+                    Click="CloseButton_Click">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd" Background="{TemplateBinding Background}">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#E81123" />
+                                            <Setter Property="Foreground" Value="White" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </Grid>
+
+        <!-- Step indicator (breadcrumbs) — built in code-behind into this StackPanel so the active
+             step glows in the accent colour. -->
+        <Border Grid.Row="1"
+                Background="{StaticResource FluentSurface1}"
+                BorderBrush="{StaticResource FluentStroke}"
+                BorderThickness="0,1,0,1"
+                Padding="20,10,20,10">
+            <StackPanel x:Name="StepIndicator" Orientation="Horizontal" />
+        </Border>
+
+        <!-- Content host — swapped on Next/Back. Each StepN_Panel sub-StackPanel lives below
+             and has its Visibility flipped from code-behind based on _currentStep. -->
+        <Border Grid.Row="2" Style="{StaticResource FluentCard}" Margin="20,16,20,8" Padding="0">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <Grid Margin="24,18,24,18">
+                    <!-- Step 0: Welcome -->
+                    <StackPanel x:Name="Step0_Welcome">
+                        <TextBlock FontSize="24" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource FluentTextPrimary}"
+                                   FontFamily="Segoe UI Variable Display"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupWelcomeHeading'}" />
+                        <TextBlock Margin="0,12,0,0"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource FluentTextSecondary}"
+                                   FontFamily="Segoe UI Variable Text"
+                                   FontSize="13"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupWelcomeIntro'}" />
+                        <TextBlock Margin="0,16,0,0"
+                                   FontWeight="SemiBold"
+                                   FontFamily="Segoe UI Variable Display"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource FluentTextPrimary}"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupWelcomeWhatNext'}" />
+                        <TextBlock Margin="0,6,0,0"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource FluentTextSecondary}"
+                                   FontFamily="Segoe UI Variable Text"
+                                   FontSize="13"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupWelcomeChecklist'}" />
+                    </StackPanel>
+
+                    <!-- Step 1: Capture source — populated from code-behind because the existing
+                         CaptureSourceSelect control isn't directly bindable. -->
+                    <StackPanel x:Name="Step1_Capture" Visibility="Collapsed">
+                        <TextBlock FontSize="22" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource FluentTextPrimary}"
+                                   FontFamily="Segoe UI Variable Display"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupCaptureHeading'}" />
+                        <TextBlock Margin="0,8,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource FluentTextSecondary}"
+                                   FontSize="13"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupCaptureHelp'}" />
+                        <StackPanel x:Name="Step1_CaptureHost" Margin="0,18,0,0" />
+                        <TextBlock x:Name="Step1_Status"
+                                   Margin="0,16,0,0" FontSize="12"
+                                   Foreground="{DynamicResource FluentTextSecondary}" />
+                    </StackPanel>
+
+                    <!-- Step 2: Model load -->
+                    <StackPanel x:Name="Step2_Model" Visibility="Collapsed">
+                        <TextBlock FontSize="22" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource FluentTextPrimary}"
+                                   FontFamily="Segoe UI Variable Display"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupModelHeading'}" />
+                        <TextBlock Margin="0,8,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource FluentTextSecondary}" FontSize="13"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupModelHelp'}" />
+                        <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                            <Button x:Name="Step2_LoadDefaultBtn"
+                                    Style="{DynamicResource FluentAccentButton}"
+                                    Padding="14,6,14,6"
+                                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupModelLoadDefault'}"
+                                    Click="Step2_LoadDefault_Click" />
+                            <Button x:Name="Step2_OpenModelsBtn"
+                                    Margin="10,0,0,0"
+                                    Style="{DynamicResource FluentStandardButton}"
+                                    Padding="14,6,14,6"
+                                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupModelOpenLibrary'}"
+                                    Click="Step2_OpenModels_Click" />
+                        </StackPanel>
+                        <TextBlock x:Name="Step2_Status"
+                                   Margin="0,16,0,0" FontSize="12"
+                                   Foreground="{DynamicResource FluentTextSecondary}" />
+                    </StackPanel>
+
+                    <!-- Step 3: Movement Method -->
+                    <StackPanel x:Name="Step3_Movement" Visibility="Collapsed">
+                        <TextBlock FontSize="22" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource FluentTextPrimary}"
+                                   FontFamily="Segoe UI Variable Display"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupMovementHeading'}" />
+                        <TextBlock Margin="0,8,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource FluentTextSecondary}" FontSize="13"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupMovementHelp'}" />
+                        <StackPanel x:Name="Step3_MovementHost" Margin="0,16,0,0" />
+                    </StackPanel>
+
+                    <!-- Step 4: Start your game + calibrate -->
+                    <StackPanel x:Name="Step4_Calibrate" Visibility="Collapsed">
+                        <TextBlock FontSize="22" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource FluentTextPrimary}"
+                                   FontFamily="Segoe UI Variable Display"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupCalibrateHeading'}" />
+                        <TextBlock Margin="0,8,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource FluentTextSecondary}" FontSize="13"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupCalibrateHelp'}" />
+                        <Button x:Name="Step4_OpenCalibrationBtn"
+                                Margin="0,18,0,0"
+                                HorizontalAlignment="Left"
+                                Style="{DynamicResource FluentAccentButton}"
+                                Padding="14,6,14,6"
+                                Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupCalibrateOpen'}"
+                                Click="Step4_OpenCalibration_Click" />
+                        <TextBlock Margin="0,12,0,0" TextWrapping="Wrap"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource FluentTextTertiary}"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupCalibrateSkipHint'}" />
+                    </StackPanel>
+
+                    <!-- Step 5: Anti-Recoil setup -->
+                    <StackPanel x:Name="Step5_Recoil" Visibility="Collapsed">
+                        <TextBlock FontSize="22" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource FluentTextPrimary}"
+                                   FontFamily="Segoe UI Variable Display"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupRecoilHeading'}" />
+                        <TextBlock Margin="0,8,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource FluentTextSecondary}" FontSize="13"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupRecoilHelp'}" />
+                        <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
+                            <Button x:Name="Step5_OpenPatternsBtn"
+                                    Style="{DynamicResource FluentStandardButton}"
+                                    Padding="14,6,14,6"
+                                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupRecoilOpenPatterns'}"
+                                    Click="Step5_OpenPatterns_Click" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Step 6: Done -->
+                    <StackPanel x:Name="Step6_Done" Visibility="Collapsed">
+                        <TextBlock FontSize="24" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource FluentAccent}"
+                                   FontFamily="Segoe UI Variable Display"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupDoneHeading'}" />
+                        <TextBlock Margin="0,12,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource FluentTextSecondary}" FontSize="13"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupDoneIntro'}" />
+                        <TextBlock Margin="0,16,0,0"
+                                   FontWeight="SemiBold"
+                                   FontFamily="Segoe UI Variable Display"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource FluentTextPrimary}"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupDoneNextSteps'}" />
+                        <TextBlock Margin="0,6,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource FluentTextSecondary}" FontSize="13"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupDoneTipsList'}" />
+                    </StackPanel>
+                </Grid>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Footer: Back / Skip / Next / Finish + "don't show again" -->
+        <Grid Grid.Row="3" Margin="20,8,20,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <CheckBox Grid.Column="0"
+                      x:Name="DontShowAgainCheckbox"
+                      VerticalAlignment="Center"
+                      IsChecked="True"
+                      Foreground="{DynamicResource FluentTextSecondary}"
+                      Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupDontShowAgain'}"
+                      Click="DontShowAgain_Click" />
+            <Button Grid.Column="2"
+                    x:Name="BackButton"
+                    Style="{DynamicResource FluentStandardButton}"
+                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Back'}"
+                    MinWidth="100"
+                    Margin="0,0,8,0"
+                    Click="Back_Click" />
+            <Button Grid.Column="3"
+                    x:Name="NextButton"
+                    Style="{DynamicResource FluentAccentButton}"
+                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Next'}"
+                    MinWidth="110"
+                    Click="Next_Click" />
+        </Grid>
+    </Grid>
+</visuality:BaseDialog>

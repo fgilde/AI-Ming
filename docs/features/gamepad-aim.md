@@ -4,33 +4,26 @@ parent: Features
 nav_order: 15
 ---
 
-# Gamepad Aim ("Use Controller for Aim")
+# Gamepad Aim
 
-A toggle that makes the entire aim pipeline drive the **virtual right stick** instead of synthesizing mouse motion. Use it for games that accept only gamepad input.
-
-## What it does
-
-When `UseControllerForAim` is on, PowerAim's aim/move loop:
-
-1. Computes the per-tick mouse-delta exactly as it would for SendInput
-2. Translates that delta into a right-stick deflection
-3. Writes the deflection to the virtual ViGEm gamepad
-
-Triggers can also be routed to gamepad buttons (`GamepadButton.A`, `GamepadSlider.RightTrigger`, etc.) via the trigger editor.
-
-The result: the game sees gamepad input, never knows there's a keyboard hooked up.
-
-## Prerequisites
-
-- **ViGEmBus driver installed.** Without it, the toggle stays disabled. See [Installation]({{ '/getting-started/installation#5-optional-install-vigembus' | relative_url }}).
-- **A working gamepad sender.** On the Gamepad settings page, the **Send Mode** must be ViGEm (default) or one of the other working backends.
+Drive the **virtual right stick** instead of synthesising mouse motion, so the game sees gamepad input. Useful for titles that accept only gamepad input or that explicitly reject keyboard hooks.
 
 ## How to enable
 
-1. **Aim Tools → AimConfig → Use Controller for Aim → toggle on**
-2. PowerAim's aim loop now writes to the virtual stick instead of the mouse
+Gamepad aim is no longer a separate toggle — it's one of the entries in the unified [Movement Method]({{ '/features/mouse-input-methods' | relative_url }}) dropdown:
 
-The toggle is greyed out until ViGEm is set up. Its tooltip explains why if it's disabled.
+**Settings → Input Settings → Movement Method → Gamepad**
+
+When picked, every component that previously sent mouse deltas (aim, anti-recoil, AutoPlay aim hints) routes through `InputSender.Move`, which writes to the ViGEm right-stick instead of the system mouse. Triggers can still be routed to gamepad buttons (`GamepadButton.A`, `GamepadSlider.RightTrigger`, etc.) via the trigger editor.
+
+> NOTE: Older docs referenced a separate "Use Controller for Aim" toggle in AimConfig. That toggle is gone — its setting is migrated into the Movement Method dropdown on first config load.
+
+## Prerequisites
+
+- **ViGEmBus driver installed.** Without it, picking **Gamepad** in the dropdown pops a `MessageDialog` ("Gamepad not ready") offering to navigate to the Gamepad settings page. See [Installation]({{ '/getting-started/installation#5-optional-install-vigembus' | relative_url }}).
+- **A working gamepad sender.** On the Gamepad settings page, the **Send Mode** must be ViGEm (default) or one of the other working backends.
+
+The **Gamepad** option stays *selectable* even when no virtual controller is configured, so you can preselect it (the warning fires, then you fix the underlying issue and try again).
 
 ## Configuration
 
@@ -45,12 +38,14 @@ The aim sensitivity sliders still apply, but their values now map to **stick def
 
 ## Tips
 
-- **Calibrate again after enabling.** The Calibration Wizard works with whatever input method is active — re-run it for gamepad-aim feel.
+- **Calibrate again after switching to Gamepad.** The Calibration Wizard works with whatever movement method is active — re-run it for the gamepad-aim feel.
 - **Combine with [Controller Mapping]({{ '/features/controller-mapping' | relative_url }}).** Use Controller Mapping to wire your WASD keys to the virtual left stick; PowerAim drives the right stick. Result: full virtual gamepad input from your KB+M.
 - **Hide your physical controller while doing this.** Otherwise some games sum inputs from both pads. See [Hidden Controllers]({{ '/features/hidden-controllers' | relative_url }}).
+- **Anti-recoil follows the same path.** Any active anti-recoil profile rides the virtual right stick automatically — no separate switch.
 
 ## Troubleshooting
 
-- **Toggle is greyed out** — ViGEm isn't ready. Open the [Gamepad Not Detected]({{ '/troubleshooting/gamepad-not-detected' | relative_url }}) guide.
+- **"Gamepad not ready" dialog when I pick Gamepad** — ViGEm isn't set up. Open the [Gamepad Not Detected]({{ '/troubleshooting/gamepad-not-detected' | relative_url }}) guide; the dialog has a shortcut to the Gamepad settings page.
 - **Game doesn't react to aim** — see [Controller Aim Has No Effect]({{ '/troubleshooting/controller-aim-no-effect' | relative_url }}).
-- **Aim drifts even with mouse still** — the AI loop is sending residual deltas. Toggle off and back on; if it persists, the deadzone (`StickDeadzone` on the mapping profile) might be too low.
+- **Aim drifts even with mouse still** — the AI loop is sending residual deltas. Switch Movement Method off Gamepad and back on; if it persists, the deadzone (`StickDeadzone` on the mapping profile) might be too low.
+- **Selected Gamepad but anti-recoil still nudges the mouse** — only the action's *destination* changed; the source still has to be PowerAim. If the mouse cursor itself moves, something outside PowerAim is the source.

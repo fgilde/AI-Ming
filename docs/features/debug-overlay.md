@@ -21,6 +21,10 @@ The Debug Overlay is a compact panel — small enough to fit in a corner of the 
 - **Frames Processed** — running count
 - **Tactical Actions** — AutoPlay actions taken this session
 - **Session Duration** — `hh:mm:ss`
+- **OCR readings** — every enabled OCR region with its live recognised value (hidden when OCR is off)
+- **AutoPlay activity log** — a rolling list of the last ~8 strategic intents / tactical actions / OCR cues with timestamps (hidden when AutoPlay is off)
+
+The panel **follows the capture source**: it subscribes to `ICapture.PropertyChanged` and repositions live when you change the captured monitor or process window from the title bar — no more stranded overlays after picking a non-primary monitor.
 
 It also shows the Sticky-Aim lock state, the predicted aim point, and a tracer to the current target — so you can see at a glance what PowerAim is "thinking."
 

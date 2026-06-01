@@ -97,6 +97,8 @@
                                 <Separator />
                                 <MenuItem x:Name="MenuItemOpenCfg" Header="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OpenQuickConfig'}" />
                                 <MenuItem Header="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OpenOtherConfig'}" Click="OpenConfig_CLick" />
+                                <Separator />
+                                <MenuItem Header="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ShowSetupWizard'}" Click="ShowWizzard_CLick" />
                             </MenuItem>
                         </Menu>
                     </StackPanel>

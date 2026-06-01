@@ -46,6 +46,7 @@ PowerAim is **source-available** under the **PolyForm Noncommercial** license. C
 | Topic | Description |
 |:------|:------------|
 | [Getting Started]({{ '/getting-started/' | relative_url }}) | Download, install, and land your first aim |
+| [Setup Best Practices]({{ '/getting-started/setup-best-practices' | relative_url }}) | Recommended workflow, GPU selection, per-game profile pattern, common pitfalls |
 | [Features]({{ '/features/' | relative_url }}) | Every user-facing feature in detail |
 | [Models]({{ '/models/' | relative_url }}) | Download, switch, and train your own ONNX models |
 | [Configuration]({{ '/configuration/' | relative_url }}) | Settings, per-game profiles, hotkeys, config file |

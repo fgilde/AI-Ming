@@ -12,7 +12,7 @@ A topmost custom crosshair drawn over the game. Useful when the game's own cross
 
 ## What it does
 
-The crosshair overlay is a click-through, transparent WPF window painted at the exact center of your active monitor. It updates as you change shape / color / size on the Settings page.
+The crosshair overlay is a click-through, transparent WPF window painted at the centre of whatever PowerAim is currently capturing. It subscribes to `ICapture.PropertyChanged` and **repositions live** when the capture source changes — pick a different monitor or capture a specific process window from the title bar and the crosshair follows. It updates as you change shape / color / size on the Settings page.
 
 ## How to enable
 
@@ -33,6 +33,9 @@ All settings live on the **Overlays** card in **Settings**.
 | **Crosshair Outline** | Outline thickness (0–6) — 0 disables the outline | 1 |
 | **Color** | ARGB hex (set elsewhere via the color picker) | `#FF8B5CF6` (PowerAim purple) |
 | **Outline Color** | Outline ARGB hex | `#FF000000` (black) |
+| **Detection Flash** | Tint the crosshair with a configurable colour for N ms whenever the current frame has at least one detection — a quiet "detection is alive" cue without needing the debug overlay | Off |
+| **Detection Flash Color** | ARGB hex of the flash tint | `#FFFF3030` |
+| **Detection Flash Duration** | Flash length in milliseconds (50–1000) | 200 |
 
 ## The six shapes
 
@@ -51,6 +54,6 @@ All settings live on the **Overlays** card in **Settings**.
 
 ## Troubleshooting
 
-- **Crosshair appears off-center** — PowerAim draws it at the *display center*, not the game center. If your game window isn't fullscreen on the same monitor PowerAim is targeting, the crosshair will be off.
+- **Crosshair appears off-center** — PowerAim draws it at the centre of the **capture area**, which mirrors whatever monitor / window you selected as the capture source in the title bar. Confirm the capture source matches the game window.
 - **Game minimizes when I toggle it on** — that's the WPF window stealing focus. Re-focus the game manually. (We're working on a fix.)
 - **Crosshair is captured by my recording software** — disable **Hide UI from Capture** on the Settings page. (The opposite is the usual problem — the crosshair shouldn't be visible to OBS by default.)

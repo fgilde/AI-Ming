@@ -52,11 +52,19 @@ Each profile holds:
 |:------|:-------------|
 | **Name** | Free text |
 | **Enabled** | Per-profile toggle (only enabled profiles are candidates for activation) |
-| **OllamaModel** | Which Ollama model to call (e.g. `moondream`) |
-| **DecisionInterval** | Min seconds between decisions (0.3–2.0 typical) |
+| **UseOllama** | When off, AutoPlay runs the heuristic + OCR cues only — no LLM polling, no screenshot capture, no Ollama install needed. Live-toggleable: flipping off mid-session settles intent to default and idles the loop on a 5 s poll. |
+| **OllamaModel** | Which Ollama model to call (e.g. `moondream`). Ignored when `UseOllama = false`. |
+| **DecisionInterval** | Min seconds between strategic decisions (0.3–2.0 typical) |
 | **GameContext** | Prompt describing the game and what the LLM should do |
+| **MouseSensScale** | Multiplier on every AutoPlay mouse movement (0.1–3.0). `1.0` = recorded magnitudes. Lets one profile cover a high-sens game and another a low-sens one. |
+| **MouseJitterPx** | Anti-detection: random ±N pixel offset on every AutoPlay mouse move (0–15). `0` (default) disables jitter. |
+| **KeyDelayJitterMs** | Anti-detection: random 0..N ms delay before each key down/up burst (0–25). Fire-and-forget — doesn't block the tick. |
 | **MatchProcess** | Optional process pattern — limits this profile to a specific game |
 | **Actions** | The list of action names + descriptions + key bindings |
+
+Every profile row also has a **hotkey chip** (`AKeyChanger`) — same pattern as Triggers / Mapping / AntiRecoil rows. The bound key toggles that profile's `Enabled` flag from in-game.
+
+The list description for a profile surfaces the active mode: `(N actions, moondream)` when Ollama is on or `(N actions, heuristic only)` when it's off.
 
 PowerAim ships a **"FPS Default"** profile with 10 actions covering WASD movement, jump, shoot, aim, reload, crouch, sprint. Use it as a template.
 
@@ -91,6 +99,18 @@ Each action has:
 The Edit dialog opens via the profile editor and provides a per-action form.
 
 ![Edit Action dialog](../images/autoplay-edit-action.png)
+
+## Ollama setup helpers (in the profile editor)
+
+The status indicator at the top of the profile editor has shortcut buttons for whichever step is missing:
+
+- **Start Ollama** — if the executable is found in `LocalAppData\Programs\Ollama`, `Program Files`, or `PATH`, this launches `ollama serve` for you.
+- **Install Ollama** — if the executable isn't found, this opens [ollama.com/download](https://ollama.com/download).
+- **Pull model** — next to the model picker, streams `ollama pull <model>` progress (manifest → downloading → verifying → success) into a live status line.
+
+The indicator also **auto-detects** an externally-started `ollama serve` via a 4 s `DispatcherTimer` — no need to mash Refresh after starting it from a terminal.
+
+The model picker is an **editable ComboBox** populated with locally installed models (from Ollama's `/api/tags`) plus a curated list of vision models. You can pick or type.
 
 ## Ollama settings
 
@@ -127,6 +147,8 @@ The model is a tiny JSON file at `%LocalAppData%\PowerAim\autoplay_model.json` t
 - **Iterate on the GameContext prompt.** Small wording changes massively change behavior. If AutoPlay won't shoot, mention "shoot enemies" more aggressively.
 - **Use Match Process to scope a profile to one game.** Otherwise the LLM might apply your FPS profile to your menu screen.
 - **Watch the Tactical Actions counter** in the Debug Overlay — it tracks the number of actions taken.
+- **Use the Activity Log column** in the [Debug Overlay]({{ '/features/debug-overlay' | relative_url }}) — a rolling list of the last ~8 strategic intents, tactical actions and OCR cues with timestamps. Fastest way to see *why* the bot is doing what it's doing.
+- **Disable UseOllama for latency-critical games.** The heuristic + OCR alone handle movement, aim, burst-fire and reload-on-low-ammo without any LLM round-trip.
 
 ## Troubleshooting
 

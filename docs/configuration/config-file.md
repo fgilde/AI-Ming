@@ -72,8 +72,9 @@ Holds every boolean. Notably:
 - `GlobalActive` — master kill switch
 - `AimAssist`, `AutoTrigger`, `AntiRecoil`, `FOV`, etc.
 - `MappingActive` — Controller Mapping master toggle
-- `UseControllerForAim` — drive virtual right stick instead of mouse
 - `HideUIFromCapture` — Win32 capture exclusion
+
+`UseControllerForAim` no longer exists as a runtime toggle — its successor is `DropdownState.MouseMovementMethod == Gamepad`. The legacy field persists for backward-compat: on first load, a `true` value is migrated into the Gamepad movement method and the bool is cleared. See [Movement Methods]({{ '/features/mouse-input-methods' | relative_url }}).
 
 ### BindingSettings
 
@@ -162,9 +163,13 @@ An array of `ControllerMappingProfile`:
   "Id": "...",
   "Name": "FPS Default",
   "Enabled": false,
+  "UseOllama": true,
   "OllamaModel": "moondream",
-  "DecisionInterval": 0.3,
+  "DecisionInterval": 0.5,
   "GameContext": "First-person shooter game...",
+  "MouseSensScale": 1.0,
+  "MouseJitterPx": 0,
+  "KeyDelayJitterMs": 0,
   "MatchProcess": "",
   "Actions": [
     {
@@ -177,6 +182,56 @@ An array of `ControllerMappingProfile`:
   ]
 }
 ```
+
+`UseOllama = false` skips the strategic LLM layer entirely (no HTTP polling, no screenshot capture for the LLM). `MouseSensScale`, `MouseJitterPx` and `KeyDelayJitterMs` are per-profile anti-detection / per-game tuning knobs — see [AutoPlay]({{ '/features/autoplay' | relative_url }}).
+
+### AntiRecoilSettings
+
+```jsonc
+"AntiRecoilSettings": {
+  "SchemaVersion": 1,
+  "ActiveProfileId": "abc123…",
+  "Profiles": [
+    {
+      "Id": "abc123…",
+      "Name": "AK-47",
+      "Mode": "PatternPlayback",     // Legacy | ImageBased | PatternPlayback
+      "MatchProcess": "",
+      "OcrRegionName": "weapon",
+      "WeaponMatch": "AK",
+      "AutoSwitchOnOcr": true,
+      "HoldTime": 10, "FireRate": 200, "YRecoil": 10, "XRecoil": 0,
+      "AutoStrength": 0.85,
+      "PatternName": "AK-47",
+      "PatternStrength": 1.0
+    }
+  ],
+  "Patterns": [ /* RecoilPattern entries — the shared library */ ],
+
+  // Legacy fields preserved for migration only — write-once, then ignored.
+  "HoldTime": 10, "FireRate": 200, "YRecoil": 10, "XRecoil": 0,
+  "AutoStrength": 0.85,
+  "UseImageBasedAntiRecoil": false,
+  "ActivePatternName": "", "PatternStrength": 1.0,
+  "UsePatternRecoil": false
+}
+```
+
+`SchemaVersion = 0` triggers a one-shot migration on load: a single profile is seeded from the legacy fields (`UseImageBasedAntiRecoil` / `UsePatternRecoil` / `ActivePatternName` / `HoldTime` / `XRecoil` / `YRecoil` / `AutoStrength` / `PatternStrength`) so old configs keep their behaviour. The version is then bumped to `1` and the migration is never run again. See [Anti-Recoil]({{ '/features/anti-recoil' | relative_url }}).
+
+### AISettings
+
+Multi-class filter, sticky aim, detection masks — plus:
+
+- `InferenceGpuDeviceId` (int, default `0`) — DXGI adapter index for ONNX inference. The title-bar GPU picker writes this. On multi-GPU systems, set it to a secondary card to keep inference off the GPU running the game. Setting it reloads the active model.
+
+### CrosshairSettings
+
+Standard shape / size / colour fields, plus:
+
+- `DetectionFlashEnabled` (bool, default `false`) — tint the crosshair when the current frame has any detections.
+- `DetectionFlashColorHex` (ARGB hex, default `#FFFF3030`).
+- `DetectionFlashMs` (int, 50–1000, default `200`).
 
 ## Quick-config menu
 

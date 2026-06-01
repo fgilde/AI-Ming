@@ -59,11 +59,21 @@ Toggles with hotkey support:
 - Show Custom Crosshair
 - AutoPlay
 - Mapping Active
-- Use Controller for Aim
 - Ensure Capture Process Foreground
 - Show Captured Area
 - Enable Gun Switching Keybind
 - Enable HUD OCR
+
+## Per-profile hotkeys
+
+Every row of the Trigger, Mapping, AutoPlay and Anti-Recoil profile lists exposes its own hotkey chip via `AKeyChanger`. Press the bound key in-game to toggle that profile:
+
+- **Triggers** — toggles the trigger's `Enabled` flag.
+- **Mapping** — toggles the mapping profile's active state (radio across mapping profiles).
+- **AutoPlay** — toggles the profile's `Enabled` flag.
+- **Anti-Recoil** — toggles the radio-active profile via `AntiRecoilProfileManager.SetActiveProfile`; pressing the same key again on the currently-active profile clears it.
+
+Per-row bindings persist under `BindingSettings` with a profile-type prefix (e.g. `ANTIRECOIL_PROFILE_<id>`), so they survive config reloads.
 
 ## Trigger keys
 

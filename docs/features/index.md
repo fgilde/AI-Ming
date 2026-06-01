@@ -35,7 +35,7 @@ Every user-facing feature of PowerAim, grouped by what it does. Pages are writte
 - **[Controller Mapping]({{ '/features/controller-mapping' | relative_url }})** — reWASD-style KB↔Pad remapping engine
 - **[Gamepad Aim]({{ '/features/gamepad-aim' | relative_url }})** — use the virtual right stick instead of the mouse
 - **[Hidden Controllers]({{ '/features/hidden-controllers' | relative_url }})** — HidHide cloak + device disable
-- **[Mouse Input Methods]({{ '/features/mouse-input-methods' | relative_url }})** — SendInput, MouseEvent, LGHub, Razer, ddxoft
+- **[Movement Methods]({{ '/features/mouse-input-methods' | relative_url }})** — SendInput, MouseEvent, LGHub, Razer, ddxoft, Gamepad
 
 ## AI / automation
 
