@@ -5,6 +5,7 @@ using System.Drawing;
 using PowerAim.AILogic.Contracts;
 using PowerAim.Config;
 using PowerAim.InputLogic;
+using PowerAim.InputLogic.Contracts;
 using InputLogic;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
@@ -507,9 +508,16 @@ public class AutoPlayGameAction : BaseAction
     }
 
     /// <summary>
-    ///     Wraps <see cref="MouseManager.Move"/> so the pitch accumulator stays accurate. Applies
+    ///     Wraps <see cref="InputSender.Move"/> so the pitch accumulator stays accurate. Applies
     ///     the active profile's per-profile sensitivity scale (1.0 = no-op), then adds optional
     ///     anti-detection jitter so the path doesn't look perfectly deterministic.
+    ///     <para>
+    ///     <b>Important:</b> dispatches through <see cref="InputSender.Move"/> (not
+    ///     <c>MouseManager.Move</c> directly), so when the user has set the Movement Method to
+    ///     <see cref="MouseMovementMethod.Gamepad"/> the corrections drive the virtual right-stick
+    ///     instead of synthesising mouse motion. Same routing the aim pipeline and anti-recoil
+    ///     actions use.
+    ///     </para>
     /// </summary>
     private void ApplyMouseMove(int dx, int dy)
     {
@@ -535,7 +543,7 @@ public class AutoPlayGameAction : BaseAction
 
         if (dx != 0 || dy != 0)
         {
-            MouseManager.Move(dx, dy);
+            InputSender.Move(dx, dy);
             _pitchSum += dy;
         }
     }
@@ -1014,6 +1022,14 @@ public class AutoPlayGameAction : BaseAction
     ///     <see cref="AutoPlayProfile.KeyDelayJitterMs"/> is 0 we keep the existing zero-overhead
     ///     fire-and-forget path. When &gt; 0 we wrap the loop in <see cref="Task.Run"/> and sleep
     ///     a random 0..N ms before the keys go out — without blocking the tick thread.
+    ///     <para>
+    ///     <b>All valid bindings fire</b>, including mixed mouse+gamepad on the same action —
+    ///     <see cref="InputSender.SendKeyAsync"/> routes each binding to the right sender by
+    ///     looking at the binding's runtime type (mouse → MouseManager, gamepad → GamepadSender,
+    ///     keyboard → keyboard). Same shape Triggers use. The active Movement Method only steers
+    ///     aim-delta motion (<see cref="ApplyMouseMove"/> → <see cref="InputSender.Move"/>) —
+    ///     not which discrete bindings to send.
+    ///     </para>
     /// </summary>
     private void SendKeysWithJitter(AutoPlayAction action, KeyPressState state)
     {

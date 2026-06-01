@@ -1747,6 +1747,15 @@ public partial class MainWindow
         {
             new CalibrationWizardDialog { Owner = this }.ShowDialog();
         };
+        // Aim-disengage rules — pauses aim assist while a HUD OCR reading matches (scoped /
+        // knife / etc.). Conceptually an aim-side feature, even though it reads OCR; lives here
+        // next to calibration so users find it without hunting in the OCR card.
+        AimConfig.AddButton(Locale.ConfigureAimDisengage)
+            .InitWith(b => b.ToolTip = Locale.AimDisengageDescription)
+            .Reader.Click += (_, _) =>
+            {
+                new PowerAim.Visuality.AimDisengageDialog { Owner = this }.ShowDialog();
+            };
 
         AimConfig.AddSlider(Locale.MouseJitter, Locale.Jitter, 1, 1, 0, 15).BindTo(() => AppConfig.Current.SliderSettings.MouseJitter);
 
@@ -2273,12 +2282,10 @@ public partial class MainWindow
         {
             new OcrRegionsDialog { Owner = this }.ShowDialog();
         };
-        HudOcrCard.AddButton(Locale.ConfigureAimDisengage)
-            .InitWith(b => b.ToolTip = Locale.AimDisengageDescription)
-            .Reader.Click += (_, _) =>
-        {
-            new AimDisengageDialog { Owner = this }.ShowDialog();
-        };
+        // Aim-disengage button was here historically because it edits OCR-driven rules. It now
+        // lives under AimConfig (see below) since semantically it's an aim-side feature — OCR is
+        // just the input. The relocation makes it discoverable from the section that already
+        // hosts sensitivity / sticky-aim / calibration.
         HudOcrCard.AddSeparator();
 
         // ===== Replay Buffer =====

@@ -16,6 +16,48 @@ public class AppConfig : BaseSettings
 {
     public const string DefaultConfigPath = "bin\\configs\\Default.cfg";
 
+    /// <summary>
+    ///     Walks the loaded JSON and removes every <c>OcrConditionTree</c> /
+    ///     <c>AntiOcrConditionTree</c> / <c>ConditionTree</c> property. Used as the fallback path
+    ///     when a pre-polymorphism config can't be deserialized because its tree children are
+    ///     empty <c>{}</c> objects with no <c>$type</c> discriminator. After stripping, the new
+    ///     trees default-construct empty and <see cref="ActionTrigger.EnsureTreeMigrated"/> /
+    ///     <see cref="AimDisengageRule.EnsureTreeMigrated"/> re-seed them from the legacy flat
+    ///     <c>OcrConditions</c> / <c>RegionName</c> fields.
+    /// </summary>
+    private static string StripConditionTreesFromJson(string json)
+    {
+        try
+        {
+            var root = System.Text.Json.Nodes.JsonNode.Parse(json);
+            if (root == null) return json;
+            StripPropertyRecursive(root, "OcrConditionTree");
+            StripPropertyRecursive(root, "AntiOcrConditionTree");
+            StripPropertyRecursive(root, "ConditionTree");
+            return root.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch
+        {
+            return json;
+        }
+    }
+
+    private static void StripPropertyRecursive(System.Text.Json.Nodes.JsonNode node, string propertyName)
+    {
+        switch (node)
+        {
+            case System.Text.Json.Nodes.JsonObject obj:
+                if (obj.ContainsKey(propertyName)) obj.Remove(propertyName);
+                foreach (var kv in obj.ToList())
+                    if (kv.Value != null) StripPropertyRecursive(kv.Value, propertyName);
+                break;
+            case System.Text.Json.Nodes.JsonArray arr:
+                foreach (var item in arr)
+                    if (item != null) StripPropertyRecursive(item, propertyName);
+                break;
+        }
+    }
+
     [JsonIgnore]
     public string? Path
     {
@@ -220,14 +262,29 @@ public class AppConfig : BaseSettings
             {
                 SaveLastConfigPath(path);
                 string json = File.ReadAllText(path);
-                
-                Current = JsonSerializer.Deserialize<AppConfig>(json);
+
+                try
+                {
+                    Current = JsonSerializer.Deserialize<AppConfig>(json);
+                }
+                catch (System.Text.Json.JsonException ex) when (ex.Message.Contains("Deserialization of interface or abstract types"))
+                {
+                    // Pre-polymorphism configs persisted OcrConditionNode children as empty {}
+                    // objects (no type discriminator) — the abstract base can't deserialize them.
+                    // Strip every *ConditionTree object from the JSON and retry; the legacy flat
+                    // OcrConditions list survives untouched and the migration step below re-seeds
+                    // the tree from it. The user loses nothing meaningful because those empty
+                    // children carried no data in the first place.
+                    Console.WriteLine($"[AppConfig] Stripping legacy abstract-typed condition trees from config: {ex.Message}");
+                    json = StripConditionTreesFromJson(json);
+                    Current = JsonSerializer.Deserialize<AppConfig>(json);
+                }
                 Current.Path = path;
                 Current.LastLoadedConfig = path;
             }
             else
             {
-                Current = new AppConfig(); 
+                Current = new AppConfig();
             }
         }
         catch (Exception ex)
@@ -240,6 +297,16 @@ public class AppConfig : BaseSettings
         // method is idempotent (gated by its own schema-version field) so re-loading the same
         // config doesn't double-seed anything.
         Current.AntiRecoilSettings?.MigrateLegacyIfNeeded();
+
+        // Triggers: migrate the legacy flat OcrConditions list into the new OcrConditionTree
+        // (AND group by default). Idempotent — re-running on an already-migrated config is a no-op.
+        if (Current.Triggers != null)
+            foreach (var t in Current.Triggers) t?.EnsureTreeMigrated();
+
+        // AimDisengageRule: each existing rule had a single (RegionName, Comparison, Value) row;
+        // seed each rule's new ConditionTree with that single leaf if it hasn't been migrated yet.
+        if (Current.AimDisengageRules != null)
+            foreach (var r in Current.AimDisengageRules) r?.EnsureTreeMigrated();
 
         // Migrate the deprecated ToggleState.UseControllerForAim flag into the unified
         // DropdownState.MouseMovementMethod enum. Old configs persist a separate bool that the

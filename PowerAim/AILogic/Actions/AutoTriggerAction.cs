@@ -70,7 +70,7 @@ public class AutoTriggerAction : BaseAction
             return; // Skip this trigger if it is still in cooldown
         }
 
-        if (TriggerKeysStateCorrect(trigger) && OcrConditionsMet(trigger))
+        if (TriggerKeysStateCorrect(trigger) && OcrConditionsMet(trigger) && !AntiOcrConditionBlocks(trigger))
         {
             if (trigger.ChargeMode)
             {
@@ -166,19 +166,24 @@ public class AutoTriggerAction : BaseAction
     /// </summary>
     private static bool OcrConditionsMet(ActionTrigger trigger)
     {
-        var conditions = trigger.OcrConditions;
-        if (conditions == null || conditions.Count == 0) return true;
+        var tree = trigger.OcrConditionTree;
+        if (tree == null || tree.IsEmpty) return true;          // no gate configured
         if (AppConfig.Current.OcrSettings is not { Enabled: true }) return true; // OCR off → don't block
+        return tree.Evaluate(OcrService.Instance.Latest);
+    }
 
-        var latest = OcrService.Instance.Latest;
-        foreach (var cond in conditions)
-        {
-            if (string.IsNullOrWhiteSpace(cond.RegionName)) continue;
-            if (!latest.TryGetValue(cond.RegionName, out var reading)) return false; // no reading yet
-            if (!OcrConditionEvaluator.Evaluate(cond.Comparison, cond.Value, reading)) return false;
-        }
-
-        return true;
+    /// <summary>
+    ///     Anti-OCR gate — the trigger is blocked when this tree evaluates to true. Mirrors
+    ///     <c>AntiTriggerKeys</c> for OCR. Returns false when no gate is configured (default),
+    ///     when OCR itself is off, or when the gate evaluates to false (i.e. the blocker doesn't
+    ///     hold). Returns true only when the blocker actively holds.
+    /// </summary>
+    private static bool AntiOcrConditionBlocks(ActionTrigger trigger)
+    {
+        var tree = trigger.AntiOcrConditionTree;
+        if (tree == null || tree.IsEmpty) return false;
+        if (AppConfig.Current.OcrSettings is not { Enabled: true }) return false;
+        return tree.Evaluate(OcrService.Instance.Latest);
     }
 
     private bool TriggerKeysStateCorrect(ActionTrigger trigger)

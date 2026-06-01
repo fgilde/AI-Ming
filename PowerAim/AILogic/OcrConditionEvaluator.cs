@@ -59,10 +59,13 @@ public static class AimDisengage
         var latest = OcrService.Instance.Latest;
         foreach (var rule in rules)
         {
-            if (!rule.Enabled || string.IsNullOrWhiteSpace(rule.RegionName)) continue;
+            if (!rule.Enabled) continue;
             if (!ProcessApplies(rule.MatchProcess)) continue;
-            if (!latest.TryGetValue(rule.RegionName, out var reading)) continue;
-            if (OcrConditionEvaluator.Evaluate(rule.Comparison, rule.Value, reading)) return true;
+            // Rules with an empty tree (e.g. brand-new ones the user is still configuring) are
+            // skipped instead of treated as "always pause" — half-edited rules shouldn't lock
+            // aim assist out of the user's game.
+            if (rule.ConditionTree == null || rule.ConditionTree.IsEmpty) continue;
+            if (rule.ConditionTree.Evaluate(latest)) return true;
         }
 
         return false;

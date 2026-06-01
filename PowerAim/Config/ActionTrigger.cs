@@ -41,6 +41,8 @@ public class ActionTrigger : EditableNotificationObject
     private StoredInputBinding[] _originalKeys;
     private StoredInputBinding[] _originalAntiKeys;
     private OcrTriggerCondition[] _originalOcrConditions;
+    private OcrConditionGroup? _originalOcrConditionTree;
+    private OcrConditionGroup? _originalAntiOcrConditionTree;
 
     public override void BeginEdit()
     {
@@ -49,6 +51,8 @@ public class ActionTrigger : EditableNotificationObject
         _originalAntiKeys = AntiTriggerKeys?.ToArray() ?? [];
         // Deep-copy: the editor mutates condition rows in place, so a shallow snapshot wouldn't revert.
         _originalOcrConditions = OcrConditions?.Select(c => c.Clone()).ToArray() ?? [];
+        _originalOcrConditionTree     = (OcrConditionGroup)OcrConditionTree.Clone();
+        _originalAntiOcrConditionTree = (OcrConditionGroup)AntiOcrConditionTree.Clone();
         base.BeginEdit();
     }
 
@@ -59,6 +63,8 @@ public class ActionTrigger : EditableNotificationObject
         AntiTriggerKeys = new ObservableCollection<StoredInputBinding>(_originalAntiKeys);
         Actions = new ObservableCollection<StoredInputBinding>(_originalActions);
         OcrConditions = new ObservableCollection<OcrTriggerCondition>(_originalOcrConditions);
+        if (_originalOcrConditionTree     != null) OcrConditionTree     = (OcrConditionGroup)_originalOcrConditionTree.Clone();
+        if (_originalAntiOcrConditionTree != null) AntiOcrConditionTree = (OcrConditionGroup)_originalAntiOcrConditionTree.Clone();
     }
 
     protected override void RaisePropertyChanged(string propertyName)
@@ -185,6 +191,50 @@ public class ActionTrigger : EditableNotificationObject
         get;
         set => SetProperty(ref field, value);
     } = new();
+
+    /// <summary>
+    ///     Grouped OCR gate (AND/OR-able tree). Replaces the old flat <see cref="OcrConditions"/>
+    ///     list — that property is kept for JSON-config back-compat and migrated into this tree on
+    ///     first load (see <see cref="EnsureTreeMigrated"/>). The trigger only fires while
+    ///     <see cref="OcrConditionTree"/>.Evaluate(…) returns true. Empty tree (default) imposes
+    ///     no constraint.
+    /// </summary>
+    public OcrConditionGroup OcrConditionTree
+    {
+        get;
+        set => SetProperty(ref field, value);
+    } = new();
+
+    /// <summary>
+    ///     Inverted OCR gate. When this tree evaluates to true, the trigger is BLOCKED — mirrors
+    ///     <see cref="AntiTriggerKeys"/> semantics but for OCR. Lets users express "fire when
+    ///     ammo > 5 EXCEPT when weapon is the knife" by putting the weapon check here.
+    /// </summary>
+    public OcrConditionGroup AntiOcrConditionTree
+    {
+        get;
+        set => SetProperty(ref field, value);
+    } = new();
+
+    /// <summary>
+    ///     One-shot migration from the legacy flat <see cref="OcrConditions"/> list into the new
+    ///     <see cref="OcrConditionTree"/>. Idempotent: only seeds when the tree is empty AND the
+    ///     legacy list has entries. Called from <see cref="AppConfig.Load"/> after deserialization.
+    /// </summary>
+    public void EnsureTreeMigrated()
+    {
+        if (!OcrConditionTree.IsEmpty) return;
+        if (OcrConditions == null || OcrConditions.Count == 0) return;
+        foreach (var leaf in OcrConditions)
+        {
+            OcrConditionTree.Children.Add(new OcrConditionLeaf
+            {
+                RegionName = leaf.RegionName,
+                Comparison = leaf.Comparison,
+                Value = leaf.Value,
+            });
+        }
+    }
 
     /// <summary>
     /// Delay before trigger is executed

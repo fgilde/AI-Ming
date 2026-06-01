@@ -123,56 +123,18 @@ namespace UILibrary
                     };
                 }).AsSimple().SetProperties(m => m.MinWidth = 80);
 
-            BuildOcrConditionsUi();
+            // The new tree-based builders own their own lifecycle. Just point them at the trigger's
+            // trees; everything else (rebuild on edit, leaf/group add, region picker repopulate)
+            // lives inside OcrConditionBuilder.
+            OcrConditionsBuilder.Group = Trigger.OcrConditionTree;
+            AntiOcrConditionsBuilder.Group = Trigger.AntiOcrConditionTree;
         }
 
-        /// <summary>
-        ///     (Re)builds the optional OCR-condition rows. Each row is region + comparison + value +
-        ///     remove; an Add button appends a new condition. Rebuilt wholesale on add/remove for
-        ///     simplicity — the editor mutates the bound <see cref="OcrTriggerCondition"/> in place.
-        /// </summary>
-        private void BuildOcrConditionsUi()
-        {
-            OcrConditionsBox.Children.Clear();
-            if (Trigger == null) return;
-
-            var regionNames = AppConfig.Current.OcrSettings.Regions
-                .Select(r => r.Name).Where(n => !string.IsNullOrWhiteSpace(n)).ToList();
-
-            if (regionNames.Count == 0)
-            {
-                OcrConditionsBox.Children.Add(new TextBlock
-                {
-                    Text = Locale.OcrConditionsNoRegions,
-                    TextWrapping = TextWrapping.Wrap,
-                    Margin = new Thickness(2, 0, 0, 4),
-                    Foreground = (Brush)FindResource("FluentTextTertiary"),
-                    FontFamily = new FontFamily("Segoe UI Variable Small"),
-                    FontSize = 11
-                });
-                return;
-            }
-
-            foreach (var cond in Trigger.OcrConditions.ToList())
-                OcrConditionsBox.Children.Add(BuildOcrConditionRow(cond, regionNames));
-
-            var addBtn = new Button
-            {
-                Content = Locale.AddCondition,
-                Margin = new Thickness(0, 4, 0, 0),
-                Padding = new Thickness(12, 6, 12, 6),
-                HorizontalAlignment = HorizontalAlignment.Left
-            };
-            addBtn.SetResourceReference(FrameworkElement.StyleProperty, "FluentStandardButton");
-            addBtn.Click += (_, _) =>
-            {
-                Trigger.OcrConditions.Add(new OcrTriggerCondition { RegionName = regionNames.FirstOrDefault() ?? "" });
-                BuildOcrConditionsUi();
-            };
-            OcrConditionsBox.Children.Add(addBtn);
-        }
-
-        private FrameworkElement BuildOcrConditionRow(OcrTriggerCondition cond, List<string> regionNames)
+        // BuildOcrConditionsUi / BuildOcrConditionRow were the flat-list editors that lived
+        // before the tree refactor. They're superseded by the in-place OcrConditionBuilder
+        // controls in XAML — nothing should call these any more.
+#pragma warning disable CS8321 // Local function is declared but never used
+        private FrameworkElement BuildOcrConditionRow_Obsolete(OcrTriggerCondition cond, List<string> regionNames)
         {
             var grid = new Grid { Margin = new Thickness(0, 0, 0, 6) };
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -229,11 +191,7 @@ namespace UILibrary
                 ToolTip = Locale.Delete
             };
             removeBtn.SetResourceReference(FrameworkElement.StyleProperty, "FluentStandardButton");
-            removeBtn.Click += (_, _) =>
-            {
-                Trigger.OcrConditions.Remove(cond);
-                BuildOcrConditionsUi();
-            };
+            removeBtn.Click += (_, _) => Trigger.OcrConditions.Remove(cond); // obsolete: superseded by OcrConditionBuilder
             Grid.SetColumn(removeBtn, 3);
             grid.Children.Add(removeBtn);
 

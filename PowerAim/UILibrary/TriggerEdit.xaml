@@ -289,7 +289,7 @@
             </StackPanel>
         </Border>
 
-        <!-- ====== OCR Conditions (optional) ====== -->
+        <!-- ====== OCR Conditions (optional gate) ====== -->
         <Border Style="{StaticResource FluentCard}">
             <StackPanel>
                 <Grid Margin="0,0,0,10">
@@ -304,10 +304,34 @@
                         <TextBlock Style="{StaticResource SectionTitleBig}"
                                    Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OcrConditions'}" />
                         <TextBlock Style="{StaticResource SectionSubtitle}"
-                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OcrConditionsSubtitle'}" />
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OcrConditionsTreeHelp'}"
+                                   TextWrapping="Wrap" />
                     </StackPanel>
                 </Grid>
-                <StackPanel x:Name="OcrConditionsBox" />
+                <uiLibrary:OcrConditionBuilder x:Name="OcrConditionsBuilder" />
+            </StackPanel>
+        </Border>
+
+        <!-- ====== Anti-OCR Conditions (block) ====== -->
+        <Border Style="{StaticResource FluentCard}">
+            <StackPanel>
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Style="{StaticResource SectionIcon}">
+                        <TextBlock Text="&#xE894;" Style="{StaticResource SectionIconGlyph}" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource SectionTitleBig}"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AntiOcrConditions'}" />
+                        <TextBlock Style="{StaticResource SectionSubtitle}"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AntiOcrConditionsTreeHelp'}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+                <uiLibrary:OcrConditionBuilder x:Name="AntiOcrConditionsBuilder" />
             </StackPanel>
         </Border>
 
