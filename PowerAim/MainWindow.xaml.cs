@@ -663,8 +663,8 @@ public partial class MainWindow
 
     // ===================================================================== LAYOUT MANAGER ====
 
-    private readonly Dictionary<string, PowerAim.Visuality.PageLayoutManager> _pageLayouts = new();
-    private PowerAim.Visuality.HiddenBoxesPill? _hiddenBoxesPill;
+    private readonly Dictionary<string, PageLayoutManager> _pageLayouts = new();
+    private HiddenBoxesPill? _hiddenBoxesPill;
 
     private static readonly string[] _layoutManagedPages =
     [
@@ -673,7 +673,7 @@ public partial class MainWindow
     ];
 
     /// <summary>
-    ///     Attach a <see cref="PowerAim.Visuality.PageLayoutManager"/> to whichever pages already
+    ///     Attach a <see cref="PageLayoutManager"/> to whichever pages already
     ///     have a fully-realised visual tree. Collapsed pages still lazy-attach on first nav via
     ///     <see cref="EnsurePageAttached"/>. Called after <see cref="CreateUI"/> finishes.
     /// </summary>
@@ -706,7 +706,7 @@ public partial class MainWindow
         if (_pageLayouts.TryGetValue(name, out var existing) && existing.Boxes.Count > 0)
             return;
         if (FindName(name) is not FrameworkElement page) return;
-        _pageLayouts[name] = PowerAim.Visuality.PageLayoutManager.Attach(name, page);
+        _pageLayouts[name] = PageLayoutManager.Attach(name, page);
     }
 
     private void EnsureHiddenBoxesPill()
@@ -715,7 +715,7 @@ public partial class MainWindow
         // Inject the pill into the outermost Grid that hosts the page area. The first child of
         // MainWindow is a Grid (the row/column layout); we put the pill there with high Z-index.
         if (Content is Grid root)
-            _hiddenBoxesPill = new PowerAim.Visuality.HiddenBoxesPill(root);
+            _hiddenBoxesPill = new HiddenBoxesPill(root);
     }
 
     private void BindHiddenBoxesPillForCurrentPage()
@@ -1131,15 +1131,15 @@ public partial class MainWindow
         // If trying to leave without saving, warn about unsaved changes.
         if (!save && _triggerEditDirty)
         {
-            var res = PowerAim.Visuality.MessageDialog.Show(
+            var res = MessageDialog.Show(
                 Locale.UnsavedChangesMessage,
                 Locale.UnsavedChanges,
-                PowerAim.Visuality.MessageDialog.DialogButtons.YesNoCancel,
-                PowerAim.Visuality.MessageDialog.DialogIcon.Warning,
+                MessageDialog.DialogButtons.YesNoCancel,
+                MessageDialog.DialogIcon.Warning,
                 owner: this,
-                defaultResult: PowerAim.Visuality.MessageDialog.DialogResult.Yes);
-            if (res == PowerAim.Visuality.MessageDialog.DialogResult.Cancel) return; // stay on editor
-            if (res == PowerAim.Visuality.MessageDialog.DialogResult.Yes) save = true; // proceed as if Save was clicked
+                defaultResult: MessageDialog.DialogResult.Yes);
+            if (res == MessageDialog.DialogResult.Cancel) return; // stay on editor
+            if (res == MessageDialog.DialogResult.Yes) save = true; // proceed as if Save was clicked
             // No → discard (continue with save=false)
         }
 
@@ -1219,15 +1219,15 @@ public partial class MainWindow
 
         if (!save && _autoPlayEditDirty)
         {
-            var res = PowerAim.Visuality.MessageDialog.Show(
+            var res = MessageDialog.Show(
                 Locale.UnsavedChangesMessage,
                 Locale.UnsavedChanges,
-                PowerAim.Visuality.MessageDialog.DialogButtons.YesNoCancel,
-                PowerAim.Visuality.MessageDialog.DialogIcon.Warning,
+                MessageDialog.DialogButtons.YesNoCancel,
+                MessageDialog.DialogIcon.Warning,
                 owner: this,
-                defaultResult: PowerAim.Visuality.MessageDialog.DialogResult.Yes);
-            if (res == PowerAim.Visuality.MessageDialog.DialogResult.Cancel) return;
-            if (res == PowerAim.Visuality.MessageDialog.DialogResult.Yes) save = true;
+                defaultResult: MessageDialog.DialogResult.Yes);
+            if (res == MessageDialog.DialogResult.Cancel) return;
+            if (res == MessageDialog.DialogResult.Yes) save = true;
         }
 
         if (target != null && _autoPlayDirtyHandler != null)
@@ -1317,14 +1317,14 @@ public partial class MainWindow
 
         if (!save && _antiRecoilEditDirty)
         {
-            var res = PowerAim.Visuality.MessageDialog.Show(
+            var res = MessageDialog.Show(
                 Locale.UnsavedChangesMessage, Locale.UnsavedChanges,
-                PowerAim.Visuality.MessageDialog.DialogButtons.YesNoCancel,
-                PowerAim.Visuality.MessageDialog.DialogIcon.Warning,
+                MessageDialog.DialogButtons.YesNoCancel,
+                MessageDialog.DialogIcon.Warning,
                 owner: this,
-                defaultResult: PowerAim.Visuality.MessageDialog.DialogResult.Yes);
-            if (res == PowerAim.Visuality.MessageDialog.DialogResult.Cancel) return;
-            if (res == PowerAim.Visuality.MessageDialog.DialogResult.Yes) save = true;
+                defaultResult: MessageDialog.DialogResult.Yes);
+            if (res == MessageDialog.DialogResult.Cancel) return;
+            if (res == MessageDialog.DialogResult.Yes) save = true;
         }
 
         if (target != null && _antiRecoilDirtyHandler != null)
@@ -1376,7 +1376,7 @@ public partial class MainWindow
     private List<PowerAim.Config.InputMapping>? _mappingEditSnapshot;
 
     /// <summary>
-    ///     True while the mapping editor is open. The <see cref="PowerAim.Visuality.MappingPage"/>'s
+    ///     True while the mapping editor is open. The <see cref="MappingPage"/>'s
     ///     auto-save handlers check this to skip writing during editing — otherwise every keystroke
     ///     would persist the in-flight state and Discard would have nothing to roll back to.
     /// </summary>
@@ -1473,15 +1473,15 @@ public partial class MainWindow
 
         if (!save && _mappingEditDirty)
         {
-            var res = PowerAim.Visuality.MessageDialog.Show(
+            var res = MessageDialog.Show(
                 Locale.UnsavedChangesMessage,
                 Locale.UnsavedChanges,
-                PowerAim.Visuality.MessageDialog.DialogButtons.YesNoCancel,
-                PowerAim.Visuality.MessageDialog.DialogIcon.Warning,
+                MessageDialog.DialogButtons.YesNoCancel,
+                MessageDialog.DialogIcon.Warning,
                 owner: this,
-                defaultResult: PowerAim.Visuality.MessageDialog.DialogResult.Yes);
-            if (res == PowerAim.Visuality.MessageDialog.DialogResult.Cancel) return;
-            if (res == PowerAim.Visuality.MessageDialog.DialogResult.Yes) save = true;
+                defaultResult: MessageDialog.DialogResult.Yes);
+            if (res == MessageDialog.DialogResult.Cancel) return;
+            if (res == MessageDialog.DialogResult.Yes) save = true;
         }
 
         if (target != null)
@@ -1540,13 +1540,13 @@ public partial class MainWindow
         var modelFile = AppConfig.Current?.LastLoadedModel;
         if (string.IsNullOrWhiteSpace(modelFile) || modelFile == "N/A")
         {
-            PowerAim.Visuality.MessageDialog.Warn(Locale.BenchmarkNoModel, Locale.RunBenchmark, owner: this);
+            MessageDialog.Warn(Locale.BenchmarkNoModel, Locale.RunBenchmark, owner: this);
             return;
         }
         var modelPath = Path.Combine("bin/models", modelFile);
         if (!File.Exists(modelPath))
         {
-            PowerAim.Visuality.MessageDialog.Warn(Locale.BenchmarkNoModel, Locale.RunBenchmark, owner: this);
+            MessageDialog.Warn(Locale.BenchmarkNoModel, Locale.RunBenchmark, owner: this);
             return;
         }
 
@@ -1566,16 +1566,16 @@ public partial class MainWindow
             }
             if (!string.IsNullOrWhiteSpace(result.Notes)) msg += "\n" + result.Notes;
 
-            PowerAim.Visuality.MessageDialog.Show(
+            MessageDialog.Show(
                 msg, Locale.BenchmarkResult,
-                PowerAim.Visuality.MessageDialog.DialogButtons.OK,
-                PowerAim.Visuality.MessageDialog.DialogIcon.Info,
+                MessageDialog.DialogButtons.OK,
+                MessageDialog.DialogIcon.Info,
                 owner: this);
         }
         catch (Exception ex)
         {
             notice.Close();
-            PowerAim.Visuality.MessageDialog.Error(ex.Message, Locale.RunBenchmark, owner: this);
+            MessageDialog.Error(ex.Message, Locale.RunBenchmark, owner: this);
         }
     }
 
@@ -1723,11 +1723,11 @@ public partial class MainWindow
         {
             var classes = FileManager.AIManager?.PredictionLogic?.ModelClasses
                           ?? new Dictionary<int, string>();
-            new PowerAim.Visuality.TargetClassDialog(classes) { Owner = this }.ShowDialog();
+            new TargetClassDialog(classes) { Owner = this }.ShowDialog();
         };
         PredictionConfig.AddButton(Locale.DetectionMasksMenuItem).Reader.Click += (_, _) =>
         {
-            new PowerAim.Visuality.DetectionMasksDialog { Owner = this }.ShowDialog();
+            new DetectionMasksDialog { Owner = this }.ShowDialog();
         };
         PredictionConfig.AddSeparator();
         PredictionConfig.Visibility = GetVisibilityFor(nameof(AimConfig));
@@ -1745,7 +1745,7 @@ public partial class MainWindow
         // Gamepad, which InputSender.GamepadAimActive now reads from.)
         AimConfig.AddButton(Locale.CalibrateSensitivity).Reader.Click += (_, _) =>
         {
-            new PowerAim.Visuality.CalibrationWizardDialog { Owner = this }.ShowDialog();
+            new CalibrationWizardDialog { Owner = this }.ShowDialog();
         };
 
         AimConfig.AddSlider(Locale.MouseJitter, Locale.Jitter, 1, 1, 0, 15).BindTo(() => AppConfig.Current.SliderSettings.MouseJitter);
@@ -1813,7 +1813,7 @@ public partial class MainWindow
         // reads from this library.
         AntiRecoil.AddButton(Locale.RecoilPatternsMenuItem).Reader.Click += (_, _) =>
         {
-            new PowerAim.Visuality.RecoilPatternsDialog { Owner = this }.ShowDialog();
+            new RecoilPatternsDialog { Owner = this }.ShowDialog();
         };
 
         AntiRecoil.AddSeparator();
@@ -2271,13 +2271,13 @@ public partial class MainWindow
             .BindTo(() => AppConfig.Current.ToggleState.ShowOcrRegionsOverlay);
         HudOcrCard.AddButton(Locale.ConfigureOcrRegions).Reader.Click += (_, _) =>
         {
-            new PowerAim.Visuality.OcrRegionsDialog { Owner = this }.ShowDialog();
+            new OcrRegionsDialog { Owner = this }.ShowDialog();
         };
         HudOcrCard.AddButton(Locale.ConfigureAimDisengage)
             .InitWith(b => b.ToolTip = Locale.AimDisengageDescription)
             .Reader.Click += (_, _) =>
         {
-            new PowerAim.Visuality.AimDisengageDialog { Owner = this }.ShowDialog();
+            new AimDisengageDialog { Owner = this }.ShowDialog();
         };
         HudOcrCard.AddSeparator();
 
@@ -2369,11 +2369,11 @@ public partial class MainWindow
 
         // Apply current state of overlays in case the config was loaded with them already enabled.
         if (AppConfig.Current.ToggleState.ShowDebugOverlay)
-            PowerAim.Visuality.DebugOverlay.ShowOrHide(true);
+            DebugOverlay.ShowOrHide(true);
         if (AppConfig.Current.ToggleState.ShowCrosshairOverlay)
-            PowerAim.Visuality.CrosshairOverlay.ShowOrHide(true);
+            CrosshairOverlay.ShowOrHide(true);
         if (AppConfig.Current.ToggleState.ShowOcrRegionsOverlay)
-            PowerAim.Visuality.OcrRegionsOverlay.ShowOrHide(true);
+            OcrRegionsOverlay.ShowOrHide(true);
     }
 
     private static void UpdateLearnStatus(System.Windows.Controls.Label label)
@@ -2532,14 +2532,14 @@ public partial class MainWindow
         {
             if (!e.Value)
             {
-                var result = PowerAim.Visuality.MessageDialog.Show(
+                var result = MessageDialog.Show(
                     Locale.DisableCaptureProtectionWarning,
                     Locale.DisableCaptureProtectionTitle,
-                    PowerAim.Visuality.MessageDialog.DialogButtons.YesNo,
-                    PowerAim.Visuality.MessageDialog.DialogIcon.Warning,
+                    MessageDialog.DialogButtons.YesNo,
+                    MessageDialog.DialogIcon.Warning,
                     owner: this,
-                    defaultResult: PowerAim.Visuality.MessageDialog.DialogResult.No);
-                if (result != PowerAim.Visuality.MessageDialog.DialogResult.Yes)
+                    defaultResult: MessageDialog.DialogResult.No);
+                if (result != MessageDialog.DialogResult.Yes)
                 {
                     AppConfig.Current.ToggleState.HideUIFromCapture = true;
                     hideCaptureToggle.Checked = true;
@@ -2621,14 +2621,14 @@ public partial class MainWindow
                 if (local == MouseMovementMethod.Gamepad
                     && !PowerAim.InputLogic.InputSender.GamepadAimAvailable)
                 {
-                    var res = PowerAim.Visuality.MessageDialog.Show(
+                    var res = MessageDialog.Show(
                         Locale.GamepadNotReadyMessage,
                         Locale.GamepadNotReady,
-                        PowerAim.Visuality.MessageDialog.DialogButtons.YesNo,
-                        PowerAim.Visuality.MessageDialog.DialogIcon.Warning,
+                        MessageDialog.DialogButtons.YesNo,
+                        MessageDialog.DialogIcon.Warning,
                         owner: this,
-                        defaultResult: PowerAim.Visuality.MessageDialog.DialogResult.Yes);
-                    if (res == PowerAim.Visuality.MessageDialog.DialogResult.Yes)
+                        defaultResult: MessageDialog.DialogResult.Yes);
+                    if (res == MessageDialog.DialogResult.Yes)
                         _ = NavigateTo(nameof(GamepadSettings));
                 }
 
@@ -2962,11 +2962,11 @@ public partial class MainWindow
         OnPropertyChanged(nameof(Config));
 
         if (!string.IsNullOrEmpty(AppConfig.Current.SuggestedModelName) && AppConfig.Current.SuggestedModelName != "N/A")
-            PowerAim.Visuality.MessageDialog.Show(
+            MessageDialog.Show(
                 $"{Locale.ModelSuggestionText}:\n" + AppConfig.Current.SuggestedModelName,
                 Locale.SuggestedModel,
-                PowerAim.Visuality.MessageDialog.DialogButtons.OK,
-                PowerAim.Visuality.MessageDialog.DialogIcon.Info,
+                MessageDialog.DialogButtons.OK,
+                MessageDialog.DialogIcon.Info,
                 owner: this);
         LoadModel();
     }
@@ -3189,13 +3189,13 @@ public partial class MainWindow
         {
             if (!confirmed)
             {
-                var res = PowerAim.Visuality.MessageDialog.Show(
+                var res = MessageDialog.Show(
                     Locale.ConfirmModelDelete.FormatWith(model), Locale.DeleteModel,
-                    PowerAim.Visuality.MessageDialog.DialogButtons.YesNo,
-                    PowerAim.Visuality.MessageDialog.DialogIcon.Question,
+                    MessageDialog.DialogButtons.YesNo,
+                    MessageDialog.DialogIcon.Question,
                     owner: this,
-                    defaultResult: PowerAim.Visuality.MessageDialog.DialogResult.No);
-                if (res == PowerAim.Visuality.MessageDialog.DialogResult.No)
+                    defaultResult: MessageDialog.DialogResult.No);
+                if (res == MessageDialog.DialogResult.No)
                     return;
             }
             File.Delete(path);
@@ -3216,13 +3216,13 @@ public partial class MainWindow
         {
             if (!confirmed)
             {
-                var res = PowerAim.Visuality.MessageDialog.Show(
+                var res = MessageDialog.Show(
                     Locale.ConfirmConfigDelete.FormatWith(cfg), Locale.DeleteConfig,
-                    PowerAim.Visuality.MessageDialog.DialogButtons.YesNo,
-                    PowerAim.Visuality.MessageDialog.DialogIcon.Question,
+                    MessageDialog.DialogButtons.YesNo,
+                    MessageDialog.DialogIcon.Question,
                     owner: this,
-                    defaultResult: PowerAim.Visuality.MessageDialog.DialogResult.No);
-                if (res == PowerAim.Visuality.MessageDialog.DialogResult.No)
+                    defaultResult: MessageDialog.DialogResult.No);
+                if (res == MessageDialog.DialogResult.No)
                     return;
             }
             File.Delete(path);
