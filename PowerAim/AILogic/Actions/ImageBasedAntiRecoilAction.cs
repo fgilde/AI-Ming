@@ -1,9 +1,8 @@
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using PowerAim.Class.Native;
 using PowerAim.Config;
+using PowerAim.InputLogic;
 using InputLogic;
 using OpenCvSharp;
 using Size = OpenCvSharp.Size;
@@ -41,14 +40,17 @@ public class ImageBasedAntiRecoilAction : BaseAction
     private double _baselineX = 0;
     private bool   _baselineSeeded = false;
 
-    public override bool Active =>
-        base.Active &&
-        AppConfig.Current.ToggleState.AntiRecoil &&
-        AppConfig.Current.AntiRecoilSettings.UseImageBasedAntiRecoil &&
-        // If pattern playback is armed, that path owns the recoil compensation entirely. Running
-        // the BETA EMA-baseline on top would just fight the recorded strokes.
-        !(AppConfig.Current.AntiRecoilSettings.UsePatternRecoil
-          && !string.IsNullOrEmpty(AppConfig.Current.AntiRecoilSettings.ActivePatternName));
+    public override bool Active
+    {
+        get
+        {
+            if (!base.Active) return false;
+            if (!AppConfig.Current.ToggleState.AntiRecoil) return false;
+            var profile = AppConfig.Current.AntiRecoilSettings?.ActiveProfile;
+            return profile != null
+                && profile.Mode == AntiRecoilMode.ImageBased;
+        }
+    }
 
     public override Task ExecuteAsync(Prediction[] predictions)
     {
@@ -106,7 +108,8 @@ public class ImageBasedAntiRecoilAction : BaseAction
             if (Math.Abs(recoilY) < Deadzone) recoilY = 0;
             if (Math.Abs(recoilX) < Deadzone) recoilX = 0;
 
-            double strength = Math.Clamp(AppConfig.Current.AntiRecoilSettings.AutoStrength, 0, 1.5);
+            var profile = AppConfig.Current.AntiRecoilSettings!.ActiveProfile!;
+            double strength = Math.Clamp(profile.AutoStrength, 0, 1.5);
             if (strength <= 0) return Task.CompletedTask;
 
             double compY = recoilY * strength * KFactor;
@@ -115,7 +118,7 @@ public class ImageBasedAntiRecoilAction : BaseAction
             int my = (int)Math.Round(Math.Clamp(compY, -MaxStepY, MaxStepY));
             int mx = (int)Math.Round(Math.Clamp(compX, -MaxStepX, MaxStepX));
 
-            if (my != 0 || mx != 0) MouseMove(mx, my);
+            if (my != 0 || mx != 0) InputSender.Move(mx, my);
         }
         finally
         {
@@ -145,19 +148,6 @@ public class ImageBasedAntiRecoilAction : BaseAction
         {
             bmp.UnlockBits(data);
         }
-    }
-
-    private static void MouseMove(int dx, int dy)
-    {
-        var inputs = new MINPUT[1];
-        inputs[0].type = (uint)MInputType.INPUT_MOUSE;
-        inputs[0].U.mi = new MOUSEINPUT
-        {
-            dx = dx,
-            dy = dy,
-            dwFlags = (uint)(InputEventFlags.MOUSEEVENTF_MOVE | InputEventFlags.MOUSEEVENTF_MOVE_NOCOALESCE)
-        };
-        NativeAPIMethods.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
     }
 
     private void Reset()

@@ -80,7 +80,13 @@ public partial class GamepadDiagnosticsDialog
             sender is null ? "false" : sender.CanWork.ToString(),
             warn: sender is null || !sender.CanWork));
         SenderPanel.Children.Add(MakeKv("AutoHideController", AppConfig.Current?.ToggleState?.AutoHideController.ToString() ?? "?"));
-        SenderPanel.Children.Add(MakeKv("UseControllerForAim", AppConfig.Current?.ToggleState?.UseControllerForAim.ToString() ?? "?"));
+        // Reads the unified MovementMethod enum (Gamepad = controller-aim is on). The old
+        // ToggleState.UseControllerForAim flag is kept as legacy config compat but no longer
+        // surfaced anywhere.
+        var method = AppConfig.Current?.DropdownState?.MouseMovementMethod;
+        SenderPanel.Children.Add(MakeKv("MovementMethod", method?.ToString() ?? "?"));
+        SenderPanel.Children.Add(MakeKv("ControllerAimActive",
+            (method == MouseMovementMethod.Gamepad).ToString()));
         var hidPath = PowerAim.InputLogic.HidHide.HidHideHelper.GetHidHidePath();
         SenderPanel.Children.Add(MakeKv("HidHide installed",
             (!string.IsNullOrEmpty(hidPath) && System.IO.File.Exists(hidPath)).ToString()));

@@ -14,7 +14,6 @@
         IsHitTestVisible="False"
         Focusable="False"
         SizeToContent="WidthAndHeight"
-        Left="16" Top="16"
         Title="PowerAim Debug">
     <Window.Resources>
         <!-- StaticResource resolution is order-sensitive: this block MUST precede the content
@@ -46,9 +45,11 @@
                        FontWeight="SemiBold"
                        FontSize="11"
                        Margin="0,0,0,6" />
-            <!-- Stats column on the left, OCR readout column on the right (added on demand). -->
+            <!-- Stats column on the left, OCR readout in the middle, AutoPlay activity log on the
+                 right. Middle/right columns hide themselves when their feature is off. -->
             <Grid>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
@@ -107,6 +108,22 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                     </Grid>
+                </StackPanel>
+
+                <!-- AutoPlay activity log — last few decisions/actions, oldest at top. Only shown
+                     while ToggleState.AutoPlay is on. -->
+                <StackPanel x:Name="AutoPlaySection"
+                            Grid.Column="2"
+                            Margin="18,0,0,0"
+                            Visibility="Collapsed">
+                    <TextBlock x:Name="AutoPlayHeader"
+                               Text="AutoPlay"
+                               Foreground="#8B5CF6"
+                               FontFamily="Segoe UI Variable Display"
+                               FontWeight="SemiBold"
+                               FontSize="11"
+                               Margin="0,0,0,4" />
+                    <StackPanel x:Name="AutoPlayLogStack" />
                 </StackPanel>
             </Grid>
 

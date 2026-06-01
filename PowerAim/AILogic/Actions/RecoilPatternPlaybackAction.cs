@@ -1,7 +1,6 @@
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using PowerAim.Class.Native;
 using PowerAim.Config;
+using PowerAim.InputLogic;
 using InputLogic;
 
 namespace PowerAim.AILogic.Actions;
@@ -11,10 +10,17 @@ namespace PowerAim.AILogic.Actions;
 ///     time since fire-down and dispatches incremental compensation strokes whose magnitudes are
 ///     read off the recorded pattern's per-frame drift.
 ///     <para>
-///     Gated independently of the legacy and image-based anti-recoil actions. When this action is
-///     active (i.e. <see cref="AntiRecoilSettings.UsePatternRecoil"/> is on and a pattern is
-///     selected), the other two should be considered redundant — UI is responsible for that
-///     visual hint; we don't disable them here on purpose, because power users may want to layer.
+///     Now driven by the active <see cref="AntiRecoilProfile"/>: this action only fires when the
+///     active profile's <see cref="AntiRecoilProfile.Mode"/> is
+///     <see cref="AntiRecoilMode.PatternPlayback"/>. The pattern name and per-profile strength come
+///     from the profile, not from the global settings.
+///     </para>
+///     <para>
+///     All compensation goes through <see cref="InputSender.Move"/> so controller-aim users get
+///     anti-recoil on the virtual right-stick too. Loses the
+///     <c>MOUSEEVENTF_MOVE_NOCOALESCE</c> finesse the previous direct-SendInput path used — the
+///     trade-off is worth it for controller support; if NOCOALESCE turns out to matter in practice
+///     it can be re-added as an opt-in flag on <see cref="InputSender.Move"/>.
 ///     </para>
 /// </summary>
 public class RecoilPatternPlaybackAction : BaseAction
@@ -25,11 +31,18 @@ public class RecoilPatternPlaybackAction : BaseAction
     private double _lastAppliedX = 0;
     private double _lastAppliedY = 0;
 
-    public override bool Active =>
-        base.Active &&
-        AppConfig.Current.ToggleState.AntiRecoil &&
-        AppConfig.Current.AntiRecoilSettings.UsePatternRecoil &&
-        !string.IsNullOrEmpty(AppConfig.Current.AntiRecoilSettings.ActivePatternName);
+    public override bool Active
+    {
+        get
+        {
+            if (!base.Active) return false;
+            if (!AppConfig.Current.ToggleState.AntiRecoil) return false;
+            var profile = AppConfig.Current.AntiRecoilSettings?.ActiveProfile;
+            return profile != null
+                && profile.Mode == AntiRecoilMode.PatternPlayback
+                && !string.IsNullOrEmpty(profile.PatternName);
+        }
+    }
 
     public override Task ExecuteAsync(Prediction[] predictions)
     {
@@ -42,7 +55,8 @@ public class RecoilPatternPlaybackAction : BaseAction
 
         if (!isHolding) { Reset(); return Task.CompletedTask; }
 
-        var pattern = ResolveActivePattern();
+        var profile = AppConfig.Current.AntiRecoilSettings!.ActiveProfile!;
+        var pattern = ResolvePattern(profile.PatternName);
         if (pattern == null || pattern.Samples.Count == 0) return Task.CompletedTask;
 
         var now = DateTime.UtcNow;
@@ -67,9 +81,9 @@ public class RecoilPatternPlaybackAction : BaseAction
         _lastSampleIndex = idx;
         if (idx < 0) return Task.CompletedTask;
 
-        double strength = Math.Clamp(AppConfig.Current.AntiRecoilSettings.PatternStrength, 0.0, 3.0);
+        double strength = Math.Clamp(profile.PatternStrength, 0.0, 3.0);
         var sample = pattern.Samples[idx];
-        // We accumulate the cumulative delta, then emit only the delta-since-last-applied to keep
+        // Accumulate the cumulative delta, then emit only the delta-since-last-applied to keep
         // mouse strokes incremental.
         double targetX = sample.DeltaX * strength;
         double targetY = sample.DeltaY * strength;
@@ -77,7 +91,7 @@ public class RecoilPatternPlaybackAction : BaseAction
         int dy = (int)Math.Round(targetY - _lastAppliedY);
         if (dx != 0 || dy != 0)
         {
-            MouseMove(dx, dy);
+            InputSender.Move(dx, dy);
             _lastAppliedX += dx;
             _lastAppliedY += dy;
         }
@@ -85,28 +99,13 @@ public class RecoilPatternPlaybackAction : BaseAction
         return Task.CompletedTask;
     }
 
-    private static RecoilPattern? ResolveActivePattern()
+    private static RecoilPattern? ResolvePattern(string name)
     {
         var settings = AppConfig.Current?.AntiRecoilSettings;
-        if (settings == null) return null;
-        var name = settings.ActivePatternName;
-        if (string.IsNullOrEmpty(name)) return null;
+        if (settings == null || string.IsNullOrEmpty(name)) return null;
         foreach (var p in settings.Patterns)
             if (p.Name == name) return p;
         return null;
-    }
-
-    private static void MouseMove(int dx, int dy)
-    {
-        var inputs = new MINPUT[1];
-        inputs[0].type = (uint)MInputType.INPUT_MOUSE;
-        inputs[0].U.mi = new MOUSEINPUT
-        {
-            dx = dx,
-            dy = dy,
-            dwFlags = (uint)(InputEventFlags.MOUSEEVENTF_MOVE | InputEventFlags.MOUSEEVENTF_MOVE_NOCOALESCE)
-        };
-        NativeAPIMethods.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
     }
 
     private void Reset()

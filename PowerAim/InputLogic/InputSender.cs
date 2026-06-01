@@ -38,9 +38,14 @@ namespace PowerAim.InputLogic
         public static bool GamepadAimAvailable =>
             GamepadManager.CanSend && GamepadManager.GamepadSender != null;
 
-        /// <summary>True when the aim pipeline should drive the right-stick instead of the mouse.</summary>
+        /// <summary>
+        ///     True when the aim pipeline should drive the right-stick instead of the mouse.
+        ///     Source of truth is now <see cref="DropdownState.MouseMovementMethod"/> ==
+        ///     <see cref="MouseMovementMethod.Gamepad"/> — the old <c>ToggleState.UseControllerForAim</c>
+        ///     toggle was folded into the same dropdown the other movement methods live in.
+        /// </summary>
         public static bool GamepadAimActive =>
-            GamepadAimAvailable && AppConfig.Current?.ToggleState?.UseControllerForAim == true;
+            GamepadAimAvailable && AppConfig.Current?.DropdownState?.MouseMovementMethod == MouseMovementMethod.Gamepad;
 
         /// <summary>
         ///     Apply an incremental aim delta. Routes through the gamepad's right-stick when

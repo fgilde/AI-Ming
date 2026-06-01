@@ -25,6 +25,7 @@ using MouseMovementLibraries.ddxoftSupport;
 using MouseMovementLibraries.RazerSupport;
 using Nextended.Core;
 using Nextended.Core.Extensions;
+using Nextended.Core.Helper;
 using Nextended.UI.Helper;
 using Other;
 using UILibrary;
@@ -1252,6 +1253,101 @@ public partial class MainWindow
     private void AutoPlayEditCancel_Click(object sender, RoutedEventArgs e) => CloseAutoPlayEditor(false);
     private void AutoPlayEditSave_Click(object sender, RoutedEventArgs e) => CloseAutoPlayEditor(true);
 
+    // ===== AntiRecoil profile editor (in-window page, analog to TriggerEditPage / AutoPlayEditPage) =====
+    private global::UILibrary.AntiRecoilProfileEdit? _antiRecoilEditor;
+    private string? _antiRecoilEditReturnTo;
+    private PowerAim.Config.AntiRecoilProfile? _antiRecoilEditTarget;
+    private bool _antiRecoilEditIsNew;
+    private Action<PowerAim.Config.AntiRecoilProfile?>? _antiRecoilEditCommit;
+    private bool _antiRecoilEditDirty;
+    private System.ComponentModel.PropertyChangedEventHandler? _antiRecoilDirtyHandler;
+
+    /// <summary>
+    ///     Open the AntiRecoil profile editor in-window (Page) instead of a modal dialog. Mirrors
+    ///     <see cref="OpenAutoPlayEditor"/> exactly: BeginEdit on existing profiles so Cancel
+    ///     rolls back, dirty-flag tracking for the unsaved-changes prompt, sidebar locked while
+    ///     editing.
+    /// </summary>
+    public void OpenAntiRecoilEditor(PowerAim.Config.AntiRecoilProfile target, bool isNew, Action<PowerAim.Config.AntiRecoilProfile?> commit)
+    {
+        _antiRecoilEditReturnTo = CurrentMenu;
+        _antiRecoilEditTarget = target;
+        _antiRecoilEditIsNew = isNew;
+        _antiRecoilEditCommit = commit;
+        if (!isNew) target.BeginEdit();
+        AntiRecoilEditTitle.Text = isNew ? Locale.AntiRecoilAddProfile : Locale.AntiRecoilProfileEdit;
+        AntiRecoilEditName.Text = target.Name ?? "";
+        _antiRecoilEditDirty = false;
+        AntiRecoilEditDirty.Visibility = Visibility.Collapsed;
+        if (_antiRecoilEditor == null)
+        {
+            _antiRecoilEditor = new global::UILibrary.AntiRecoilProfileEdit();
+            AntiRecoilEditorHost.Content = _antiRecoilEditor;
+        }
+        _antiRecoilEditor.Profile = target;
+
+        // Dirty-tracking via PropertyChanged — same shape as AutoPlay.
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            if (!ReferenceEquals(_antiRecoilEditTarget, target)) return;
+            _antiRecoilDirtyHandler = (s, e) =>
+            {
+                _antiRecoilEditDirty = true;
+                AntiRecoilEditDirty.Visibility = Visibility.Visible;
+                if (e.PropertyName == nameof(PowerAim.Config.AntiRecoilProfile.Name))
+                {
+                    AntiRecoilEditName.Text = target.Name ?? "";
+                }
+            };
+            target.PropertyChanged += _antiRecoilDirtyHandler;
+        }), System.Windows.Threading.DispatcherPriority.Background);
+
+        SetSidebarLocked(true);
+        _ = NavigateTo(nameof(AntiRecoilEditPage));
+    }
+
+    private void CloseAntiRecoilEditor(bool save)
+    {
+        var target = _antiRecoilEditTarget;
+        var isNew = _antiRecoilEditIsNew;
+        var commit = _antiRecoilEditCommit;
+        var returnTo = _antiRecoilEditReturnTo ?? nameof(AimMenu);
+
+        if (!save && _antiRecoilEditDirty)
+        {
+            var res = PowerAim.Visuality.MessageDialog.Show(
+                Locale.UnsavedChangesMessage, Locale.UnsavedChanges,
+                PowerAim.Visuality.MessageDialog.DialogButtons.YesNoCancel,
+                PowerAim.Visuality.MessageDialog.DialogIcon.Warning,
+                owner: this,
+                defaultResult: PowerAim.Visuality.MessageDialog.DialogResult.Yes);
+            if (res == PowerAim.Visuality.MessageDialog.DialogResult.Cancel) return;
+            if (res == PowerAim.Visuality.MessageDialog.DialogResult.Yes) save = true;
+        }
+
+        if (target != null && _antiRecoilDirtyHandler != null)
+            target.PropertyChanged -= _antiRecoilDirtyHandler;
+        _antiRecoilDirtyHandler = null;
+        _antiRecoilEditDirty = false;
+        AntiRecoilEditDirty.Visibility = Visibility.Collapsed;
+
+        if (target != null && !isNew)
+        {
+            if (save) target.EndEdit();
+            else target.CancelEdit();
+        }
+
+        SetSidebarLocked(false);
+        _antiRecoilEditTarget = null;
+        _antiRecoilEditCommit = null;
+        commit?.Invoke(save ? target : null);
+        _ = NavigateTo(returnTo);
+    }
+
+    private void AntiRecoilEditBack_Click(object sender, RoutedEventArgs e)   => CloseAntiRecoilEditor(false);
+    private void AntiRecoilEditCancel_Click(object sender, RoutedEventArgs e) => CloseAntiRecoilEditor(false);
+    private void AntiRecoilEditSave_Click(object sender, RoutedEventArgs e)   => CloseAntiRecoilEditor(true);
+
     private void SetSidebarLocked(bool locked)
     {
         if (Sidebar is not null)
@@ -1548,15 +1644,10 @@ public partial class MainWindow
 
                 break;
 
-            case nameof(AppConfig.Current.BindingSettings.Gun1Key):
-                if (AppConfig.Current.ToggleState.EnableGunSwitchingKeybind)
-                    LoadAntiRecoilConfig(AppConfig.Current.FileLocationState.Gun1Config, true);
-                break;
-
-            case nameof(AppConfig.Current.BindingSettings.Gun2Key):
-                if (AppConfig.Current.ToggleState.EnableGunSwitchingKeybind)
-                    LoadAntiRecoilConfig(AppConfig.Current.FileLocationState.Gun2Config, true);
-                break;
+            // Gun1Key / Gun2Key cases removed: the old "load gun-config file" behaviour is
+            // superseded by the AntiRecoilProfile keybind activation (see AntiRecoilProfileManager
+            // — each profile's KeyBind toggles ActiveProfileId). Binding fields remain on
+            // BindingSettings for legacy compat but are unused.
         }
     }
 
@@ -1573,7 +1664,6 @@ public partial class MainWindow
         AimConfig.RemoveAll();
         TriggerBot.RemoveAll();
         AntiRecoil.RemoveAll();
-        ARConfig.RemoveAll();
         FOVConfig.RemoveAll();
         ESPConfig.RemoveAll();
 
@@ -1648,17 +1738,9 @@ public partial class MainWindow
         AimConfig.AddDropdown(Locale.MovementPath, AppConfig.Current.DropdownState.MovementPathType, v => AppConfig.Current.DropdownState.MovementPathType = v);
         AimConfig.AddSlider(Locale.MouseSensitivity, Locale.Sensitivity, 0.01, 0.01, 0.01, 1).BindTo(() => AppConfig.Current.SliderSettings.MouseSensitivity);
 
-        // Use-controller-for-aim toggle. Uses the same AddToggleWithKeyBind pattern as
-        // GlobalActive/AutoTrigger/AntiRecoil so the user can bind a hotkey to flip it on/off
-        // from inside the game without having to alt-tab to PowerAim. AddToggleWithKeyBind
-        // handles the two-way binding + keybind plumbing internally.
-        var useControllerToggle = AimConfig.AddToggleWithKeyBind(Locale.UseControllerForAim,
-            nameof(Locale.UseControllerForAim), BindingManager);
-        useControllerToggle.BindTo(() => AppConfig.Current.ToggleState.UseControllerForAim);
-        //useControllerToggle.IsEnabled = PowerAim.InputLogic.GamepadManager.CanSend;
-        useControllerToggle.ToolTip = PowerAim.InputLogic.GamepadManager.CanSend
-            ? Locale.UseControllerForAimTooltip
-            : Locale.UseControllerForAimDisabledTooltip;
+        // (UseControllerForAim toggle removed — folded into the Movement Method dropdown in
+        // InputSettings. The "Gamepad" entry there sets DropdownState.MouseMovementMethod =
+        // Gamepad, which InputSender.GamepadAimActive now reads from.)
         AimConfig.AddButton(Locale.CalibrateSensitivity).Reader.Click += (_, _) =>
         {
             new PowerAim.Visuality.CalibrationWizardDialog { Owner = this }.ShowDialog();
@@ -1701,135 +1783,44 @@ public partial class MainWindow
         #region Anti Recoil
 
         AntiRecoil.AddTitle(Locale.AntiRecoil, true);
-        AntiRecoil.AddToggleWithKeyBind(Locale.AntiRecoil, nameof(Locale.AntiRecoil), BindingManager).BindTo(() => AppConfig.Current.ToggleState.AntiRecoil).BindActiveStateColor(AntiRecoil);
+        AntiRecoil.AddToggleWithKeyBind(Locale.AntiRecoil, nameof(Locale.AntiRecoil), BindingManager)
+            .BindTo(() => AppConfig.Current.ToggleState.AntiRecoil)
+            .BindActiveStateColor(AntiRecoil);
         AntiRecoil.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind), () => keybind.AntiRecoilKeybind, BindingManager);
         AntiRecoil.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.DisableAntiRecoilKeybind), () => keybind.DisableAntiRecoilKeybind, BindingManager);
 
-        // BETA toggle for the experimental image-based mode. When on, the manual sliders below
-        // are disabled and only the Image-Based Strength slider applies.
-        var betaToggle = AntiRecoil.AddToggle(Locale.UseImageBasedAntiRecoil);
-        betaToggle.ToolTip = Locale.UseImageBasedAntiRecoilHelp;
-        betaToggle.BindTo(() => AppConfig.Current.AntiRecoilSettings.UseImageBasedAntiRecoil);
-
-        // Pattern recorder + playback. Mutually exclusive with both the legacy and the BETA paths
-        // — when this is on and a pattern is selected, the other two skip themselves in their
-        // .Active getters.
-        var patternToggle = AntiRecoil.AddToggle(Locale.UsePatternPlayback);
-        patternToggle.ToolTip = Locale.UsePatternPlaybackTooltip;
-        patternToggle.BindTo(() => AppConfig.Current.AntiRecoilSettings.UsePatternRecoil);
-
-        var patternStatus = new System.Windows.Controls.Label
+        // Profile list — replaces the old monolithic Legacy/BETA/Pattern UI. Each profile bundles
+        // an engine variant + parameters + optional activation conditions (hotkey, OCR weapon
+        // match). The AntiRecoilProfileManager handles radio activation + notifications.
+        var profilesHelpLabel = new System.Windows.Controls.Label
         {
             Foreground = (System.Windows.Media.Brush)FindResource("FluentTextSecondary"),
             FontFamily = new System.Windows.Media.FontFamily("Segoe UI Variable Text"),
-            FontSize = 12,
+            FontSize = 11,
             Padding = new Thickness(0),
-            Margin = new Thickness(8, 0, 8, 6),
+            Margin = new Thickness(8, 4, 8, 4),
+            Content = Locale.AntiRecoilProfilesHelp,
         };
-        AntiRecoil.Children.Add(patternStatus);
+        AntiRecoil.Children.Add(profilesHelpLabel);
 
+        var profileList = new global::UILibrary.AntiRecoilProfileList { Margin = new Thickness(4) };
+        profileList.BindTo(() => AppConfig.Current.AntiRecoilSettings.Profiles);
+        AntiRecoil.Children.Add(profileList);
+
+        // Pattern library is reachable from here too — the per-profile editor's pattern picker
+        // reads from this library.
         AntiRecoil.AddButton(Locale.RecoilPatternsMenuItem).Reader.Click += (_, _) =>
         {
             new PowerAim.Visuality.RecoilPatternsDialog { Owner = this }.ShowDialog();
         };
 
-        // Image-based strength (only relevant when BETA is on).
-        var strengthSlider = AntiRecoil.AddSlider(Locale.AntiRecoilStrength, Locale.Amount, 0.05, 0.05, 0, 1.5)
-            .InitWith(s => s.ToolTip = Locale.AntiRecoilStrengthHelp)
-            .BindTo(() => AppConfig.Current.AntiRecoilSettings.AutoStrength);
-
-        // Legacy manual sliders (disabled when BETA is on).
-        var holdTimeSlider = AntiRecoil.AddSlider(Locale.HoldTime, Locale.Milliseconds, 1, 1, 1, 1000, true)
-            .BindTo(() => AppConfig.Current.AntiRecoilSettings.HoldTime);
-        var recordFireRateBtn = AntiRecoil.AddButton(Locale.RecordFireRate);
-        recordFireRateBtn.Reader.Click += (s, e) => new SetAntiRecoil(this).Show();
-        var fireRateSlider = AntiRecoil.AddSlider(Locale.FireRate, Locale.Milliseconds, 1, 1, 1, 5000, true)
-            .BindTo(() => AppConfig.Current.AntiRecoilSettings.FireRate);
-        var yRecoilSlider = AntiRecoil.AddSlider(Locale.YRecoilUpDown, Locale.Move, 1, 1, -1000, 1000, true)
-            .BindTo(() => AppConfig.Current.AntiRecoilSettings.YRecoil);
-        var xRecoilSlider = AntiRecoil.AddSlider(Locale.XRecoilLeftRight, Locale.Move, 1, 1, -1000, 1000, true)
-            .BindTo(() => AppConfig.Current.AntiRecoilSettings.XRecoil);
-
-        // Show whichever block of controls is relevant for the engine the user selected.
-        // Precedence: pattern playback > BETA image-based > legacy fixed X/Y.
-        //   pattern armed → hide everything else (legacy sliders, BETA strength) plus status hint
-        //   BETA on       → only the strength slider visible; legacy sliders + ARConfig collapsed
-        //   default       → strength slider hidden, legacy sliders + ARConfig visible
-        void UpdateAntiRecoilVisibility()
-        {
-            var s = AppConfig.Current.AntiRecoilSettings;
-            bool pattern = s.UsePatternRecoil && !string.IsNullOrEmpty(s.ActivePatternName);
-            bool beta = s.UseImageBasedAntiRecoil && !pattern;
-            bool legacy = !pattern && !beta;
-
-            strengthSlider.Visibility    = beta ? Visibility.Visible : Visibility.Collapsed;
-            holdTimeSlider.Visibility    = legacy ? Visibility.Visible : Visibility.Collapsed;
-            recordFireRateBtn.Visibility = legacy ? Visibility.Visible : Visibility.Collapsed;
-            fireRateSlider.Visibility    = legacy ? Visibility.Visible : Visibility.Collapsed;
-            yRecoilSlider.Visibility     = legacy ? Visibility.Visible : Visibility.Collapsed;
-            xRecoilSlider.Visibility     = legacy ? Visibility.Visible : Visibility.Collapsed;
-            // Collapse the entire "Anti Recoil Config" card too (the FluentCard Border that
-            // wraps the ARConfig StackPanel) — it's only meaningful for the legacy path.
-            if (ARConfig.Parent is FrameworkElement arCard)
-                arCard.Visibility = legacy ? Visibility.Visible : Visibility.Collapsed;
-
-            // Status line right under the pattern toggle.
-            if (pattern)
-                patternStatus.Content = string.Format(Locale.ActivePatternStatusFormat, s.ActivePatternName, s.PatternStrength);
-            else if (s.UsePatternRecoil)
-                patternStatus.Content = Locale.PatternArmedButNoneSelected;
-            else if (beta)
-                patternStatus.Content = Locale.RecoilModeImageBased;
-            else
-                patternStatus.Content = Locale.RecoilModeLegacy;
-        }
-        AppConfig.Current.AntiRecoilSettings.PropertyChanged += (s, e) =>
-        {
-            if (e.PropertyName is nameof(AntiRecoilSettings.UseImageBasedAntiRecoil)
-                or nameof(AntiRecoilSettings.UsePatternRecoil)
-                or nameof(AntiRecoilSettings.ActivePatternName)
-                or nameof(AntiRecoilSettings.PatternStrength))
-                Dispatcher.Invoke(UpdateAntiRecoilVisibility);
-        };
-        UpdateAntiRecoilVisibility();
-
         AntiRecoil.AddSeparator();
         AntiRecoil.Visibility = GetVisibilityFor(nameof(AntiRecoil));
 
+        // Spin up the profile manager (keybind subscriptions + OCR poll). Idempotent.
+        PowerAim.AILogic.AntiRecoilProfileManager.EnsureInitialized();
+
         #endregion Anti Recoil
-
-        #region Anti Recoil Config
-
-        // Anti-Recoil Config — per-gun manual recoil patterns. Only meaningful when the legacy
-        // (non-BETA) pattern-based path is active.
-        ARConfig.AddTitle(Locale.AntiRecoilConfig, true);
-        ARConfig.AddToggleWithKeyBind(Locale.EnableGunSwitchingKeybind, nameof(Locale.EnableGunSwitchingKeybind), BindingManager).BindTo(() => AppConfig.Current.ToggleState.EnableGunSwitchingKeybind).BindActiveStateColor(ARConfig);
-        ARConfig.AddButton(Locale.SaveAntiRecoilConfig).Reader.Click += (s, e) =>
-        {
-            var saveFileDialog = new SaveFileDialog
-            {
-                InitialDirectory = $"{Directory.GetCurrentDirectory}\\bin\\anti_recoil_configs",
-                Filter = Locale.FilterAntiRecoilConfig
-            };
-            if (saveFileDialog.ShowDialog() == true)
-            {
-                AppConfig.Current.AntiRecoilSettings.Save<AntiRecoilSettings>(saveFileDialog.FileName);
-                new NoticeBar(Locale.AntiRecoilSaved.FormatWith(saveFileDialog.FileName), 2000).Show();
-            }
-        };
-        ARConfig.AddKeyChanger(Locale.GunKey.FormatWith(1), () => keybind.Gun1Key, BindingManager);
-        ARConfig.AddFileLocator(Locale.GunConfig.FormatWith(1), Locale.FilterAntiRecoilConfig, "\\bin\\anti_recoil_configs");
-        ARConfig.AddKeyChanger(Locale.GunKey.FormatWith(2), () => keybind.Gun2Key, BindingManager);
-        ARConfig.AddFileLocator(Locale.GunConfig.FormatWith(2), Locale.FilterAntiRecoilConfig, "\\bin\\anti_recoil_configs");
-
-        ARConfig.AddButton(Locale.LoadGunConfig.FormatWith(1)).Reader.Click +=
-            (s, e) => LoadAntiRecoilConfig(AppConfig.Current.FileLocationState.Gun1Config, true);
-        ARConfig.AddButton(Locale.LoadGunConfig.FormatWith(2)).Reader.Click +=
-            (s, e) => LoadAntiRecoilConfig(AppConfig.Current.FileLocationState.Gun2Config, true);
-        ARConfig.AddSeparator();
-        ARConfig.Visibility = GetVisibilityFor(nameof(ARConfig));
-
-        #endregion Anti Recoil Config
 
         #region FOV Config
 
@@ -2202,6 +2193,29 @@ public partial class MainWindow
             .BindTo(() => AppConfig.Current.CrosshairSettings.OutlineThickness);
         OverlaySettings.AddColorChanger(Locale.CrosshairColor).BindTo(() => AppConfig.Current.CrosshairSettings.ColorValue);
         OverlaySettings.AddColorChanger(Locale.CrosshairOutlineColor).BindTo(() => AppConfig.Current.CrosshairSettings.OutlineColorValue);
+
+        // Detection-flash cue: tints the crosshair briefly whenever the detector finds a target.
+        // The dependent picker + duration slider hide when the toggle is off — matches the
+        // conditional-UI pattern used in the Anti-Recoil section.
+        var detectionFlashToggle = OverlaySettings.AddToggle(Locale.DetectionFlash)
+            .InitWith(t => t.ToolTip = Locale.DetectionFlashHelp)
+            .BindTo(() => AppConfig.Current.CrosshairSettings.DetectionFlashEnabled);
+        var detectionFlashColor = OverlaySettings.AddColorChanger(Locale.DetectionFlashColor);
+        detectionFlashColor.BindTo(() => AppConfig.Current.CrosshairSettings.DetectionFlashColorValue);
+        var detectionFlashDuration = OverlaySettings.AddSlider(Locale.DetectionFlashDuration, Locale.Milliseconds, 10, 10, 50, 1000)
+            .BindTo(() => AppConfig.Current.CrosshairSettings.DetectionFlashMs);
+        void UpdateDetectionFlashVisibility()
+        {
+            var on = AppConfig.Current.CrosshairSettings.DetectionFlashEnabled;
+            detectionFlashColor.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+            detectionFlashDuration.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+        }
+        AppConfig.Current.CrosshairSettings.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(CrosshairSettings.DetectionFlashEnabled))
+                Dispatcher.Invoke(UpdateDetectionFlashVisibility);
+        };
+        UpdateDetectionFlashVisibility();
         OverlaySettings.AddSeparator();
 
         // ===== Stats =====
@@ -2556,18 +2570,79 @@ public partial class MainWindow
         CaptureSettings.AddColorChanger(Locale.CapturedAreaBorderColor).BindTo(() => AppConfig.Current.ColorState.CapturedAreaBorderColor);
         CaptureSettings.AddSeparator();
 
-        InputSettings.AddDropdown(Locale.MouseMovementMethod,
-            AppConfig.Current.DropdownState.MouseMovementMethod, async v =>
+        // Movement Method dropdown — custom-built so we can:
+        //   • render a device icon (mouse 🖱 / gamepad 🎮) next to each entry, matching the
+        //     AKeyChanger device-icon convention,
+        //   • disable the "Gamepad" entry when no working virtual gamepad sender exists, so the
+        //     user can't pick a non-functional option.
+        // Replaces both the old generic-enum dropdown AND the standalone "Use controller for aim"
+        // toggle — those two were redundant.
+        var movementDropdown = new global::UILibrary.ADropdown(Locale.MouseMovementMethod);
+        InputSettings.Add(movementDropdown);
+
+        foreach (var v in Enum.GetValues<MouseMovementMethod>())
+        {
+            // Glyphs match AKeyChanger.SetContent: mouse = U+F8AF, gamepad = U+E7FC.
+            string glyph = v == MouseMovementMethod.Gamepad ? "" : "";
+            string label = v.ToDescriptionString();
+            bool isGamepad = v == MouseMovementMethod.Gamepad;
+
+            var item = new System.Windows.Controls.ComboBoxItem();
+            var stack = new System.Windows.Controls.StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
+            stack.Children.Add(new System.Windows.Controls.TextBlock
             {
-                AppConfig.Current.DropdownState.MouseMovementMethod = v;
-                if ((v == MouseMovementMethod.LGHUB && !new LGHubMain().Load())
-                    || (v == MouseMovementMethod.RazerSynapse && !await RZMouse.Load())
-                    || (v == MouseMovementMethod.ddxoft && !await DdxoftMain.Load())
-                   )
+                Text = glyph,
+                FontFamily = new System.Windows.Media.FontFamily("Segoe Fluent Icons,Segoe MDL2 Assets"),
+                FontSize = 13,
+                Width = 20,
+                VerticalAlignment = VerticalAlignment.Center,
+                Opacity = 0.85,
+            });
+            stack.Children.Add(new System.Windows.Controls.TextBlock
+            {
+                Text = label,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(6, 0, 0, 0),
+            });
+            item.Content = stack;
+            if (isGamepad)
+                item.ToolTip = Locale.UseControllerForAimTooltip;
+
+            // Capture by closure — we copy `v` into a local so the inner lambda binds correctly.
+            var local = v;
+            item.Selected += async (_, _) =>
+            {
+                // Gamepad pick + nothing connected → warn the user and offer to navigate to the
+                // Gamepad page so they can wire it up. We DO commit the selection either way so
+                // their intent survives the navigation; once a sender comes online,
+                // InputSender.GamepadAimActive flips true automatically.
+                if (local == MouseMovementMethod.Gamepad
+                    && !PowerAim.InputLogic.InputSender.GamepadAimAvailable)
+                {
+                    var res = PowerAim.Visuality.MessageDialog.Show(
+                        Locale.GamepadNotReadyMessage,
+                        Locale.GamepadNotReady,
+                        PowerAim.Visuality.MessageDialog.DialogButtons.YesNo,
+                        PowerAim.Visuality.MessageDialog.DialogIcon.Warning,
+                        owner: this,
+                        defaultResult: PowerAim.Visuality.MessageDialog.DialogResult.Yes);
+                    if (res == PowerAim.Visuality.MessageDialog.DialogResult.Yes)
+                        _ = NavigateTo(nameof(GamepadSettings));
+                }
+
+                AppConfig.Current.DropdownState.MouseMovementMethod = local;
+                if ((local == MouseMovementMethod.LGHUB && !new LGHubMain().Load())
+                    || (local == MouseMovementMethod.RazerSynapse && !await RZMouse.Load())
+                    || (local == MouseMovementMethod.ddxoft && !await DdxoftMain.Load()))
                 {
                     AppConfig.Current.DropdownState.MouseMovementMethod = MouseMovementMethod.MouseEvent;
                 }
-            });
+            };
+
+            movementDropdown.DropdownBox.Items.Add(item);
+            if (v == AppConfig.Current.DropdownState.MouseMovementMethod)
+                movementDropdown.DropdownBox.SelectedItem = item;
+        }
 
         InputSettings.AddSlider(Locale.GamepadMinimumLT, "LT", 0.1, 0.1, 0.1, 1).BindTo(() => AppConfig.Current.SliderSettings.GamepadMinimumLT);
         InputSettings.AddSlider(Locale.GamepadMinimumRT, "RT", 0.1, 0.1, 0.1, 1).BindTo(() => AppConfig.Current.SliderSettings.GamepadMinimumRT);

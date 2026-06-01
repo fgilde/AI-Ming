@@ -1,9 +1,8 @@
-<UserControl x:Class="UILibrary.AutoPlayProfileList"
+<UserControl x:Class="UILibrary.AntiRecoilProfileList"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:controls="clr-namespace:AntWpf.Controls;assembly=AntWpf"
              xmlns:uiLibrary="clr-namespace:PowerAim.UILibrary"
              xmlns:poweraim="clr-namespace:PowerAim"
              mc:Ignorable="d"
@@ -15,6 +14,7 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <ListBox
+                x:Name="ProfilesList"
                 ItemsSource="{Binding Profiles, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                 Foreground="{DynamicResource FluentTextPrimary}"
                 FontFamily="Segoe UI Variable Text"
@@ -28,55 +28,52 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <StackPanel Orientation="Vertical">
-                                <TextBlock
-                                    Text="{Binding Name}"
-                                    ToolTip="{Binding Description}"
-                                    Foreground="{Binding Enabled, Converter={StaticResource boolToBrush}}"
-                                    Opacity="{Binding IsActive, Converter={StaticResource boolToOpacity}}"
-                                    VerticalAlignment="Center"
-                                    Margin="0,0,5,0" />
-                                <TextBlock
-                                    Text="{Binding OllamaModel}"
-                                    FontSize="10"
-                                    Opacity="0.6"
-                                    Foreground="{DynamicResource FluentTextSecondary}"
-                                    VerticalAlignment="Center"
-                                    Margin="0,0,5,0" />
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0">
+                                <TextBlock Text="{Binding Name}"
+                                           ToolTip="{Binding Description}"
+                                           Foreground="{DynamicResource FluentTextPrimary}"
+                                           FontWeight="SemiBold"
+                                           FontSize="14"
+                                           TextTrimming="CharacterEllipsis" />
+                                <TextBlock Foreground="{DynamicResource FluentTextSecondary}"
+                                           FontFamily="Segoe UI Variable Small"
+                                           FontSize="11"
+                                           TextTrimming="CharacterEllipsis"
+                                           Text="{Binding Description}" />
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                <!-- Per-profile hotkey: pressing the bound key toggles this
-                                     profile's Enabled state. Same shape as Trigger / Mapping /
-                                     AntiRecoil list rows (KeyConfigPrefix gives each profile a
-                                     unique dynamic id, GlobalKeyPressed routes back to the
-                                     code-behind). The keybind itself is persisted by AKeyChanger
-                                     into BindingSettings under AUTOPLAY_PROFILE_<id>. -->
+                                <!-- Per-profile hotkey: pressing the bound key toggles this profile's
+                                     active state (radio: if it's currently active, clears active; otherwise
+                                     sets it). Same UI shape as the Mapping profile list. The keybind is
+                                     persisted by AKeyChanger into BindingSettings under
+                                     ANTIRECOIL_PROFILE_<id>. -->
                                 <uiLibrary:AKeyChanger KeyConfigName="{Binding Id}"
                                                        Tag="{Binding}"
-                                                       KeyConfigPrefix="AUTOPLAY_PROFILE"
+                                                       KeyConfigPrefix="ANTIRECOIL_PROFILE"
                                                        BindingManager="{Binding DataContext.BindingManager, RelativeSource={RelativeSource AncestorType=poweraim:MainWindow}}"
-                                                       MouseDown="UIElement_OnMouseDown"
-                                                       GlobalKeyPressed="ApplyBindingEnabled"
+                                                       MouseDown="SwallowMouse"
+                                                       GlobalKeyPressed="ApplyBindingActive"
                                                        WithBorder="False"
                                                        Text="" />
+                                <!-- Toggle = is this profile currently THE active one. Bound to a
+                                     writable shim (IsActiveSelfWrite) so flipping it routes through
+                                     the profile manager and deactivates any sibling. -->
                                 <uiLibrary:AToggle BorderBrush="Transparent" Text=""
-                                                   Checked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}" />
-
+                                                   Checked="{Binding IsActiveSelfWrite, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}" />
                                 <Button Style="{StaticResource FluentIconButton}"
                                     ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Edit'}"
                                     Tag="{Binding}"
-                                    MouseDown="UIElement_OnMouseDown"
+                                    MouseDown="SwallowMouse"
                                     Click="EditProfile_Click"
                                     Foreground="{DynamicResource FluentTextPrimary}"
                                     Content="&#xEB7E;"
                                     Padding="0,0,0,0"
                                     FontSize="20"
                                     Width="50" />
-
                                 <Button Style="{StaticResource FluentIconButton}"
                                     ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Delete'}"
                                     Tag="{Binding}"
-                                    MouseDown="UIElement_OnMouseDown"
+                                    MouseDown="SwallowMouse"
                                     Click="DeleteProfile_Click"
                                     Foreground="{DynamicResource FluentTextPrimary}"
                                     Content="&#xE74D;"
@@ -91,8 +88,8 @@
             <Border Grid.Row="1">
                 <Button Style="{StaticResource FluentIconButton}"
                     HorizontalAlignment="Right"
-                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AddProfile'}"
-                    MouseDown="UIElement_OnMouseDown"
+                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AntiRecoilAddProfile'}"
+                    MouseDown="SwallowMouse"
                     Click="AddProfile_Click"
                     Foreground="{DynamicResource FluentTextPrimary}"
                     Content="&#xECC8;"

@@ -609,9 +609,6 @@
                                         <StackPanel x:Name="AimConfig" />
                                     </Border>
                                     <Border Style="{StaticResource FluentCard}">
-                                        <StackPanel x:Name="ARConfig" />
-                                    </Border>
-                                    <Border Style="{StaticResource FluentCard}">
                                         <StackPanel x:Name="FOVConfig" />
                                     </Border>
                                 </StackPanel>
@@ -1462,6 +1459,82 @@
                                           VerticalScrollBarVisibility="Auto"
                                           PanningMode="VerticalOnly">
                                 <ContentControl x:Name="AutoPlayEditorHost" />
+                            </ScrollViewer>
+                        </Grid>
+
+                        <!-- AntiRecoil profile editor page (analog to TriggerEditPage / AutoPlayEditPage) -->
+                        <Grid x:Name="AntiRecoilEditPage" Visibility="Collapsed">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Border Grid.Row="0"
+                                    Background="{StaticResource FluentSurface1}"
+                                    BorderBrush="{StaticResource FluentStroke}"
+                                    BorderThickness="0,0,0,1"
+                                    Padding="20,12,20,12">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Button Grid.Column="0"
+                                            Style="{StaticResource FluentStandardButton}"
+                                            Click="AntiRecoilEditBack_Click"
+                                            Padding="10,6,12,6">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Back'}" Margin="6,0,0,0" VerticalAlignment="Center" FontFamily="Segoe UI Variable Text" FontSize="13" />
+                                        </StackPanel>
+                                    </Button>
+                                    <StackPanel Grid.Column="1"
+                                                Orientation="Horizontal"
+                                                Margin="14,0,0,0"
+                                                VerticalAlignment="Center">
+                                        <TextBlock x:Name="AntiRecoilEditTitle"
+                                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AntiRecoilProfileEdit'}"
+                                                   Foreground="{DynamicResource FluentTextPrimary}"
+                                                   FontFamily="Segoe UI Variable Display"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="18" />
+                                        <TextBlock x:Name="AntiRecoilEditName"
+                                                   Margin="8,0,0,0"
+                                                   Foreground="{DynamicResource FluentAccent}"
+                                                   FontFamily="Segoe UI Variable Display"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="18"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   MaxWidth="380" />
+                                        <TextBlock x:Name="AntiRecoilEditDirty"
+                                                   Text=" *"
+                                                   Foreground="{DynamicResource FluentAccent}"
+                                                   FontFamily="Segoe UI Variable Display"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="18"
+                                                   Visibility="Collapsed" />
+                                    </StackPanel>
+                                    <Button Grid.Column="2"
+                                            x:Name="AntiRecoilEditCancel"
+                                            Style="{StaticResource FluentStandardButton}"
+                                            Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Cancel'}"
+                                            MinWidth="90"
+                                            Margin="0,0,8,0"
+                                            Click="AntiRecoilEditCancel_Click" />
+                                    <Button Grid.Column="3"
+                                            x:Name="AntiRecoilEditSave"
+                                            Style="{StaticResource FluentAccentButton}"
+                                            Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Save'}"
+                                            MinWidth="100"
+                                            Click="AntiRecoilEditSave_Click" />
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1"
+                                          Padding="20,16,20,16"
+                                          VerticalScrollBarVisibility="Auto"
+                                          PanningMode="VerticalOnly">
+                                <ContentControl x:Name="AntiRecoilEditorHost" />
                             </ScrollViewer>
                         </Grid>
 

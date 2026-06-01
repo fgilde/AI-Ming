@@ -6,26 +6,21 @@ using InputLogic;
 namespace PowerAim.AILogic.Actions;
 
 /// <summary>
-///     Legacy "manual" anti-recoil: while the configured trigger key (default Left Mouse
-///     Button) is held, applies a fixed per-tick (<see cref="AntiRecoilSettings.XRecoil"/>,
-///     <see cref="AntiRecoilSettings.YRecoil"/>) mouse-delta on a timer.
-///     <para>
-///     <see cref="AntiRecoilSettings.HoldTime"/> is the delay (ms) before the first correction
-///     fires after the key first goes down — gives the gun a moment of natural recoil before
-///     the compensator kicks in. <see cref="AntiRecoilSettings.FireRate"/> is the cooldown (ms)
-///     between corrections.
-///     </para>
-///     <para>
-///     Disabled (no-op) when:
+///     Legacy fixed-step anti-recoil. Active only when:
 ///     <list type="bullet">
-///       <item><see cref="ToggleState.GlobalActive"/> is off</item>
-///       <item><see cref="ToggleState.AntiRecoil"/> is off</item>
-///       <item>The user has enabled the experimental <see cref="ImageBasedAntiRecoilAction"/>
-///             via <see cref="AntiRecoilSettings.UseImageBasedAntiRecoil"/></item>
+///       <item><see cref="ToggleState.AntiRecoil"/> master switch is on,</item>
+///       <item>An active <see cref="AntiRecoilProfile"/> exists,</item>
+///       <item>That profile's <see cref="AntiRecoilProfile.Mode"/> is
+///             <see cref="AntiRecoilMode.Legacy"/>.</item>
 ///     </list>
-///     Previously this logic lived in a parallel <c>DispatcherTimer</c> on the UI thread
-///     (<c>AntiRecoilManager</c> + <c>MouseManager.DoAntiRecoil</c>) which ignored every gate
-///     above — that's been deleted; the action-class lifecycle is now the single source of truth.
+///     Reads <see cref="AntiRecoilProfile.HoldTime"/> / <see cref="AntiRecoilProfile.FireRate"/> /
+///     <see cref="AntiRecoilProfile.XRecoil"/> / <see cref="AntiRecoilProfile.YRecoil"/> from the
+///     active profile (not from the global <see cref="AntiRecoilSettings"/> any more — those legacy
+///     fields are only consulted once during config migration).
+///     <para>
+///     All mouse compensation is dispatched through <see cref="InputSender.Move"/> so when the user
+///     toggles <c>UseControllerForAim</c> the recoil compensation rides the virtual right-stick
+///     instead of the synthetic mouse.
 ///     </para>
 /// </summary>
 public class AntiRecoilAction : BaseAction
@@ -34,18 +29,16 @@ public class AntiRecoilAction : BaseAction
     private DateTime _lastApplyAt = DateTime.MinValue;
     private bool _wasHolding = false;
 
-    public override bool Active =>
-        base.Active &&
-        AppConfig.Current.ToggleState.AntiRecoil &&
-        !AppConfig.Current.AntiRecoilSettings.UseImageBasedAntiRecoil &&
-        // Pattern playback owns the recoil entirely when armed — overlaying the fixed-step
-        // legacy compensation on top of recorded strokes just double-counts and feels wrong.
-        !IsPatternPlaybackArmed();
-
-    private static bool IsPatternPlaybackArmed()
+    public override bool Active
     {
-        var s = AppConfig.Current?.AntiRecoilSettings;
-        return s != null && s.UsePatternRecoil && !string.IsNullOrEmpty(s.ActivePatternName);
+        get
+        {
+            if (!base.Active) return false;
+            if (!AppConfig.Current.ToggleState.AntiRecoil) return false;
+            var profile = AppConfig.Current.AntiRecoilSettings?.ActiveProfile;
+            return profile != null
+                && profile.Mode == AntiRecoilMode.Legacy;
+        }
     }
 
     public override Task ExecuteAsync(Prediction[] predictions)
@@ -68,8 +61,6 @@ public class AntiRecoilAction : BaseAction
         }
 
         var now = DateTime.UtcNow;
-
-        // First tick after the key goes down — start the hold-time clock.
         if (!_wasHolding)
         {
             _keyDownAt = now;
@@ -78,11 +69,11 @@ public class AntiRecoilAction : BaseAction
             return Task.CompletedTask;
         }
 
-        var settings = AppConfig.Current.AntiRecoilSettings;
-        if ((now - _keyDownAt).TotalMilliseconds < settings.HoldTime) return Task.CompletedTask;
-        if ((now - _lastApplyAt).TotalMilliseconds < settings.FireRate) return Task.CompletedTask;
+        var profile = AppConfig.Current.AntiRecoilSettings!.ActiveProfile!;
+        if ((now - _keyDownAt).TotalMilliseconds < profile.HoldTime) return Task.CompletedTask;
+        if ((now - _lastApplyAt).TotalMilliseconds < profile.FireRate) return Task.CompletedTask;
 
-        MouseManager.Move(settings.XRecoil, settings.YRecoil);
+        InputSender.Move(profile.XRecoil, profile.YRecoil);
         _lastApplyAt = now;
         return Task.CompletedTask;
     }

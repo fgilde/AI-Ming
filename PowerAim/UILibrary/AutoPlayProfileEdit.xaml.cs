@@ -46,6 +46,27 @@ namespace UILibrary
                 slider.BorderBrush = slider.Background = Brushes.Transparent;
                 slider.ToolTip = Locale.DecisionIntervalTooltip;
             }).BindTo(() => Profile.DecisionInterval);
+
+            // Per-profile sens-scale: keeps the same multiplier metaphor as the rest of the
+            // app's slider-driven knobs (range 0.1x–3x, fine 0.05 steps).
+            MouseSensScalePanel.RemoveAll();
+            MouseSensScalePanel.AddSlider(Locale.AutoPlayMouseSensScale, Locale.Multiplier, 0.05, 0.1, 0.1, 3.0).InitWith(slider =>
+            {
+                slider.BorderBrush = slider.Background = Brushes.Transparent;
+            }).BindTo(() => Profile.MouseSensScale);
+
+            // Anti-detection jitter: integer pixels and integer ms, both default 0 = off.
+            MouseJitterPanel.RemoveAll();
+            MouseJitterPanel.AddSlider(Locale.AutoPlayMouseJitter, Locale.Pixels, 1, 1, 0, 15).InitWith(slider =>
+            {
+                slider.BorderBrush = slider.Background = Brushes.Transparent;
+            }).BindTo(() => Profile.MouseJitterPx);
+
+            KeyDelayJitterPanel.RemoveAll();
+            KeyDelayJitterPanel.AddSlider(Locale.AutoPlayKeyDelayJitter, Locale.Milliseconds, 1, 1, 0, 25).InitWith(slider =>
+            {
+                slider.BorderBrush = slider.Background = Brushes.Transparent;
+            }).BindTo(() => Profile.KeyDelayJitterMs);
         }
 
         public AutoPlayProfileEdit()

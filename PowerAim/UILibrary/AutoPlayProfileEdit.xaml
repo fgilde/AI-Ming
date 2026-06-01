@@ -133,6 +133,20 @@
                 <!-- Decision Interval -->
                 <StackPanel x:Name="DecisionIntervalPanel" Margin="0 5 0 0" />
 
+                <!-- Per-profile mouse sens scale (multiplies AutoPlay's emitted dx/dy) -->
+                <StackPanel x:Name="MouseSensScalePanel" Margin="0 5 0 0" />
+
+                <!-- Anti-detection jitter sliders + help text -->
+                <StackPanel x:Name="MouseJitterPanel" Margin="0 5 0 0" />
+                <StackPanel x:Name="KeyDelayJitterPanel" Margin="0 5 0 0" />
+                <TextBlock Foreground="{StaticResource Foreground}"
+                           FontSize="11"
+                           Margin="2 0 0 10"
+                           TextWrapping="Wrap"
+                           Visibility="{Binding Converter={StaticResource helpVis}}"
+                           Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AutoPlayJitterHelp'}"
+                           FontFamily="Segoe UI Variable Text" />
+
                 <!-- Game Context -->
                 <StackPanel Margin="0 10 0 0">
                     <Label Foreground="{StaticResource Foreground}"

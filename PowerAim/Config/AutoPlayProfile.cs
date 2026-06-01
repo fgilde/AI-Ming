@@ -139,6 +139,41 @@ public class AutoPlayProfile : EditableNotificationObject
     } = 0.5;
 
     /// <summary>
+    ///     Multiplier applied to every AutoPlay mouse movement (ApplyMouseMove). 1.0 = recorded
+    ///     magnitudes, 0.5 = half-strength (slower aim), 2.0 = double (faster). Useful when one
+    ///     profile is for a high-sens game and another for low-sens. Doesn't affect general aim
+    ///     — that has its own X/Y sens sliders.
+    /// </summary>
+    public double MouseSensScale
+    {
+        get;
+        set => SetProperty(ref field, value);
+    } = 1.0;
+
+    /// <summary>
+    ///     Anti-detection: random ±N pixel offset added to every AutoPlay mouse move so the
+    ///     emitted path doesn't look perfectly deterministic. 0 (default) disables jitter and
+    ///     preserves the original recorded behaviour. Typical values: 1–4 px for a subtle
+    ///     human-ish wobble, higher for noticeably noisy aim.
+    /// </summary>
+    public int MouseJitterPx
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
+    /// <summary>
+    ///     Anti-detection: random 0..N ms delay inserted before each key down/up burst so key
+    ///     events don't all land on perfectly even tick boundaries. 0 (default) disables the
+    ///     delay. The delay is fire-and-forget — it doesn't block the AutoPlay tick.
+    /// </summary>
+    public int KeyDelayJitterMs
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
+    /// <summary>
     /// Available actions for this profile
     /// </summary>
     public ObservableCollection<AutoPlayAction> Actions

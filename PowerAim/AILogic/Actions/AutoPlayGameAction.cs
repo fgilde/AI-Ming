@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Drawing;
@@ -9,6 +10,12 @@ using System.Windows.Forms;
 using System.Text.RegularExpressions;
 
 namespace PowerAim.AILogic.Actions;
+
+/// <summary>
+///     Single entry in the AutoPlay activity ring buffer surfaced in the Debug Overlay.
+///     <see cref="Category"/> is one of "Intent", "Tactical", "OCR", "Combat".
+/// </summary>
+public sealed record AutoPlayLogEntry(DateTime At, string Category, string Detail);
 
 /// <summary>
 ///     Heuristic AutoPlay driver with an optional Ollama "strategic layer" running in parallel.
@@ -106,6 +113,31 @@ public class AutoPlayGameAction : BaseAction
     private const double PitchCorrectionFraction  = 0.25;
     private const int    PitchCorrectionMaxStep   = 14;
 
+    // ============================================================================ ACTIVITY LOG ====
+
+    /// <summary>
+    ///     Capacity of the activity ring buffer surfaced in the Debug Overlay. Kept tiny so the
+    ///     allocation pressure (per-tick enqueue/dequeue) stays negligible.
+    /// </summary>
+    private const int ActivityLogCapacity = 20;
+
+    private static readonly ConcurrentQueue<AutoPlayLogEntry> _activityLog = new();
+
+    /// <summary>Snapshot of the most recent decisions/actions, oldest first. Thread-safe.</summary>
+    public static IReadOnlyList<AutoPlayLogEntry> RecentEntries => _activityLog.ToArray();
+
+    /// <summary>
+    ///     Append <paramref name="detail"/> to both the static ring buffer (Debug Overlay) and the
+    ///     debug trace. The queue is bounded to <see cref="ActivityLogCapacity"/> entries via a
+    ///     lock-free dequeue-on-overflow.
+    /// </summary>
+    private static void AddLogEntry(string category, string detail)
+    {
+        _activityLog.Enqueue(new AutoPlayLogEntry(DateTime.Now, category, detail));
+        while (_activityLog.Count > ActivityLogCapacity && _activityLog.TryDequeue(out _)) { /* trim */ }
+        Log($"{category}: {detail}");
+    }
+
     // ============================================================================ LIFECYCLE ====
 
     private static void Log(string msg)
@@ -185,7 +217,10 @@ public class AutoPlayGameAction : BaseAction
         if (predictions.Length > 0)
         {
             if ((DateTime.Now - _lastSeenEnemy).TotalMilliseconds > 800)
+            {
                 _firstSightingThisStreak = DateTime.Now;
+                AddLogEntry("Combat", $"{predictions.Length} enem{(predictions.Length == 1 ? "y" : "ies")}");
+            }
             _lastSeenEnemy = DateTime.Now;
             _ticksWithoutEnemy = 0;
             HandleCombat(predictions, centerX, centerY, intent);
@@ -471,9 +506,33 @@ public class AutoPlayGameAction : BaseAction
         }
     }
 
-    /// <summary>Wraps <see cref="MouseManager.Move"/> so the pitch accumulator stays accurate.</summary>
+    /// <summary>
+    ///     Wraps <see cref="MouseManager.Move"/> so the pitch accumulator stays accurate. Applies
+    ///     the active profile's per-profile sensitivity scale (1.0 = no-op), then adds optional
+    ///     anti-detection jitter so the path doesn't look perfectly deterministic.
+    /// </summary>
     private void ApplyMouseMove(int dx, int dy)
     {
+        if (dx == 0 && dy == 0) return;
+
+        var profile = GetActiveProfile();
+
+        // ---- Per-profile sens scale ----
+        double scale = profile?.MouseSensScale ?? 1.0;
+        if (scale != 1.0)
+        {
+            dx = (int)Math.Round(dx * scale);
+            dy = (int)Math.Round(dy * scale);
+        }
+
+        // ---- Anti-detection jitter ----
+        int jitter = profile?.MouseJitterPx ?? 0;
+        if (jitter > 0)
+        {
+            dx += _rng.Next(-jitter, jitter + 1);
+            dy += _rng.Next(-jitter, jitter + 1);
+        }
+
         if (dx != 0 || dy != 0)
         {
             MouseManager.Move(dx, dy);
@@ -527,6 +586,7 @@ public class AutoPlayGameAction : BaseAction
         }
 
         Activate(action);
+        AddLogEntry("Tactical", action.Name ?? "?");
         Log($"Tactical: {action.Name} (combat={inCombat}, hinted={intent.ActionHint != null})");
 
         _nextTacticalUse = now.AddSeconds(inCombat
@@ -576,7 +636,7 @@ public class AutoPlayGameAction : BaseAction
             {
                 Activate(_aReload);
                 _lastReloadAt = now;
-                Log($"OCR: ammo={ammo.Value:0} → reload");
+                AddLogEntry("OCR", $"reload (ammo={ammo.Value:0})");
             }
         }
 
@@ -586,7 +646,10 @@ public class AutoPlayGameAction : BaseAction
         {
             // Extend (or open) the retreat window. Letting the timer slide forward as long as
             // health stays low avoids the bot bouncing between retreat and engage.
+            bool wasActive = now < _healthRetreatUntil;
             _healthRetreatUntil = now + TimeSpan.FromSeconds(HealthRetreatSeconds);
+            if (!wasActive)
+                AddLogEntry("OCR", $"retreat (hp={health.Value:0})");
         }
     }
 
@@ -805,11 +868,16 @@ public class AutoPlayGameAction : BaseAction
     private void RememberIntent(StrategicIntent intent)
     {
         var label = string.IsNullOrEmpty(intent.Direction) ? intent.Mode : $"{intent.Mode}/{intent.Direction}";
+        bool changed;
         lock (_recentIntentsLock)
         {
+            // Only emit an activity-log entry when the strategic intent actually shifts — avoids
+            // 20 identical "explore" rows after a long stretch of unchanged decisions.
+            changed = _recentIntents.Count == 0 || _recentIntents.Last() != label;
             _recentIntents.Enqueue(label);
             while (_recentIntents.Count > 5) _recentIntents.Dequeue();
         }
+        if (changed) AddLogEntry("Intent", label);
     }
 
     private static async Task SafeDelay(int ms, CancellationToken ct)
@@ -931,16 +999,43 @@ public class AutoPlayGameAction : BaseAction
     {
         if (action == null || !action.IsValid) return;
         if (!_heldActions.Add(action)) return;
-        foreach (var key in action.Keys.Where(k => k.IsValid))
-            _ = InputSender.SendKeyAsync(key, KeyPressState.Down);
+        SendKeysWithJitter(action, KeyPressState.Down);
     }
 
     private void Release(AutoPlayAction? action)
     {
         if (action == null || !action.IsValid) return;
         if (!_heldActions.Remove(action)) return;
-        foreach (var key in action.Keys.Where(k => k.IsValid))
-            _ = InputSender.SendKeyAsync(key, KeyPressState.Up);
+        SendKeysWithJitter(action, KeyPressState.Up);
+    }
+
+    /// <summary>
+    ///     Dispatches the action's key burst with optional anti-detection delay jitter. When
+    ///     <see cref="AutoPlayProfile.KeyDelayJitterMs"/> is 0 we keep the existing zero-overhead
+    ///     fire-and-forget path. When &gt; 0 we wrap the loop in <see cref="Task.Run"/> and sleep
+    ///     a random 0..N ms before the keys go out — without blocking the tick thread.
+    /// </summary>
+    private void SendKeysWithJitter(AutoPlayAction action, KeyPressState state)
+    {
+        var profile = GetActiveProfile();
+        int jitter = profile?.KeyDelayJitterMs ?? 0;
+        var keys = action.Keys.Where(k => k.IsValid).ToArray();
+        if (keys.Length == 0) return;
+
+        if (jitter <= 0)
+        {
+            foreach (var key in keys)
+                _ = InputSender.SendKeyAsync(key, state);
+            return;
+        }
+
+        int delay = _rng.Next(0, jitter + 1);
+        _ = Task.Run(async () =>
+        {
+            if (delay > 0) await Task.Delay(delay);
+            foreach (var key in keys)
+                await InputSender.SendKeyAsync(key, state);
+        });
     }
 
     private void Tap(AutoPlayAction? action)

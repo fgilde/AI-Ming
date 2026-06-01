@@ -4,6 +4,9 @@ using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using System.Windows.Threading;
+using PowerAim.AILogic;
+using PowerAim.AILogic.Contracts;
 using PowerAim.Class.Native;
 using PowerAim.Config;
 using Brush = System.Windows.Media.Brush;
@@ -32,13 +35,79 @@ public partial class CrosshairOverlay : Window
     private const int WS_EX_TOOLWINDOW = 0x00000080;
     private const int WS_EX_NOACTIVATE = 0x08000000;
 
+    // Detection-flash state. Active while the dispatcher timer is running; Render() uses the
+    // configured flash colour instead of CrosshairSettings.ColorBrush during that window. A
+    // single one-shot DispatcherTimer is reused — a new detection while one is already flashing
+    // resets the timer rather than stacking, so the flash never visibly stutters.
+    private bool _flashActive;
+    private DispatcherTimer? _flashTimer;
+    private readonly Action<Prediction[]> _onDetected;
+
+    private System.ComponentModel.PropertyChangedEventHandler? _captureChangedHandler;
+
     public CrosshairOverlay()
     {
         InitializeComponent();
         // Live-update on settings change.
         var settings = AppConfig.Current?.CrosshairSettings;
         if (settings is not null) settings.PropertyChanged += (_, _) => Dispatcher.BeginInvoke(new Action(Render));
-        Loaded += (_, _) => { PositionOnPrimaryCenter(); Render(); };
+        // Detection-flash hook — predictions arrive on the AI loop thread, marshal to UI.
+        _onDetected = OnDetectionFrame;
+        DetectionEventBus.Detected += _onDetected;
+        // Follow the active capture source: when the user switches monitor / process, ICapture
+        // raises PropertyChanged on CaptureArea — we reposition to the new centre.
+        _captureChangedHandler = (_, e) =>
+        {
+            if (e.PropertyName is nameof(ICapture.CaptureArea) or nameof(ICapture.Screen))
+                Dispatcher.BeginInvoke(new Action(PositionOnActiveCapture));
+        };
+        SubscribeCapture();
+        Closed += (_, _) =>
+        {
+            DetectionEventBus.Detected -= _onDetected;
+            UnsubscribeCapture();
+        };
+        Loaded += (_, _) => { PositionOnActiveCapture(); Render(); };
+    }
+
+    private void SubscribeCapture()
+    {
+        var cap = AIManager.Instance?.ImageCapture;
+        if (cap != null && _captureChangedHandler != null) cap.PropertyChanged += _captureChangedHandler;
+    }
+
+    private void UnsubscribeCapture()
+    {
+        var cap = AIManager.Instance?.ImageCapture;
+        if (cap != null && _captureChangedHandler != null) cap.PropertyChanged -= _captureChangedHandler;
+    }
+
+    private void OnDetectionFrame(Prediction[] predictions)
+    {
+        var detectionCount = predictions.Length;
+        if (detectionCount <= 0) return;
+        var s = AppConfig.Current?.CrosshairSettings;
+        if (s is null || !s.DetectionFlashEnabled) return;
+
+        // Marshal to the UI thread; predictions arrive off it.
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            _flashTimer ??= new DispatcherTimer();
+            _flashTimer.Tick -= FlashTimer_Tick;
+            _flashTimer.Tick += FlashTimer_Tick;
+            _flashTimer.Stop();
+            _flashTimer.Interval = TimeSpan.FromMilliseconds(s.DetectionFlashMs);
+            _flashActive = true;
+            _flashTimer.Start();
+            Render();
+        }));
+    }
+
+    private void FlashTimer_Tick(object? sender, EventArgs e)
+    {
+        _flashTimer?.Stop();
+        _flashActive = false;
+        Render();
     }
 
     protected override void OnSourceInitialized(EventArgs e)
@@ -50,14 +119,31 @@ public partial class CrosshairOverlay : Window
         this.HideForCaptureIfEnabled();
     }
 
-    private void PositionOnPrimaryCenter()
+    /// <summary>
+    ///     Centre the crosshair on the active capture rectangle: the area
+    ///     <see cref="AIManager.ImageCapture"/> is reading from. That can be a specific monitor
+    ///     OR a process window — in both cases <c>ICapture.CaptureArea</c> is the screen-space
+    ///     rect we want to centre on. Falls back to <see cref="Screen.PrimaryScreen"/> when the
+    ///     AIManager isn't initialised yet (very early startup, before the first capture exists).
+    /// </summary>
+    private void PositionOnActiveCapture()
     {
-        var screen = Screen.PrimaryScreen;
-        if (screen is null) return;
-        // Convert physical screen pixels to WPF DIPs.
         var src = PresentationSource.FromVisual(this);
         double dpi = src?.CompositionTarget?.TransformToDevice.M11 ?? 1.0;
-        var b = screen.Bounds;
+
+        System.Drawing.Rectangle b;
+        var cap = AIManager.Instance?.ImageCapture;
+        if (cap != null && cap.CaptureArea.Width > 0 && cap.CaptureArea.Height > 0)
+        {
+            b = cap.CaptureArea;
+        }
+        else
+        {
+            var screen = Screen.PrimaryScreen;
+            if (screen is null) return;
+            b = screen.Bounds;
+        }
+
         Width = 200 / dpi;
         Height = 200 / dpi;
         Left = (b.X + b.Width  / 2.0) / dpi - Width  / 2;
@@ -77,7 +163,20 @@ public partial class CrosshairOverlay : Window
         double half = size / 2.0;
         double thick = s.Thickness;
         double gap = s.Gap;
+        // Swap the fill brush during the detection-flash window. The persisted colour is
+        // untouched — this is purely a render-time override that snaps back when the timer fires.
         Brush fill = s.ColorBrush;
+        if (_flashActive)
+        {
+            try
+            {
+                var flashColor = (Color)ColorConverter.ConvertFromString(s.DetectionFlashColorHex);
+                var flashBrush = new SolidColorBrush(flashColor);
+                flashBrush.Freeze();
+                fill = flashBrush;
+            }
+            catch { /* malformed hex — fall back to the normal colour */ }
+        }
         Brush outlineBrush = s.OutlineBrush;
         double outline = s.OutlineThickness;
 

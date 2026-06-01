@@ -121,6 +121,8 @@ public class AIManager : IDisposable
                     stats.LastDetectionCount = predictions.Length;
                     stats.AddDetections(predictions.Length);
                     stats.IncrementFrames();
+                    // Detection-flash cue + any other per-frame UI signal. Cheap when no listeners.
+                    DetectionEventBus.Report(predictions);
                     // Rolling FPS: smoothed via simple EMA so the overlay number stops jittering.
                     var instMs = sw.Elapsed.TotalMilliseconds;
                     if (instMs > 0.01)

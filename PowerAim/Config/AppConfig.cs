@@ -236,6 +236,25 @@ public class AppConfig : BaseSettings
             Console.WriteLine($"Error loading configuration: {ex.Message}");
             Current = new AppConfig();
         }
+        // Migrations that translate older config schemas into the new shapes. Each MigrateXyz
+        // method is idempotent (gated by its own schema-version field) so re-loading the same
+        // config doesn't double-seed anything.
+        Current.AntiRecoilSettings?.MigrateLegacyIfNeeded();
+
+        // Migrate the deprecated ToggleState.UseControllerForAim flag into the unified
+        // DropdownState.MouseMovementMethod enum. Old configs persist a separate bool that the
+        // UI no longer surfaces — fold it into the new "Gamepad" movement method so users keep
+        // their controller-aim setting across the upgrade.
+        if (Current.ToggleState?.UseControllerForAim == true
+            && Current.DropdownState != null
+            && Current.DropdownState.MouseMovementMethod != MouseMovementMethod.Gamepad)
+        {
+            Current.DropdownState.MouseMovementMethod = MouseMovementMethod.Gamepad;
+            // Clear the legacy flag so it doesn't keep re-forcing Gamepad on every load if the
+            // user manually changes the method later.
+            Current.ToggleState.UseControllerForAim = false;
+        }
+
         ConfigLoaded?.Invoke(null, new EventArgs<AppConfig>(Current));
         Current.RaiseAllPropertiesChanged();
         return Current;

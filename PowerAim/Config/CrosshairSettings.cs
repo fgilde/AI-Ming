@@ -64,6 +64,45 @@ public class CrosshairSettings : BaseSettings
         set => SetField(ref field, Math.Clamp(value, 0, 6));
     } = 1;
 
+    /// <summary>
+    ///     When enabled, the crosshair flashes <see cref="DetectionFlashColorHex"/> for
+    ///     <see cref="DetectionFlashMs"/> milliseconds every time the detector finds at least one
+    ///     target on the current frame. Gives a quiet "detection is alive" cue without needing
+    ///     the debug overlay. Off by default — old behaviour preserved.
+    /// </summary>
+    public bool DetectionFlashEnabled
+    {
+        get;
+        set => SetField(ref field, value);
+    } = false;
+
+    /// <summary>ARGB hex string for the detection-flash tint (default an accent red).</summary>
+    public string DetectionFlashColorHex
+    {
+        get;
+        set => SetField(ref field, value ?? "#FFFF3030");
+    } = "#FFFF3030";
+
+    /// <summary>Flash duration in milliseconds. Clamped to a sane window.</summary>
+    public int DetectionFlashMs
+    {
+        get;
+        set => SetField(ref field, Math.Clamp(value, 50, 1000));
+    } = 200;
+
+    /// <summary>
+    ///     <see cref="Color"/>-typed view over <see cref="DetectionFlashColorHex"/> so the
+    ///     in-app picker can bind to a Color directly. Not serialized — the hex string remains
+    ///     the source of truth.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    [Newtonsoft.Json.JsonIgnore]
+    public Color DetectionFlashColorValue
+    {
+        get => TryParseColor(DetectionFlashColorHex, System.Windows.Media.Color.FromRgb(0xFF, 0x30, 0x30));
+        set => DetectionFlashColorHex = $"#{value.A:X2}{value.R:X2}{value.G:X2}{value.B:X2}";
+    }
+
     // Computed WPF Brush — DO NOT serialize. WPF's Brush.Transform.Inverse chains back on itself
     // and System.Text.Json walks straight into an "object cycle detected" at depth 64. The
     // persisted state is the Color / OutlineColor hex strings above; the brushes are reconstituted

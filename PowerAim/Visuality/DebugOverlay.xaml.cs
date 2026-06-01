@@ -1,7 +1,10 @@
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms;
 using System.Windows.Threading;
+using PowerAim.AILogic;
+using PowerAim.AILogic.Contracts;
 using PowerAim.Class;
 using PowerAim.Class.Native;
 
@@ -30,11 +33,61 @@ public partial class DebugOverlay : Window
     private const int WS_EX_TOOLWINDOW = 0x00000080;
     private const int WS_EX_NOACTIVATE = 0x08000000;
 
+    private System.ComponentModel.PropertyChangedEventHandler? _captureChangedHandler;
+
     public DebugOverlay()
     {
         InitializeComponent();
         _timer = new() { Interval = TimeSpan.FromMilliseconds(120) };
         _timer.Tick += OnTick;
+        // Follow the active capture source: monitor / process changes raise PropertyChanged on
+        // ICapture.CaptureArea — reposition to the new top-left so the overlay never strands
+        // itself on the wrong screen.
+        _captureChangedHandler = (_, e) =>
+        {
+            if (e.PropertyName is nameof(ICapture.CaptureArea) or nameof(ICapture.Screen))
+                Dispatcher.BeginInvoke(new Action(PositionOnActiveCapture));
+        };
+        Loaded += (_, _) => { SubscribeCapture(); PositionOnActiveCapture(); };
+    }
+
+    private void SubscribeCapture()
+    {
+        var cap = AIManager.Instance?.ImageCapture;
+        if (cap != null && _captureChangedHandler != null) cap.PropertyChanged += _captureChangedHandler;
+    }
+
+    private void UnsubscribeCapture()
+    {
+        var cap = AIManager.Instance?.ImageCapture;
+        if (cap != null && _captureChangedHandler != null) cap.PropertyChanged -= _captureChangedHandler;
+    }
+
+    /// <summary>
+    ///     Park the overlay at the top-left of the active capture rectangle (the monitor or
+    ///     process window <see cref="AIManager.ImageCapture"/> is reading from). 16-px margin.
+    ///     Falls back to the primary screen when AIManager isn't ready yet.
+    /// </summary>
+    private void PositionOnActiveCapture()
+    {
+        var src = System.Windows.PresentationSource.FromVisual(this);
+        double dpi = src?.CompositionTarget?.TransformToDevice.M11 ?? 1.0;
+
+        System.Drawing.Rectangle b;
+        var cap = AIManager.Instance?.ImageCapture;
+        if (cap != null && cap.CaptureArea.Width > 0 && cap.CaptureArea.Height > 0)
+        {
+            b = cap.CaptureArea;
+        }
+        else
+        {
+            var screen = Screen.PrimaryScreen;
+            if (screen is null) { Left = 16; Top = 16; return; }
+            b = screen.Bounds;
+        }
+
+        Left = (b.X / dpi) + 16;
+        Top  = (b.Y / dpi) + 16;
     }
 
     protected override void OnSourceInitialized(EventArgs e)
@@ -52,6 +105,7 @@ public partial class DebugOverlay : Window
     {
         _timer.Stop();
         _timer.Tick -= OnTick;
+        UnsubscribeCapture();
         base.OnClosed(e);
     }
 
@@ -69,6 +123,7 @@ public partial class DebugOverlay : Window
             : WindowFocusWatcher.Instance.CurrentProcessName;
 
         UpdateOcrSection();
+        UpdateAutoPlaySection();
 
         // Lazily add / remove the input visualizer. Adding the panel flips InputEventBus.Enabled on
         // (via the panel's Loaded handler); removing it turns the senders' reporting back off.
@@ -139,6 +194,53 @@ public partial class DebugOverlay : Window
             valueTb.Text = latest.TryGetValue(r.Name ?? "", out var res) && !string.IsNullOrEmpty(res.Text)
                 ? res.Text
                 : "—";
+        }
+    }
+
+    private const int AutoPlayLogRows = 8;
+
+    /// <summary>
+    ///     Mirrors the AutoPlay activity ring buffer
+    ///     (<see cref="PowerAim.AILogic.Actions.AutoPlayGameAction.RecentEntries"/>) into the
+    ///     right-hand column of the overlay. Hidden when AutoPlay is off; shows the last
+    ///     <see cref="AutoPlayLogRows"/> entries (oldest at the top, newest at the bottom).
+    /// </summary>
+    private void UpdateAutoPlaySection()
+    {
+        bool show = PowerAim.Config.AppConfig.Current?.ToggleState?.AutoPlay == true;
+        if (!show)
+        {
+            if (AutoPlaySection.Visibility != Visibility.Collapsed) AutoPlaySection.Visibility = Visibility.Collapsed;
+            return;
+        }
+        AutoPlaySection.Visibility = Visibility.Visible;
+        AutoPlayHeader.Text = PowerAim.Locale.DebugOverlayAutoPlayHeader;
+
+        var entries = PowerAim.AILogic.Actions.AutoPlayGameAction.RecentEntries;
+        // Take the trailing window so "oldest at top, newest at bottom" within the visible slice
+        // matches the user's reading order.
+        int take = Math.Min(entries.Count, AutoPlayLogRows);
+        int skip = entries.Count - take;
+
+        // Reuse TextBlocks across ticks — at 120 ms cadence churning the visual tree would be
+        // wasteful. Grow/shrink the child collection to match the visible row count.
+        while (AutoPlayLogStack.Children.Count < take)
+        {
+            AutoPlayLogStack.Children.Add(new System.Windows.Controls.TextBlock
+            {
+                Style = (Style)FindResource("DebugValue"),
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
+                Margin = new Thickness(0, 1, 0, 1),
+            });
+        }
+        while (AutoPlayLogStack.Children.Count > take)
+            AutoPlayLogStack.Children.RemoveAt(AutoPlayLogStack.Children.Count - 1);
+
+        for (int i = 0; i < take; i++)
+        {
+            var e = entries[skip + i];
+            var tb = (System.Windows.Controls.TextBlock)AutoPlayLogStack.Children[i];
+            tb.Text = $"{e.At:HH:mm:ss} · {e.Category} · {e.Detail}";
         }
     }
 

@@ -8,6 +8,9 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using PowerAim.Extensions;
 using PowerAim;
+using PowerAim.InputLogic;
+using PowerAim.Types;
+using PowerAim.UILibrary;
 using Nextended.Core.Extensions;
 using Visuality;
 
@@ -34,6 +37,24 @@ namespace UILibrary
         private void UIElement_OnMouseDown(object sender, MouseButtonEventArgs e)
         {
             e.Handled = true;
+        }
+
+        /// <summary>
+        ///     Hotkey routed back from the per-row <see cref="AKeyChanger"/>: flip the bound
+        ///     profile's <see cref="AutoPlayProfile.Enabled"/> so the keybind acts as a quick
+        ///     enable/disable switch. Same pattern as <c>TriggerList.ApplyBindingEnabled</c> and
+        ///     <c>MappingProfileList.ApplyBindingEnabled</c>.
+        /// </summary>
+        private void ApplyBindingEnabled(object? sender, EventArgs<(AKeyChanger Sender, string Key, StoredInputBinding KeyBinding)> e)
+        {
+            if (e.Value.Sender.Tag is AutoPlayProfile profile)
+            {
+                // Swallow duplicate events from a double-subscribed keybind control (e.g. after
+                // a CreateUI rebuild leaves a stale row subscribed) — same guard the other lists use.
+                if (!KeybindToggleGuard.ShouldHandle(profile)) return;
+                profile.Enabled = !profile.Enabled;
+                Notifier.Notify(profile.Name, profile.Enabled);
+            }
         }
 
         private void EditProfile_Click(object sender, RoutedEventArgs e)

@@ -1,9 +1,103 @@
 using System.Collections.ObjectModel;
+using Nextended.Core;
+using Nextended.Core.Extensions;
 
 namespace PowerAim.Config;
 
 public class AntiRecoilSettings : BaseSettings
 {
+    /// <summary>
+    ///     The set of named profiles. Exactly one (or none) is "active" at any time — see
+    ///     <see cref="ActiveProfileId"/>. Replaces the old monolithic per-mode settings (HoldTime,
+    ///     X/Y Recoil, AutoStrength, PatternName, …) — those still exist as fields for backward
+    ///     compatibility, are read once during <see cref="MigrateLegacyIfNeeded"/>, and are then
+    ///     left alone.
+    /// </summary>
+    public ObservableCollection<AntiRecoilProfile> Profiles
+    {
+        get;
+        set => SetField(ref field, value);
+    } = new();
+
+    /// <summary>
+    ///     Id of the currently active <see cref="AntiRecoilProfile"/> (radio activation). Empty
+    ///     string = nothing active; the engine actions become no-ops. Mutated by:
+    ///     <list type="bullet">
+    ///       <item>The keybind manager when the user presses a profile's hotkey.</item>
+    ///       <item>The OCR watcher when a configured weapon-name substring matches.</item>
+    ///       <item>The UI profile-list when the user manually activates one.</item>
+    ///     </list>
+    /// </summary>
+    public string ActiveProfileId
+    {
+        get;
+        set => SetField(ref field, value ?? "");
+    } = "";
+
+    /// <summary>
+    ///     Migration flag. <c>0</c> = original schema (legacy fields populated, no Profiles).
+    ///     <c>1</c> = profiles seeded from legacy fields. Bumped automatically by
+    ///     <see cref="MigrateLegacyIfNeeded"/> on first load.
+    /// </summary>
+    public int SchemaVersion
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    /// <summary>
+    ///     Seeds a single profile from the legacy settings the very first time this config is
+    ///     loaded under the new schema. Idempotent — does nothing once <see cref="SchemaVersion"/>
+    ///     reaches <c>1</c>. Called from <c>AppConfig</c> after deserialization.
+    /// </summary>
+    public void MigrateLegacyIfNeeded()
+    {
+        if (SchemaVersion >= 1) return;
+        if (Profiles.Count > 0) { SchemaVersion = 1; return; }
+
+        // Pick the mode that was effectively active in the legacy config so the user's behaviour
+        // doesn't change after the migration.
+        AntiRecoilMode mode;
+        if (UsePatternRecoil && !string.IsNullOrEmpty(ActivePatternName)) mode = AntiRecoilMode.PatternPlayback;
+        else if (UseImageBasedAntiRecoil) mode = AntiRecoilMode.ImageBased;
+        else mode = AntiRecoilMode.Legacy;
+
+        var seeded = new AntiRecoilProfile
+        {
+            Id = Guid.NewGuid().ToFormattedId(),
+            Name = mode switch
+            {
+                AntiRecoilMode.PatternPlayback => string.IsNullOrEmpty(ActivePatternName) ? "Default" : ActivePatternName,
+                AntiRecoilMode.ImageBased      => "Image-based",
+                _                              => "Default",
+            },
+            Mode = mode,
+            HoldTime = HoldTime,
+            FireRate = FireRate,
+            YRecoil = YRecoil,
+            XRecoil = XRecoil,
+            AutoStrength = AutoStrength,
+            PatternName = ActivePatternName ?? "",
+            PatternStrength = PatternStrength,
+        };
+        Profiles.Add(seeded);
+        ActiveProfileId = seeded.Id;
+        SchemaVersion = 1;
+    }
+
+    /// <summary>Returns the currently-active profile, or <c>null</c> when none is active.</summary>
+    public AntiRecoilProfile? ActiveProfile
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(ActiveProfileId)) return null;
+            foreach (var p in Profiles)
+                if (p.Id == ActiveProfileId) return p;
+            return null;
+        }
+    }
+
+
     public int HoldTime
     {
         get;
