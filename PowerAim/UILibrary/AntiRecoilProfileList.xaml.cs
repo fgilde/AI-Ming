@@ -74,7 +74,17 @@ namespace UILibrary
             var draft = new AntiRecoilProfile { Name = "New profile" };
             MainWindow.Instance!.OpenAntiRecoilEditor(draft, isNew: true, commit: saved =>
             {
-                if (saved != null) Profiles.Add(saved);
+                if (saved == null) return;
+                Profiles.Add(saved);
+                // First-profile UX: if nothing is currently active (no migration seed + no manual
+                // hotkey activation yet), auto-activate the newly created profile. Otherwise the
+                // master AntiRecoil toggle has nothing to apply and silently no-ops — that was
+                // the "I have it on and a profile on, but nothing happens" bug.
+                var settings = AppConfig.Current?.AntiRecoilSettings;
+                if (settings != null && settings.ActiveProfile == null)
+                {
+                    AntiRecoilProfileManager.Instance.SetActiveProfile(saved.Id, notify: true);
+                }
             });
         }
 
@@ -90,7 +100,18 @@ namespace UILibrary
             {
                 var settings = AppConfig.Current?.AntiRecoilSettings;
                 if (settings != null && settings.ActiveProfileId == profile.Id)
-                    AntiRecoilProfileManager.Instance.SetActiveProfile("", notify: false);
+                {
+                    // Fall back to a sibling instead of clearing the active id outright — same
+                    // reasoning as AddProfile_Click. Picking the first remaining valid profile
+                    // keeps anti-recoil working when the user just wanted to swap one of several.
+                    AntiRecoilProfile? fallback = null;
+                    foreach (var p in settings.Profiles)
+                    {
+                        if (p.Id == profile.Id) continue;
+                        if (p.IsValid) { fallback = p; break; }
+                    }
+                    AntiRecoilProfileManager.Instance.SetActiveProfile(fallback?.Id ?? "", notify: false);
+                }
                 Profiles.Remove(profile);
             }
         }

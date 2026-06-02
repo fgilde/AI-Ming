@@ -20,6 +20,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="Titlebar_MouseLeftButtonDown">
@@ -252,7 +253,80 @@
             </Border>
         </Grid>
 
-        <Grid Grid.Row="3" Margin="16,0,16,16">
+        <!-- Row 3: Engine options expander. Collapsed by default; all toggles default off so the
+             engine behaves exactly as before unless the user opts in. -->
+        <Expander Grid.Row="3" Margin="16,0,16,8"
+                  Foreground="{DynamicResource FluentTextPrimary}"
+                  Background="{DynamicResource FluentSurface2}"
+                  BorderBrush="{DynamicResource FluentStroke}"
+                  BorderThickness="1"
+                  Header="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OcrEngineOptions'}">
+            <StackPanel Margin="6,8,6,8">
+                <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OcrEngineOptionsHint'}"
+                           Foreground="{DynamicResource FluentTextTertiary}"
+                           FontFamily="Segoe UI Variable Small" FontSize="11"
+                           TextWrapping="Wrap" Margin="0,0,0,8" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <CheckBox Grid.Row="0" Grid.Column="0" x:Name="OptMaxChannelBox" Margin="0,2,8,4"
+                              Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OcrOptMaxChannelGrayscale'}"
+                              ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OcrOptMaxChannelGrayscaleTooltip'}"
+                              Foreground="{DynamicResource FluentTextPrimary}"
+                              FontFamily="Segoe UI Variable Text" FontSize="13"
+                              Checked="OptMaxChannel_Toggle" Unchecked="OptMaxChannel_Toggle" />
+                    <CheckBox Grid.Row="0" Grid.Column="1" x:Name="OptSubstituteBox" Margin="8,2,0,4"
+                              Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OcrOptSubstituteLettersToDigits'}"
+                              ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OcrOptSubstituteLettersToDigitsTooltip'}"
+                              Foreground="{DynamicResource FluentTextPrimary}"
+                              FontFamily="Segoe UI Variable Text" FontSize="13"
+                              Checked="OptSubstitute_Toggle" Unchecked="OptSubstitute_Toggle" />
+                    <CheckBox Grid.Row="1" Grid.Column="0" x:Name="OptStrictParseBox" Margin="0,2,8,4"
+                              Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OcrOptStrictNumberParsing'}"
+                              ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OcrOptStrictNumberParsingTooltip'}"
+                              Foreground="{DynamicResource FluentTextPrimary}"
+                              FontFamily="Segoe UI Variable Text" FontSize="13"
+                              Checked="OptStrictParse_Toggle" Unchecked="OptStrictParse_Toggle" />
+                    <CheckBox Grid.Row="1" Grid.Column="1" x:Name="OptDpiBox" Margin="8,2,0,4"
+                              Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OcrOptUseUserDefinedDpi'}"
+                              ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OcrOptUseUserDefinedDpiTooltip'}"
+                              Foreground="{DynamicResource FluentTextPrimary}"
+                              FontFamily="Segoe UI Variable Text" FontSize="13"
+                              Checked="OptDpi_Toggle" Unchecked="OptDpi_Toggle" />
+                    <CheckBox Grid.Row="2" Grid.Column="0" x:Name="OptOtsuBox" Margin="0,2,8,4"
+                              Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OcrOptUseOtsuFallback'}"
+                              ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OcrOptUseOtsuFallbackTooltip'}"
+                              Foreground="{DynamicResource FluentTextPrimary}"
+                              FontFamily="Segoe UI Variable Text" FontSize="13"
+                              Checked="OptOtsu_Toggle" Unchecked="OptOtsu_Toggle" />
+                    <Grid Grid.Row="2" Grid.Column="1" Margin="8,2,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="84" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OcrOptStickyLastValidMs'}"
+                                   ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OcrOptStickyLastValidMsTooltip'}"
+                                   Foreground="{DynamicResource FluentTextPrimary}"
+                                   FontFamily="Segoe UI Variable Text" FontSize="13"
+                                   VerticalAlignment="Center" />
+                        <TextBox Grid.Column="1" x:Name="OptStickyMsBox" MinHeight="28"
+                                 ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OcrOptStickyLastValidMsTooltip'}"
+                                 TextChanged="OptStickyMs_Changed" />
+                    </Grid>
+                </Grid>
+            </StackPanel>
+        </Expander>
+
+        <Grid Grid.Row="4" Margin="16,0,16,16">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />

@@ -34,6 +34,16 @@ public partial class OcrRegionsDialog
         if (settings is not null)
         {
             EngineEnabledBox.IsChecked = settings.Enabled;
+            // Engine-options expander state — guard with _suppressFieldUpdates so the
+            // Checked/Unchecked handlers don't fire while we're hydrating the UI from config.
+            _suppressFieldUpdates = true;
+            OptMaxChannelBox.IsChecked = settings.UseMaxChannelGrayscale;
+            OptSubstituteBox.IsChecked = settings.SubstituteLettersToDigits;
+            OptStrictParseBox.IsChecked = settings.StrictNumberParsing;
+            OptDpiBox.IsChecked = settings.UseUserDefinedDpi;
+            OptOtsuBox.IsChecked = settings.UseOtsuFallback;
+            OptStickyMsBox.Text = settings.StickyLastValidMs.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            _suppressFieldUpdates = false;
         }
 
         _previewTimer = new() { Interval = TimeSpan.FromMilliseconds(400) };
@@ -320,6 +330,64 @@ public partial class OcrRegionsDialog
         if (settings is null) return;
         settings.Enabled = EngineEnabledBox.IsChecked == true;
         UpdateStatus();
+    }
+
+    // ---------- engine options (all opt-in, default off) ----------
+
+    private void OptMaxChannel_Toggle(object sender, RoutedEventArgs e)
+    {
+        if (_suppressFieldUpdates) return;
+        var settings = AppConfig.Current?.OcrSettings;
+        if (settings is null) return;
+        settings.UseMaxChannelGrayscale = OptMaxChannelBox.IsChecked == true;
+    }
+
+    private void OptSubstitute_Toggle(object sender, RoutedEventArgs e)
+    {
+        if (_suppressFieldUpdates) return;
+        var settings = AppConfig.Current?.OcrSettings;
+        if (settings is null) return;
+        settings.SubstituteLettersToDigits = OptSubstituteBox.IsChecked == true;
+    }
+
+    private void OptStrictParse_Toggle(object sender, RoutedEventArgs e)
+    {
+        if (_suppressFieldUpdates) return;
+        var settings = AppConfig.Current?.OcrSettings;
+        if (settings is null) return;
+        settings.StrictNumberParsing = OptStrictParseBox.IsChecked == true;
+    }
+
+    private void OptDpi_Toggle(object sender, RoutedEventArgs e)
+    {
+        if (_suppressFieldUpdates) return;
+        var settings = AppConfig.Current?.OcrSettings;
+        if (settings is null) return;
+        // OcrService.EnsureEngine compares this against its cached _engineDpiHinted and recreates
+        // the Tesseract engine on the next sample — no manual restart needed.
+        settings.UseUserDefinedDpi = OptDpiBox.IsChecked == true;
+    }
+
+    private void OptOtsu_Toggle(object sender, RoutedEventArgs e)
+    {
+        if (_suppressFieldUpdates) return;
+        var settings = AppConfig.Current?.OcrSettings;
+        if (settings is null) return;
+        settings.UseOtsuFallback = OptOtsuBox.IsChecked == true;
+    }
+
+    private void OptStickyMs_Changed(object sender, TextChangedEventArgs e)
+    {
+        if (_suppressFieldUpdates) return;
+        var settings = AppConfig.Current?.OcrSettings;
+        if (settings is null) return;
+        // Invalid input (non-int, empty) leaves the previous value alone — same pattern as the
+        // coord boxes above. The setter on OcrSettings clamps to [0, 10000].
+        if (int.TryParse(OptStickyMsBox.Text, System.Globalization.NumberStyles.Integer,
+            System.Globalization.CultureInfo.InvariantCulture, out int ms))
+        {
+            settings.StickyLastValidMs = ms;
+        }
     }
 
     private async void Download_Click(object sender, RoutedEventArgs e)

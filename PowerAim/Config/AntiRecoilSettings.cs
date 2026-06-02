@@ -52,8 +52,23 @@ public class AntiRecoilSettings : BaseSettings
     /// </summary>
     public void MigrateLegacyIfNeeded()
     {
-        if (SchemaVersion >= 1) return;
-        if (Profiles.Count > 0) { SchemaVersion = 1; return; }
+        if (SchemaVersion >= 1)
+        {
+            // Defensive sweep on every load: if profiles exist but ActiveProfileId points to a
+            // deleted Id (orphan) or is empty, snap it to the first profile. Otherwise the
+            // master AntiRecoil toggle silently no-ops because every action class short-circuits
+            // on ActiveProfile == null. See AntiRecoilAction.Active / ImageBasedAntiRecoilAction.
+            ReconcileActiveProfileId();
+            return;
+        }
+        if (Profiles.Count > 0)
+        {
+            // Pre-existing profiles found at the same time we're bumping schema (config edited
+            // by hand, or schema-bumped without seed in some prior version). Bless and reconcile.
+            SchemaVersion = 1;
+            ReconcileActiveProfileId();
+            return;
+        }
 
         // Pick the mode that was effectively active in the legacy config so the user's behaviour
         // doesn't change after the migration.
@@ -83,6 +98,38 @@ public class AntiRecoilSettings : BaseSettings
         Profiles.Add(seeded);
         ActiveProfileId = seeded.Id;
         SchemaVersion = 1;
+    }
+
+    /// <summary>
+    ///     Make sure <see cref="ActiveProfileId"/> points at an existing profile when at least
+    ///     one profile exists. Three states are repaired:
+    ///     <list type="bullet">
+    ///       <item><c>ActiveProfileId</c> empty but profiles exist → pick first valid one.</item>
+    ///       <item><c>ActiveProfileId</c> points to a deleted profile → pick first valid one.</item>
+    ///       <item>Already valid → no-op.</item>
+    ///     </list>
+    ///     Called from <see cref="MigrateLegacyIfNeeded"/> on every load. The action classes
+    ///     short-circuit to no-op when <see cref="ActiveProfile"/> is null, so without this fix
+    ///     the master AntiRecoil toggle would silently do nothing whenever the id got out of sync.
+    /// </summary>
+    private void ReconcileActiveProfileId()
+    {
+        if (Profiles.Count == 0)
+        {
+            // Genuinely nothing to activate. Clear the id (was already empty in most cases).
+            if (!string.IsNullOrEmpty(ActiveProfileId)) ActiveProfileId = "";
+            return;
+        }
+        if (!string.IsNullOrEmpty(ActiveProfileId))
+        {
+            foreach (var p in Profiles)
+                if (p.Id == ActiveProfileId) return; // already valid
+        }
+        // Pick first valid profile; if none are "valid" (e.g. missing pattern), still pick the
+        // first one so the user at least sees the active marker and can fix the profile.
+        AntiRecoilProfile? pick = null;
+        foreach (var p in Profiles) { if (p.IsValid) { pick = p; break; } }
+        ActiveProfileId = (pick ?? Profiles[0]).Id;
     }
 
     /// <summary>Returns the currently-active profile, or <c>null</c> when none is active.</summary>

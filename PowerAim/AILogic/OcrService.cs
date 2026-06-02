@@ -29,6 +29,7 @@ public sealed class OcrService : INotifyPropertyChanged, IDisposable
 
     private TesseractEngine? _engine;
     private string? _engineDataPath;
+    private bool _engineDpiHinted;
     private CancellationTokenSource? _cts;
     private Task? _loopTask;
     private readonly ConcurrentDictionary<string, OcrResult> _latest = new();
@@ -157,8 +158,34 @@ public sealed class OcrService : INotifyPropertyChanged, IDisposable
                 {
                     if (ct.IsCancellationRequested) break;
                     if (region == null || !region.Enabled) continue;
-                    var value = SampleRegion(region);
-                    if (value != null) _latest[region.Name] = value;
+                    var value = SampleRegion(region, settings);
+                    if (value == null) continue;
+
+                    // Sticky-last-valid (opt-in via OcrSettings.StickyLastValidMs): if this frame
+                    // couldn't extract a Number but the prior reading did AND it's still fresh,
+                    // carry the prior numeric value forward. Single bad frames from motion blur /
+                    // partial occlusion don't flicker consumers between "value X" and "nothing".
+                    // Cannot manufacture wrong values — only holds real prior ones.
+                    int stickyMs = settings.StickyLastValidMs;
+                    if (stickyMs > 0
+                        && (region.Kind == OcrRegionKind.Number || region.Kind == OcrRegionKind.Health)
+                        && !value.Number.HasValue
+                        && _latest.TryGetValue(region.Name, out var prior)
+                        && prior.Number.HasValue
+                        && (DateTime.UtcNow - prior.Timestamp).TotalMilliseconds < stickyMs)
+                    {
+                        value = new OcrResult
+                        {
+                            RegionName = value.RegionName,
+                            Raw = value.Raw,
+                            Text = value.Text,
+                            Number = prior.Number,
+                            Confidence = value.Confidence,
+                            Timestamp = value.Timestamp,
+                        };
+                    }
+
+                    _latest[region.Name] = value;
                 }
             }
             catch (Exception ex)
@@ -175,7 +202,9 @@ public sealed class OcrService : INotifyPropertyChanged, IDisposable
     private void EnsureEngine(OcrSettings settings)
     {
         var dataPath = string.IsNullOrEmpty(settings.TessdataPath) ? DefaultTessdataPath : settings.TessdataPath;
-        if (_engine != null && _engineDataPath == dataPath) return;
+        // Re-init when the data path OR the DPI-hint flag changes — the variable is sticky on the
+        // engine instance, so flipping the toggle at runtime needs a fresh engine to take effect.
+        if (_engine != null && _engineDataPath == dataPath && _engineDpiHinted == settings.UseUserDefinedDpi) return;
 
         var trainedFile = Path.Combine(dataPath, "eng.traineddata");
         if (!File.Exists(trainedFile))
@@ -190,7 +219,13 @@ public sealed class OcrService : INotifyPropertyChanged, IDisposable
         {
             _engine?.Dispose();
             _engine = new TesseractEngine(dataPath, "eng", EngineMode.LstmOnly);
+            if (settings.UseUserDefinedDpi)
+            {
+                // 300 is the documented LSTM sweet spot. Tells Tesseract not to auto-rescale.
+                _engine.SetVariable("user_defined_dpi", "300");
+            }
             _engineDataPath = dataPath;
+            _engineDpiHinted = settings.UseUserDefinedDpi;
             LastError = "";
         }
         catch (DllNotFoundException ex)
@@ -229,7 +264,7 @@ public sealed class OcrService : INotifyPropertyChanged, IDisposable
         return $"Engine OK. Data path: {_engineDataPath}.";
     }
 
-    private OcrResult? SampleRegion(OcrRegion region)
+    private OcrResult? SampleRegion(OcrRegion region, OcrSettings settings)
     {
         var rect = new System.Drawing.Rectangle(region.X, region.Y, region.Width, region.Height);
         Bitmap? bmp = CaptureScreen(rect);
@@ -239,35 +274,48 @@ public sealed class OcrService : INotifyPropertyChanged, IDisposable
         {
             using var mat = BitmapToMat(bmp);
             using var gray = new Mat();
-            // Bitmap was captured as 32bppArgb → 4-channel BGRA.
-            Cv2.CvtColor(mat, gray, ColorConversionCodes.BGRA2GRAY);
-            using var binary = new Mat();
-            Cv2.Threshold(gray, binary, region.Threshold, 255,
-                region.Invert ? ThresholdTypes.BinaryInv : ThresholdTypes.Binary);
-
-            // Upscale 2x so small HUD digits OCR more reliably.
-            using var scaled = new Mat();
-            Cv2.Resize(binary, scaled, new Size(binary.Cols * 2, binary.Rows * 2), 0, 0, InterpolationFlags.Cubic);
-
-            using var ms = new MemoryStream();
-            Cv2.ImEncode(".png", scaled, out var pngBytes);
-            using var pix = Pix.LoadFromMemory(pngBytes);
-
-            using var page = _engine!.Process(pix,
-                region.Kind == OcrRegionKind.Text ? PageSegMode.Auto : PageSegMode.SingleLine);
-            string raw = page.GetText()?.Trim() ?? "";
-            string sanitized = SanitizeForKind(raw, region.Kind);
-            double? number = TryExtractNumber(sanitized, region.Kind);
-            float conf = page.GetMeanConfidence();
-            return new OcrResult
+            if (settings.UseMaxChannelGrayscale)
             {
-                RegionName = region.Name,
-                Raw = raw,
-                Text = sanitized,
-                Number = number,
-                Confidence = conf,
-                Timestamp = DateTime.UtcNow
-            };
+                // Max-of-channels grayscale (= HSV V channel). For saturated coloured HUD digits
+                // (e.g. magenta ammo counters) standard luminance Y collapses to a mid-grey that
+                // falls below user thresholds tuned for white text. V keeps any saturated colour
+                // at 255 so one threshold works across white / pink / red / green. For unbunten
+                // text (R=G=B) V == Y bit-identically — no regression.
+                var channels = Cv2.Split(mat);
+                try
+                {
+                    Cv2.Max(channels[0], channels[1], gray);   // gray = max(B, G)
+                    Cv2.Max(gray, channels[2], gray);          // gray = max(gray, R)
+                }
+                finally
+                {
+                    for (int i = 0; i < channels.Length; i++) channels[i].Dispose();
+                }
+            }
+            else
+            {
+                // Bitmap was captured as 32bppArgb → 4-channel BGRA. Standard luminance Y.
+                Cv2.CvtColor(mat, gray, ColorConversionCodes.BGRA2GRAY);
+            }
+
+            // Primary pass with the user-configured fixed threshold.
+            var primary = RunOcr(region, gray, useOtsu: false);
+
+            // Otsu fallback (opt-in, off by default). Re-binarises with Tesseract's auto-picked
+            // threshold when the primary pass returned no number. Known risk: on noisy / colour-
+            // saturated regions Otsu can manufacture spurious multi-digit reads from speckle.
+            // Only enable when the primary threshold is *just barely* missing and a re-threshold
+            // would reliably recover.
+            if (settings.UseOtsuFallback
+                && (region.Kind == OcrRegionKind.Number || region.Kind == OcrRegionKind.Health)
+                && primary != null
+                && !primary.Number.HasValue)
+            {
+                var otsu = RunOcr(region, gray, useOtsu: true);
+                if (otsu != null && otsu.Number.HasValue) return otsu;
+            }
+
+            return primary;
         }
         finally
         {
@@ -275,22 +323,103 @@ public sealed class OcrService : INotifyPropertyChanged, IDisposable
         }
     }
 
-    private static string SanitizeForKind(string raw, OcrRegionKind kind)
+    /// <summary>
+    ///     Single OCR pass over <paramref name="gray"/>: threshold → 2× upscale → BMP-encode →
+    ///     Tesseract. <paramref name="useOtsu"/> swaps the user-configured fixed threshold for
+    ///     Otsu's automatic one (Otsu fallback path).
+    /// </summary>
+    private OcrResult? RunOcr(OcrRegion region, Mat gray, bool useOtsu)
+    {
+        var settings = AppConfig.Current?.OcrSettings;
+
+        using var binary = new Mat();
+        if (useOtsu)
+        {
+            var flags = (region.Invert ? ThresholdTypes.BinaryInv : ThresholdTypes.Binary) | ThresholdTypes.Otsu;
+            Cv2.Threshold(gray, binary, 0, 255, flags);
+        }
+        else
+        {
+            Cv2.Threshold(gray, binary, region.Threshold, 255,
+                region.Invert ? ThresholdTypes.BinaryInv : ThresholdTypes.Binary);
+        }
+
+        // Upscale 2x so small HUD digits OCR more reliably.
+        using var scaled = new Mat();
+        Cv2.Resize(binary, scaled, new Size(binary.Cols * 2, binary.Rows * 2), 0, 0, InterpolationFlags.Cubic);
+
+        // BMP encode — pixel-identical to PNG but ~10–50× faster to decode in Leptonica because
+        // there's no DEFLATE step. Tesseract sees the exact same bitmap content either way.
+        Cv2.ImEncode(".bmp", scaled, out var bmpBytes);
+        using var pix = Pix.LoadFromMemory(bmpBytes);
+
+        using var page = _engine!.Process(pix,
+            region.Kind == OcrRegionKind.Text ? PageSegMode.Auto : PageSegMode.SingleLine);
+        string raw = page.GetText()?.Trim() ?? "";
+        string sanitized = SanitizeForKind(raw, region.Kind, settings);
+        double? number = TryExtractNumber(sanitized, region.Kind, settings);
+        float conf = page.GetMeanConfidence();
+        return new OcrResult
+        {
+            RegionName = region.Name,
+            Raw = raw,
+            Text = sanitized,
+            Number = number,
+            Confidence = conf,
+            Timestamp = DateTime.UtcNow,
+        };
+    }
+
+    private static string SanitizeForKind(string raw, OcrRegionKind kind, OcrSettings? settings)
     {
         if (string.IsNullOrEmpty(raw)) return "";
         raw = raw.Replace("\n", " ").Replace("\r", " ").Trim();
+        // Optional letter↔digit substitution BEFORE digit-only stripping — without it, a near-miss
+        // like "lO" loses both characters; with it, "lO" → "10" survives.
+        bool substitute = settings?.SubstituteLettersToDigits == true;
         switch (kind)
         {
             case OcrRegionKind.Number:
+                if (substitute) raw = SubstituteLettersToDigits(raw);
                 return new string(raw.Where(c => char.IsDigit(c) || c == '.').ToArray());
             case OcrRegionKind.Health:
+                if (substitute) raw = SubstituteLettersToDigits(raw);
                 return new string(raw.Where(c => char.IsDigit(c) || c == '/' || c == '.').ToArray());
             default:
                 return raw;
         }
     }
 
-    private static double? TryExtractNumber(string sanitized, OcrRegionKind kind)
+    /// <summary>
+    ///     Map common letter glyphs that Tesseract confuses with digits, character-by-character.
+    ///     Only the conservative mappings — the ones that show up in real HUD-font OCR misses
+    ///     (LSTM-mode Tesseract on 12-18 px digits). More aggressive mappings (E→3, A→4, T→7)
+    ///     would catch a few more cases but at higher risk of false positives, so they're left
+    ///     out. Case-sensitive on purpose: <c>o</c> and <c>O</c> both → 0, but <c>b</c> → 6 while
+    ///     <c>B</c> → 8.
+    /// </summary>
+    private static string SubstituteLettersToDigits(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return s;
+        var sb = new System.Text.StringBuilder(s.Length);
+        foreach (char c in s)
+        {
+            sb.Append(c switch
+            {
+                'O' or 'o' or 'Q' or 'D' => '0',
+                'l' or 'I' or 'i' or '|' or '!' or ']' => '1',
+                'Z' or 'z' => '2',
+                'S' or 's' => '5',
+                'b' => '6',
+                'B' => '8',
+                'g' or 'q' => '9',
+                _ => c,
+            });
+        }
+        return sb.ToString();
+    }
+
+    private static double? TryExtractNumber(string sanitized, OcrRegionKind kind, OcrSettings? settings)
     {
         if (string.IsNullOrEmpty(sanitized)) return null;
         var s = sanitized;
@@ -298,7 +427,19 @@ public sealed class OcrService : INotifyPropertyChanged, IDisposable
         {
             int slash = s.IndexOf('/');
             if (slash > 0) s = s.Substring(0, slash);
+            else if (slash == 0 && settings?.StrictNumberParsing == true) return null; // "/100" — no current value
         }
+
+        if (settings?.StrictNumberParsing == true)
+        {
+            // Require at least one digit and trim stray standalone dots. Without this, inputs
+            // like "." or ".." (a stray speckle that survived thresholding) parse cleanly as 0
+            // and the consumer treats it as a real reading.
+            if (!s.Any(char.IsDigit)) return null;
+            s = s.Trim('.');
+            if (s.Length == 0) return null;
+        }
+
         return double.TryParse(s, System.Globalization.NumberStyles.Any,
             System.Globalization.CultureInfo.InvariantCulture, out double n) ? n : null;
     }

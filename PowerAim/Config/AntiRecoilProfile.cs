@@ -196,6 +196,19 @@ public class AntiRecoilProfile : EditableNotificationObject
         set => SetProperty(ref field, value);
     } = 1.0;
 
+    /// <summary>
+    ///     When the user keeps the trigger held past the pattern's last sample, restart the pattern
+    ///     from the beginning instead of freezing at the last sample. Default <c>true</c> — matches
+    ///     real-world spray behaviour (the gun keeps kicking after the recorded mag length on
+    ///     hi-cap weapons / cheat-refill scenarios). Disable for one-shot patterns where the
+    ///     recording explicitly covers the full mag and no further compensation is wanted.
+    /// </summary>
+    public bool LoopPattern
+    {
+        get;
+        set => SetProperty(ref field, value);
+    } = true;
+
     // -------------------------------------------------------------- Computed --
 
     /// <summary>A profile is valid when it has a name and (for PatternPlayback) a referenced pattern.</summary>

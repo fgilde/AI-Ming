@@ -72,6 +72,24 @@ public class RecoilPatternPlaybackAction : BaseAction
 
         int elapsedMs = (int)(now - _fireDownAt).TotalMilliseconds;
 
+        // Loop the pattern while the trigger is still held. Without this the playback freezes
+        // at the last recorded sample once elapsedMs exceeds the pattern's duration — the user
+        // keeps firing but anti-recoil silently stops. Shift _fireDownAt forward by N full
+        // duration cycles so elapsedMs falls back into the pattern's time range; reset the
+        // applied-accumulators so the next emitted delta is computed against 0 (matching the
+        // start of a fresh cycle) rather than the end-of-pattern cumulative offset, which would
+        // produce a huge backward teleport.
+        int durationMs = pattern.Samples[^1].TimeMs;
+        if (profile.LoopPattern && durationMs > 0 && elapsedMs > durationMs)
+        {
+            int cycles = elapsedMs / durationMs;
+            _fireDownAt = _fireDownAt.AddMilliseconds((long)cycles * durationMs);
+            elapsedMs = (int)(now - _fireDownAt).TotalMilliseconds;
+            _lastSampleIndex = -1;
+            _lastAppliedX = 0;
+            _lastAppliedY = 0;
+        }
+
         // Find the latest sample whose TimeMs <= elapsedMs. Samples are sorted on record.
         int idx = _lastSampleIndex;
         while (idx + 1 < pattern.Samples.Count && pattern.Samples[idx + 1].TimeMs <= elapsedMs)

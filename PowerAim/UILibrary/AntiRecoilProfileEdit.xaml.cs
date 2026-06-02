@@ -133,6 +133,12 @@ namespace UILibrary
             PatternPanel.Children.Add(combo);
             PatternPanel.AddSlider(Locale.AntiRecoilStrength, Locale.Amount, 0.05, 0.05, 0, 3)
                 .BindTo(() => Profile!.PatternStrength);
+            // Loop-on-hold toggle. Defaults true on the profile, so the visible state matches a
+            // freshly-created profile out of the box. Disabling it restores the previous "freeze
+            // at last sample" behaviour for one-shot patterns covering the whole mag.
+            PatternPanel.AddToggle(Locale.AntiRecoilLoopPattern,
+                    t => t.ToolTip = Locale.AntiRecoilLoopPatternTooltip)
+                .BindTo(() => Profile!.LoopPattern);
 
             var patterns = AppConfig.Current?.AntiRecoilSettings?.Patterns;
             combo.ItemsSource = patterns;
