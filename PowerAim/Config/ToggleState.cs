@@ -261,15 +261,16 @@ public class ToggleState : BaseSettings
         set => SetField(ref field, value);
     } = true;
 
-    public bool XAxisPercentageAdjustment
+    /// <summary>
+    ///     Instead of always aiming at the centre of <see cref="SliderSettings.AimRegion"/>, pick a
+    ///     random point inside the region. The point is re-rolled once per aim "session" (each time
+    ///     the aim key is freshly held / a new lock starts), NOT every frame — re-rolling per frame
+    ///     would fight EMA smoothing and make the crosshair shake. Adds humanisation / reduces the
+    ///     always-same-pixel bot tell. Default off.
+    /// </summary>
+    public bool RandomAimPoint
     {
         get;
         set => SetField(ref field, value);
     }
-
-    public bool YAxisPercentageAdjustment
-    {
-        get;
-        set => SetField(ref field, value);
-    } = true;
 }

@@ -1736,7 +1736,6 @@ public partial class MainWindow
         AimConfig.AddTitle(Locale.AimConfig, true);
 
 
-        AimConfig.AddDropdown(Locale.AimingBoundariesAlignment, AppConfig.Current.DropdownState.AimingBoundariesAlignment, v => AppConfig.Current.DropdownState.AimingBoundariesAlignment = v);
         AimConfig.AddDropdown(Locale.MovementPath, AppConfig.Current.DropdownState.MovementPathType, v => AppConfig.Current.DropdownState.MovementPathType = v);
         AimConfig.AddSlider(Locale.MouseSensitivity, Locale.Sensitivity, 0.01, 0.01, 0.01, 1).BindTo(() => AppConfig.Current.SliderSettings.MouseSensitivity);
 
@@ -1759,11 +1758,17 @@ public partial class MainWindow
 
         AimConfig.AddSlider(Locale.MouseJitter, Locale.Jitter, 1, 1, 0, 15).BindTo(() => AppConfig.Current.SliderSettings.MouseJitter);
 
-        AimConfig.AddSlider(Locale.YOffset, Locale.Offset, 1, 1, -150, 150).BindTo(() => AppConfig.Current.SliderSettings.YOffset);
-        AimConfig.AddSlider(Locale.YOffsetPercentage, Locale.Percent, 1, 1, 0, 100).BindTo(() => AppConfig.Current.SliderSettings.YOffsetPercentage);
-
-        AimConfig.AddSlider(Locale.XOffset, Locale.Offset, 1, 1, -150, 150).BindTo(() => AppConfig.Current.SliderSettings.XOffset);
-        AimConfig.AddSlider(Locale.XOffsetPercentage, Locale.Percent, 1, 1, 0, 100).BindTo(() => AppConfig.Current.SliderSettings.XOffsetPercentage);
+        // ----- Aim region -----
+        // The aim point comes from a visually-drawn region inside the target box (the same "head
+        // area" editor the triggers use). Replaces the old X/Y offset + percentage sliders.
+        AimConfig.AddButton(Locale.EditAimRegion).Reader.Click += (_, _) =>
+        {
+            new global::Visuality.EditHeadArea(AppConfig.Current.SliderSettings.AimRegion,
+                model => AppConfig.Current.SliderSettings.AimRegion = model.ToRelativeRect())
+            { Owner = this }.Show();
+        };
+        AimConfig.AddToggle(Locale.RandomAimPoint, t => t.ToolTip = Locale.RandomAimPointTooltip)
+            .BindTo(() => AppConfig.Current.ToggleState.RandomAimPoint);
 
         AimConfig.AddSlider(Locale.EMASmoothening, Locale.Amount, 0.01, 0.01, 0.01, 1).BindTo(() => AppConfig.Current.SliderSettings.EMASmoothening);
 
@@ -2658,14 +2663,6 @@ public partial class MainWindow
 
         InputSettings.AddCredit(Locale.FireMaxDelay, Locale.FireDelayInfo.FormatWith(Environment.NewLine));
         InputSettings.AddSlider(Locale.FireMaxDelay, Locale.Seconds, 0.01, 0.1, 0.00, 2).BindTo(() => AppConfig.Current.SliderSettings.FirePressDelay);
-
-
-
-
-        // X/Y Percentage Adjustment Enabler
-        InputSettings.AddSubTitle(Locale.XYPercentageAdjustment);
-        InputSettings.AddToggle(Locale.XAxisPercentageAdjustment).BindTo(() => AppConfig.Current.ToggleState.XAxisPercentageAdjustment);
-        InputSettings.AddToggle(Locale.YAxisPercentageAdjustment).BindTo(() => AppConfig.Current.ToggleState.YAxisPercentageAdjustment);
         InputSettings.AddSeparator();
 
     }

@@ -87,7 +87,7 @@ public partial class CrosshairOverlay : Window
         var detectionCount = predictions.Length;
         if (detectionCount <= 0) return;
         var s = AppConfig.Current?.CrosshairSettings;
-        if (s is null || !s.DetectionFlashEnabled) return;
+        if (s is null || !s.DetectionFlashEnabled || predictions.All( p => !p.IsIntersectingCenter() )) return;
 
         // Marshal to the UI thread; predictions arrive off it.
         Dispatcher.BeginInvoke(new Action(() =>

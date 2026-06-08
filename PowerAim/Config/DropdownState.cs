@@ -38,12 +38,6 @@ public class DropdownState: BaseSettings
         set => SetField(ref field, value);
     } = DetectionAreaType.ClosestToCenter;
 
-    public AimingBoundariesAlignment AimingBoundariesAlignment
-    {
-        get;
-        set => SetField(ref field, value);
-    } = AimingBoundariesAlignment.Top;
-
     public MouseMovementMethod MouseMovementMethod
     {
         get;

@@ -1,4 +1,5 @@
 using InputLogic;
+using PowerAim.Types;
 
 namespace PowerAim.Config;
 
@@ -36,13 +37,14 @@ public class SliderSettings : BaseSettings
 
     public double MouseJitter { get; set => SetField(ref field, value); } = 6;
 
-    public double YOffset { get; set => SetField(ref field, value); } = 0;
-
-    public double YOffsetPercentage { get; set => SetField(ref field, value); } = 90;
-
-    public double XOffset { get; set; } = 0;
-
-    public double XOffsetPercentage { get; set => SetField(ref field, value); } = 50;
+    /// <summary>
+    ///     Visual aim region — a sub-rectangle inside the detected bounding box (normalized 0..1
+    ///     coords, same model as the trigger "head area"). The aim point is taken from this region:
+    ///     its centre by default, or a random point within it when
+    ///     <see cref="ToggleState.RandomAimPoint"/> is enabled. Default mirrors the trigger default
+    ///     (an upper-centre "head" box). Replaces the old X/Y offset + percentage sliders.
+    /// </summary>
+    public RelativeRect AimRegion { get; set => SetField(ref field, value); } = RelativeRect.Default;
 
     public double EMASmoothening { get; set => SetField(ref field, value); } = 0.5;
 

@@ -17,6 +17,14 @@ public class AimingAction : BaseAction
     private KalmanPrediction kalmanPrediction = new();
     private WiseTheFoxPrediction wtfpredictionManager = new();
 
+    // Random aim-point state. _aimFracX/Y are the chosen position inside the aim region as a
+    // 0..1 fraction; 0.5/0.5 = region centre. Re-rolled once per aim session (see HandleAim),
+    // never per frame — per-frame randomisation would fight EMA smoothing and shake the crosshair.
+    private readonly Random _rng = new();
+    private double _aimFracX = 0.5;
+    private double _aimFracY = 0.5;
+    private bool _wasAiming = false;
+
     // Sticky-aim state. Lives on the action instance (i.e. across frames) so the selector can
     // accumulate lock-score and velocity. The trigger / overlay actions intentionally do not share
     // this — they consume the unfiltered prediction set so the user still sees every detection.
@@ -48,68 +56,55 @@ public class AimingAction : BaseAction
         // Don't carry a stale lock across pause/resume — the player might re-aim somewhere else
         // before turning the assist back on.
         _stickyAim.Reset();
+        _wasAiming = false;
         return base.OnPause();
     }
 
     private void CalculateCoordinates(Prediction closestPrediction, float scaleX, float scaleY)
     {
-        double YOffset = AppConfig.Current.SliderSettings.YOffset;
-        double XOffset = AppConfig.Current.SliderSettings.XOffset;
-
-        double YOffsetPercentage = AppConfig.Current.SliderSettings.YOffsetPercentage;
-        double XOffsetPercentage = AppConfig.Current.SliderSettings.XOffsetPercentage;
-
-        var rect = closestPrediction.Rectangle;
-
-        if (AppConfig.Current.ToggleState.XAxisPercentageAdjustment)
-        {
-            detectedX = (int)((rect.X + (rect.Width * (XOffsetPercentage / 100))) * scaleX);
-        }
-        else
-        {
-            detectedX = (int)((rect.X + rect.Width / 2) * scaleX + XOffset);
-        }
-
-        if (AppConfig.Current.ToggleState.YAxisPercentageAdjustment)
-        {
-            detectedY = (int)((rect.Y + rect.Height - (rect.Height * (YOffsetPercentage / 100))) * scaleY + YOffset);
-        }
-        else
-        {
-            detectedY = CalculateDetectedY(scaleY, YOffset, closestPrediction);
-        }
-    }
-
-    private static int CalculateDetectedY(float scaleY, double YOffset, Prediction closestPrediction)
-    {
-        var rect = closestPrediction.Rectangle;
-        float yBase = rect.Y;
-        float yAdjustment = 0;
-
-        switch (AppConfig.Current.DropdownState.AimingBoundariesAlignment)
-        {
-            case AimingBoundariesAlignment.Center:
-                yAdjustment = rect.Height / 2;
-                break;
-
-            case AimingBoundariesAlignment.Top:
-                // yBase is already at the top
-                break;
-
-            case AimingBoundariesAlignment.Bottom:
-                yAdjustment = rect.Height;
-                break;
-        }
-
-        return (int)((yBase + yAdjustment) * scaleY + YOffset);
+        // Take the aim point from the visual aim region (the same "head area" sub-rectangle model
+        // the triggers use). The chosen point inside the region is _aimFracX/_aimFracY: 0.5/0.5 =
+        // centre, or a random per-session point when RandomAimPoint is on (see HandleAim).
+        var region = AppConfig.Current.SliderSettings.AimRegion;
+        var r = closestPrediction.Rectangle;
+        float subX = r.X + r.Width * region.LeftMarginPercentage;
+        float subY = r.Y + r.Height * region.TopMarginPercentage;
+        float subW = r.Width * region.WidthPercentage;
+        float subH = r.Height * region.HeightPercentage;
+        detectedX = (int)((subX + subW * (float)_aimFracX) * scaleX);
+        detectedY = (int)((subY + subH * (float)_aimFracY) * scaleY);
     }
 
     private void HandleAim(Prediction closestPrediction)
     {
-        if (AppConfig.Current.ToggleState.AimAssist
+        bool isAiming = AppConfig.Current.ToggleState.AimAssist
             && (!HasValidKey(AppConfig.Current.BindingSettings.AimKeyBindings)
                 || AnyKeyIsHold(AppConfig.Current.BindingSettings.AimKeyBindings))
-            && !AimDisengage.ShouldPause())
+            && !AimDisengage.ShouldPause();
+
+        if (!isAiming)
+        {
+            _wasAiming = false;
+            return;
+        }
+
+        // New aim session (key freshly held / re-engaged): re-roll the random aim point so each
+        // flick lands on a slightly different spot in the region. Held continuously → stable point.
+        if (!_wasAiming)
+        {
+            if (AppConfig.Current.ToggleState.RandomAimPoint)
+            {
+                _aimFracX = _rng.NextDouble();
+                _aimFracY = _rng.NextDouble();
+            }
+            else
+            {
+                _aimFracX = 0.5;
+                _aimFracY = 0.5;
+            }
+        }
+        _wasAiming = true;
+
         {
             var area = ImageCapture.CaptureArea;
             // Map model-space detection coords (0..imageSize) to screen pixels. Use the ACTUAL model
