@@ -17,6 +17,17 @@ namespace PowerAim.Visuality;
 /// </summary>
 public partial class AimDisengageDialog
 {
+    /// <summary>
+    ///     The rule collection being edited. Defaults to the legacy global list for back-compat;
+    ///     the aim-profile editor sets this to the active profile's <c>DisengageRules</c> before
+    ///     showing the dialog. Setting it after construction rebuilds the rows.
+    /// </summary>
+    public System.Collections.ObjectModel.ObservableCollection<AimDisengageRule> Rules
+    {
+        get;
+        set { field = value; if (RulesBox != null) BuildRows(); }
+    } = AppConfig.Current?.AimDisengageRules ?? new();
+
     public AimDisengageDialog()
     {
         InitializeComponent();
@@ -54,7 +65,7 @@ public partial class AimDisengageDialog
         }
 
         AddBtn.IsEnabled = true;
-        foreach (var rule in AppConfig.Current.AimDisengageRules.ToList())
+        foreach (var rule in Rules.ToList())
             RulesBox.Children.Add(BuildRuleCard(rule));
     }
 
@@ -139,7 +150,7 @@ public partial class AimDisengageDialog
         removeBtn.SetResourceReference(StyleProperty, "FluentStandardButton");
         removeBtn.Click += (_, _) =>
         {
-            AppConfig.Current.AimDisengageRules.Remove(rule);
+            Rules.Remove(rule);
             BuildRows();
         };
         Grid.SetColumn(removeBtn, 3);
@@ -157,7 +168,7 @@ public partial class AimDisengageDialog
 
     private void Add_Click(object sender, RoutedEventArgs e)
     {
-        AppConfig.Current.AimDisengageRules.Add(new AimDisengageRule());
+        Rules.Add(new AimDisengageRule());
         BuildRows();
     }
 

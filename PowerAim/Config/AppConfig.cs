@@ -112,6 +112,7 @@ public class AppConfig : BaseSettings
     public FileLocationState FileLocationState { get; set; } = new FileLocationState();
     public OllamaSettings OllamaSettings { get; set; } = new OllamaSettings();
     public AISettings AISettings { get; set; } = new AISettings();
+    public AimSettings AimSettings { get; set; } = new AimSettings();
     public ActiveProcessSettings ActiveProcessSettings { get; set; } = new ActiveProcessSettings();
     public CrosshairSettings CrosshairSettings { get; set; } = new CrosshairSettings();
     public OcrSettings OcrSettings { get; set; } = new OcrSettings();
@@ -297,6 +298,9 @@ public class AppConfig : BaseSettings
         // method is idempotent (gated by its own schema-version field) so re-loading the same
         // config doesn't double-seed anything.
         Current.AntiRecoilSettings?.MigrateLegacyIfNeeded();
+        // Seed a Default aim profile from the live aim settings on first load under the profile
+        // schema, and repair a dangling/empty active id. Idempotent.
+        Current.AimSettings?.MigrateLegacyIfNeeded();
 
         // Triggers: migrate the legacy flat OcrConditions list into the new OcrConditionTree
         // (AND group by default). Idempotent — re-running on an already-migrated config is a no-op.

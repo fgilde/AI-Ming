@@ -52,7 +52,10 @@ public static class AimDisengage
 {
     public static bool ShouldPause()
     {
-        var rules = AppConfig.Current?.AimDisengageRules;
+        // Aim-disengage rules are now per-profile: read the active aim profile's list, falling back
+        // to the legacy global list when no profile is active (back-compat / pre-migration).
+        var rules = AppConfig.Current?.AimSettings?.ActiveProfile?.DisengageRules
+                    ?? AppConfig.Current?.AimDisengageRules;
         if (rules == null || rules.Count == 0) return false;
         if (AppConfig.Current!.OcrSettings is not { Enabled: true }) return false;
 

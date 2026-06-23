@@ -1348,6 +1348,99 @@ public partial class MainWindow
     private void AntiRecoilEditCancel_Click(object sender, RoutedEventArgs e) => CloseAntiRecoilEditor(false);
     private void AntiRecoilEditSave_Click(object sender, RoutedEventArgs e)   => CloseAntiRecoilEditor(true);
 
+    // ===== Aim profile editor (in-window page, analog to AntiRecoilEditPage) =====
+    private global::UILibrary.AimProfileEdit? _aimEditor;
+    private string? _aimEditReturnTo;
+    private PowerAim.Config.AimProfile? _aimEditTarget;
+    private bool _aimEditIsNew;
+    private Action<PowerAim.Config.AimProfile?>? _aimEditCommit;
+    private bool _aimEditDirty;
+    private System.ComponentModel.PropertyChangedEventHandler? _aimDirtyHandler;
+
+    /// <summary>Open the aim-profile editor in-window. Mirrors <see cref="OpenAntiRecoilEditor"/>.</summary>
+    public void OpenAimEditor(PowerAim.Config.AimProfile target, bool isNew, Action<PowerAim.Config.AimProfile?> commit)
+    {
+        _aimEditReturnTo = CurrentMenu;
+        _aimEditTarget = target;
+        _aimEditIsNew = isNew;
+        _aimEditCommit = commit;
+        if (!isNew) target.BeginEdit();
+        AimEditTitle.Text = isNew ? Locale.AimAddProfile : Locale.AimProfileEdit;
+        AimEditName.Text = target.Name ?? "";
+        _aimEditDirty = false;
+        AimEditDirty.Visibility = Visibility.Collapsed;
+        if (_aimEditor == null)
+        {
+            _aimEditor = new global::UILibrary.AimProfileEdit();
+            AimEditorHost.Content = _aimEditor;
+        }
+        _aimEditor.Profile = target;
+
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            if (!ReferenceEquals(_aimEditTarget, target)) return;
+            _aimDirtyHandler = (s, e) =>
+            {
+                _aimEditDirty = true;
+                AimEditDirty.Visibility = Visibility.Visible;
+                if (e.PropertyName == nameof(PowerAim.Config.AimProfile.Name))
+                    AimEditName.Text = target.Name ?? "";
+            };
+            target.PropertyChanged += _aimDirtyHandler;
+        }), System.Windows.Threading.DispatcherPriority.Background);
+
+        SetSidebarLocked(true);
+        _ = NavigateTo(nameof(AimEditPage));
+    }
+
+    private void CloseAimEditor(bool save)
+    {
+        var target = _aimEditTarget;
+        var isNew = _aimEditIsNew;
+        var commit = _aimEditCommit;
+        var returnTo = _aimEditReturnTo ?? nameof(AimMenu);
+
+        if (!save && _aimEditDirty)
+        {
+            var res = MessageDialog.Show(
+                Locale.UnsavedChangesMessage, Locale.UnsavedChanges,
+                MessageDialog.DialogButtons.YesNoCancel,
+                MessageDialog.DialogIcon.Warning,
+                owner: this,
+                defaultResult: MessageDialog.DialogResult.Yes);
+            if (res == MessageDialog.DialogResult.Cancel) return;
+            if (res == MessageDialog.DialogResult.Yes) save = true;
+        }
+
+        if (target != null && _aimDirtyHandler != null)
+            target.PropertyChanged -= _aimDirtyHandler;
+        _aimDirtyHandler = null;
+        _aimEditDirty = false;
+        AimEditDirty.Visibility = Visibility.Collapsed;
+
+        if (target != null && !isNew)
+        {
+            if (save) target.EndEdit();
+            else target.CancelEdit();
+        }
+
+        SetSidebarLocked(false);
+        _aimEditTarget = null;
+        _aimEditCommit = null;
+        commit?.Invoke(save ? target : null);
+
+        // If the edited profile is the active one, re-apply its (possibly changed) values to the
+        // live settings the pipeline reads.
+        if (save && target != null && AppConfig.Current?.AimSettings?.ActiveProfileId == target.Id)
+            target.Apply();
+
+        _ = NavigateTo(returnTo);
+    }
+
+    private void AimEditBack_Click(object sender, RoutedEventArgs e)   => CloseAimEditor(false);
+    private void AimEditCancel_Click(object sender, RoutedEventArgs e) => CloseAimEditor(false);
+    private void AimEditSave_Click(object sender, RoutedEventArgs e)   => CloseAimEditor(true);
+
     private void SetSidebarLocked(bool locked)
     {
         if (Sidebar is not null)
@@ -1734,77 +1827,24 @@ public partial class MainWindow
         AimConfig.AddTitle(Locale.AimConfig, true);
 
 
-        AimConfig.AddDropdown(Locale.MovementPath, AppConfig.Current.DropdownState.MovementPathType, v => AppConfig.Current.DropdownState.MovementPathType = v);
-        // Fine-grained sensitivity for high-DPI mice (GitHub issue #10): 0.001 increments, a very
-        // low floor, 4-decimal readout, and snap-to-tick OFF so arbitrary config values (e.g.
-        // 0.0005) are honoured instead of being rounded up to the old 0.01 tick.
-        AimConfig.AddSlider(Locale.MouseSensitivity, Locale.Sensitivity, 0.001, 0.001, 0.0001, 1, forAntiRecoil: false, decimals: 4, snapToTick: false)
-            .BindTo(() => AppConfig.Current.SliderSettings.MouseSensitivity);
+        // (Calibrate-sensitivity removed — the new closed-loop damped controller converges without
+        // pixel-to-rotation calibration. Aim-disengage moved into the per-profile edit page.)
 
-        // (UseControllerForAim toggle removed — folded into the Movement Method dropdown in
-        // InputSettings. The "Gamepad" entry there sets DropdownState.MouseMovementMethod =
-        // Gamepad, which InputSender.GamepadAimActive now reads from.)
-        AimConfig.AddButton(Locale.CalibrateSensitivity).Reader.Click += (_, _) =>
-        {
-            new CalibrationWizardDialog { Owner = this }.ShowDialog();
-        };
-        // Aim-disengage rules — pauses aim assist while a HUD OCR reading matches (scoped /
-        // knife / etc.). Conceptually an aim-side feature, even though it reads OCR; lives here
-        // next to calibration so users find it without hunting in the OCR card.
-        AimConfig.AddButton(Locale.ConfigureAimDisengage)
-            .InitWith(b => b.ToolTip = Locale.AimDisengageDescription)
-            .Reader.Click += (_, _) =>
-            {
-                new PowerAim.Visuality.AimDisengageDialog { Owner = this }.ShowDialog();
-            };
-
-        AimConfig.AddSlider(Locale.MouseJitter, Locale.Jitter, 1, 1, 0, 15).BindTo(() => AppConfig.Current.SliderSettings.MouseJitter);
-
-        // ----- Aim region -----
-        // The aim point comes from a visually-drawn region inside the target box (the same "head
-        // area" editor the triggers use). Replaces the old X/Y offset + percentage sliders.
-        AimConfig.AddButton(Locale.EditAimRegion).Reader.Click += (_, _) =>
-        {
-            new global::Visuality.EditHeadArea(AppConfig.Current.SliderSettings.AimRegion,
-                model => AppConfig.Current.SliderSettings.AimRegion = model.ToRelativeRect())
-            { Owner = this }.Show();
-        };
-        AimConfig.AddToggle(Locale.RandomAimPoint, t => t.ToolTip = Locale.RandomAimPointTooltip)
-            .BindTo(() => AppConfig.Current.ToggleState.RandomAimPoint);
-
-        AimConfig.AddSlider(Locale.EMASmoothening, Locale.Amount, 0.01, 0.01, 0.01, 1).BindTo(() => AppConfig.Current.SliderSettings.EMASmoothening);
-
-        // ----- Smart Aim (tracking pipeline) -----
-        // Persistent SORT-style target tracking + switch hysteresis + adaptive (1€) smoothing +
-        // a frame-rate-independent damped controller. Fixes "detects → aims → loses it → jumps"
-        // and flip-flopping between targets. When off, the legacy sticky-selector path runs.
-        AimConfig.AddSubTitle(Locale.SmartAimSection);
-        AimConfig.AddToggle(Locale.SmartAimEnabled, t => t.ToolTip = Locale.SmartAimEnabledTooltip)
-            .BindTo(() => AppConfig.Current.AISettings.SmartAimEnabled);
-        AimConfig.AddSlider(Locale.AimDeadzone, Locale.Pixels, 1, 1, 0, 20)
-            .InitWith(s => s.ToolTip = Locale.AimDeadzoneTooltip)
-            .BindTo(() => AppConfig.Current.AISettings.AimDeadzonePx);
-        AimConfig.AddSlider(Locale.AimCoastFrames, Locale.Amount, 1, 1, 1, 20)
-            .InitWith(s => s.ToolTip = Locale.AimCoastFramesTooltip)
-            .BindTo(() => AppConfig.Current.AISettings.TrackMaxAgeFrames);
-        AimConfig.AddSlider(Locale.AimSwitchDelay, Locale.Amount, 1, 1, 1, 20)
-            .InitWith(s => s.ToolTip = Locale.AimSwitchDelayTooltip)
-            .BindTo(() => AppConfig.Current.AISettings.SwitchFrames);
-        AimConfig.AddSlider(Locale.AimLeadMs, Locale.Milliseconds, 1, 1, 0, 100)
-            .InitWith(s => s.ToolTip = Locale.AimLeadMsTooltip)
-            .BindTo(() => AppConfig.Current.AISettings.LeadTimeMs);
-        AimConfig.AddToggle(Locale.AimAdaptiveSmoothing, t => t.ToolTip = Locale.AimAdaptiveSmoothingTooltip)
-            .BindTo(() => AppConfig.Current.AISettings.UseOneEuro);
-
-        // ----- Sticky Aim (legacy — used only when Smart aim is off) -----
-        AimConfig.AddToggle(Locale.StickyAimEnabled).BindTo(() => AppConfig.Current.AISettings.StickyAimEnabled);
-        AimConfig.AddSlider(Locale.StickyAimThreshold, Locale.Pixels, 1, 5, 10, 300)
-            .BindTo(() => AppConfig.Current.AISettings.StickyAimThreshold);
-        AimConfig.AddSlider(Locale.StickyAimMaxLockScore, Locale.Amount, 1, 5, 10, 300)
-            .BindTo(() => AppConfig.Current.AISettings.StickyAimMaxLockScore);
+        // ----- Aim profiles -----
+        // All aim tuning (sensitivity, region, smart-tracking, smoothing, …) now lives per-profile
+        // in the edit page — exactly like AntiRecoil. The active profile's values are applied to
+        // the live settings the pipeline reads. Per-row hotkey toggles a profile active.
+        // NB: no AddSubTitle here — a nested ATitle would halt the section's collapse animation
+        // (ATitle.ApplyState stops at the next ATitle), leaving the list stuck visible.
+        var aimProfileList = new global::UILibrary.AimProfileList { Margin = new Thickness(4) };
+        aimProfileList.BindTo(() => AppConfig.Current.AimSettings.Profiles);
+        AimConfig.Children.Add(aimProfileList);
 
         AimConfig.AddSeparator();
         AimConfig.Visibility = GetVisibilityFor(nameof(AimConfig));
+
+        // Spin up the aim profile manager (keybind activation + OCR auto-switch). Idempotent.
+        PowerAim.AILogic.AimProfileManager.EnsureInitialized();
 
         #endregion Config
 

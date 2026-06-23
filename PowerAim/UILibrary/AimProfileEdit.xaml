@@ -1,0 +1,117 @@
+<UserControl x:Class="UILibrary.AimProfileEdit"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:uiLibrary="clr-namespace:PowerAim.UILibrary"
+             xmlns:local="clr-namespace:UILibrary"
+             mc:Ignorable="d"
+             d:DesignHeight="720" d:DesignWidth="560">
+    <StackPanel Margin="4,8,4,8">
+        <!-- Identity -->
+        <Label Foreground="{StaticResource Foreground}" FontSize="13" FontFamily="Segoe UI Variable Text"
+               Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ProfileName'}" />
+        <TextBox BorderThickness="1" Padding="3 5 1 5" Margin="2,5"
+                 Text="{Binding Profile.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                 FontFamily="Segoe UI Variable Text"
+                 BorderBrush="{DynamicResource FluentStroke}"
+                 Background="Transparent"
+                 Foreground="{StaticResource Foreground}" />
+
+        <!-- Preset dropdown — selecting one overwrites the tuning fields (after a warning). -->
+        <Label Margin="0,12,0,0" Foreground="{StaticResource Foreground}" FontSize="13" FontFamily="Segoe UI Variable Text"
+               Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimPreset'}" />
+        <ComboBox x:Name="PresetCombo" Margin="2,5"
+                  ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimPresetTooltip'}"
+                  SelectionChanged="PresetCombo_SelectionChanged" />
+
+        <uiLibrary:Line Margin="0,10,0,10" />
+
+        <!-- Tuning controls (sliders/toggles built in code-behind so we reuse AddSlider/AddToggle + BindTo). -->
+        <StackPanel x:Name="TunePanel" Margin="0,4,0,0" />
+
+        <!-- Aim region (where in the detection box to aim). -->
+        <Grid Margin="2,8,2,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" VerticalAlignment="Center"
+                       Foreground="{StaticResource Foreground}" FontSize="12" FontFamily="Segoe UI Variable Text"
+                       Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='UseAimRegion'}" />
+            <Button Grid.Column="1" x:Name="EditRegionButton"
+                    Padding="12,4,12,4" MinHeight="28"
+                    Style="{DynamicResource FluentStandardButton}"
+                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='EditAimRegion'}"
+                    Click="EditRegion_Click" />
+        </Grid>
+
+        <!-- Per-profile aim-disengage rules (pause aim while a HUD OCR condition holds). -->
+        <Grid Margin="2,8,2,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" VerticalAlignment="Center"
+                       Foreground="{StaticResource Foreground}" FontSize="12" FontFamily="Segoe UI Variable Text"
+                       Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ConfigureAimDisengage'}" />
+            <Button Grid.Column="1" x:Name="EditDisengageButton"
+                    Padding="12,4,12,4" MinHeight="28"
+                    Style="{DynamicResource FluentStandardButton}"
+                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Edit'}"
+                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimDisengageDescription'}"
+                    Click="EditDisengage_Click" />
+        </Grid>
+
+        <uiLibrary:Line Margin="0,12,0,10" />
+
+        <!-- Activation: process filter + OCR weapon-match (hotkey lives on the list row). -->
+        <Label Margin="0,4,0,0" Foreground="{StaticResource Foreground}" FontSize="12" FontFamily="Segoe UI Variable Text"
+               Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='MatchProcessOptional'}" />
+        <TextBox BorderThickness="1" Padding="3 5 1 5" Margin="2,5"
+                 Text="{Binding Profile.MatchProcess, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                 Tag="cs2*, valorant, *fortnite*"
+                 FontFamily="Segoe UI Variable Text"
+                 Style="{DynamicResource placeHolder}"
+                 BorderBrush="{DynamicResource FluentStroke}"
+                 Background="Transparent"
+                 Foreground="{StaticResource Foreground}" />
+
+        <uiLibrary:AToggle Margin="0,8,0,0"
+                           BorderBrush="Transparent" Background="Transparent"
+                           Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AntiRecoilAutoSwitchOnOcr'}"
+                           Checked="{Binding Profile.AutoSwitchOnOcr, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+        <Label Foreground="{StaticResource Foreground}" FontSize="12" FontFamily="Segoe UI Variable Text"
+               Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AntiRecoilOcrRegion'}"
+               ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AntiRecoilOcrRegionHelp'}" />
+        <Grid Margin="2,5,2,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ComboBox x:Name="OcrRegionCombo" Grid.Column="0"
+                      SelectionChanged="OcrRegionCombo_SelectionChanged"
+                      IsEnabled="{Binding Profile.AutoSwitchOnOcr}" />
+            <Button Grid.Column="1"
+                    Margin="6,0,0,0" Padding="12,4,12,4" MinHeight="28"
+                    Style="{DynamicResource FluentStandardButton}"
+                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='EditOcrRegionsButton'}"
+                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='EditOcrRegionsButtonTooltip'}"
+                    Click="EditRegions_Click" />
+        </Grid>
+
+        <Label Foreground="{StaticResource Foreground}" FontSize="12" FontFamily="Segoe UI Variable Text"
+               Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AntiRecoilWeaponMatch'}"
+               ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AntiRecoilWeaponMatchHelp'}" />
+        <TextBox BorderThickness="1" Padding="3 5 1 5" Margin="2,5"
+                 Text="{Binding Profile.WeaponMatch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                 IsEnabled="{Binding Profile.AutoSwitchOnOcr}"
+                 Tag="AK, Vandal, AWP, ..."
+                 FontFamily="Segoe UI Variable Text"
+                 Style="{DynamicResource placeHolder}"
+                 BorderBrush="{DynamicResource FluentStroke}"
+                 Background="Transparent"
+                 Foreground="{StaticResource Foreground}" />
+    </StackPanel>
+</UserControl>
