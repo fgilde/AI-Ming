@@ -172,7 +172,13 @@ public class AIManager : IDisposable
 
     private async Task SetActionsState(bool paused)
     {
-        await Task.WhenAll(_actions.Select(a => paused ? a.OnPause() : a.OnResume()));
+        try
+        {
+            await Task.WhenAll(_actions.Select(a => paused ? a?.OnPause() : a?.OnResume()).ToArray());
+        }
+        catch (Exception)
+        {
+        }
     }
 
 

@@ -252,13 +252,10 @@ namespace Other
 
         /// <summary>
         /// Fetches the same logical directory (e.g. <c>"models"</c>) from multiple GitHub repos
-        /// in parallel and merges the results by filename. Resolution rules when two repos
-        /// expose the same filename:
-        /// <list type="bullet">
-        ///   <item>Newer wins — compared via <see cref="GithubManager.GetLatestCommitDateAsync"/>.</item>
-        ///   <item>If commit dates are equal, missing, or the lookup fails, the <b>fork</b> wins.
-        ///     The fork is defined as the <em>first</em> entry in <paramref name="repos"/>.</item>
-        /// </list>
+        /// in parallel and merges the results by filename. When two repos expose the same filename
+        /// the <b>fork wins</b> — the fork is the <em>first</em> entry in <paramref name="repos"/>.
+        /// (Previously the newer commit date won, but that cost one GitHub commits-API call per
+        /// duplicate file and routinely tripped the anonymous rate limit; fork-wins needs none.)
         /// Files that already exist locally under <paramref name="localPath"/> are skipped (they
         /// are not surfaced as downloadable). The returned dictionary is the same instance as
         /// <paramref name="allFiles"/>, keyed by filename.
@@ -291,26 +288,12 @@ namespace Other
                 // Skip anything we already have locally.
                 if (File.Exists(Path.Combine(localPath, fileName))) continue;
 
-                var candidates = group.ToList();
-                if (candidates.Count == 1)
-                {
-                    allFiles[fileName] = candidates[0].File;
-                    continue;
-                }
-
-                // Resolve by last-commit date for the file's path within each repo.
-                var withDates = await Task.WhenAll(candidates.Select(async c =>
-                {
-                    var date = await githubManager.GetLatestCommitDateAsync(c.File.Owner, c.File.Repo, c.File.Path);
-                    return (c.Index, c.File, Date: date);
-                }));
-
-                // Pick: newest date wins. On tie / null dates, the fork (lowest Index) wins.
-                var winner = withDates
-                    .OrderByDescending(x => x.Date ?? DateTime.MinValue)
-                    .ThenBy(x => x.Index)
-                    .First();
-
+                // Fork wins on duplicate filenames (the fork is index 0 — the curated source).
+                // This deliberately drops the previous per-duplicate commits-API lookup
+                // (GetLatestCommitDateAsync): with models present in both repos it fired one extra
+                // GitHub API call PER duplicate file, which was the main cause of hitting the
+                // anonymous 60-req/hour rate limit. Fork-wins needs zero extra calls.
+                var winner = group.OrderBy(x => x.Index).First();
                 allFiles[fileName] = winner.File;
             }
 

@@ -2764,10 +2764,13 @@ public partial class MainWindow
     {
         try
         {
-            using var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+            // Route through CachingHttpClient: 1-hour disk cache + stale-cache fallback on a
+            // rate-limit/network error, so the About → Releases list survives GitHub's anonymous
+            // limit instead of showing "too many requests". (Still session-cached via _cachedReleases.)
+            using var http = new Core.CachingHttpClient(TimeSpan.FromHours(1));
             // GitHub's API rejects requests without a User-Agent.
             http.DefaultRequestHeaders.UserAgent.ParseAdd("PowerAim");
-            var json = await http.GetStringAsync(ApplicationConstants.ReleasesApiUrl);
+            var json = await http.GetAsync(ApplicationConstants.ReleasesApiUrl);
 
             var releases = new List<ReleaseInfo>();
             using var doc = System.Text.Json.JsonDocument.Parse(json);
@@ -2952,10 +2955,11 @@ public partial class MainWindow
             (ApplicationConstants.RepoOwner, ApplicationConstants.RepoName, "models"),
             (ApplicationConstants.UpstreamRepoOwner, ApplicationConstants.UpstreamRepoName, "models"),
         ];
+        // Configs come ONLY from this fork's repo — unlike models, the upstream (babyhamsta)
+        // configs must not be surfaced.
         (string owner, string repo, string subPath)[] configRepos =
         [
             (ApplicationConstants.RepoOwner, ApplicationConstants.RepoName, "configs"),
-            (ApplicationConstants.UpstreamRepoOwner, ApplicationConstants.UpstreamRepoName, "configs"),
         ];
 
         try
