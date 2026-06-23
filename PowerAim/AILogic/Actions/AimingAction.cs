@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+using System.Drawing;
+using PowerAim.AILogic.Aiming;
 using PowerAim.AILogic.Contracts;
 using PowerAim.Config;
 using Class;
@@ -18,36 +19,43 @@ public class AimingAction : BaseAction
     private WiseTheFoxPrediction wtfpredictionManager = new();
 
     // Random aim-point state. _aimFracX/Y are the chosen position inside the aim region as a
-    // 0..1 fraction; 0.5/0.5 = region centre. Re-rolled once per aim session (see HandleAim),
-    // never per frame — per-frame randomisation would fight EMA smoothing and shake the crosshair.
+    // 0..1 fraction; 0.5/0.5 = region centre. Re-rolled once per aim session, never per frame —
+    // per-frame randomisation would fight the smoother and shake the crosshair.
     private readonly Random _rng = new();
     private double _aimFracX = 0.5;
     private double _aimFracY = 0.5;
     private bool _wasAiming = false;
 
-    // Sticky-aim state. Lives on the action instance (i.e. across frames) so the selector can
-    // accumulate lock-score and velocity. The trigger / overlay actions intentionally do not share
-    // this — they consume the unfiltered prediction set so the user still sees every detection.
+    // Legacy single-target sticky selector — used only when SmartAimEnabled is off.
     private readonly StickyAimSelector _stickyAim = new();
+
+    // ---- Smart-aim pipeline (SmartAimEnabled): detect → track → select → smooth → control ----
+    private readonly TargetTracker _tracker = new();
+    private readonly TargetSelector _selector = new();
+    private readonly OneEuroFilter2D _oneEuro = new();
+    private readonly AimController _controller = new();
+    private DateTime _lastTickUtc = DateTime.MinValue;
 
     public override Task ExecuteAsync(Prediction[] predictions)
     {
-        // Existing behaviour: pick the entry returned by MinBy(Confidence) (preserved for the
-        // sticky-disabled fallback so we don't silently change targeting semantics).
-        var fallback = predictions.MinBy(p => p.Confidence);
+        // Frame delta for all time-aware stages (tracker velocity, 1€ filter, damped control).
+        var now = DateTime.UtcNow;
+        double dt = _lastTickUtc == DateTime.MinValue ? 1.0 / 60.0 : (now - _lastTickUtc).TotalSeconds;
+        dt = Math.Clamp(dt, 0.001, 0.1);
+        _lastTickUtc = now;
 
+        if (AppConfig.Current.AISettings.SmartAimEnabled)
+        {
+            ExecuteSmart(predictions, dt);
+            return Task.CompletedTask;
+        }
+
+        // ---- Legacy path ----
+        var fallback = predictions.MinBy(p => p.Confidence);
         var ai = AppConfig.Current.AISettings;
         var selected = _stickyAim.SelectTarget(
-            predictions,
-            fallback,
-            ai.StickyAimEnabled,
-            ai.StickyAimThreshold,
-            ai.StickyAimMaxLockScore);
-
-        if (selected != null)
-        {
-            HandleAim(selected);
-        }
+            predictions, fallback, ai.StickyAimEnabled, ai.StickyAimThreshold, ai.StickyAimMaxLockScore);
+        if (selected != null) HandleAim(selected);
         return Task.CompletedTask;
     }
 
@@ -56,40 +64,142 @@ public class AimingAction : BaseAction
         // Don't carry a stale lock across pause/resume — the player might re-aim somewhere else
         // before turning the assist back on.
         _stickyAim.Reset();
+        _tracker.Reset();
+        _selector.Reset();
+        _oneEuro.Reset();
+        _controller.Reset();
         _wasAiming = false;
+        _lastTickUtc = DateTime.MinValue;
         return base.OnPause();
     }
 
+    /// <summary>True when the user actually wants the aim to move right now (toggle + key + not disengaged).</summary>
+    private bool IsAiming() =>
+        AppConfig.Current.ToggleState.AimAssist
+        && (!HasValidKey(AppConfig.Current.BindingSettings.AimKeyBindings)
+            || AnyKeyIsHold(AppConfig.Current.BindingSettings.AimKeyBindings))
+        && !AimDisengage.ShouldPause();
+
+    // ============================================================================ SMART PATH ====
+
+    private void ExecuteSmart(Prediction[] predictions, double dt)
+    {
+        var ai = AppConfig.Current.AISettings;
+
+        // Keep the tracker tunables in sync with config (cheap; lets slider edits apply live).
+        _tracker.MaxAgeFrames = ai.TrackMaxAgeFrames;
+        _tracker.MinHits = ai.TrackMinHits;
+        _tracker.IoUThreshold = ai.TrackIoUThreshold;
+        _tracker.Alpha = ai.TrackAlpha;
+        _tracker.Beta = ai.TrackBeta;
+
+        // Always step the tracker — even when not pressing the aim key — so identities stay warm
+        // and the moment the user engages we're already locked, not acquiring from scratch.
+        var tracks = _tracker.Update(predictions, dt);
+
+        if (!IsAiming())
+        {
+            _wasAiming = false;
+            _controller.Reset();
+            _oneEuro.Reset();
+            return;
+        }
+
+        float modelSize = Math.Max(1, global::PowerAim.AILogic.PredictionLogic.IMAGE_SIZE);
+        double center = modelSize / 2.0; // crosshair in model space
+
+        var target = _selector.Select(tracks, center, center, ai.SwitchMarginPct, ai.SwitchFrames);
+        if (target == null)
+        {
+            _wasAiming = false;
+            _controller.Reset();
+            _oneEuro.Reset();
+            return;
+        }
+
+        // New aim session → re-roll the random region point (if enabled) once.
+        if (!_wasAiming)
+        {
+            if (AppConfig.Current.ToggleState.RandomAimPoint)
+            {
+                _aimFracX = _rng.NextDouble();
+                _aimFracY = _rng.NextDouble();
+            }
+            else
+            {
+                _aimFracX = 0.5;
+                _aimFracY = 0.5;
+            }
+            // Seed the smoother at the target so the first frame doesn't lurch from a stale value.
+            _oneEuro.Reset();
+        }
+        _wasAiming = true;
+
+        // Aim point inside the tracked box (model space) using the configured aim region.
+        var (px, py) = RegionPoint(target.Box);
+
+        // Optional velocity lead to compensate input+render latency.
+        double leadSec = ai.LeadTimeMs / 1000.0;
+        if (leadSec > 0)
+        {
+            px += target.Vx * leadSec;
+            py += target.Vy * leadSec;
+        }
+
+        // Adaptive jitter removal on the aim point.
+        if (ai.UseOneEuro)
+        {
+            _oneEuro.Configure(ai.OneEuroMinCutoff, ai.OneEuroBeta);
+            var f = _oneEuro.Filter(px, py, dt);
+            px = f.X;
+            py = f.Y;
+        }
+
+        var area = ImageCapture.CaptureArea;
+        float scaleX = area.Width / modelSize;
+        float scaleY = area.Height / modelSize;
+        double targetScreenX = px * scaleX;
+        double targetScreenY = py * scaleY;
+
+        // Feed the debug input visualiser the coarse aim direction (mouse path only).
+        if (!InputSender.GamepadAimActive)
+            InputEventBus.MouseMove(targetScreenX - area.Width / 2.0, targetScreenY - area.Height / 2.0);
+
+        // Damped, frame-rate-independent move. Sensitivity is the per-60Hz-frame approach fraction
+        // (higher = snappier). No per-frame jitter here — that's the shake we're removing; the
+        // optional random aim point already provides per-engagement variation.
+        _controller.MoveTo(targetScreenX, targetScreenY, area, dt,
+            AppConfig.Current.SliderSettings.MouseSensitivity, ai.AimDeadzonePx, 150, 0);
+    }
+
+    /// <summary>Compute the aim point (model space) inside <paramref name="box"/> from the configured aim region + frac.</summary>
+    private (double X, double Y) RegionPoint(RectangleF box)
+    {
+        var region = AppConfig.Current.SliderSettings.AimRegion;
+        double subX = box.X + box.Width * region.LeftMarginPercentage;
+        double subY = box.Y + box.Height * region.TopMarginPercentage;
+        double subW = box.Width * region.WidthPercentage;
+        double subH = box.Height * region.HeightPercentage;
+        return (subX + subW * _aimFracX, subY + subH * _aimFracY);
+    }
+
+    // ============================================================================ LEGACY PATH ====
+
     private void CalculateCoordinates(Prediction closestPrediction, float scaleX, float scaleY)
     {
-        // Take the aim point from the visual aim region (the same "head area" sub-rectangle model
-        // the triggers use). The chosen point inside the region is _aimFracX/_aimFracY: 0.5/0.5 =
-        // centre, or a random per-session point when RandomAimPoint is on (see HandleAim).
-        var region = AppConfig.Current.SliderSettings.AimRegion;
-        var r = closestPrediction.Rectangle;
-        float subX = r.X + r.Width * region.LeftMarginPercentage;
-        float subY = r.Y + r.Height * region.TopMarginPercentage;
-        float subW = r.Width * region.WidthPercentage;
-        float subH = r.Height * region.HeightPercentage;
-        detectedX = (int)((subX + subW * (float)_aimFracX) * scaleX);
-        detectedY = (int)((subY + subH * (float)_aimFracY) * scaleY);
+        var (px, py) = RegionPoint(closestPrediction.Rectangle);
+        detectedX = (int)(px * scaleX);
+        detectedY = (int)(py * scaleY);
     }
 
     private void HandleAim(Prediction closestPrediction)
     {
-        bool isAiming = AppConfig.Current.ToggleState.AimAssist
-            && (!HasValidKey(AppConfig.Current.BindingSettings.AimKeyBindings)
-                || AnyKeyIsHold(AppConfig.Current.BindingSettings.AimKeyBindings))
-            && !AimDisengage.ShouldPause();
-
-        if (!isAiming)
+        if (!IsAiming())
         {
             _wasAiming = false;
             return;
         }
 
-        // New aim session (key freshly held / re-engaged): re-roll the random aim point so each
-        // flick lands on a slightly different spot in the region. Held continuously → stable point.
         if (!_wasAiming)
         {
             if (AppConfig.Current.ToggleState.RandomAimPoint)
@@ -107,10 +217,6 @@ public class AimingAction : BaseAction
 
         {
             var area = ImageCapture.CaptureArea;
-            // Map model-space detection coords (0..imageSize) to screen pixels. Use the ACTUAL model
-            // input size — hardcoding 640 mis-scaled the mouse move whenever a dynamic-shape model
-            // ran at a non-640 ImageSize (detection/overlay were already correct, only the aim move
-            // was off). Identical to the old behaviour for the default fixed-640 model.
             float modelSize = Math.Max(1, global::PowerAim.AILogic.PredictionLogic.IMAGE_SIZE);
             float scaleX = area.Width / modelSize;
             float scaleY = area.Height / modelSize;

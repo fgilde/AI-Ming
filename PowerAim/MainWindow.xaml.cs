@@ -1079,8 +1079,6 @@ public partial class MainWindow
     private System.ComponentModel.PropertyChangedEventHandler? _triggerDirtyHandler;
 
     // Keeps the FOV-size sliders' max in lockstep with the active model ImageSize.
-    private System.ComponentModel.INotifyPropertyChanged? _fovMaxSettings;
-    private System.ComponentModel.PropertyChangedEventHandler? _fovMaxHandler;
 
     public void OpenTriggerEditor(PowerAim.Config.ActionTrigger target, bool isNew, Action<PowerAim.Config.ActionTrigger?> commit)
     {
@@ -1737,7 +1735,11 @@ public partial class MainWindow
 
 
         AimConfig.AddDropdown(Locale.MovementPath, AppConfig.Current.DropdownState.MovementPathType, v => AppConfig.Current.DropdownState.MovementPathType = v);
-        AimConfig.AddSlider(Locale.MouseSensitivity, Locale.Sensitivity, 0.01, 0.01, 0.01, 1).BindTo(() => AppConfig.Current.SliderSettings.MouseSensitivity);
+        // Fine-grained sensitivity for high-DPI mice (GitHub issue #10): 0.001 increments, a very
+        // low floor, 4-decimal readout, and snap-to-tick OFF so arbitrary config values (e.g.
+        // 0.0005) are honoured instead of being rounded up to the old 0.01 tick.
+        AimConfig.AddSlider(Locale.MouseSensitivity, Locale.Sensitivity, 0.001, 0.001, 0.0001, 1, forAntiRecoil: false, decimals: 4, snapToTick: false)
+            .BindTo(() => AppConfig.Current.SliderSettings.MouseSensitivity);
 
         // (UseControllerForAim toggle removed — folded into the Movement Method dropdown in
         // InputSettings. The "Gamepad" entry there sets DropdownState.MouseMovementMethod =
@@ -1772,7 +1774,29 @@ public partial class MainWindow
 
         AimConfig.AddSlider(Locale.EMASmoothening, Locale.Amount, 0.01, 0.01, 0.01, 1).BindTo(() => AppConfig.Current.SliderSettings.EMASmoothening);
 
-        // ----- Sticky Aim -----
+        // ----- Smart Aim (tracking pipeline) -----
+        // Persistent SORT-style target tracking + switch hysteresis + adaptive (1€) smoothing +
+        // a frame-rate-independent damped controller. Fixes "detects → aims → loses it → jumps"
+        // and flip-flopping between targets. When off, the legacy sticky-selector path runs.
+        AimConfig.AddSubTitle(Locale.SmartAimSection);
+        AimConfig.AddToggle(Locale.SmartAimEnabled, t => t.ToolTip = Locale.SmartAimEnabledTooltip)
+            .BindTo(() => AppConfig.Current.AISettings.SmartAimEnabled);
+        AimConfig.AddSlider(Locale.AimDeadzone, Locale.Pixels, 1, 1, 0, 20)
+            .InitWith(s => s.ToolTip = Locale.AimDeadzoneTooltip)
+            .BindTo(() => AppConfig.Current.AISettings.AimDeadzonePx);
+        AimConfig.AddSlider(Locale.AimCoastFrames, Locale.Amount, 1, 1, 1, 20)
+            .InitWith(s => s.ToolTip = Locale.AimCoastFramesTooltip)
+            .BindTo(() => AppConfig.Current.AISettings.TrackMaxAgeFrames);
+        AimConfig.AddSlider(Locale.AimSwitchDelay, Locale.Amount, 1, 1, 1, 20)
+            .InitWith(s => s.ToolTip = Locale.AimSwitchDelayTooltip)
+            .BindTo(() => AppConfig.Current.AISettings.SwitchFrames);
+        AimConfig.AddSlider(Locale.AimLeadMs, Locale.Milliseconds, 1, 1, 0, 100)
+            .InitWith(s => s.ToolTip = Locale.AimLeadMsTooltip)
+            .BindTo(() => AppConfig.Current.AISettings.LeadTimeMs);
+        AimConfig.AddToggle(Locale.AimAdaptiveSmoothing, t => t.ToolTip = Locale.AimAdaptiveSmoothingTooltip)
+            .BindTo(() => AppConfig.Current.AISettings.UseOneEuro);
+
+        // ----- Sticky Aim (legacy — used only when Smart aim is off) -----
         AimConfig.AddToggle(Locale.StickyAimEnabled).BindTo(() => AppConfig.Current.AISettings.StickyAimEnabled);
         AimConfig.AddSlider(Locale.StickyAimThreshold, Locale.Pixels, 1, 5, 10, 300)
             .BindTo(() => AppConfig.Current.AISettings.StickyAimThreshold);
@@ -1846,30 +1870,18 @@ public partial class MainWindow
         FOVConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.DynamicFOVKeybind), () => keybind.DynamicFOVKeybind, BindingManager);
         FOVConfig.AddColorChanger(Locale.FOVColor).BindTo(() => AppConfig.Current.ColorState.FOVColor);
 
-        // FOV is a centered crop INSIDE the model-input (ImageSize) image, so its useful ceiling is
-        // exactly the current ImageSize. Track it live: a dynamic-model override (e.g. 740, 1200)
-        // widens the FOV range to match; a smaller model narrows it. (Fixed models stay at their
-        // baked size, e.g. 640.)
-        int fovMax = Math.Max(10, AppConfig.Current.SliderSettings.ImageSize);
+        // FOV now sizes the captured screen region itself (PredictionLogic downscales it to the
+        // model input before inference), so its ceiling is the screen, not the model resolution.
+        // Cap at the primary screen's smaller dimension so the centered capture box always fits.
+        var primaryBounds = System.Windows.Forms.Screen.PrimaryScreen?.Bounds
+                            ?? new System.Drawing.Rectangle(0, 0, 1920, 1080);
+        int fovMax = Math.Max(10, Math.Min(primaryBounds.Width, primaryBounds.Height));
         var fovSizeSlider = FOVConfig.AddSlider(Locale.FOVSize, Locale.Size, 1, 1, 10, fovMax);
         fovSizeSlider.BindTo(() => AppConfig.Current.SliderSettings.FOVSize);
         var dynFovSizeSlider = FOVConfig.AddSlider(Locale.DynamicFOVSize, Locale.Size, 1, 1, 10, fovMax);
         dynFovSizeSlider.BindTo(() => AppConfig.Current.SliderSettings.DynamicFOVSize);
-
-        if (_fovMaxSettings != null && _fovMaxHandler != null)
-            _fovMaxSettings.PropertyChanged -= _fovMaxHandler;
-        _fovMaxSettings = AppConfig.Current.SliderSettings;
-        _fovMaxHandler = (_, e) =>
-        {
-            if (e.PropertyName != nameof(PowerAim.Config.SliderSettings.ImageSize)) return;
-            Dispatcher.Invoke(() =>
-            {
-                int m = Math.Max(10, AppConfig.Current.SliderSettings.ImageSize);
-                fovSizeSlider.Maximum = m;
-                dynFovSizeSlider.Maximum = m;
-            });
-        };
-        _fovMaxSettings.PropertyChanged += _fovMaxHandler;
+        // FOV max is screen-based and constant now (FOV sizes the capture region, not an inner
+        // crop of the model input), so it no longer needs to re-cap when ImageSize changes.
 
         FOVConfig.AddSeparator();
         FOVConfig.Visibility = GetVisibilityFor(nameof(FOVConfig));

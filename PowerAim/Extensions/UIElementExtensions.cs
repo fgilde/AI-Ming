@@ -380,10 +380,12 @@ public static class UIElementExtensions
         return panel.Add(new AColorChanger(title));
     }
 
-    public static ASlider AddSlider(this IAddChild panel, string title, string label, double frequency, double buttonsteps, double min, double max, bool forAntiRecoil = false)
+    public static ASlider AddSlider(this IAddChild panel, string title, string label, double frequency, double buttonsteps, double min, double max, bool forAntiRecoil = false, int decimals = 2, bool snapToTick = true)
     {
         var slider = new ASlider(title, label, frequency)
         {
+            Decimals = decimals,
+            SnapToTick = snapToTick,
             Slider =
             {
                 Minimum = min,
