@@ -57,11 +57,22 @@ All three modes route their mouse output through `InputSender.Move`, so when [Mo
 3. Pick a **Mode**. The editor swaps the mode-specific section below:
    - **Legacy** — sliders for `HoldTime` (ms), `FireRate` (ms), `Y Recoil` and `X Recoil` (pixels per tick).
    - **ImageBased** — a single `Anti-Recoil Strength` slider (0.0 off → 1.5 over-correct, 0.85 is "natural").
-   - **PatternPlayback** — a dropdown of patterns from the library plus a `Pattern Strength` slider (0–3, `1.0` = exact).
+   - **PatternPlayback** — a dropdown of patterns from the library, a `Pattern Strength` slider (0–3, `1.0` = exact), and a **Loop Pattern** toggle (see below).
 4. Optionally fill in the **activation rules** (next section).
 5. **Save**.
 
 The profile is now in the list. Toggling its row activates it; pressing its bound hotkey toggles it the same way.
+
+## Disabling anti-recoil mid-game
+
+Two card-level keybinds sit next to each other on the Anti-Recoil card:
+
+| Keybind | Default | Effect |
+|:--------|:--------|:-------|
+| `AntiRecoilKeybind` | Left mouse button | The "I'm firing" key — anti-recoil compensation only runs while it is held. |
+| `DisableAntiRecoilKeybind` | `]` (`Oem6`) | Panic switch — pressing it force-flips the master AntiRecoil toggle **off** if it was on, and shows a confirmation toast. |
+
+Use `DisableAntiRecoilKeybind` to kill all compensation instantly without alt-tabbing — handy when you switch to a weapon you have no profile for, or want to fire manually for a moment.
 
 ## Per-profile activation rules
 
@@ -75,7 +86,9 @@ The hotkey works regardless of whether the master AntiRecoil toggle is on — us
 
 ### OCR weapon auto-switch
 
-Pick an OCR region from `OcrSettings.Regions` and supply a substring (e.g. `AK`, `Vandal`, `Operator`). While the master AntiRecoil toggle is on, `AntiRecoilProfileManager` polls that region (~750 ms) and activates the first profile whose substring matches the recognised text. A `Notifier` toast confirms the switch.
+Tick **Auto-switch on OCR** (`AutoSwitchOnOcr`) on the profile, pick an OCR region from `OcrSettings.Regions` (`OcrRegionName`), and supply a `WeaponMatch` substring (e.g. `AK`, `Vandal`, `Operator`). While the master AntiRecoil toggle is on, `AntiRecoilProfileManager` polls that region (~750 ms) and activates the first profile whose substring (case-insensitive) is contained in the recognised text. A `Notifier` toast confirms the switch.
+
+`AutoSwitchOnOcr` is the per-profile master switch for this behaviour — leave it off and the profile is keybind / manual-activation only, even if a region and substring are set.
 
 The editor has an **Edit OCR Regions…** button that opens the OCR-regions configurator without leaving the editor, so you can define a fresh region (e.g. the weapon-name box on your HUD) and pick it as the source on the same screen.
 
@@ -98,6 +111,15 @@ This is the recommended workflow for setting up per-weapon profiles in a calm me
 ## Recoil pattern library
 
 Patterns recorded in the library are stored under `AntiRecoilSettings.Patterns` and survive config save/load. PatternPlayback profiles reference them by name — see **[Recoil Patterns]({{ '/features/recoil-patterns' | relative_url }})** for the recording workflow.
+
+### Loop vs. freeze (`LoopPattern`)
+
+A recorded pattern has a finite number of samples (roughly one mag's worth). The **Loop Pattern** toggle (PatternPlayback only, default **on**) decides what happens when you keep firing past the last sample:
+
+| Loop Pattern | Behaviour past the last sample |
+|:-------------|:-------------------------------|
+| **On** (default) | The pattern **restarts from the beginning** — matches a held spray on a hi-cap / refilled magazine, where the gun keeps kicking. |
+| **Off** | Playback **freezes on the last sample**, applying no further new compensation. Use for one-shot patterns whose recording already covers the full mag. |
 
 ## Migration from older configs
 

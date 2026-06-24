@@ -5,115 +5,135 @@ nav_order: 1
 ---
 
 # Aim Assist
+{: .no_toc }
 
-The core PowerAim feature: while the configured aim key is held, the mouse is nudged toward the nearest detected target inside the FOV circle.
+The core PowerAim feature: while an aim key is held, the mouse (or a virtual controller stick) is
+nudged toward the tracked target inside the FOV.
 
 ![Aim Tools page with Aim Assist + AimConfig cards](../images/aim-tools-page.png)
+
+1. TOC
+{:toc}
 
 ## What it does
 
 Each frame, PowerAim:
 
-1. Captures the screen region inside the FOV box
-2. Runs the loaded ONNX model
-3. Filters detections by minimum confidence + target classes
-4. Picks the "best" target via the [Sticky-Aim selector]({{ '/features/aim-assist#sticky-aim' | relative_url }})
-5. Computes the next mouse position using the configured **movement path** and **prediction method**
-6. Sends the delta via the configured **mouse input method**
+1. Captures the screen region defined by the **FOV** (the FOV size drives the scanned region — see [FOV Overlay]({{ '/features/fov-overlay' | relative_url }}))
+2. Runs the loaded ONNX model and filters detections by minimum confidence + target classes
+3. Feeds detections into the **smart aim pipeline** (default): a SORT-style tracker assigns a stable identity to each target and coasts through dropped frames
+4. Selects a target with **switch hysteresis** so the lock doesn't flip-flop between two enemies
+5. Smooths the aim point with a **1€ filter** and aims at the configured **aim region** inside the target
+6. Drives the cursor toward it with a **frame-rate-independent damped controller**, then sends the delta via the configured **mouse input method** (or the virtual right stick)
 
-If no aim key is held, steps 4–6 are skipped — PowerAim still draws ESP boxes / FOV ring but never moves the mouse.
+If no aim key is held, steps 3–6 still track but never move the cursor — ESP boxes / FOV ring keep drawing.
 
 ## How to enable
 
 1. **Aim Tools → Aim Assist → toggle on**
-2. Make sure **Global Active** (top-center of the window) is also on — Global Active is the master kill switch.
+2. Make sure **Global Active** (top-center of the window) is also on — it's the master kill switch.
 3. Hold any of the configured **Aim Key Bindings** in-game.
 
-The aim key chip supports multiple keys. By default it lists `Right Mouse Button` + `Left Alt` — either one arms the aim.
+The aim-key chip supports multiple keys. By default it lists `Right Mouse Button` + `Left Alt` — either one arms the aim.
 
 {: .note }
-Aim assist can be **paused automatically by the HUD state**. If you set up [OCR aim-disengage rules]({{ '/features/ocr#aim-disengage-rules' | relative_url }}), assist is held off while a HUD region matches — e.g. while scoped or holding a knife — even though the aim key is held.
+Aim assist can be **paused by the HUD state**. If the active profile has
+[aim-disengage rules](#per-profile-aim-disengage), assist is held off while a HUD region matches —
+e.g. while a knife is equipped or you're not scoped — even though the aim key is held.
 
-## Configuration options
+## Aim profiles
 
-All sliders live on the **AimConfig** card (right column of Aim Tools).
+Aim is organised into **named profiles**, exactly like [Anti-Recoil]({{ '/features/anti-recoil' | relative_url }}).
+Each profile bundles the full aim feel (responsiveness, aim region, tracking/smoothing tuning) plus
+optional activation conditions. **One profile is active at a time.**
 
-### Movement & path
+- **Profile list** (Aim section) — add / duplicate / delete profiles; the row toggle makes a profile active.
+- **Per-profile hotkey** — bind a key on the row to toggle that profile active in-game.
+- **OCR weapon auto-switch** — set an OCR region + a weapon-name substring; the profile activates when the HUD shows that weapon (needs **Auto-switch on OCR** on the profile). See [OCR]({{ '/features/ocr' | relative_url }}).
+- **Process scope** — limit auto-activation to specific games via a process-name pattern.
 
-| Setting | What it does | Default |
-|:--------|:-------------|:--------|
-| **Aiming Boundaries Alignment** | Where the FOV ring is anchored on the screen — Center / Top / Bottom | Center |
-| **Movement Path** | Curve used between current and target position — Bezier / Lerp / Exponential / Adaptive / Perlin | Bezier |
-| **Mouse Sensitivity** | Multiplier on each frame's mouse delta. 0.90 default; 0.10 is the slowest, 1.00 the fastest. | 0.90 |
-| **Mouse Jitter** | Pixel radius for random jitter added to the path. 0 = perfectly straight. | 6 |
-| **EMA Smoothening** | Exponential moving average weight applied to the target position. Higher = smoother but more lag. | 0.5 |
+Activating a profile copies its values into the live settings the pipeline reads — there's no
+separate runtime path, so switching a profile simply re-applies its feel.
 
-The five **Movement Paths**:
+### Presets
 
-- **Bezier** — cubic Bezier with 1/3 and 2/3 control points. Original Aimmy curve.
-- **Lerp** — straight linear interpolation. Fastest, no easing.
-- **Exponential** — slow start, fast finish.
-- **Adaptive** — Lerp for short distances, Bezier for longer ones (threshold 100 px).
-- **PerlinNoise** — Lerp with Perlin-noise jitter perpendicular to the direction. Most "organic" feel.
+The profile editor has a **preset dropdown** at the top. Picking one overwrites only the tuning
+fields (name and activation conditions are kept). They're starting points — fine-tune from there.
 
-### Offsets
+| Preset | Feel | Sensitivity | Notable |
+|:-------|:-----|:------------|:--------|
+| **Smooth tracking** | Calm, very sticky lock | 0.20 | `SwitchFrames` 8, heavy coast |
+| **Snappy / flick** | Fast convergence, quick target switches | 0.55 | `LeadTimeMs` 20, less smoothing |
+| **Precise (high DPI)** | Very fine and slow, for high-DPI mice | 0.08 | Heavy standstill smoothing |
+| **Humanized** | Natural feel with a random aim point | 0.18 | `RandomAimPoint` on, slight lead |
+| **Legacy (no tracking)** | The old single-target path | 0.25 | `Smart Aim` off |
 
-PowerAim aims at the head by default. The four offset sliders let you bias the aim point:
+## Aim region
 
-| Setting | What it does |
-|:--------|:-------------|
-| **Y Offset** | Vertical pixel offset (positive = down, negative = up) |
-| **Y Offset Percentage** | Vertical offset as a percentage of the bounding box (90% = forehead) |
-| **X Offset** | Horizontal pixel offset |
-| **X Offset Percentage** | Horizontal offset as a percentage of the bounding box (50% = center) |
+Instead of pixel/percentage offsets, you draw **where inside the target to aim** with the same
+visual editor the triggers use for their head area. Open it from the profile, drag the green
+rectangle over the part of the body you want (head, upper chest…), and save.
 
-The percentage and pixel offsets are independent — enable them with the toggles on the Settings page (**X-Axis Percentage Adjustment** / **Y-Axis Percentage Adjustment**).
+- **Random aim point** — aim at a randomized point inside the region per engagement, for a less robotic feel (the **Humanized** preset turns this on).
 
-### Predictions
+## Smart aim tuning
 
-Toggle **Predictions** to enable lead-time on moving targets. Method is chosen on the **PredictionConfig** card:
-
-- **Kalman Filter** (default) — custom 2D Kalman with velocity state. Adaptive lead time available via the **Adaptive Kalman Lead** toggle in Stats.
-- **Shall0e's Prediction** — velocity-based linear lead. Fixed by Shall0e in the fork; the upstream version was broken.
-- **wisethef0x's EMA Prediction** — EMA-weighted velocity lead.
-
-### Sticky Aim
-
-Sticky Aim holds your current target between frames based on a composite score (distance + confidence + size + lock bonus), and only switches when a clearly better candidate appears. This eliminates flicker between two overlapping detections.
+These are the knobs the smart pipeline exposes. Most live on the profile (mirrored to the live
+`AISettings` when the profile activates); a few advanced association params are global.
 
 | Setting | What it does | Default |
 |:--------|:-------------|:--------|
-| **Sticky Aim Enabled** | Master toggle | On |
-| **Sticky Aim Threshold** | Pixel radius within which distance counts toward the score. Outside this radius, distance contributes 0. | 80 px |
-| **Sticky Aim Max Lock Score** | Upper bound on the accumulated lock-score. Higher = harder to break the lock. | 100 |
+| **Mouse Sensitivity** | Per-60 Hz-frame approach fraction. **Higher = snappier, lower = smoother.** | 0.25 |
+| **Aim Deadzone** | Crosshair-to-target radius (px) within which the controller stops nudging — kills standstill shake. | 3 px |
+| **Coast frames** | Frames a track may coast with no matching detection before it's dropped (bridges YOLO drop-outs). | 8 |
+| **Switch frames** | Consecutive frames a challenger must stay better before the lock actually moves. | 6 |
+| **Switch margin** | How much better (fraction) a challenger must be to be considered for a switch. | 0.25 |
+| **Lead time (ms)** | Aim ahead of the target by its estimated velocity to offset input/render latency. 0 = current position. | 0 |
+| **Use 1€ filter** | Adaptive jitter removal on the aim point — smooth at rest, responsive on flicks. | On |
+| **1€ min cutoff** | Lower = smoother when the target is still. | 1.0 |
+| **1€ beta** | Higher = less lag during fast flicks. | 0.7 |
 
-### Use controller for aim
+Global tracker/association params (not per-profile): **IoU threshold** (0.2) for matching detections
+to tracks, **min hits** (3) before a track is eligible to aim, and the alpha/beta correction gains
+(**0.5** / **0.2**).
 
-The **Use Controller for Aim** toggle (on the AimConfig card) makes the aim pipeline drive the **virtual right stick** instead of sending mouse motion. This is the right setting if you're on a game that ignores mouse input (consoles, anti-cheat-locked titles that accept gamepad only).
+### Per-profile aim-disengage
 
-The toggle is greyed out until ViGEm is set up — see [Gamepad Aim]({{ '/features/gamepad-aim' | relative_url }}).
+Each profile carries its own OCR-driven **disengage rules** — conditions that pause aim assist while
+true (e.g. "knife equipped", "not scoped"). Edit them from the profile; they're read for the active
+profile only. New profiles start empty. See [OCR → aim-disengage]({{ '/features/ocr#aim-disengage-rules' | relative_url }}).
 
-## FOV
+## Use controller for aim
 
-The FOV circle defines the screen region PowerAim looks at. See [FOV Overlay]({{ '/features/fov-overlay' | relative_url }}) for the dedicated page; here's the short version:
+The **Use Controller for Aim** toggle makes the pipeline drive the **virtual right stick** instead of
+sending mouse motion — the right setting for games that only accept gamepad input. It's greyed out
+until ViGEm is set up; see [Gamepad Aim]({{ '/features/gamepad-aim' | relative_url }}).
 
-| Setting | What it does |
-|:--------|:-------------|
-| **FOV Size** | Diameter in pixels. Smaller = tighter aim, fewer false positives, faster inference. |
-| **Dynamic FOV** | Optional — switches to the Dynamic FOV Size while the Dynamic FOV keybind is held. |
-| **Dynamic FOV Size** | Diameter while the keybind is held. Usually smaller than the base FOV (precise aiming). |
+## Legacy aim path
+
+Turn **Smart Aim** off (or pick the *Legacy* preset) to run the original single-target path instead
+of the tracker. It uses:
+
+- **Sticky Aim** — holds the current target between frames on a composite score (distance + confidence + size + lock bonus) and only switches when a clearly better candidate appears. Controlled by **Sticky Aim Enabled**, **Sticky Aim Threshold** (80 px) and **Sticky Aim Max Lock Score** (100).
+- **Movement Path** — the curve between current and target position: **Bezier** (default), **Lerp**, **Exponential**, **Adaptive** (Lerp short / Bezier long), **PerlinNoise** (organic jitter).
+- **EMA Smoothening** — an exponential moving average on the target position (its own toggle + strength slider).
+- **Predictions** — optional lead on moving targets: **Kalman Filter**, **Shall0e's Prediction**, **wisethef0x's EMA Prediction**.
+
+{: .note }
+The smart pipeline replaces all of the above with its tracker + 1€ filter + lead-time + damped
+controller, so those legacy controls only take effect when Smart Aim is off.
 
 ## Tips
 
-- **Start with low sensitivity.** Begin at `MouseSensitivity = 0.50` and ramp up. It's easier to add aim power than to subtract overshooting.
-- **EMA Smoothening is your friend on noisy models.** Models trained on too few frames flicker the detection box; EMA smooths it out.
-- **Use the Calibration Wizard** to set sensitivity automatically. It measures the relation between PowerAim's deltas and your in-game cursor — see [Calibration Wizard]({{ '/features/calibration-wizard' | relative_url }}).
-- **Use Sticky Aim's lock score** to control how "loyal" the aim is. Lower lock score = more reactive to new targets; higher = harder to peel off the current one.
-- **Movement path matters less than people think.** Bezier vs. Lerp is mostly feel — pick what looks natural.
+- **Pick a preset, then tweak.** *Smooth tracking* is a safe start; *Precise* if you run a high-DPI mouse; *Snappy* for fast duels.
+- **Sensitivity is the main dial.** Higher snaps faster but can overshoot — start low and ramp up.
+- **Standstill shake?** Raise the Aim Deadzone a little, or lower the 1€ min cutoff.
+- **Lock won't leave a downed enemy?** Lower Switch frames / Switch margin so it re-targets faster.
+- **Want a more human look?** Use the *Humanized* preset (random aim point + slight lead).
 
 ## Troubleshooting
 
-- **No detections in-game?** Open **ESPConfig → Show Detected Player** and verify the boxes appear. If they don't, the model doesn't recognize what's on screen — try a different model.
-- **Aim feels jittery?** Raise EMA Smoothening, lower Mouse Jitter to 0, switch the movement path to Bezier.
-- **Aim is too slow?** Lower EMA Smoothening, raise Mouse Sensitivity, switch movement path to Lerp.
-- **Aim drags / lags?** Check the [Low FPS troubleshooting]({{ '/troubleshooting/low-fps' | relative_url }}) — the AI loop might be running below 30 FPS.
+- **No detections in-game?** Turn on **Show Detected Player** (ESP) and verify boxes appear. If not, the model doesn't recognise what's on screen — try a different model.
+- **Aim feels jittery?** Raise the Aim Deadzone, keep the 1€ filter on, lower the 1€ min cutoff.
+- **Aim is too slow / laggy?** Raise Mouse Sensitivity, add a little Lead time, raise the 1€ beta.
+- **Aim drags / stutters?** Check [Low FPS troubleshooting]({{ '/troubleshooting/low-fps' | relative_url }}) — the AI loop may be running below 30 FPS.

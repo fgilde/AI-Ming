@@ -20,11 +20,22 @@ Capture frames  →  Auto-label / hand-label  →  Train YOLOv8  →  Export to 
 
 PowerAim ships built-in capture for training data:
 
-- **Settings → Collect Data While Playing** — saves the FOV-cropped frame on each detection
-- **Settings → Auto-Label Data** — also writes a YOLO `.txt` label file based on the current model's predictions (the "auto-label" trick)
-- Captured frames land in `bin\images\`
+- **Settings → Collect Data While Playing** — saves capture frames to disk while you play
+- **Settings → Auto-Label Data** — additionally writes a YOLO `.txt` label file from the current model's detections (the "auto-label" trick)
 
 For a fresh class with no existing model, just capture frames manually. The [Replay Buffer]({{ '/features/replay-buffer' | relative_url }}) is also a quick way to grab clean frames.
+
+### In-app training-data capture
+
+Together these two toggles bootstrap a dataset you can curate and retrain on — no separate recorder needed.
+
+- **`Collect Data While Playing`** saves capture frames as JPEGs to `bin\images\` while the AI loop runs. Frames are throttled to roughly a couple per second (the save is rate-limited to at most one frame every 500 ms), so a play session yields a steady trickle of varied images rather than a flood of near-duplicates.
+- **`Auto-Label Data`** (in addition to `Collect Data While Playing`) writes a matching YOLO-format label file to `bin\labels\` for each saved frame, named to match its image. The label is derived from the primary (nearest-to-centre) detection of the model that is currently loaded.
+
+Each label file holds one line in the standard YOLO format — `<class-id> <x-center> <y-center> <width> <height>` — with the box coordinates normalized to the frame size.
+
+{: .note }
+Auto-labels are only as good as the model that produced them. Treat them as a head start: load the captured `bin\images\` and `bin\labels\` into a labelling tool, fix the misses, and add classes the current model can't see yet before you retrain.
 
 ## 2. Auto-label with MakeSense.ai
 

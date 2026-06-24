@@ -27,12 +27,15 @@ public class ApplicationConstants : Constants
     public const string ShowOnly = "";
     public const bool EasyMode = false;
 
+    /// <summary>Marketing / download landing page (the GitHub Pages site root).</summary>
+    public const string WebsiteUrl = "https://fgilde.github.io/AI-Ming/";
+
     /// <summary>
-    ///     URL the in-app Help button opens. Points to the GitHub Pages-hosted documentation.
-    ///     Bundled docs live under <c>docs/</c> in the repo and are auto-published to this URL
-    ///     by GitHub Pages on push. Update when the repo path changes.
+    ///     URL the in-app Help button opens. Points to the GitHub Pages-hosted <b>documentation</b>
+    ///     home — NOT the site root, which is now the marketing landing page (<see cref="WebsiteUrl"/>).
+    ///     The docs live under <c>docs/</c> in the repo and are auto-published by GitHub Pages on push.
     /// </summary>
-    public const string DocsUrl = "https://fgilde.github.io/AI-Ming/";
+    public const string DocsUrl = "https://fgilde.github.io/AI-Ming/documentation/";
     public static Uri DocsUri = new Uri(DocsUrl);
 
     // ---- Project / author links -----------------------------------------------------------
