@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -7,6 +8,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using PowerAim.Class.Native;
 using PowerAim.Config;
+using PowerAim.UILibrary;
 
 namespace Visuality
 {
@@ -19,6 +21,8 @@ namespace Visuality
     {
         private const string ConfigDir = "bin\\configs";
         private readonly Window _owner;
+        // Per-row key changers — disposed on close so their global keybind subscription doesn't leak.
+        private readonly List<AKeyChanger> _keyChangers = new();
 
         public QuickConfigWindow(Window owner)
         {
@@ -85,14 +89,51 @@ namespace Visuality
                 FontWeight = active ? FontWeights.SemiBold : FontWeights.Normal
             };
 
-            var sp = new StackPanel { Orientation = Orientation.Horizontal };
-            sp.Children.Add(dot);
-            sp.Children.Add(text);
+            var nameStack = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+            nameStack.Children.Add(dot);
+            nameStack.Children.Add(text);
 
-            var border = new Border { Style = (Style)FindResource("QcRow"), Child = sp };
+            // Clickable name area = switch to this config. Kept separate from the key changer so
+            // clicking the keybind doesn't also switch the config.
+            var nameHost = new Border
+            {
+                Background = Brushes.Transparent,
+                Child = nameStack,
+                VerticalAlignment = VerticalAlignment.Stretch,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                Cursor = active ? Cursors.Arrow : Cursors.Hand,
+            };
             if (!active)
-                border.MouseLeftButtonUp += (_, _) => SwitchTo(path);
-            return border;
+                nameHost.MouseLeftButtonUp += (_, _) => SwitchTo(path);
+
+            // Per-config keybind — reuses the SAME AKeyChanger control + storage as the Models &
+            // Configs page (prefix "CONFIG" + the file name "X.cfg"), so setting it in either place
+            // updates the one shared binding. Pressing it loads this config.
+            var fileName = Path.GetFileName(path);
+            var keyChanger = new AKeyChanger
+            {
+                KeyConfigName = fileName,
+                KeyConfigPrefix = "CONFIG",
+                Tag = fileName,
+                BindingManager = PowerAim.MainWindow.Instance?.BindingManager,
+                WithBorder = false,
+                Text = "",
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(8, 0, 0, 0),
+                IgnoreGlobalActiveGate = true,
+            };
+            keyChanger.GlobalKeyPressed += (_, _) => SwitchTo(path);
+            _keyChangers.Add(keyChanger);
+
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            Grid.SetColumn(nameHost, 0);
+            Grid.SetColumn(keyChanger, 1);
+            grid.Children.Add(nameHost);
+            grid.Children.Add(keyChanger);
+
+            return new Border { Style = (Style)FindResource("QcRow"), Child = grid };
         }
 
         private bool _closed;   // guards against re-entrant Close() from Deactivated during closing
@@ -124,8 +165,23 @@ namespace Visuality
         private void Window_Deactivated(object sender, EventArgs e)
         {
             if (_closed) return;
+            // Don't dismiss while the user is mid-recording a keybind — capturing a mouse-button
+            // binding moves focus off this window, which would otherwise close it before the bind lands.
+            if (_keyChangers.Any(k => k.InUpdateMode)) return;
             _closed = true;
             try { Close(); } catch { /* ignore */ }
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            // Dispose each AKeyChanger so its BindingManager.OnBindingPressed subscription is removed
+            // (otherwise every open would leak a handler that keeps firing after the window is gone).
+            foreach (var kc in _keyChangers)
+            {
+                try { kc.Dispose(); } catch { /* ignore */ }
+            }
+            _keyChangers.Clear();
+            base.OnClosed(e);
         }
 
         /// <summary>Show the window centered just below the given anchor window (the floating tab).</summary>

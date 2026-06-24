@@ -203,6 +203,10 @@ public partial class MainWindow
         {
             AttachLayoutManagers();
             BindHiddenBoxesPillForCurrentPage();
+            // The active GPU is per-config (AISettings.InferenceGpuDeviceId). The picker popup reads
+            // it live, but the title-bar pill label is only set on startup / manual change — refresh
+            // it on every config load so it doesn't show the previous config's card.
+            RefreshGpuPickerLabel();
         }), System.Windows.Threading.DispatcherPriority.Loaded);
 
         if (isRecreating && menu is not null)
@@ -382,7 +386,6 @@ public partial class MainWindow
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        //  this.HideForCapture();
         _ = CheckUpdate(false);
         KnownIssuesDialog.ShowIf(this);
         //SetupWizard.ShowIfFirstRun(this);
@@ -529,6 +532,7 @@ public partial class MainWindow
 
     private void RefreshGpuPickerLabel(IReadOnlyList<AILogic.GpuAdapterEnumerator.GpuAdapter>? adapters = null)
     {
+        if (GpuPickerLabel is null) return;
         adapters ??= AILogic.GpuAdapterEnumerator.List();
         int selected = AppConfig.Current?.AISettings?.InferenceGpuDeviceId ?? 0;
         var match = adapters.FirstOrDefault(a => a.DeviceId == selected);
@@ -731,9 +735,31 @@ public partial class MainWindow
     private void EnsurePageAttached(string name)
     {
         if (_pageLayouts.TryGetValue(name, out var existing) && existing.Boxes.Count > 0)
+        {
+            // Page already instrumented (its boxes survive CreateUI). On a config switch the new
+            // config's layout must still be applied — otherwise the previous config's hidden/order
+            // state sticks. ReapplyLayout reads the now-current AppConfig.LayoutConfiguration.
+            existing.ReapplyLayout();
             return;
+        }
         if (FindName(name) is not FrameworkElement page) return;
-        _pageLayouts[name] = PageLayoutManager.Attach(name, page);
+        var mgr = PageLayoutManager.Attach(name, page);
+        // Persist the layout as soon as the user hides/restores/reorders a section. The layout
+        // lives in AppConfig.LayoutConfiguration (per-config), but nothing saved it before — so it
+        // only stuck by accident on the next config save. LayoutChanged fires on user actions only
+        // (not during Attach/ApplyPersistedLayout), so this won't save on plain config load.
+        mgr.LayoutChanged += PersistLayoutConfig;
+        _pageLayouts[name] = mgr;
+    }
+
+    private void PersistLayoutConfig()
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(AppConfig.Current?.Path))
+                AppConfig.Current.Save();
+        }
+        catch { /* never let a layout tweak crash the UI */ }
     }
 
     private void EnsureHiddenBoxesPill()

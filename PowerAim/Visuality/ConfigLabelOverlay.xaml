@@ -9,6 +9,7 @@
         ShowActivated="False"
         ResizeMode="NoResize"
         SizeToContent="WidthAndHeight"
+        MouseLeftButtonDown="ConfigLabelOverlay_OnMouseDown"
         WindowStartupLocation="Manual"
         Left="-10000"
         Top="-10000"

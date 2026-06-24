@@ -764,6 +764,7 @@
                                                                                    BindingManager="{Binding DataContext.BindingManager, RelativeSource={RelativeSource AncestorType=poweraim:MainWindow}}"
                                                                                    MouseDown="UIElement_OnMouseDown"
                                                                                    GlobalKeyPressed="AKeyChanger_ModelOnGlobalKeyPressed"
+                                                                                   IgnoreGlobalActiveGate="True"
                                                                                    WithBorder="False"
                                                                                    Text="" />
                                                             <Button Grid.Column="3"
@@ -885,6 +886,7 @@
                                                                                    BindingManager="{Binding DataContext.BindingManager, RelativeSource={RelativeSource AncestorType=poweraim:MainWindow}}"
                                                                                    MouseDown="UIElement_OnMouseDown"
                                                                                    GlobalKeyPressed="AKeyChanger_ConfigOnGlobalKeyPressed"
+                                                                                   IgnoreGlobalActiveGate="True"
                                                                                    WithBorder="False"
                                                                                    Text="" />
                                                             <Button Grid.Column="3"

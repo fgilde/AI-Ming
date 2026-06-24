@@ -1,6 +1,7 @@
 using System;
 using System.Windows;
 using System.Windows.Input;
+using PowerAim;
 using PowerAim.Class.Native;
 using PowerAim.Config;
 
@@ -16,7 +17,8 @@ namespace Visuality
     {
         private const double OverlapPx = 1;   // 1px tuck so the tab sits flush on the window's top edge (no gap)
         private readonly Window _owner;
-
+        private bool _editing;
+        
         public ConfigLabelOverlay(Window owner)
         {
             _owner = owner;
@@ -72,6 +74,7 @@ namespace Visuality
         {
             var cfg = AppConfig.Current;
             if (cfg == null) return;
+            _editing = true;
             ConfigLabelEdit.Text = cfg.ConfigLabel ?? string.Empty;
             ConfigLabelText.Visibility = Visibility.Collapsed;
             ConfigLabelEdit.Visibility = Visibility.Visible;
@@ -115,6 +118,7 @@ namespace Visuality
 
         private void EndEdit()
         {
+            _editing = false;
             ConfigLabelEdit.Visibility = Visibility.Collapsed;
             ConfigLabelText.Visibility = Visibility.Visible;
         }
@@ -135,6 +139,12 @@ namespace Visuality
             {
                 _quickConfig = null;
             }
+        }
+
+        private void ConfigLabelOverlay_OnMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if(!_editing)
+                MainWindow.Instance?.DragMove();
         }
     }
 }
