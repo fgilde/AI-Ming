@@ -62,8 +62,37 @@ public class AppConfig : BaseSettings
     public string? Path
     {
         get;
-        set => SetField(ref field, value);
+        set
+        {
+            if (SetField(ref field, value))
+                OnPropertyChanged(nameof(EffectiveConfigLabel));
+        }
     }
+
+    /// <summary>
+    ///     Optional user-facing display name for this config, shown (and inline-editable) in the
+    ///     title bar above the source select. When empty, the UI falls back to the config file
+    ///     name without extension via <see cref="EffectiveConfigLabel"/>.
+    /// </summary>
+    public string ConfigLabel
+    {
+        get;
+        set
+        {
+            if (SetField(ref field, value))
+                OnPropertyChanged(nameof(EffectiveConfigLabel));
+        }
+    } = "";
+
+    /// <summary>
+    ///     The label to display: <see cref="ConfigLabel"/> when set, otherwise the current config's
+    ///     file name without extension (or "Default" when no path is known yet).
+    /// </summary>
+    [JsonIgnore]
+    public string EffectiveConfigLabel =>
+        !string.IsNullOrWhiteSpace(ConfigLabel)
+            ? ConfigLabel
+            : (!string.IsNullOrEmpty(Path) ? System.IO.Path.GetFileNameWithoutExtension(Path) : "Default");
 
     public static AppConfig Current { get; private set; }
 

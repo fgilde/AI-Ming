@@ -19,9 +19,11 @@ namespace Visuality
     /// </summary>
     public partial class ConfigSaver 
     {
-        private static Color EnableColor = (Color)ColorConverter.ConvertFromString("#FF722ED1");
         private static Color DisableColor = (Color)ColorConverter.ConvertFromString("#FFFFFFFF");
         private static TimeSpan AnimationDuration = TimeSpan.FromMilliseconds(500);
+
+        // Always center on the owner (MainWindow) instead of restoring a free-floating position.
+        protected override bool SaveRestorePosition => false;
 
         public void SetColorAnimation(Color fromColor, Color toColor, TimeSpan duration)
         {
@@ -51,7 +53,7 @@ namespace Visuality
             if (ExtraStrings == string.Empty)
             {
                 ExtraStrings = " (Found in Downloadable Model menu)";
-                SetColorAnimation((Color)SwitchMoving.Background.GetValue(SolidColorBrush.ColorProperty), EnableColor, AnimationDuration);
+                SetColorAnimation((Color)SwitchMoving.Background.GetValue(SolidColorBrush.ColorProperty), ApplicationConstants.AccentColor, AnimationDuration);
                 Animator.ObjectShift(AnimationDuration, SwitchMoving, SwitchMoving.Margin, new(0, 0, -1, 0));
             }
             else

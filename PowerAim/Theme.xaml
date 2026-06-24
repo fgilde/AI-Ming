@@ -448,6 +448,7 @@
                                                   ContentSource="Header"
                                                   RecognizesAccessKey="True"
                                                   Margin="{TemplateBinding Padding}"
+                                                  TextElement.Foreground="{TemplateBinding Foreground}"
                                                   VerticalAlignment="Center" />
                                 <TextBlock Grid.Column="2"
                                            Text="{TemplateBinding InputGestureText}"

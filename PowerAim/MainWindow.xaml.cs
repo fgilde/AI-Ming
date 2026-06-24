@@ -99,6 +99,33 @@ public partial class MainWindow
         //Console.WriteLine(JsonConvert.SerializeObject(Dictionary.toggleState));
         Console.WriteLine(Locale.UICompleteMessage);
         Console.WriteLine("Compiled with Cuda: " + ApplicationConstants.IsCudaBuild);
+
+        // Floating config-label tab — a separate window that sits just above the title bar, so it
+        // shows the config name OUTSIDE the shell without altering the main window's content.
+        Loaded += (_, _) => ShowConfigLabelOverlay();
+        LocationChanged += (_, _) => _configLabelOverlay?.Reposition();
+        SizeChanged += (_, _) => _configLabelOverlay?.Reposition();
+        StateChanged += (_, _) => _configLabelOverlay?.Reposition();
+        Activated += (_, _) => _configLabelOverlay?.Reposition();
+        Closed += (_, _) => { _configLabelOverlay?.Close(); _configLabelOverlay = null; };
+    }
+
+    private global::Visuality.ConfigLabelOverlay? _configLabelOverlay;
+
+    private void ShowConfigLabelOverlay()
+    {
+        if (_configLabelOverlay != null) return;
+        try
+        {
+            _configLabelOverlay = new global::Visuality.ConfigLabelOverlay(this);
+            _configLabelOverlay.Show();
+            _configLabelOverlay.Reposition();
+        }
+        catch
+        {
+            // The tab is cosmetic — never let it break startup.
+            _configLabelOverlay = null;
+        }
     }
 
     private void CreateUI()
@@ -1796,7 +1823,7 @@ public partial class MainWindow
         #region Config Settings
 
         ConfigSettings.AddTitle(Locale.ConfigSettings);
-        ConfigSettings.AddButton(Locale.SaveConfig).Reader.Click += (s, e) => new ConfigSaver().ShowDialog();
+        ConfigSettings.AddButton(Locale.SaveConfig).Reader.Click += (s, e) => new ConfigSaver { Owner = this }.ShowDialog();
         ConfigSettings.AddSeparator();
 
         #endregion
@@ -2921,29 +2948,6 @@ public partial class MainWindow
     private void LoadCreditsMenu()
     {
         CreditsPanel.RemoveAll();
-        return; // TODO: Fix size problems
-        CreditsPanel.AddTitle("Developers");
-        CreditsPanel.AddCredit("Babyhamsta", "AI Logic");
-        CreditsPanel.AddCredit("MarsQQ", "Design");
-        CreditsPanel.AddCredit("Taylor", "Optimization, Cleanup");
-        CreditsPanel.AddCredit("Florian Gilde", "Optimization, Cleanup, Trigger Bot improvements, Gamepad support");
-        CreditsPanel.AddSeparator();
-
-        CreditsPanel.AddTitle("Contributors");
-        CreditsPanel.AddCredit("Shall0e", "Prediction Method");
-        CreditsPanel.AddCredit("wisethef0x", "EMA Prediction Method");
-        CreditsPanel.AddCredit("whoswhip", "Bug fixes & EMA");
-        CreditsPanel.AddCredit("HakaCat", "Idea for Auto Labelling Data");
-        CreditsPanel.AddCredit("Themida", "LGHub check");
-        CreditsPanel.AddCredit("Ninja", "MarsQQ's emotional support");
-        CreditsPanel.AddSeparator();
-
-        CreditsPanel.AddTitle("Model Creators");
-        CreditsPanel.AddCredit("Babyhamsta", "UniversalV4, Phantom Forces");
-        CreditsPanel.AddCredit("Natdog400", "AIO V2, V7");
-        CreditsPanel.AddCredit("Themida", "Arsenal, Strucid, Bad Business, Blade Ball, etc.");
-        CreditsPanel.AddCredit("Hogthewog", "Da Hood, FN, etc.");
-        CreditsPanel.AddSeparator();
     }
 
     public async Task LoadStoreMenu()
@@ -2955,8 +2959,7 @@ public partial class MainWindow
             (ApplicationConstants.RepoOwner, ApplicationConstants.RepoName, "models"),
             (ApplicationConstants.UpstreamRepoOwner, ApplicationConstants.UpstreamRepoName, "models"),
         ];
-        // Configs come ONLY from this fork's repo — unlike models, the upstream (babyhamsta)
-        // configs must not be surfaced.
+
         (string owner, string repo, string subPath)[] configRepos =
         [
             (ApplicationConstants.RepoOwner, ApplicationConstants.RepoName, "configs"),
@@ -3155,7 +3158,7 @@ public partial class MainWindow
 
     private void MenuItem_OnClick(object sender, RoutedEventArgs e)
     {
-        new ConfigSaver().ShowDialog();
+        new ConfigSaver { Owner = this }.ShowDialog();
     }
 
     private void MenuItemSaveAs_OnClick(object sender, RoutedEventArgs e)

@@ -72,7 +72,8 @@ public static class UIElementExtensions
             var menuItem = new MenuItem
             {
                 Header = item?.ToString(),
-                Foreground = Brushes.Black,
+                // No explicit foreground: inherit the themed MenuItem style (FluentTextPrimary) so
+                // dropdown items stay readable in dark mode (hard-coded black was unreadable there).
                 Tag = item,
             };
             menuItem.Command = new ActionCommand(() => onClick(menuItem));
