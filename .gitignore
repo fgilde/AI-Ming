@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /.claude/settings.local.json
 /.screenshots
+/.claude/launch.json
