@@ -96,6 +96,16 @@ namespace PowerAim.UILibrary
             TunePanel.AddSlider(Locale.MouseSensitivity, Locale.Sensitivity, 0.001, 0.001, 0.0001, 1, false, 4, false)
                 .BindTo(() => Profile!.Sensitivity);
 
+            // Measure how far the game's view moves per unit of mouse input and apply a matching
+            // sensitivity to THIS profile (re-added on request — the closed loop converges without it,
+            // but calibration makes the slider game-independent instead of trial-and-error per game).
+            TunePanel.AddButton(Locale.CalibrateSensitivity).Reader.Click += (_, _) =>
+                new PowerAim.Visuality.CalibrationWizardDialog
+                {
+                    Owner = System.Windows.Window.GetWindow(this),
+                    TargetProfile = Profile,
+                }.ShowDialog();
+
             // Smart-only tuning — hidden when SmartAim is off (the legacy path ignores these).
             if (Profile!.SmartAim)
             {

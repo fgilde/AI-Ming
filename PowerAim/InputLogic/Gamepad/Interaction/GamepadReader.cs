@@ -106,7 +106,7 @@ public class GamepadReader : IGamepadReader
                 if (IsConnected)
                 {
                     try { Poll(); }
-                    catch (Exception ex) { Console.WriteLine($"[GPDBG] Poll threw, loop survives: {ex.Message}"); }
+                    catch { /* transient Controller.GetState() failure (brief disconnect) — keep the loop alive */ }
                 }
                 else
                 {
@@ -197,7 +197,6 @@ public class GamepadReader : IGamepadReader
 
     private void InvokeEvent(GamepadEventArgs args)
     {
-        if (!args.IsStickEvent) Console.WriteLine($"[GPDBG] reader.Invoke {args.Button} pressed={args.IsPressed}");
         Task.Factory.StartNew(() => ButtonEvent?.Invoke(this, args), CancellationToken.None, TaskCreationOptions.None, _scheduler);
     }
 

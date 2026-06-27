@@ -133,14 +133,13 @@ public class AimingAction : BaseAction
         }
         _wasAiming = true;
 
-        // Aim point inside the box (model space) using the configured aim region. Prefer the raw
-        // latest detection — identical to the proven legacy aim point — and fall back to the
-        // velocity-predicted estimate ONLY while the track is coasting through a detection gap.
-        // Aiming at the predicted/smoothed centre while a detection is present biased the closed aim
-        // loop: the tracker reads the assist's own view-pan as target velocity, so the estimate (and
-        // thus the crosshair) drifted consistently in the pan direction — "aims away from the target".
-        var aimBox = target.MissedFrames == 0 ? target.LastDetectionBox : target.Box;
-        var (px, py) = RegionPoint(aimBox);
+        // Aim point inside the box (model space) using the configured aim region. ALWAYS use the raw
+        // latest detection — identical to the proven legacy aim point — NEVER the tracker's
+        // velocity-extrapolated Box. In a closed loop the tracker reads the assist's OWN view-pan as
+        // target velocity, so coasting on that estimate flung the crosshair off-target ("strange,
+        // like the video"). The tracker is kept only for stable identity/selection; during a detection
+        // gap this simply holds the last detected box instead of extrapolating.
+        var (px, py) = RegionPoint(target.LastDetectionBox);
 
         // Optional velocity lead to compensate input+render latency.
         double leadSec = ai.LeadTimeMs / 1000.0;

@@ -148,7 +148,6 @@ namespace PowerAim.InputLogic
             _recordPressed.Clear();
             _recordStarted = false;
             EnsureHookEvents();
-            Console.WriteLine($"[GPDBG] StartListening '{bindingId}' -> canRead={GamepadManager.CanRead} gamepadListen={_gamepadListen} readerNull={GamepadManager.GamepadReader == null}");
         }
 
         private void EnsureHookEvents()
@@ -184,7 +183,6 @@ namespace PowerAim.InputLogic
         private void GamepadReader_ButtonEvent(object? sender, GamepadEventArgs e)
         {
             if (e.IsStickEvent) return; // sticks are never bindings
-            Console.WriteLine($"[GPDBG] BM.PadEvent {e.Button} pressed={e.IsPressed} settingId={settingBindingId ?? "null"}");
             OnRawInput(new StoredInputBinding(e), e.IsPressed == true);
         }
 

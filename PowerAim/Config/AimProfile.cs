@@ -88,8 +88,11 @@ public class AimProfile : EditableNotificationObject
     /// <summary>Use the smart tracking pipeline (vs the legacy single-target path).</summary>
     public bool SmartAim { get; set => SetProperty(ref field, value); } = true;
 
-    /// <summary>Per-60Hz-frame approach fraction. Higher = snappier, lower = smoother.</summary>
-    public double Sensitivity { get; set => SetProperty(ref field, value); } = 0.25;
+    /// <summary>
+    ///     Per-60Hz-frame approach fraction of the target offset (in FOV-box pixels, resolution-
+    ///     independent). Higher = snappier/firmer, lower = smoother. Matches the "Balanced" preset.
+    /// </summary>
+    public double Sensitivity { get; set => SetProperty(ref field, value); } = 0.45;
 
     /// <summary>Aim at a random point inside the region (per engagement) instead of its centre.</summary>
     public bool RandomAimPoint { get; set => SetProperty(ref field, value); }
