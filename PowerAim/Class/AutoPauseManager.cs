@@ -59,21 +59,12 @@ public static class AutoPauseManager
         if (string.IsNullOrEmpty(current)) return true; // unknown foreground — give user the benefit of the doubt
 
         // If the user has configured a whitelist, only that whitelist counts.
-        if (settings.GameProcessPatterns != null && settings.GameProcessPatterns.Count > 0)
-        {
-            foreach (var pattern in settings.GameProcessPatterns)
-            {
-                if (ProcessMatcher.Matches(pattern, current)) return true;
-            }
-            return false;
-        }
+        if (settings.GameProcessPatterns is { Count: > 0 } patterns)
+            return patterns.Any(pattern => ProcessMatcher.Matches(pattern, current));
 
         // No whitelist configured — fall back to the built-in non-game list.
-        foreach (var blacklisted in DefinitelyNotGames)
-        {
-            if (string.Equals(current, blacklisted, StringComparison.OrdinalIgnoreCase))
-                return false;
-        }
+        if (DefinitelyNotGames.Any(blacklisted => string.Equals(current, blacklisted, StringComparison.OrdinalIgnoreCase)))
+            return false;
         // Also pause when our own app is foreground (user is configuring).
         if (IsOwnApp(current)) return false;
 

@@ -14,6 +14,8 @@ public static class GamepadManager
     public static bool CanRead { get; private set; }
     public static IGamepadReader? GamepadReader { get; private set; }
 
+    public static string? ReadingControllerId { get; private set; }
+    
     /// <summary>
     ///     The sender used for all output. This is a <see cref="ReportingGamepadSender"/> wrapper
     ///     around the concrete sender so the debug input visualizer sees every emitted input
@@ -32,7 +34,7 @@ public static class GamepadManager
         if (GamepadReader == null)
         {
             GamepadReader = new GamepadReader();
-            GamepadReader.Controller.GetControllerId(); // Needs to be called before virtual one is created
+            ReadingControllerId = GamepadReader.Controller.GetControllerId(); // Needs to be called before virtual one is created
         }
 
         try

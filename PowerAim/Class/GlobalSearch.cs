@@ -92,7 +92,7 @@ public static class GlobalSearch
                         // If the title is missing (common for free-floating help blocks), surface the
                         // first ~50 chars of the description as the searchable label.
                         string effectiveLabel = string.IsNullOrWhiteSpace(title)
-                            ? (desc.Length > 60 ? desc.Substring(0, 60) + "…" : desc)
+                            ? (desc.Length > 60 ? desc[..60] + "…" : desc)
                             : title;
                         sink.Add(new SearchEntry
                         {

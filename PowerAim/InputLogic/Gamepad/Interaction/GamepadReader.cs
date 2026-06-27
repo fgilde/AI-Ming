@@ -1,9 +1,6 @@
 ﻿using SharpDX.XInput;
-using System.Threading;
-using PowerAim.Class;
 using PowerAim.Config;
 using PowerAim.InputLogic.Contracts;
-using Newtonsoft.Json;
 
 namespace PowerAim.InputLogic.Gamepad.Interaction;
 
@@ -11,7 +8,7 @@ namespace PowerAim.InputLogic.Gamepad.Interaction;
 
 public class GamepadReader : IGamepadReader
 {
-    private readonly UserIndex _userIndex;
+    private UserIndex _userIndex;
     public Controller Controller { get; private set; }
     public State State { get; private set; }
 
@@ -25,9 +22,27 @@ public class GamepadReader : IGamepadReader
     {
         _userIndex = userIndex;
         _scheduler = TaskScheduler.FromCurrentSynchronizationContext();
-        Controller = new Controller(_userIndex);
+        Controller = ConnectController();
 
         StartPolling();
+    }
+
+    // The physical pad isn't always on XInput slot One — another device (or a virtual ViGEm pad)
+    // can take a lower slot and leave slot One empty. The old code hard-wired slot One, so when the
+    // pad sat elsewhere Controller.IsConnected stayed false forever and NO ButtonEvents ever fired
+    // (keybind recording + reaction dead), even though the pad worked in the tester — which scans
+    // all four slots. Prefer the last-known slot (stay on the same pad across brief drop-outs),
+    // otherwise scan all four. Never returns null so Controller is always assigned.
+    private Controller ConnectController()
+    {
+        var preferred = new Controller(_userIndex);
+        if (preferred.IsConnected) return preferred;
+        for (var i = UserIndex.One; i <= UserIndex.Four; i++)
+        {
+            var candidate = new Controller(i);
+            if (candidate.IsConnected) { _userIndex = i; return candidate; }
+        }
+        return preferred; // none connected yet — keep retrying the preferred slot
     }
 
     public bool IsConnected => Controller.IsConnected;
@@ -90,12 +105,13 @@ public class GamepadReader : IGamepadReader
             {
                 if (IsConnected)
                 {
-                    Poll();
+                    try { Poll(); }
+                    catch (Exception ex) { Console.WriteLine($"[GPDBG] Poll threw, loop survives: {ex.Message}"); }
                 }
                 else
                 {
                     await Task.Delay(1000, token);
-                    Controller = new Controller(_userIndex); // Retry connecting
+                    Controller = ConnectController(); // re-scan all slots — the pad may be on a different one
                 }
                 await Task.Delay(10, token); // Reduce CPU usage
             }
@@ -181,6 +197,7 @@ public class GamepadReader : IGamepadReader
 
     private void InvokeEvent(GamepadEventArgs args)
     {
+        if (!args.IsStickEvent) Console.WriteLine($"[GPDBG] reader.Invoke {args.Button} pressed={args.IsPressed}");
         Task.Factory.StartNew(() => ButtonEvent?.Invoke(this, args), CancellationToken.None, TaskCreationOptions.None, _scheduler);
     }
 

@@ -6,7 +6,7 @@ using PowerAim;
 using PowerAim.Config;
 using PowerAim.Extensions;
 
-namespace Visuality
+namespace PowerAim.Visuality
 {
     public partial class KnownIssuesDialog
     {

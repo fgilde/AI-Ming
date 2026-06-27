@@ -1,7 +1,7 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using PowerAim.InputLogic.Contracts;
 using System.Windows.Forms;
-using InputLogic;
+using PowerAim.InputLogic;
 
 namespace PowerAim.InputLogic;
 

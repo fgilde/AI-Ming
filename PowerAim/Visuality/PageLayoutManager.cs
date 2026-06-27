@@ -22,9 +22,9 @@ public sealed class PageLayoutManager
 {
     private readonly string _pageName;
     private readonly FrameworkElement _pageRoot;
-    private readonly List<BoxRef> _boxes = new();
+    private readonly List<BoxRef> _boxes = [];
     /// <summary>Distinct host StackPanels in document order. Index = column ID for persistence.</summary>
-    private readonly List<StackPanel> _hosts = new();
+    private readonly List<StackPanel> _hosts = [];
 
     private PageLayoutManager(string pageName, FrameworkElement pageRoot)
     {

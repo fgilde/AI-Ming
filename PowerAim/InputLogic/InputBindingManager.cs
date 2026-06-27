@@ -1,10 +1,10 @@
-﻿using Gma.System.MouseKeyHook;
+using Gma.System.MouseKeyHook;
 using PowerAim.InputLogic;
 using PowerAim.InputLogic.Contracts;
 using KeyEventArgs = System.Windows.Forms.KeyEventArgs;
 using MouseEventArgs = System.Windows.Forms.MouseEventArgs;
 
-namespace InputLogic
+namespace PowerAim.InputLogic
 {
     public class InputBindingManager : IDisposable
     {
@@ -112,6 +112,7 @@ namespace InputLogic
         {
             settingBindingId = bindingId;
             EnsureHookEvents();
+            Console.WriteLine($"[GPDBG] StartListening '{bindingId}' -> canRead={GamepadManager.CanRead} gamepadListen={_gamepadListen} readerNull={GamepadManager.GamepadReader == null}");
         }
 
         private void EnsureHookEvents()
@@ -148,6 +149,7 @@ namespace InputLogic
         {
             if (!e.IsStickEvent)
             {
+                Console.WriteLine($"[GPDBG] BM.PadEvent {e.Button} pressed={e.IsPressed} settingId={settingBindingId ?? "null"}");
                 var pressed = e.IsPressed == true;
                 if (settingBindingId != null)
                 {

@@ -4,9 +4,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using PowerAim;
-using Visuality;
+using PowerAim.Visuality;
 
-namespace UILibrary
+namespace PowerAim.UILibrary
 {
     public partial class AutoPlayActionList : UserControl
     {

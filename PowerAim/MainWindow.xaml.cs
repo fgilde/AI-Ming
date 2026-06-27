@@ -1,26 +1,19 @@
 using Core;
-using InputLogic;
+using PowerAim.InputLogic;
 using Microsoft.Xaml.Behaviors.Core;
-using MouseMovementLibraries.ddxoftSupport;
-using MouseMovementLibraries.RazerSupport;
 using Nextended.Core;
 using Nextended.Core.Extensions;
 using Nextended.Core.Helper;
 using Nextended.UI.Helper;
-using Other;
+using PowerAim.Other;
 using PowerAim.Class;
 using PowerAim.Config;
 using PowerAim.Extensions;
-using PowerAim.InputLogic;
-using PowerAim.InputLogic.HidHide;
 using PowerAim.Localizations;
 using PowerAim.Models;
-using PowerAim.MouseMovementLibraries.GHubSupport;
-using PowerAim.Other;
 using PowerAim.Types;
 using PowerAim.UILibrary;
 using PowerAim.Visuality;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -29,14 +22,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
-using UILibrary;
-using Visuality;
 using Application = System.Windows.Application;
 using Brushes = System.Windows.Media.Brushes;
 using Button = System.Windows.Controls.Button;
-using Panel = System.Windows.Controls.Panel;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
-using TextBox = System.Windows.Controls.TextBox;
 
 namespace PowerAim;
 
@@ -71,13 +60,17 @@ public partial class MainWindow
     public InputBindingManager? BindingManager { get; private set; }
 
 
+    private readonly GlobalSearchController _search;
+
     public MainWindow()
     {
         InitializeComponent();
 
-        // Ctrl+F → open global search. The KeyBinding in XAML references this command; we have
-        // to provide the binding here so the input gesture actually dispatches.
-        CommandBindings.Add(new System.Windows.Input.CommandBinding(OpenSearchCommand, OpenSearch_Executed));
+        // Ctrl+F search is a self-contained controller; the static OpenSearchCommand (referenced by
+        // the XAML KeyBinding) just forwards to it.
+        _search = new GlobalSearchController(this, GlobalSearchButton, GlobalSearchPopup, GlobalSearchBox,
+            GlobalSearchResults, GlobalSearchHint, () => CurrentMenu, (menu, animate) => NavigateTo(menu, animate));
+        CommandBindings.Add(new System.Windows.Input.CommandBinding(OpenSearchCommand, (_, _) => _search.Open()));
 
         var writer = new TextBoxStreamWriter(OutputTextBox);
         Console.SetOut(writer);
@@ -110,14 +103,14 @@ public partial class MainWindow
         Closed += (_, _) => { _configLabelOverlay?.Close(); _configLabelOverlay = null; };
     }
 
-    private global::Visuality.ConfigLabelOverlay? _configLabelOverlay;
+    private global::PowerAim.Visuality.ConfigLabelOverlay? _configLabelOverlay;
 
     private void ShowConfigLabelOverlay()
     {
         if (_configLabelOverlay != null) return;
         try
         {
-            _configLabelOverlay = new global::Visuality.ConfigLabelOverlay(this);
+            _configLabelOverlay = new global::PowerAim.Visuality.ConfigLabelOverlay(this);
             _configLabelOverlay.Show();
             _configLabelOverlay.Reposition();
         }
@@ -213,7 +206,7 @@ public partial class MainWindow
             // The active GPU is per-config (AISettings.InferenceGpuDeviceId). The picker popup reads
             // it live, but the title-bar pill label is only set on startup / manual change — refresh
             // it on every config load so it doesn't show the previous config's card.
-            RefreshGpuPickerLabel();
+            _gpuPicker?.RefreshLabel();
         }), System.Windows.Threading.DispatcherPriority.Loaded);
 
         if (isRecreating && menu is not null)
@@ -223,110 +216,6 @@ public partial class MainWindow
     }
 
     internal AIManager AIManager => AIManager.Instance;
-
-    internal void FillMenus()
-    {
-        UpdateModelText();
-        ModelContextMenu.Items.Clear();
-        ModelContextMenu.Items.AddRange(ModelListBox.ToMenuItems(item =>
-        {
-            LoadModel(item.Header.ToString());
-        },
-        (i, item) => i <= 9 ? KeyGestureConvertHelper.CreateFromString($"Ctrl + Shift + {i}") : null));
-        ModelContextMenu.Items.Add(new Separator());
-        var downloadableMenu = new System.Windows.Controls.MenuItem()
-        {
-            Header = Locale.DownloadableModelsHeader
-        };
-        ModelContextMenu.Items.Add(downloadableMenu);
-        downloadableMenu.Items.AddRange(_availableModels.Keys.Select(s => new System.Windows.Controls.MenuItem()
-        {
-            Header = s,
-            Command = new ActionCommand(() =>
-            {
-                downloadableMenu.IsEnabled = false;
-                ADownloadGateway.DownloadAsync(s, "models").ContinueWith(task =>
-                {
-                    if (task.Result)
-                    {
-                        Dispatcher.Invoke(() =>
-                        {
-                            LoadModel(s);
-                            FillMenus();
-                        });
-                    }
-                });
-            })
-        }));
-
-        MenuItemOpenCfg.Items.Clear();
-        MenuItemOpenCfg.Items.AddRange(ConfigsListBox.ToMenuItems(
-            item => LoadConfig(Path.Combine(Path.GetDirectoryName(AppConfig.DefaultConfigPath), item.Header?.ToString())),
-            (i, item) => i <= 9 ? KeyGestureConvertHelper.CreateFromString($"Ctrl + {i}") : null)
-        );
-    }
-
-    private void UpdateModelText()
-    {
-        if (Config is not null)
-            ModelContextMenu.Header = $"{Config.LastLoadedModel} ({AIManager?.PredictionLogic?.ExecutionProvider})";
-    }
-
-    private void LoadModel(string? modelName = null)
-    {
-        FileManager.AIManager?.Dispose();
-        FileManager.AIManager = null;
-        FileManager.CurrentlyLoadingModel = false;
-        LoadLastModel(modelName);
-    }
-
-    private void LoadLastModel(string? modelName = null)
-    {
-        modelName ??= Config.LastLoadedModel;
-        var lastLoaded = Path.Combine(ApplicationConstants.ModelsBasePath, modelName);
-        var modelPath = File.Exists(lastLoaded) ? lastLoaded : Path.Combine(ApplicationConstants.ModelsBasePath, ApplicationConstants.DefaultModel);
-        if (File.Exists(modelPath) && !FileManager.CurrentlyLoadingModel &&
-            FileManager.AIManager?.IsModelLoaded != true)
-        {
-            // A model is about to load — keep the empty-state card in its "loading" look so the
-            // "no model" message doesn't flash during the brief load.
-            ModelLoadPending = true;
-            _ = _fileManager.LoadModel(Path.GetFileName(modelPath), modelPath);
-        }
-        else if (!IsModelLoaded)
-        {
-            // Nothing to load (no model file present) — reveal the empty-state message now.
-            ModelLoadPending = false;
-        }
-        UpdateModelText();
-    }
-
-    /// <summary>
-    ///     Copies the bundled default model (<c>Resources\default.onnx</c>, shipped next to the exe)
-    ///     into <c>bin\models\</c> if it isn't there yet, then loads it. Backs the "Load default
-    ///     model" button on <see cref="UILibrary.NoModelCard"/>. Throws a localized
-    ///     <see cref="FileNotFoundException"/> if the bundled file is missing so the card can show it.
-    /// </summary>
-    public async Task LoadDefaultModelAsync()
-    {
-        var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-        var modelsDir = Path.Combine(baseDir, "bin", "models");
-        Directory.CreateDirectory(modelsDir);
-        var dest = Path.Combine(modelsDir, ApplicationConstants.DefaultModel);
-
-        if (!File.Exists(dest))
-        {
-            var src = Path.Combine(baseDir, "Resources", ApplicationConstants.DefaultModel);
-            if (!File.Exists(src))
-                throw new FileNotFoundException(Locale.LoadDefaultModelMissing);
-            File.Copy(src, dest);
-        }
-
-        // Switch the empty-state card to its loading look while the model spins up.
-        ModelLoadPending = true;
-        await _fileManager.LoadModel(ApplicationConstants.DefaultModel,
-            Path.Combine(ApplicationConstants.ModelsBasePath, ApplicationConstants.DefaultModel));
-    }
 
 
     public bool IsModelLoaded => FileManager.AIManager?.IsModelLoaded ?? false;
@@ -391,118 +280,7 @@ public partial class MainWindow
         await LoadStoreMenu();
     }
 
-    private void Window_Loaded(object sender, RoutedEventArgs e)
-    {
-        _ = CheckUpdate(false);
-        KnownIssuesDialog.ShowIf(this);
-        //SetupWizard.ShowIfFirstRun(this);
-        AboutSpecs.Content =
-            $"{GetProcessorName()} • {GetVideoControllerName()} • {GetFormattedMemorySize()}GB RAM";
-
-        if (GamepadTester is not null)
-            GamepadTester.BackRequested += (_, _) => _ = NavigateTo(nameof(GamepadSettings));
-
-        WireHelpPanel();
-        WireAboutPage();
-
-        UpdateAdminButton();
-        InitGpuPicker();
-    }
-
-    private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        // The window-wide "click anywhere to drag" behaviour eats events bound for interactive
-        // controls that live inside the window (Buttons in Popups, Sliders, TextBoxes, the drag
-        // Thumbs on the layout boxes, …) — DragMove blocks the message loop synchronously, so
-        // the inner control never sees its MouseUp and Click never fires.
-        // Walk up the visual tree from the click source and skip DragMove if we find anything
-        // interactive between us and the Window.
-        if (e.OriginalSource is DependencyObject d && IsInsideInteractiveControl(d))
-            return;
-        try { DragMove(); }
-        catch { /* DragMove can throw if mouse-state shifted under us; nothing actionable */ }
-    }
-
-    private static bool IsInsideInteractiveControl(DependencyObject node)
-    {
-        for (int i = 0; i < 32 && node is not null; i++)
-        {
-            switch (node)
-            {
-                case PowerAim.UILibrary.AKeyChanger:                       // keybind editor (its min-time popup uses MouseUp)
-                case System.Windows.Controls.Primitives.ButtonBase:        // Button, ToggleButton, RepeatButton…
-                case System.Windows.Controls.Primitives.Thumb:             // layout-drag handles
-                case System.Windows.Controls.Primitives.Popup:             // search popup, hidden-sections popup
-                case System.Windows.Controls.Primitives.TextBoxBase:       // TextBox, RichTextBox
-                case System.Windows.Controls.Slider:
-                case System.Windows.Controls.ComboBox:
-                case System.Windows.Controls.ComboBoxItem:
-                case System.Windows.Controls.ListBox:
-                case System.Windows.Controls.ListBoxItem:
-                case System.Windows.Controls.MenuItem:
-                case System.Windows.Controls.PasswordBox:
-                case System.Windows.Controls.Primitives.ScrollBar:
-                    return true;
-            }
-            // Climb both visual and logical parents — popups live in the logical tree of the
-            // placement target but their content tree is detached from the window visually.
-            node = (node is System.Windows.Media.Visual or System.Windows.Media.Media3D.Visual3D)
-                ? System.Windows.Media.VisualTreeHelper.GetParent(node)
-                : System.Windows.LogicalTreeHelper.GetParent(node);
-        }
-        return false;
-    }
-
-    private void Minimize_Click(object sender, RoutedEventArgs e)
-    {
-        WindowState = WindowState.Minimized;
-    }
-
-    /// <summary>
-    ///     Relaunches PowerAim with admin rights via ShellExecute "runas". Visible in the
-    ///     topbar only when the current process isn't already elevated (see UpdateAdminButton).
-    /// </summary>
-    private void RestartAsAdminButton_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            var exe = Environment.ProcessPath ?? System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
-            if (string.IsNullOrEmpty(exe))
-            {
-                new global::Visuality.NoticeBar(Locale.ResolveExePathFailed, 4000).Show();
-                return;
-            }
-            var psi = new System.Diagnostics.ProcessStartInfo
-            {
-                FileName = exe,
-                UseShellExecute = true,
-                Verb = "runas",
-            };
-            System.Diagnostics.Process.Start(psi);
-            // Quit the unelevated instance so we don't have two running side by side.
-            Application.Current.Shutdown();
-        }
-        catch (System.ComponentModel.Win32Exception)
-        {
-            // User dismissed the UAC prompt — leave the unelevated instance alone.
-            new global::Visuality.NoticeBar(Locale.UacDeclined, 3000).Show();
-        }
-        catch (Exception ex)
-        {
-            new global::Visuality.NoticeBar(Locale.RestartAsAdminFailedFormat.FormatWith(ex.Message), 5000).Show();
-        }
-    }
-
-    /// <summary>
-    ///     Hides the "Restart as admin" button when we're already elevated.
-    /// </summary>
-    private void UpdateAdminButton()
-    {
-        if (RestartAsAdminButton is null) return;
-        RestartAsAdminButton.Visibility = PowerAim.Class.Native.DeviceHide.IsElevated()
-            ? Visibility.Collapsed
-            : Visibility.Visible;
-    }
+    private GpuPickerController? _gpuPicker;
 
 
     #endregion Loading Window
@@ -510,127 +288,11 @@ public partial class MainWindow
 
 
 
-    #region Config Loader
-
-    internal void LoadConfig(string path = AppConfig.DefaultConfigPath)
-    {
-        if (path == AppConfig.Current.Path)
-            return;
-        AppConfig.Current.Save();
-        Console.WriteLine(Locale.LoadingConfigMessage + path);
-        Config = AppConfig.Load(path);
-        OnPropertyChanged(nameof(Config));
-
-        if (!string.IsNullOrEmpty(AppConfig.Current.SuggestedModelName) && AppConfig.Current.SuggestedModelName != "N/A")
-            MessageDialog.Show(
-                $"{Locale.ModelSuggestionText}:\n" + AppConfig.Current.SuggestedModelName,
-                Locale.SuggestedModel,
-                MessageDialog.DialogButtons.OK,
-                MessageDialog.DialogIcon.Info,
-                owner: this);
-        LoadModel();
-    }
-
-    #endregion Config Loader
-
-    #region Anti Recoil Config Loader
-
-    private void LoadAntiRecoilConfig(string path = Constants.AntiRecoilConfigBasePath + "\\Default.cfg",
-        bool loading_outside_startup = false)
-    {
-        if (!string.IsNullOrEmpty(path))
-        {
-            AppConfig.Current.AntiRecoilSettings.Load<AntiRecoilSettings>(path);
-            if (loading_outside_startup)
-                CreateUI();
-        }
-    }
-
-    #endregion Anti Recoil Config Loader
-
-    #region Open Folder
-
-    private void OpenFolderB_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is Button clickedButton)
-            Process.Start("explorer.exe", Path.Combine(Directory.GetCurrentDirectory(), "bin", clickedButton.Tag.ToString()));
-    }
-
-    #endregion Open Folder
-
-    #region System Information
-
-    private static string? GetProcessorName()
-    {
-        return GetSpecs.GetSpecification("Win32_Processor", "Name");
-    }
-
-    private static string? GetVideoControllerName()
-    {
-        return GetSpecs.GetSpecification("Win32_VideoController", "Name");
-    }
-
-    private static string? GetFormattedMemorySize()
-    {
-        var totalMemorySize = long.Parse(GetSpecs.GetSpecification("CIM_OperatingSystem", "TotalVisibleMemorySize")!);
-        return Math.Round(totalMemorySize / (1024.0 * 1024.0), 0).ToString();
-    }
-
-    #endregion System Information
-
     #region Fancy UI Calculations
 
     private double currentGradientAngle;
 
-    private double CalculateAngleDifference(double targetAngle, double fullCircle, double halfCircle, double clamp)
-    {
-        var angleDifference = (targetAngle - currentGradientAngle + fullCircle) % fullCircle;
-        if (angleDifference > halfCircle) angleDifference -= fullCircle;
-        return Math.Max(Math.Min(angleDifference, clamp), -clamp);
-    }
-
     #endregion Fancy UI Calculations
-
-    #region Window Handling
-
-    private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
-    {
-        await CheckUpdate(true);
-    }
-
-    private async Task CheckUpdate(bool showNotice)
-    {
-        try
-        {
-            CheckForUpdates.IsEnabled = false;
-            UpdateCheckStatusLabel.Content = Locale.CheckingForUpdates;
-            await Task.Delay(500);
-            var updateManager = new UpdateManager();
-            var hasUpdate = await updateManager.CheckForUpdate(ApplicationConstants.ApplicationVersion, ApplicationConstants.RepoOwner, ApplicationConstants.RepoName, ApplicationConstants.IsCudaBuild);
-            UpdateCheckStatusLabel.Content = hasUpdate ? Locale.UpdateAvailable : Locale.NoUpdateAvailable;
-            if (hasUpdate)
-            {
-                CheckForUpdates.Content = Locale.InstallUpdate;
-            }
-            if (!hasUpdate)
-            {
-                if (showNotice)
-                    new NoticeBar(Locale.YouAreAlreadyOnTheLatestVersion, 5000).Show();
-            }
-            else
-            {
-                new UpdateDialog(updateManager) { Owner = Application.Current.MainWindow }.ShowDialog();
-            }
-
-            updateManager.Dispose();
-        }
-        finally
-        {
-            CheckForUpdates.IsEnabled = true;
-        }
-    }
-
-    #endregion Window Handling
 
 
     internal override void OnPropertyChanged([CallerMemberName] string? propertyName = null)
@@ -648,149 +310,5 @@ public partial class MainWindow
         OnPropertyChanged(name);
     }
 
-    private void ClearLogs_Click(object sender, RoutedEventArgs e)
-    {
-        OutputTextBox.Clear();
-    }
-
-    private void MenuItem_OnClick(object sender, RoutedEventArgs e)
-    {
-        new ConfigSaver { Owner = this }.ShowDialog();
-    }
-
-    private void MenuItemSaveAs_OnClick(object sender, RoutedEventArgs e)
-    {
-        var dlg = new SaveFileDialog() { Filter = Locale.FilterConfig };
-        if (dlg.ShowDialog() == true)
-        {
-            AppConfig.Current.Save(dlg.FileName);
-        }
-    }
-
-    private void OpenConfig_CLick(object sender, RoutedEventArgs e)
-    {
-        var dlg = new OpenFileDialog() { Filter = Locale.FilterConfig };
-        if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-        {
-            LoadConfig(dlg.FileName);
-        }
-    }
-
-    private void ShowKnownIssues_Click(object sender, RoutedEventArgs e)
-    {
-        KnownIssuesDialog.ShowIf(this, true);
-    }
-
-    private void UIElement_OnMouseDown(object sender, MouseButtonEventArgs e)
-    {
-        e.Handled = true;
-    }
-
-    private void AKeyChanger_ModelOnGlobalKeyPressed(object? sender, EventArgs<(AKeyChanger Sender, string Key, StoredInputBinding KeyBinding)> e)
-    {
-        var args = e.Value;
-        var modelToLoad = args.Sender.Tag?.ToString();
-        if (modelToLoad is not null)
-        {
-            try
-            {
-                ModelListBox.SelectedIndex = ModelListBox.Items.IndexOf(modelToLoad);
-            }
-            catch
-            {
-                Check.TryCatch<Exception>(() => LoadModel(modelToLoad));
-            }
-        }
-    }
-
-    private void AKeyChanger_ConfigOnGlobalKeyPressed(object? sender, EventArgs<(AKeyChanger Sender, string Key, StoredInputBinding KeyBinding)> e)
-    {
-        var args = e.Value;
-        var configToLoad = args.Sender.Tag?.ToString();
-        if (configToLoad is not null)
-        {
-            try
-            {
-                ConfigsListBox.SelectedIndex = ConfigsListBox.Items.IndexOf(configToLoad);
-            }
-            catch
-            {
-                Check.TryCatch<Exception>(() => LoadConfig(Path.Combine(Path.GetDirectoryName(AppConfig.DefaultConfigPath), configToLoad)));
-            }
-        }
-    }
-
     private MagnifierDialog? _magnifier;
-    private void ToggleMagnifier(bool? show = null)
-    {
-        if (_magnifier is null && show is null or true)
-        {
-            _magnifier = new MagnifierDialog();
-            _magnifier.Show();
-        }
-        else if (_magnifier is not null && show is null or false)
-        {
-            _magnifier.Close();
-            _magnifier = null;
-        }
-    }
-
-    private void DeleteModel_Click(object sender, RoutedEventArgs e)
-    {
-        var model = (sender as FrameworkElement)?.Tag?.ToString();
-        if (!string.IsNullOrEmpty(model))
-            DeleteModel(model);
-    }
-
-    private void DeleteModel(string model, bool confirmed = false)
-    {
-        var path = Path.Combine(Constants.ModelsBasePath, model);
-        if (File.Exists(path))
-        {
-            if (!confirmed)
-            {
-                var res = MessageDialog.Show(
-                    Locale.ConfirmModelDelete.FormatWith(model), Locale.DeleteModel,
-                    MessageDialog.DialogButtons.YesNo,
-                    MessageDialog.DialogIcon.Question,
-                    owner: this,
-                    defaultResult: MessageDialog.DialogResult.No);
-                if (res == MessageDialog.DialogResult.No)
-                    return;
-            }
-            File.Delete(path);
-        }
-    }
-
-    private void DeleteConfig_Click(object sender, RoutedEventArgs e)
-    {
-        var cfg = (sender as FrameworkElement)?.Tag?.ToString();
-        if (!string.IsNullOrEmpty(cfg))
-            DeleteConfig(cfg);
-    }
-
-    private void DeleteConfig(string cfg, bool confirmed = false)
-    {
-        var path = Path.Combine(Path.GetDirectoryName(AppConfig.DefaultConfigPath), cfg);
-        if (File.Exists(path))
-        {
-            if (!confirmed)
-            {
-                var res = MessageDialog.Show(
-                    Locale.ConfirmConfigDelete.FormatWith(cfg), Locale.DeleteConfig,
-                    MessageDialog.DialogButtons.YesNo,
-                    MessageDialog.DialogIcon.Question,
-                    owner: this,
-                    defaultResult: MessageDialog.DialogResult.No);
-                if (res == MessageDialog.DialogResult.No)
-                    return;
-            }
-            File.Delete(path);
-        }
-    }
-
-    private void ShowWizzard_CLick(object sender, RoutedEventArgs e)
-    {
-        SetupWizard.ShowIfFirstRun(this, true);
-    }
 }

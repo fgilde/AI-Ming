@@ -1,14 +1,14 @@
-﻿using System.IO;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using PowerAim.Config;
-using Visuality;
+using PowerAim.Visuality;
 using PowerAim;
 using Core;
 using PowerAim.Extensions;
 using Nextended.Core.Extensions;
 
-namespace Other
+namespace PowerAim.Other
 {
     internal class FileManager : IDisposable
     {

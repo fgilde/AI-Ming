@@ -1,6 +1,6 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 
-namespace MouseMovementLibraries.ddxoftSupport;
+namespace PowerAim.MouseMovementLibraries.ddxoftSupport;
 
 // Imported from: https://github.com/ddxoft/master/tree/master/Example/App_csharp
 // Nori

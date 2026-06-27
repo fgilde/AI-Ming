@@ -58,7 +58,7 @@ public class ThemePalette
     /// <summary>Linear blend of two colours (t = 0 → a, t = 1 → b). Alpha forced opaque.</summary>
     private static Color Mix(Color a, Color b, double t)
     {
-        t = t < 0 ? 0 : t > 1 ? 1 : t;
+        t = Math.Clamp(t, 0, 1);
         return Color.FromRgb(
             (byte)Math.Round(a.R + (b.R - a.R) * t),
             (byte)Math.Round(a.G + (b.G - a.G) * t),

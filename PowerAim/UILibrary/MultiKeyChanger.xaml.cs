@@ -13,7 +13,7 @@ using PowerAim.Extensions;
 using PowerAim.InputLogic;
 using PowerAim.Types;
 using PowerAim.UILibrary;
-using InputLogic;
+
 using Nextended.Core;
 using Nextended.Core.Extensions;
 using static ICSharpCode.AvalonEdit.Document.TextDocumentWeakEventManager;

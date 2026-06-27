@@ -15,9 +15,9 @@ public static class ImageExtensions
     public static float[] ToFloatArray(this Bitmap image)
     {
         if (image.Width == image.Height
-            && (image.PixelFormat == PixelFormat.Format32bppArgb
-                || image.PixelFormat == PixelFormat.Format32bppPArgb
-                || image.PixelFormat == PixelFormat.Format32bppRgb))
+            && image.PixelFormat is PixelFormat.Format32bppArgb
+                or PixelFormat.Format32bppPArgb
+                or PixelFormat.Format32bppRgb)
         {
             return MathUtil.BitmapToFloatArray(image, image.Width);
         }

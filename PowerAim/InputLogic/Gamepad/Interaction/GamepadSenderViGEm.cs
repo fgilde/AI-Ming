@@ -77,7 +77,7 @@ public class GamepadSenderViGEm : IGamepadSender
         try
         {
             _virtualController.Disconnect();
-            System.Threading.Thread.Sleep(100); // let Windows process the disconnect
+            Thread.Sleep(100); // let Windows process the disconnect
             _virtualController.Connect();
             return true;
         }

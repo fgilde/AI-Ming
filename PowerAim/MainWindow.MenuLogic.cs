@@ -1,41 +1,16 @@
 using Core;
-using InputLogic;
-using Microsoft.Xaml.Behaviors.Core;
-using MouseMovementLibraries.ddxoftSupport;
-using MouseMovementLibraries.RazerSupport;
-using Nextended.Core;
 using Nextended.Core.Extensions;
-using Nextended.Core.Helper;
-using Nextended.UI.Helper;
-using Other;
+using PowerAim.Other;
 using PowerAim.Class;
 using PowerAim.Config;
-using PowerAim.Extensions;
-using PowerAim.InputLogic;
-using PowerAim.InputLogic.HidHide;
 using PowerAim.Localizations;
-using PowerAim.Models;
-using PowerAim.MouseMovementLibraries.GHubSupport;
-using PowerAim.Other;
-using PowerAim.Types;
 using PowerAim.UILibrary;
 using PowerAim.Visuality;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Forms;
-using System.Windows.Input;
-using UILibrary;
-using Visuality;
-using Application = System.Windows.Application;
-using Brushes = System.Windows.Media.Brushes;
 using Button = System.Windows.Controls.Button;
 using Panel = System.Windows.Controls.Panel;
-using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 using TextBox = System.Windows.Controls.TextBox;
 
 namespace PowerAim;
@@ -225,7 +200,7 @@ public partial class MainWindow
     private PowerAim.Config.ActionTrigger? _triggerEditTarget;
     private bool _triggerEditIsNew;
     private Action<PowerAim.Config.ActionTrigger?>? _triggerEditCommit;
-    private global::UILibrary.TriggerEdit? _triggerEditor;
+    private global::PowerAim.UILibrary.TriggerEdit? _triggerEditor;
     private bool _triggerEditDirty;
     private System.ComponentModel.PropertyChangedEventHandler? _triggerDirtyHandler;
 
@@ -244,7 +219,7 @@ public partial class MainWindow
         TriggerEditDirty.Visibility = Visibility.Collapsed;
         if (_triggerEditor == null)
         {
-            _triggerEditor = new global::UILibrary.TriggerEdit();
+            _triggerEditor = new global::PowerAim.UILibrary.TriggerEdit();
             TriggerEditorHost.Content = _triggerEditor;
         }
         _triggerEditor.Trigger = target;
@@ -316,7 +291,7 @@ public partial class MainWindow
     }
 
     // ===== AutoPlay profile editor (in-window page, analog to the trigger editor) =====
-    private global::UILibrary.AutoPlayProfileEdit? _autoPlayEditor;
+    private global::PowerAim.UILibrary.AutoPlayProfileEdit? _autoPlayEditor;
     private string? _autoPlayEditReturnTo;
     private PowerAim.Config.AutoPlayProfile? _autoPlayEditTarget;
     private bool _autoPlayEditIsNew;
@@ -337,7 +312,7 @@ public partial class MainWindow
         AutoPlayEditDirty.Visibility = Visibility.Collapsed;
         if (_autoPlayEditor == null)
         {
-            _autoPlayEditor = new global::UILibrary.AutoPlayProfileEdit();
+            _autoPlayEditor = new global::PowerAim.UILibrary.AutoPlayProfileEdit();
             AutoPlayEditorHost.Content = _autoPlayEditor;
         }
         _autoPlayEditor.Profile = target;
@@ -405,7 +380,7 @@ public partial class MainWindow
     private void AutoPlayEditSave_Click(object sender, RoutedEventArgs e) => CloseAutoPlayEditor(true);
 
     // ===== AntiRecoil profile editor (in-window page, analog to TriggerEditPage / AutoPlayEditPage) =====
-    private global::UILibrary.AntiRecoilProfileEdit? _antiRecoilEditor;
+    private global::PowerAim.UILibrary.AntiRecoilProfileEdit? _antiRecoilEditor;
     private string? _antiRecoilEditReturnTo;
     private PowerAim.Config.AntiRecoilProfile? _antiRecoilEditTarget;
     private bool _antiRecoilEditIsNew;
@@ -432,7 +407,7 @@ public partial class MainWindow
         AntiRecoilEditDirty.Visibility = Visibility.Collapsed;
         if (_antiRecoilEditor == null)
         {
-            _antiRecoilEditor = new global::UILibrary.AntiRecoilProfileEdit();
+            _antiRecoilEditor = new global::PowerAim.UILibrary.AntiRecoilProfileEdit();
             AntiRecoilEditorHost.Content = _antiRecoilEditor;
         }
         _antiRecoilEditor.Profile = target;
@@ -500,7 +475,7 @@ public partial class MainWindow
     private void AntiRecoilEditSave_Click(object sender, RoutedEventArgs e)   => CloseAntiRecoilEditor(true);
 
     // ===== Aim profile editor (in-window page, analog to AntiRecoilEditPage) =====
-    private global::UILibrary.AimProfileEdit? _aimEditor;
+    private global::PowerAim.UILibrary.AimProfileEdit? _aimEditor;
     private string? _aimEditReturnTo;
     private PowerAim.Config.AimProfile? _aimEditTarget;
     private bool _aimEditIsNew;
@@ -522,7 +497,7 @@ public partial class MainWindow
         AimEditDirty.Visibility = Visibility.Collapsed;
         if (_aimEditor == null)
         {
-            _aimEditor = new global::UILibrary.AimProfileEdit();
+            _aimEditor = new global::PowerAim.UILibrary.AimProfileEdit();
             AimEditorHost.Content = _aimEditor;
         }
         _aimEditor.Profile = target;

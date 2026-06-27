@@ -41,6 +41,16 @@ public sealed class TargetTrack
     public RectangleF Box => new(
         (float)(X - Width / 2.0), (float)(Y - Height / 2.0), (float)Width, (float)Height);
 
+    /// <summary>
+    ///     The raw bounding box of the most recent matched detection (model-space). Unlike
+    ///     <see cref="Box"/> — the velocity-predicted, alpha-beta-smoothed estimate — this is the
+    ///     unfiltered measurement. The aim point is taken from this whenever the track has a fresh
+    ///     detection, so the crosshair targets exactly what was detected rather than an extrapolated
+    ///     centre that the closed aim loop biases (the tracker otherwise reads the assist's own
+    ///     view-pan as target velocity and the estimate drifts consistently in the pan direction).
+    /// </summary>
+    public RectangleF LastDetectionBox { get; private set; }
+
     public TargetTrack(int id, Prediction det)
     {
         Id = id;
@@ -48,6 +58,7 @@ public sealed class TargetTrack
         Y = det.Rectangle.Y + det.Rectangle.Height / 2.0;
         Width = det.Rectangle.Width;
         Height = det.Rectangle.Height;
+        LastDetectionBox = det.Rectangle;
         Confidence = det.Confidence;
         ClassId = det.ClassId;
         ClassName = det.ClassName;
@@ -83,6 +94,7 @@ public sealed class TargetTrack
         // Box size + class follow the latest detection with light EMA smoothing.
         Width = Width * 0.6 + det.Rectangle.Width * 0.4;
         Height = Height * 0.6 + det.Rectangle.Height * 0.4;
+        LastDetectionBox = det.Rectangle;
         Confidence = det.Confidence;
         ClassId = det.ClassId;
         ClassName = det.ClassName;

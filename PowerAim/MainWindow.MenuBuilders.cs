@@ -1,14 +1,9 @@
 using Core;
-using InputLogic;
-using Microsoft.Xaml.Behaviors.Core;
-using MouseMovementLibraries.ddxoftSupport;
-using MouseMovementLibraries.RazerSupport;
-using Nextended.Core;
+using PowerAim.MouseMovementLibraries.ddxoftSupport;
+using PowerAim.MouseMovementLibraries.RazerSupport;
 using Nextended.Core.Extensions;
 using Nextended.Core.Helper;
-using Nextended.UI.Helper;
-using Other;
-using PowerAim.Class;
+using PowerAim.Other;
 using PowerAim.Config;
 using PowerAim.Extensions;
 using PowerAim.InputLogic;
@@ -16,27 +11,17 @@ using PowerAim.InputLogic.HidHide;
 using PowerAim.Localizations;
 using PowerAim.Models;
 using PowerAim.MouseMovementLibraries.GHubSupport;
-using PowerAim.Other;
 using PowerAim.Types;
 using PowerAim.UILibrary;
 using PowerAim.Visuality;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Forms;
-using System.Windows.Input;
-using UILibrary;
-using Visuality;
 using Application = System.Windows.Application;
 using Brushes = System.Windows.Media.Brushes;
 using Button = System.Windows.Controls.Button;
-using Panel = System.Windows.Controls.Panel;
-using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
-using TextBox = System.Windows.Controls.TextBox;
 
 namespace PowerAim;
 
@@ -50,7 +35,6 @@ public partial class MainWindow
         ModelSettings.RemoveAll();
         AimAssist.RemoveAll();
         PredictionConfig.RemoveAll();
-        AimConfig.RemoveAll();
         TriggerBot.RemoveAll();
         AntiRecoil.RemoveAll();
         FOVConfig.RemoveAll();
@@ -66,6 +50,17 @@ public partial class MainWindow
 
         AimAssist.AddToggleWithKeyBind(Locale.Predictions, nameof(Locale.Predictions), BindingManager).BindTo(() => AppConfig.Current.ToggleState.Predictions);
         AimAssist.AddToggleWithKeyBind(Locale.EMASmoothening, nameof(Locale.EMASmoothening), BindingManager).BindTo(() => AppConfig.Current.ToggleState.EMASmoothening);
+
+        // Aim profiles — formerly the separate "Aim Config" card, now merged into this one card
+        // (the configs are a list, so a dedicated card no longer earns its place). All per-profile
+        // tuning (sensitivity, region, smart-tracking, smoothing, …) lives in the profile edit page;
+        // the active profile feeds the live pipeline. Added directly with NO nested ATitle — a
+        // nested title would halt this section's collapse animation (ATitle.ApplyState stops at the
+        // next ATitle), leaving the list stuck visible.
+        var aimProfileList = new global::PowerAim.UILibrary.AimProfileList { Margin = new Thickness(4) };
+        aimProfileList.BindTo(() => AppConfig.Current.AimSettings.Profiles);
+        AimAssist.Children.Add(aimProfileList);
+
         AimAssist.AddSeparator();
         AimAssist.Visibility = GetVisibilityFor(nameof(AimAssist));
 
@@ -117,27 +112,7 @@ public partial class MainWindow
             new DetectionMasksDialog { Owner = this }.ShowDialog();
         };
         PredictionConfig.AddSeparator();
-        PredictionConfig.Visibility = GetVisibilityFor(nameof(AimConfig));
-
-
-        AimConfig.AddTitle(Locale.AimConfig, true);
-
-
-        // (Calibrate-sensitivity removed — the new closed-loop damped controller converges without
-        // pixel-to-rotation calibration. Aim-disengage moved into the per-profile edit page.)
-
-        // ----- Aim profiles -----
-        // All aim tuning (sensitivity, region, smart-tracking, smoothing, …) now lives per-profile
-        // in the edit page — exactly like AntiRecoil. The active profile's values are applied to
-        // the live settings the pipeline reads. Per-row hotkey toggles a profile active.
-        // NB: no AddSubTitle here — a nested ATitle would halt the section's collapse animation
-        // (ATitle.ApplyState stops at the next ATitle), leaving the list stuck visible.
-        var aimProfileList = new global::UILibrary.AimProfileList { Margin = new Thickness(4) };
-        aimProfileList.BindTo(() => AppConfig.Current.AimSettings.Profiles);
-        AimConfig.Children.Add(aimProfileList);
-
-        AimConfig.AddSeparator();
-        AimConfig.Visibility = GetVisibilityFor(nameof(AimConfig));
+        PredictionConfig.Visibility = GetVisibilityFor(nameof(PredictionConfig));
 
         // Spin up the aim profile manager (keybind activation + OCR auto-switch). Idempotent.
         PowerAim.AILogic.AimProfileManager.EnsureInitialized();
@@ -179,7 +154,7 @@ public partial class MainWindow
         };
         AntiRecoil.Children.Add(profilesHelpLabel);
 
-        var profileList = new global::UILibrary.AntiRecoilProfileList { Margin = new Thickness(4) };
+        var profileList = new global::PowerAim.UILibrary.AntiRecoilProfileList { Margin = new Thickness(4) };
         profileList.BindTo(() => AppConfig.Current.AntiRecoilSettings.Profiles);
         AntiRecoil.Children.Add(profileList);
 
@@ -635,10 +610,8 @@ public partial class MainWindow
         {
             new OcrRegionsDialog { Owner = this }.ShowDialog();
         };
-        // Aim-disengage button was here historically because it edits OCR-driven rules. It now
-        // lives under AimConfig (see below) since semantically it's an aim-side feature — OCR is
-        // just the input. The relocation makes it discoverable from the section that already
-        // hosts sensitivity / sticky-aim / calibration.
+        // Aim-disengage editing lived here historically (it edits OCR-driven rules); it now lives
+        // in the per-profile aim edit page — semantically an aim-side feature, OCR is just the input.
         HudOcrCard.AddSeparator();
 
         // ===== Replay Buffer =====
@@ -939,7 +912,7 @@ public partial class MainWindow
         //     user can't pick a non-functional option.
         // Replaces both the old generic-enum dropdown AND the standalone "Use controller for aim"
         // toggle — those two were redundant.
-        var movementDropdown = new global::UILibrary.ADropdown(Locale.MouseMovementMethod);
+        var movementDropdown = new global::PowerAim.UILibrary.ADropdown(Locale.MouseMovementMethod);
         InputSettings.Add(movementDropdown);
 
         foreach (var v in Enum.GetValues<MouseMovementMethod>())

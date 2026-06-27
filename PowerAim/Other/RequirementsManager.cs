@@ -1,10 +1,10 @@
-﻿using Microsoft.Win32;
+using Microsoft.Win32;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
-using Visuality;
+using PowerAim.Visuality;
 
-namespace Other
+namespace PowerAim.Other
 {
     internal class RequirementsManager
     {

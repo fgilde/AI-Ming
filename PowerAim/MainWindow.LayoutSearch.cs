@@ -1,42 +1,15 @@
-using Core;
-using InputLogic;
-using Microsoft.Xaml.Behaviors.Core;
-using MouseMovementLibraries.ddxoftSupport;
-using MouseMovementLibraries.RazerSupport;
-using Nextended.Core;
 using Nextended.Core.Extensions;
-using Nextended.Core.Helper;
-using Nextended.UI.Helper;
-using Other;
-using PowerAim.Class;
-using PowerAim.Config;
-using PowerAim.Extensions;
-using PowerAim.InputLogic;
-using PowerAim.InputLogic.HidHide;
-using PowerAim.Localizations;
-using PowerAim.Models;
-using PowerAim.MouseMovementLibraries.GHubSupport;
 using PowerAim.Other;
+using PowerAim.Config;
+using PowerAim.InputLogic;
+using PowerAim.Localizations;
+using PowerAim.MouseMovementLibraries.GHubSupport;
 using PowerAim.Types;
-using PowerAim.UILibrary;
 using PowerAim.Visuality;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Globalization;
-using System.IO;
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Forms;
-using System.Windows.Input;
-using UILibrary;
-using Visuality;
 using Application = System.Windows.Application;
-using Brushes = System.Windows.Media.Brushes;
-using Button = System.Windows.Controls.Button;
-using Panel = System.Windows.Controls.Panel;
-using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
-using TextBox = System.Windows.Controls.TextBox;
 
 namespace PowerAim;
 
@@ -134,126 +107,6 @@ public partial class MainWindow
     public static readonly System.Windows.Input.RoutedUICommand OpenSearchCommand =
         new("Open Search", nameof(OpenSearchCommand), typeof(MainWindow));
 
-    private List<PowerAim.Class.SearchEntry>? _searchIndex;
-
-    private void GlobalSearchButton_Click(object sender, RoutedEventArgs e)
-    {
-        OpenGlobalSearch();
-    }
-
-    private void OpenSearch_Executed(object sender, System.Windows.Input.ExecutedRoutedEventArgs e)
-    {
-        OpenGlobalSearch();
-    }
-
-    private void OpenGlobalSearch()
-    {
-        // Rebuild on each open — UI may have grown (e.g. profiles added, dialogs hosted).
-        _searchIndex = PowerAim.Class.GlobalSearch.BuildIndex(this);
-        GlobalSearchPopup.IsOpen = true;
-        GlobalSearchBox.Text = "";
-        RenderSearchResults("");
-        Dispatcher.BeginInvoke(new Action(() => GlobalSearchBox.Focus()),
-            System.Windows.Threading.DispatcherPriority.Render);
-    }
-
-    private void GlobalSearchBox_TextChanged(object sender, TextChangedEventArgs e)
-        => RenderSearchResults(GlobalSearchBox.Text);
-
-    private void GlobalSearchBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-    {
-        if (e.Key == System.Windows.Input.Key.Escape)
-        {
-            GlobalSearchPopup.IsOpen = false;
-            e.Handled = true;
-        }
-        else if (e.Key == System.Windows.Input.Key.Enter)
-        {
-            // Activate the first result if there is one.
-            if (GlobalSearchResults.Items.Count > 0
-                && GlobalSearchResults.Items[0] is FrameworkElement first
-                && first.Tag is PowerAim.Class.SearchEntry entry)
-            {
-                _ = ActivateSearchResult(entry);
-            }
-            e.Handled = true;
-        }
-    }
-
-    private void RenderSearchResults(string query)
-    {
-        GlobalSearchResults.Items.Clear();
-        if (_searchIndex is null) return;
-        var matches = PowerAim.Class.GlobalSearch.Filter(_searchIndex, query);
-        if (matches.Count == 0)
-        {
-            GlobalSearchHint.Text = Locale.NoMatches;
-            return;
-        }
-        GlobalSearchHint.Text = Locale.SearchMatchesFormat.FormatWith(matches.Count);
-        foreach (var entry in matches)
-            GlobalSearchResults.Items.Add(BuildResultRow(entry));
-    }
-
-    private FrameworkElement BuildResultRow(PowerAim.Class.SearchEntry entry)
-    {
-        var border = new System.Windows.Controls.Border
-        {
-            Padding = new Thickness(10, 8, 10, 8),
-            Margin = new Thickness(0, 0, 0, 2),
-            CornerRadius = new CornerRadius(4),
-            Cursor = System.Windows.Input.Cursors.Hand,
-            Tag = entry,
-            Background = System.Windows.Media.Brushes.Transparent,
-            ToolTip = string.IsNullOrEmpty(entry.Description) ? null : entry.Description
-        };
-        var grid = new System.Windows.Controls.Grid();
-        grid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        grid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = GridLength.Auto });
-
-        var sp = new System.Windows.Controls.StackPanel();
-        sp.Children.Add(new TextBlock
-        {
-            Text = entry.Label,
-            FontFamily = new System.Windows.Media.FontFamily("Segoe UI Variable Text"),
-            FontSize = 13,
-            FontWeight = FontWeights.SemiBold,
-            Foreground = (System.Windows.Media.Brush)FindResource("FluentTextPrimary")
-        });
-        var sub = new TextBlock
-        {
-            FontFamily = new System.Windows.Media.FontFamily("Segoe UI Variable Small"),
-            FontSize = 11,
-            Foreground = (System.Windows.Media.Brush)FindResource("FluentTextTertiary"),
-            Text = string.IsNullOrEmpty(entry.MenuTag)
-                ? entry.Category
-                : $"{entry.Category}  ·  {entry.MenuTag.Replace("Menu", "")}"
-        };
-        sp.Children.Add(sub);
-        System.Windows.Controls.Grid.SetColumn(sp, 0);
-        grid.Children.Add(sp);
-        border.Child = grid;
-
-        border.MouseEnter += (_, _) => border.Background = (System.Windows.Media.Brush)FindResource("FluentSurface3");
-        border.MouseLeave += (_, _) => border.Background = System.Windows.Media.Brushes.Transparent;
-        border.MouseLeftButtonDown += async (_, _) => await ActivateSearchResult(entry);
-        return border;
-    }
-
-    private async Task ActivateSearchResult(PowerAim.Class.SearchEntry entry)
-    {
-        GlobalSearchPopup.IsOpen = false;
-        // Switch pages if the entry lives on a different one.
-        if (!string.IsNullOrEmpty(entry.MenuTag) && CurrentMenu != entry.MenuTag)
-        {
-            try { await NavigateTo(entry.MenuTag, animate: true); }
-            catch { /* navigation failure isn't fatal — flash will still try */ }
-            // Give the section layout one render cycle before measuring scroll positions.
-            await Task.Delay(220);
-        }
-        try { PowerAim.Class.GlobalSearch.RevealAndFlash(entry.Target); }
-        catch { /* visual tree could be in a transient state — best-effort */ }
-    }
 
     private const double SidebarCompactWidth = 48;
     private const double SidebarExpandedWidth = 220;

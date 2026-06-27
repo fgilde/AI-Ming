@@ -5,7 +5,7 @@ using PowerAim;
 using PowerAim.Class.Native;
 using PowerAim.Config;
 
-namespace Visuality
+namespace PowerAim.Visuality
 {
     /// <summary>
     ///     A small floating "tab" that shows the current config's label (<see cref="AppConfig.EffectiveConfigLabel"/>)

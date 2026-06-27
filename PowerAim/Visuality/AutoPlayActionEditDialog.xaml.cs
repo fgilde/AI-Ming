@@ -6,7 +6,7 @@ using PowerAim.Extensions;
 using PowerAim;
 using PowerAim.Visuality;
 
-namespace Visuality
+namespace PowerAim.Visuality
 {
     public partial class AutoPlayActionEditDialog : BaseDialog
     {

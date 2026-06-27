@@ -11,7 +11,7 @@ using PowerAim.Class.Native;
 using PowerAim.Config;
 using PowerAim.UILibrary;
 
-namespace Visuality
+namespace PowerAim.Visuality
 {
     /// <summary>
     ///     A small, cool config switcher shown in its own window under the floating config tab.

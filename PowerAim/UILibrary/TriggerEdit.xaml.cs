@@ -8,11 +8,10 @@ using PowerAim.Extensions;
 using PowerAim.InputLogic;
 using PowerAim.Types;
 using PowerAim.UILibrary;
-using InputLogic;
 using Nextended.Core.Extensions;
-using Visuality;
+using PowerAim.Visuality;
 
-namespace UILibrary
+namespace PowerAim.UILibrary
 {
     /// <summary>
     /// Interaction logic for TriggerEdit.xaml

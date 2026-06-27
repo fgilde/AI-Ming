@@ -5,7 +5,7 @@ using PowerAim;
 using PowerAim.Config;
 using PowerAim.Extensions;
 
-namespace UILibrary
+namespace PowerAim.UILibrary
 {
     /// <summary>
     ///     Editor form for a single <see cref="AimProfile"/>. Hosted by the in-window aim edit page
@@ -157,7 +157,7 @@ namespace UILibrary
         private void EditRegion_Click(object sender, RoutedEventArgs e)
         {
             if (Profile == null) return;
-            new global::Visuality.EditHeadArea(Profile.AimRegion, model => Profile.AimRegion = model.ToRelativeRect())
+            new global::PowerAim.Visuality.EditHeadArea(Profile.AimRegion, model => Profile.AimRegion = model.ToRelativeRect())
             { Owner = Window.GetWindow(this) }.Show();
         }
 

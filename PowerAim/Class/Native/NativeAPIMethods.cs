@@ -8,7 +8,7 @@ namespace PowerAim.Class.Native
 {
     internal static class NativeAPIMethods
     {
-        static readonly Guid GraphicsCaptureItemGuid = new Guid("79C3F95B-31F7-4EC2-A464-632EF5D30760");
+        static readonly Guid GraphicsCaptureItemGuid = new("79C3F95B-31F7-4EC2-A464-632EF5D30760");
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern uint SendInput(uint nInputs, [MarshalAs(UnmanagedType.LPArray), In] INPUT[] pInputs, int cbSize);
@@ -227,7 +227,7 @@ namespace PowerAim.Class.Native
 
         public static RECT GetWindowRectangle(IntPtr hWnd)
         {
-            RECT rect = new RECT();
+            RECT rect = new();
             if (!GetWindowRect(hWnd, ref rect))
             {
                 throw new Exception("Failed to get window rectangle.");
@@ -276,8 +276,7 @@ namespace PowerAim.Class.Native
                     return false;
                 }
 
-                var cloaked = false;
-                var hrTemp = DwmGetWindowAttribute(hwnd, DWMWINDOWATTRIBUTE.Cloaked, out cloaked, Marshal.SizeOf<bool>());
+                var hrTemp = DwmGetWindowAttribute(hwnd, DWMWINDOWATTRIBUTE.Cloaked, out var cloaked, Marshal.SizeOf<bool>());
                 if (hrTemp == 0 && cloaked)
                 {
                     return false;
@@ -285,7 +284,7 @@ namespace PowerAim.Class.Native
 
                 return true;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return false;
             }

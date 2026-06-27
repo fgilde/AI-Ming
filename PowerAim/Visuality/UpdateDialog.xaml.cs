@@ -7,9 +7,9 @@ using PowerAim;
 using PowerAim.Config;
 using PowerAim.Extensions;
 using Core;
-using Other;
+using PowerAim.Other;
 
-namespace Visuality
+namespace PowerAim.Visuality
 {
     public partial class UpdateDialog
     {

@@ -53,11 +53,11 @@ public class OllamaClient : IOllamaClient
     public static string? FindOllamaExecutable()
     {
         string[] candidates =
-        {
+        [
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Ollama", "ollama.exe"),
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),         "Ollama", "ollama.exe"),
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),      "Ollama", "ollama.exe"),
-        };
+        ];
         foreach (var path in candidates)
             if (!string.IsNullOrEmpty(path) && File.Exists(path)) return path;
 

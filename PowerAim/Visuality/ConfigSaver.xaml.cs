@@ -1,5 +1,4 @@
 using PowerAim.Class;
-using Class;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
@@ -13,7 +12,7 @@ using Color = System.Windows.Media.Color;
 using ColorConverter = System.Windows.Media.ColorConverter;
 using MessageBox = System.Windows.MessageBox;
 
-namespace Visuality
+namespace PowerAim.Visuality
 {
     /// <summary>
     /// Interaction logic for ConfigSaver.xaml

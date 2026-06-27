@@ -4,7 +4,7 @@ using System.Windows.Interop;
 using PowerAim.Extensions;
 using PowerAim.Class.Native;
 
-namespace Visuality
+namespace PowerAim.Visuality
 {
     /// <summary>
     /// Interaction logic for NoticeBar.xaml
@@ -21,7 +21,6 @@ namespace Visuality
         {
             base.OnSourceInitialized(e);
             this.HideForCaptureIfEnabled();
-            //this.MakeClickThrough();
         }
 
         public NoticeBar(string text, int waitingTime)

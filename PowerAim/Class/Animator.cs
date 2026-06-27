@@ -7,8 +7,7 @@ namespace PowerAim.Class
     public static class Animator
     {
         public static Storyboard StoryBoard = new();
-        private static TimeSpan duration = TimeSpan.FromMilliseconds(500);
-        //private static TimeSpan duration2 = TimeSpan.FromMilliseconds(1000);
+        private static readonly TimeSpan duration = TimeSpan.FromMilliseconds(500);
 
         private static readonly IEasingFunction Smooth = new QuarticEase
         {
@@ -70,7 +69,7 @@ namespace PowerAim.Class
                 Duration = speed,
                 EasingFunction = new QuarticEase()
             };
-            Circle.BeginAnimation(FrameworkElement.WidthProperty, doubleanimation); ;
+            Circle.BeginAnimation(FrameworkElement.WidthProperty, doubleanimation);
         }
 
         public static void HeightShift(Duration speed, Ellipse Circle, double OriginalSize, double NewSize)
@@ -82,7 +81,7 @@ namespace PowerAim.Class
                 Duration = speed,
                 EasingFunction = new QuarticEase()
             };
-            Circle.BeginAnimation(FrameworkElement.HeightProperty, doubleanimation); ;
+            Circle.BeginAnimation(FrameworkElement.HeightProperty, doubleanimation);
         }
     }
 }

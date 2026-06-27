@@ -13,7 +13,7 @@ namespace PowerAim.Visuality;
 /// </summary>
 public partial class TargetClassDialog
 {
-    private readonly Dictionary<int, CheckBox> _classBoxes = new();
+    private readonly Dictionary<int, CheckBox> _classBoxes = [];
     private readonly IReadOnlyDictionary<int, string> _classes;
 
     public TargetClassDialog(IReadOnlyDictionary<int, string> classes)

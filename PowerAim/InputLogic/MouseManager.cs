@@ -2,9 +2,9 @@ using System.Drawing;
 using PowerAim.Class;
 using PowerAim.Config;
 using PowerAim.MouseMovementLibraries.GHubSupport;
-using MouseMovementLibraries.ddxoftSupport;
-using MouseMovementLibraries.RazerSupport;
-using MouseMovementLibraries.SendInputSupport;
+using PowerAim.MouseMovementLibraries.ddxoftSupport;
+using PowerAim.MouseMovementLibraries.RazerSupport;
+using PowerAim.MouseMovementLibraries.SendInputSupport;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -13,13 +13,13 @@ using Application = System.Windows.Application;
 using Point = System.Drawing.Point;
 using PowerAim.InputLogic;
 
-namespace InputLogic
+namespace PowerAim.InputLogic
 {
     internal class MouseManager
     {
 
         private static DateTime LastClickTime = DateTime.MinValue;
-        private static Random _random = new();
+        private static readonly Random _random = new();
         private const int WHEEL_DELTA = 120; 
         private static double previousX = 0;
         private static double previousY = 0;
@@ -27,7 +27,7 @@ namespace InputLogic
         public static bool IsEMASmoothingEnabled => AppConfig.Current.ToggleState.EMASmoothening;
 
 
-        private static Random MouseRandom = new();
+        private static readonly Random MouseRandom = new();
 
         private static Point CubicBezier(Point start, Point end, Point control1, Point control2, double t)
         {

@@ -6,7 +6,6 @@ using PowerAim;
 using PowerAim.Config;
 using PowerAim.InputLogic;
 using PowerAim.InputLogic.Mapping;
-using PowerAim;
 using PowerAim.Types;
 
 namespace PowerAim.UILibrary;

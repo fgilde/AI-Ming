@@ -1,4 +1,4 @@
-﻿using Other;
+using PowerAim.Other;
 using System.Windows;
 
 namespace PowerAim.MouseMovementLibraries.GHubSupport;

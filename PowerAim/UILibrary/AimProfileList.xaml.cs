@@ -14,7 +14,7 @@ using PowerAim.InputLogic;
 using PowerAim.Types;
 using PowerAim.UILibrary;
 
-namespace UILibrary
+namespace PowerAim.UILibrary
 {
     /// <summary>
     ///     Aim profile list — direct analog of <see cref="AntiRecoilProfileList"/>. Each row has a

@@ -1,14 +1,14 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using SharpDX.XInput;
 using System.Runtime.InteropServices;
 using PowerAim.InputLogic.Contracts;
-using InputLogic;
+using PowerAim.InputLogic;
 
 namespace PowerAim.InputLogic
 {
     public static class GamepadExtensions
     {
-        private static ConcurrentDictionary<Controller, string> _cache = new();
+        private static readonly ConcurrentDictionary<Controller, string> _cache = new();
 
         public static void Send(this IGamepadSender sender, GamepadEventArgs args, KeyPressState? pressState = null)
         {

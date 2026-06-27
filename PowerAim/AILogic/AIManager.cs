@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Windows;
 using PowerAim;
 using PowerAim.AILogic;
@@ -8,9 +8,8 @@ using PowerAim.Class.Native;
 using PowerAim.Config;
 using PowerAim.Models;
 using Nextended.Core.Extensions;
-using Other;
-using PowerAim;
-using Visuality;
+using PowerAim.Other;
+using PowerAim.Visuality;
 
 
 public class AIManager : IDisposable
@@ -18,7 +17,7 @@ public class AIManager : IDisposable
     public static AIManager Instance { get; private set; }
     private readonly IList<IAction> _actions;
     private bool _isAiLoopRunning;
-    private Thread _aiLoopThread;
+    private readonly Thread _aiLoopThread;
     private bool _pausedNotified = false;
     private readonly FpsCapHelper _fpsCap = new();
     public bool IsRunning => _isAiLoopRunning;

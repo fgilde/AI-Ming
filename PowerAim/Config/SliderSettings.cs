@@ -1,4 +1,4 @@
-using InputLogic;
+using PowerAim.InputLogic;
 using PowerAim.Types;
 
 namespace PowerAim.Config;

@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 using PowerAim.Models;
+using PowerAim.Extensions;
 using Nextended.Core.Extensions;
 
 namespace PowerAim.AILogic;
@@ -39,10 +40,7 @@ public class CaptureSource
         return capture.Capture(Rectangle.Empty);
     }
 
-    public override string ToString()
-    {
-        return $"{TargetType} {Title} ({ProcessOrScreenId})";
-    }
+    public override string ToString() => $"{TargetType} {Title} ({ProcessOrScreenId})";
 }
 
 public enum CaptureTargetType

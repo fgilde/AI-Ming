@@ -10,7 +10,7 @@ using PowerAim.Config;
 using PowerAim.Extensions;
 using PowerAim.Class.Native;
 
-namespace Visuality
+namespace PowerAim.Visuality
 {
     /// <summary>
     /// Interaction logic for DetectedPlayerWindow.xaml
@@ -139,12 +139,9 @@ namespace Visuality
             }
             PredictionHost.Visibility = Visibility.Collapsed;
             var lastDetectionBox = prediction.TranslatedRectangle;
-            //var captureArea = ImageCapture.CaptureArea;
             var scaleFactor = AIManager.Instance.ImageCapture.Screen.GetScalingFactor();
             var scalingFactorX = scaleFactor.FactorX;
             var scalingFactorY = scaleFactor.FactorY;
-            //var centerX = Convert.ToInt16((lastDetectionBox.X + captureArea.Left) / scalingFactorX) + (lastDetectionBox.Width / 2.0);
-            //var centerY = Convert.ToInt16((lastDetectionBox.Y + captureArea.Top) / scalingFactorY);
             var centerX = Convert.ToInt16((lastDetectionBox.X) / scalingFactorX) + (lastDetectionBox.Width / 2.0);
             var centerY = Convert.ToInt16((lastDetectionBox.Y) / scalingFactorY);
 
@@ -161,8 +158,6 @@ namespace Visuality
             DetectedTracers.Opacity = showTracers ? 1 : 0;
             if (showTracers)
             {
-                //_playerOverlay.DetectedTracers.X1 = captureArea.GetBottomCenter().X;
-                //_playerOverlay.DetectedTracers.Y1 = captureArea.GetBottomCenter().Y;
                 DetectedTracers.X2 = centerX;
                 DetectedTracers.Y2 = centerY + lastDetectionBox.Height;
             }

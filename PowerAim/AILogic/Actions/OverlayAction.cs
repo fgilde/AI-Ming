@@ -1,10 +1,10 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Forms;
 using PowerAim.Class.Native;
 using PowerAim.Config;
 using PowerAim.Extensions;
 using PowerAim.Other;
-using Visuality;
+using PowerAim.Visuality;
 using Application = System.Windows.Application;
 
 
@@ -155,7 +155,7 @@ public class OverlayAction : BaseAction
                     _playerOverlay.Opacity = enabled ? 1 : 0;
             });
         }
-        catch (Exception e)
+        catch (Exception)
         { }
     }
 }

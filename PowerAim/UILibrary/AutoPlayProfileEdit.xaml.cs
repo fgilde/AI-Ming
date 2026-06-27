@@ -6,7 +6,7 @@ using PowerAim.Config;
 using PowerAim.Extensions;
 using PowerAim;
 
-namespace UILibrary
+namespace PowerAim.UILibrary
 {
     public partial class AutoPlayProfileEdit : UserControl
     {

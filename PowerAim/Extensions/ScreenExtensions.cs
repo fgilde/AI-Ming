@@ -2,18 +2,17 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using System.Linq;
-using System.Management;
-using System.Text;
 using System.Drawing;
+
+namespace PowerAim.Extensions;
 
 public static class ScreenExtensions
 {
     public const int ERROR_SUCCESS = 0;
-    private static Graphics GraphicsThing = Graphics.FromHwnd(IntPtr.Zero);
+    private static readonly Graphics GraphicsThing = Graphics.FromHwnd(IntPtr.Zero);
 
-    private static float scalingFactorX = GraphicsThing.DpiX / (float)96;
-    private static float scalingFactorY = GraphicsThing.DpiY / (float)96;
+    private static readonly float scalingFactorX = GraphicsThing.DpiX / 96f;
+    private static readonly float scalingFactorY = GraphicsThing.DpiY / 96f;
 
     #region enums
 

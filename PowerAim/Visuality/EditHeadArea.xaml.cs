@@ -1,4 +1,3 @@
-using Class;
 using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
@@ -9,11 +8,10 @@ using PowerAim.Config;
 using PowerAim.Models;
 using PowerAim.Types;
 
-using Other;
 using PowerAim.Extensions;
 using PowerAim.Visuality;
 
-namespace Visuality
+namespace PowerAim.Visuality
 {
     public partial class EditHeadArea : BaseDialog
     {

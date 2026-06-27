@@ -1,12 +1,13 @@
-<visuality:BaseDialog x:Class="Visuality.AutoPlayActionEditDialog"
+<visuality:BaseDialog x:Class="PowerAim.Visuality.AutoPlayActionEditDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:uiLibrary="clr-namespace:PowerAim.UILibrary"
-        xmlns:uiLibrary1="clr-namespace:UILibrary"
-        xmlns:local="clr-namespace:Visuality"
-        xmlns:visuality="clr-namespace:PowerAim.Visuality"
+        xmlns:uiLibrary1="clr-namespace:PowerAim.UILibrary"
+        xmlns:local="clr-namespace:PowerAim.Visuality"
+        xmlns:visuality="clr-namespace:PowerAim.Visuality" 
+        xmlns:uiLibrary2="clr-namespace:UILibrary"
         mc:Ignorable="d"
         Title="{Binding Converter={StaticResource localeConverter}, ConverterParameter='EditAction'}"
         Height="540"
@@ -132,7 +133,7 @@
 
                 <!-- Keys -->
                 <TextBlock Style="{StaticResource FluentSectionTitle}" Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='KeysToPress'}" />
-                <uiLibrary1:MultiKeyChanger Margin="0,4,0,0"
+                <uiLibrary2:MultiKeyChanger Margin="0,4,0,0"
                                             Keys="{Binding Action.Keys, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 <TextBlock Foreground="{DynamicResource FluentTextTertiary}"
                            FontSize="11"

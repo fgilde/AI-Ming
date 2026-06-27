@@ -133,23 +133,23 @@ public class AppConfig : BaseSettings
     }
 
     public AppThemeMode ThemeMode { get; set; } = AppThemeMode.System;
-    public BindingSettings BindingSettings { get; set; } = new BindingSettings();
-    public SliderSettings SliderSettings { get; set; } = new SliderSettings();
-    public ToggleState ToggleState { get; set; } = new ToggleState();
-    public MinimizeState MinimizeState { get; set; } = new MinimizeState();
-    public DropdownState DropdownState { get; set; } = new DropdownState();
-    public ColorState ColorState { get; set; } = new ColorState();
-    public AntiRecoilSettings AntiRecoilSettings { get; set; } = new AntiRecoilSettings();
-    public FileLocationState FileLocationState { get; set; } = new FileLocationState();
-    public OllamaSettings OllamaSettings { get; set; } = new OllamaSettings();
-    public AISettings AISettings { get; set; } = new AISettings();
-    public AimSettings AimSettings { get; set; } = new AimSettings();
-    public ActiveProcessSettings ActiveProcessSettings { get; set; } = new ActiveProcessSettings();
-    public CrosshairSettings CrosshairSettings { get; set; } = new CrosshairSettings();
-    public OcrSettings OcrSettings { get; set; } = new OcrSettings();
-    public ReplaySettings ReplaySettings { get; set; } = new ReplaySettings();
-    public AutoPlayLearningSettings AutoPlayLearningSettings { get; set; } = new AutoPlayLearningSettings();
-    public LayoutConfiguration LayoutConfiguration { get; set; } = new LayoutConfiguration();
+    public BindingSettings BindingSettings { get; set; } = new();
+    public SliderSettings SliderSettings { get; set; } = new();
+    public ToggleState ToggleState { get; set; } = new();
+    public MinimizeState MinimizeState { get; set; } = new();
+    public DropdownState DropdownState { get; set; } = new();
+    public ColorState ColorState { get; set; } = new();
+    public AntiRecoilSettings AntiRecoilSettings { get; set; } = new();
+    public FileLocationState FileLocationState { get; set; } = new();
+    public OllamaSettings OllamaSettings { get; set; } = new();
+    public AISettings AISettings { get; set; } = new();
+    public AimSettings AimSettings { get; set; } = new();
+    public ActiveProcessSettings ActiveProcessSettings { get; set; } = new();
+    public CrosshairSettings CrosshairSettings { get; set; } = new();
+    public OcrSettings OcrSettings { get; set; } = new();
+    public ReplaySettings ReplaySettings { get; set; } = new();
+    public AutoPlayLearningSettings AutoPlayLearningSettings { get; set; } = new();
+    public LayoutConfiguration LayoutConfiguration { get; set; } = new();
 
     public ObservableCollection<ControllerMappingProfile> ControllerMappingProfiles
     {
@@ -280,8 +280,6 @@ public class AppConfig : BaseSettings
 
     public static AppConfig Load(string? path = null)
     {
-        //Current = new AppConfig();
-        //return Current;
         if (path == null)
         {
             path = GetLastConfigPath();
@@ -370,7 +368,6 @@ public class AppConfig : BaseSettings
 
     public void Save(string? path = null)
     {
-        var cs = CaptureSource;
         path ??= Path ?? DefaultConfigPath;
         Save<AppConfig>(path);
     }

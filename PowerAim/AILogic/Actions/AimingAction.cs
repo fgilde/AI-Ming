@@ -2,8 +2,6 @@ using System.Drawing;
 using PowerAim.AILogic.Aiming;
 using PowerAim.AILogic.Contracts;
 using PowerAim.Config;
-using Class;
-using InputLogic;
 using PowerAim.InputLogic; // InputSender (Move/MoveCrosshair) lives here after the MoveInputManager fold-in
 
 namespace PowerAim.AILogic.Actions;
@@ -15,8 +13,8 @@ public class AimingAction : BaseAction
     private int detectedX { get; set; }
     private int detectedY { get; set; }
 
-    private KalmanPrediction kalmanPrediction = new();
-    private WiseTheFoxPrediction wtfpredictionManager = new();
+    private readonly KalmanPrediction kalmanPrediction = new();
+    private readonly WiseTheFoxPrediction wtfpredictionManager = new();
 
     // Random aim-point state. _aimFracX/Y are the chosen position inside the aim region as a
     // 0..1 fraction; 0.5/0.5 = region centre. Re-rolled once per aim session, never per frame —
@@ -135,8 +133,14 @@ public class AimingAction : BaseAction
         }
         _wasAiming = true;
 
-        // Aim point inside the tracked box (model space) using the configured aim region.
-        var (px, py) = RegionPoint(target.Box);
+        // Aim point inside the box (model space) using the configured aim region. Prefer the raw
+        // latest detection — identical to the proven legacy aim point — and fall back to the
+        // velocity-predicted estimate ONLY while the track is coasting through a detection gap.
+        // Aiming at the predicted/smoothed centre while a detection is present biased the closed aim
+        // loop: the tracker reads the assist's own view-pan as target velocity, so the estimate (and
+        // thus the crosshair) drifted consistently in the pan direction — "aims away from the target".
+        var aimBox = target.MissedFrames == 0 ? target.LastDetectionBox : target.Box;
+        var (px, py) = RegionPoint(aimBox);
 
         // Optional velocity lead to compensate input+render latency.
         double leadSec = ai.LeadTimeMs / 1000.0;
@@ -155,20 +159,29 @@ public class AimingAction : BaseAction
             py = f.Y;
         }
 
+        // Model space (px,py ∈ [0,modelSize]) → capture-box pixels. The model only ever sees the FOV
+        // patch (a SQUARE box, captureSize×captureSize, centred on the crosshair) — NOT the whole
+        // screen. So the scale is FOV/model. Using screenWidth/model here over-scaled every move by
+        // screenWidth/FOV (≈3× on 1080p with a 640 FOV); combined with the controller's gain==
+        // sensitivity that pushed the effective per-frame gain above 1 and the aim diverged/ran away
+        // at higher sensitivities. captureSize mirrors AIManager's capture box so the units match.
         var area = ImageCapture.CaptureArea;
-        float scaleX = area.Width / modelSize;
-        float scaleY = area.Height / modelSize;
-        double targetScreenX = px * scaleX;
-        double targetScreenY = py * scaleY;
+        double maxCap = Math.Min(area.Width, area.Height);
+        double captureSize = Math.Clamp(Math.Round(AppConfig.Current.SliderSettings.ActualFovSize), 16.0, maxCap);
+        double scale = captureSize / modelSize;
+        double targetX = px * scale;
+        double targetY = py * scale;
+        // Square reference box → crosshair sits at its centre and there's no X/Y aspect skew.
+        var aimArea = new Rectangle(0, 0, (int)captureSize, (int)captureSize);
 
         // Feed the debug input visualiser the coarse aim direction (mouse path only).
         if (!InputSender.GamepadAimActive)
-            InputEventBus.MouseMove(targetScreenX - area.Width / 2.0, targetScreenY - area.Height / 2.0);
+            InputEventBus.MouseMove(targetX - captureSize / 2.0, targetY - captureSize / 2.0);
 
         // Damped, frame-rate-independent move. Sensitivity is the per-60Hz-frame approach fraction
         // (higher = snappier). No per-frame jitter here — that's the shake we're removing; the
         // optional random aim point already provides per-engagement variation.
-        _controller.MoveTo(targetScreenX, targetScreenY, area, dt,
+        _controller.MoveTo(targetX, targetY, aimArea, dt,
             AppConfig.Current.SliderSettings.MouseSensitivity, ai.AimDeadzonePx, 150, 0);
     }
 

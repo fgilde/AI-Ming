@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Windows.Controls;
 using PowerAim.Extensions;
 
-namespace Visuality
+namespace PowerAim.Visuality
 {
     public partial class ProcessPickerDialog
     {

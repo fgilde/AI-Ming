@@ -1,4 +1,4 @@
-<visuality1:BaseDialog x:Class="PowerAim.MainWindow"
+<visuality:BaseDialog x:Class="PowerAim.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -7,9 +7,8 @@
         xmlns:Ant="clr-namespace:AntWpf.Controls;assembly=AntWpf"
         xmlns:uiLibrary="clr-namespace:PowerAim.UILibrary"
         xmlns:poweraim="clr-namespace:PowerAim"
-        xmlns:visuality="clr-namespace:Visuality"
+        xmlns:visuality="clr-namespace:PowerAim.Visuality"
         xmlns:system="clr-namespace:System;assembly=System.Runtime"
-        xmlns:visuality1="clr-namespace:PowerAim.Visuality"
         mc:Ignorable="d"
         Title="{x:Static poweraim:ApplicationConstants.ApplicationName}"
         Height="560"
@@ -96,9 +95,9 @@
                                 <MenuItem Header="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SaveConfigAs'}" Click="MenuItemSaveAs_OnClick" />
                                 <Separator />
                                 <MenuItem x:Name="MenuItemOpenCfg" Header="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OpenQuickConfig'}" />
-                                <MenuItem Header="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OpenOtherConfig'}" Click="OpenConfig_CLick" />
+                                <MenuItem Header="{Binding Converter={StaticResource localeConverter}, ConverterParameter='OpenOtherConfig'}" Click="OpenConfig_Click" />
                                 <Separator />
-                                <MenuItem Header="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ShowSetupWizard'}" Click="ShowWizzard_CLick" />
+                                <MenuItem Header="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ShowSetupWizard'}" Click="ShowWizard_Click" />
                             </MenuItem>
                         </Menu>
                     </StackPanel>
@@ -175,7 +174,6 @@
                                 Margin="0,0,8,0"
                                 Visibility="Collapsed"
                                 WindowChrome.IsHitTestVisibleInChrome="True"
-                                Click="GpuPickerButton_Click"
                                 ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='InferenceGpuTooltip'}">
                             <Border CornerRadius="{StaticResource PillCorner}"
                                     Background="{StaticResource FluentSurface3}"
@@ -238,7 +236,6 @@
                                 Foreground="{StaticResource FluentTextPrimary}"
                                 ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='FindSettingTooltip'}"
                                 WindowChrome.IsHitTestVisibleInChrome="True"
-                                Click="GlobalSearchButton_Click"
                                 Margin="0,0,8,0" />
                         <Popup x:Name="GlobalSearchPopup"
                                Placement="Bottom"
@@ -267,9 +264,7 @@
                                              BorderBrush="{StaticResource FluentStroke}"
                                              Foreground="{StaticResource FluentTextPrimary}"
                                              Tag="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SearchSettings'}"
-                                             Style="{DynamicResource placeHolder}"
-                                             TextChanged="GlobalSearchBox_TextChanged"
-                                             KeyDown="GlobalSearchBox_KeyDown" />
+                                             Style="{DynamicResource placeHolder}" />
                                     <Border Height="1"
                                             Background="{StaticResource FluentStroke}"
                                             Margin="0,6,0,6" />
@@ -606,9 +601,6 @@
                                             Margin="8,0,0,0">
                                     <Border Style="{StaticResource FluentCard}">
                                         <StackPanel x:Name="PredictionConfig" />
-                                    </Border>
-                                    <Border Style="{StaticResource FluentCard}">
-                                        <StackPanel x:Name="AimConfig" />
                                     </Border>
                                     <Border Style="{StaticResource FluentCard}">
                                         <StackPanel x:Name="FOVConfig" />
@@ -1313,7 +1305,7 @@
                             </Border>
                         </ScrollViewer>
 
-                        <visuality1:MappingPage x:Name="MappingMenu" Visibility="Collapsed" />
+                        <visuality:MappingPage x:Name="MappingMenu" Visibility="Collapsed" />
 
                         <Grid x:Name="TriggerEditPage" Visibility="Collapsed">
                             <Grid.RowDefinitions>
@@ -1719,7 +1711,7 @@
                         Padding="14,2,12,2"
                         FontSize="11"
                         Foreground="{StaticResource FluentTextSecondary}"
-                        Click="OpenConfig_CLick"
+                        Click="OpenConfig_Click"
                         Content="{Binding Config.Path}" />
                 <Menu Grid.Column="1"
                       Cursor="Hand"
@@ -1742,4 +1734,4 @@
             </Grid>
         </Border>
     </Grid>
-</visuality1:BaseDialog>
+</visuality:BaseDialog>

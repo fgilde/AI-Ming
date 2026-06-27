@@ -1,11 +1,10 @@
-﻿using PowerAim.InputLogic.Contracts;
+using PowerAim.InputLogic.Contracts;
 using PowerAim.Config;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using Accord.Diagnostics;
 using PowerAim.Class.Native;
 using WindowsInput;
-using InputLogic;
+using PowerAim.InputLogic;
 
 namespace PowerAim.InputLogic
 {
@@ -18,7 +17,7 @@ namespace PowerAim.InputLogic
 
     public class InputSender
     {
-        private static InputSimulator _inputSimulator = new();
+        private static readonly InputSimulator _inputSimulator = new();
 
         // ===========================================================================
         //  Crosshair / aim movement — routes either through MouseManager (synth mouse)
@@ -200,14 +199,14 @@ namespace PowerAim.InputLogic
         {
             if(sendMode == KeyboardSendMode.UseInputSimulator)
             {
-                if(pressState == KeyPressState.DownAndUp || pressState == KeyPressState.Down)
+                if (pressState is KeyPressState.DownAndUp or KeyPressState.Down)
                 {
                     _inputSimulator.Keyboard.KeyDown((VirtualKeyCode)keyArgs.KeyCode);
                     InputEventBus.Key((int)keyArgs.KeyCode, true);
                 }
                 if (pressState == KeyPressState.DownAndUp)
                     await Task.Delay(MouseManager.GetRandomDelay());
-                if (pressState == KeyPressState.DownAndUp || pressState == KeyPressState.Up)
+                if (pressState is KeyPressState.DownAndUp or KeyPressState.Up)
                 {
                     _inputSimulator.Keyboard.KeyUp((VirtualKeyCode)keyArgs.KeyCode);
                     InputEventBus.Key((int)keyArgs.KeyCode, false);
@@ -219,7 +218,7 @@ namespace PowerAim.InputLogic
             {
                 List<INPUT> inputs = [];
 
-                if (pressState == KeyPressState.DownAndUp || pressState == KeyPressState.Down)
+                if (pressState is KeyPressState.DownAndUp or KeyPressState.Down)
                 {
                     // Key down event
                     INPUT downInput = new()
@@ -237,7 +236,7 @@ namespace PowerAim.InputLogic
                     inputs.Add(downInput);
                 }
 
-                if (pressState == KeyPressState.DownAndUp || pressState == KeyPressState.Up)
+                if (pressState is KeyPressState.DownAndUp or KeyPressState.Up)
                 {
                     // Key up event
                     INPUT upInput = new()
@@ -265,7 +264,7 @@ namespace PowerAim.InputLogic
                 ushort scanCode = (ushort)MapVirtualKey((uint)keyArgs.KeyCode, 0);
                 List<INPUT> inputs = [];
 
-                if (pressState == KeyPressState.DownAndUp || pressState == KeyPressState.Down)
+                if (pressState is KeyPressState.DownAndUp or KeyPressState.Down)
                 {
                     // Key down event
                     INPUT downInput = new()
@@ -283,7 +282,7 @@ namespace PowerAim.InputLogic
                     inputs.Add(downInput);
                 }
 
-                if (pressState == KeyPressState.DownAndUp || pressState == KeyPressState.Up)
+                if (pressState is KeyPressState.DownAndUp or KeyPressState.Up)
                 {
                     // Key up event
                     INPUT upInput = new()

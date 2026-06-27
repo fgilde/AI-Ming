@@ -1,4 +1,4 @@
-<Window x:Class="Visuality.ConfigLabelOverlay"
+<Window x:Class="PowerAim.Visuality.ConfigLabelOverlay"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:poweraim="clr-namespace:PowerAim"

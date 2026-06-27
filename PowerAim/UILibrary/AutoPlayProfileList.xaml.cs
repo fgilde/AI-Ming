@@ -12,9 +12,9 @@ using PowerAim.InputLogic;
 using PowerAim.Types;
 using PowerAim.UILibrary;
 using Nextended.Core.Extensions;
-using Visuality;
+using PowerAim.Visuality;
 
-namespace UILibrary
+namespace PowerAim.UILibrary
 {
     public partial class AutoPlayProfileList : UserControl
     {

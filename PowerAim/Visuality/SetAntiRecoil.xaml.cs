@@ -1,6 +1,6 @@
 using PowerAim;
 using PowerAim.Class;
-using InputLogic;
+using PowerAim.InputLogic;
 using System.Windows;
 using System.Windows.Threading;
 using PowerAim.Class.Native;
@@ -8,7 +8,7 @@ using PowerAim.Config;
 using PowerAim.Extensions;
 using Nextended.Core.Extensions;
 
-namespace Visuality
+namespace PowerAim.Visuality
 {
     /// <summary>
     /// Interaction logic for SetAntiRecoil.xaml
@@ -16,7 +16,7 @@ namespace Visuality
     public partial class SetAntiRecoil : Window
     {
         private MainWindow MainWin { get; set; }
-        private DispatcherTimer HoldDownTimer = new();
+        private readonly DispatcherTimer HoldDownTimer = new();
         private DateTime LastClickTime;
         private int FireRate;
         private int ChangingFireRate;

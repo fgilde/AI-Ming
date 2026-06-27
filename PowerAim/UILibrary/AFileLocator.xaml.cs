@@ -1,18 +1,18 @@
-﻿using PowerAim.Class;
+using PowerAim.Class;
 using PowerAim.Config;
 using Microsoft.Win32;
 using System.IO;
 using PowerAim.Types;
 using UserControl = System.Windows.Controls.UserControl;
 
-namespace UILibrary
+namespace PowerAim.UILibrary
 {
     /// <summary>
     /// Interaction logic for AFileLocator.xaml
     /// </summary>
     public partial class AFileLocator : UserControl
     {
-        private OpenFileDialog openFileDialog = new();
+        private readonly OpenFileDialog openFileDialog = new();
         private string main_dictionary_path { get; set; }
         private string OFDFilter = "All files (*.*)|*.*";
         private string DefaultLocationExtension = "";

@@ -14,9 +14,9 @@ using PowerAim.Extensions;
 using PowerAim.InputLogic;
 using PowerAim.Types;
 using PowerAim.UILibrary;
-using Visuality;
+using PowerAim.Visuality;
 
-namespace UILibrary
+namespace PowerAim.UILibrary
 {
     /// <summary>
     ///     Anti-Recoil profile list. Each row exposes a per-profile hotkey (via

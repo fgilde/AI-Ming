@@ -2,14 +2,10 @@
 using System.ComponentModel;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading.Channels;
 using System.Windows.Controls;
-using System.Windows.Input;
 using PowerAim.Extensions;
 using System.Numerics;
-using System.Windows.Media;
 using System.Windows;
-using static System.Net.Mime.MediaTypeNames;
 using System.Windows.Controls.Primitives;
 
 namespace PowerAim.UILibrary
