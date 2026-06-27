@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using Core;
 using PowerAim.Class.Native;
 using PowerAim.Config;
 using PowerAim.UILibrary;
@@ -19,7 +20,7 @@ namespace Visuality
     /// </summary>
     public partial class QuickConfigWindow : Window
     {
-        private const string ConfigDir = "bin\\configs";
+        private const string ConfigDir = Constants.ConfigBasePath;
         private readonly Window _owner;
         // Per-row key changers — disposed on close so their global keybind subscription doesn't leak.
         private readonly List<AKeyChanger> _keyChangers = new();

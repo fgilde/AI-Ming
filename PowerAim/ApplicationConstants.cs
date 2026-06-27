@@ -41,8 +41,7 @@ public class ApplicationConstants : Constants
     // ---- Project / author links -----------------------------------------------------------
     public const string Copyright    = "© Florian Gilde";
     public static Uri AuthorUrl    = new Uri("https://www.gilde.org");
-    public const string RepoOwner    = "fgilde";
-    public const string RepoName     = "AI-Ming";
+    // RepoOwner / RepoName are inherited from Core.Constants (single source of truth).
     public const string RepoUrl      = "https://github.com/" + RepoOwner + "/" + RepoName;
     public static Uri RepoUri = new Uri(RepoUrl);
     public const string ReleasesUrl  = RepoUrl + "/releases";

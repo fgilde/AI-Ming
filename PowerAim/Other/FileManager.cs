@@ -15,11 +15,11 @@ namespace Other
         public FileSystemWatcher? ModelFileWatcher;
         public FileSystemWatcher? ConfigFileWatcher;
 
-        private ListBox ModelListBox;
-        private Label SelectedModelNotifier;
+        private readonly ListBox ModelListBox;
+        private readonly Label SelectedModelNotifier;
 
-        private ListBox ConfigListBox;
-        private Label SelectedConfigNotifier;
+        private readonly ListBox ConfigListBox;
+        private readonly Label SelectedConfigNotifier;
 
         public bool InQuittingState = false;
 
@@ -48,7 +48,7 @@ namespace Other
         private void CheckForRequiredFolders()
         {
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            string[] dirs = { "bin\\models", "bin\\images", "bin\\labels", "bin\\configs", "bin\\anti_recoil_configs" };
+            string[] dirs = [Constants.ModelsBasePath, Constants.ImagesBasePath, Constants.LabelsBasePath, Constants.ConfigBasePath, Constants.AntiRecoilConfigBasePath];
 
             try
             {
@@ -76,7 +76,7 @@ namespace Other
 
             string selectedModel = ModelListBox.SelectedItem.ToString()!;
 
-            string modelPath = Path.Combine("bin/models", selectedModel);
+            string modelPath = Path.Combine(Constants.ModelsBasePath, selectedModel);
 
             await LoadModel(selectedModel, modelPath);
         }
@@ -123,103 +123,67 @@ namespace Other
             if (ConfigListBox.SelectedItem == null) return;
             string selectedConfig = ConfigListBox.SelectedItem.ToString()!;
 
-            string configPath = Path.Combine(Path.GetDirectoryName(AppConfig.DefaultConfigPath), selectedConfig);
+            string configPath = Path.Combine(Constants.ConfigBasePath, selectedConfig);
             MainWindow.Instance.LoadConfig(configPath);
             SelectedConfigNotifier.Content = Locale.LoadedConfig.FormatWith(selectedConfig);
         }
 
         public void InitializeFileWatchers()
         {
-            ModelFileWatcher = new FileSystemWatcher();
-            ConfigFileWatcher = new FileSystemWatcher();
-
-            InitializeWatcher(ref ModelFileWatcher, "bin/models", "*.onnx");
-            InitializeWatcher(ref ConfigFileWatcher, "bin/configs", "*.cfg");
+            ModelFileWatcher = CreateWatcher(Constants.ModelsBasePath, Constants.ModelFileFilter, LoadModelsIntoListBox);
+            ConfigFileWatcher = CreateWatcher(Constants.ConfigBasePath, Constants.ConfigFileFilter, LoadConfigsIntoListBox);
         }
 
-        private void InitializeWatcher(ref FileSystemWatcher watcher, string path, string filter)
+        /// <summary>
+        ///     Builds a watcher that re-runs <paramref name="onChange"/> on any create/delete/change/rename
+        ///     of matching files. Called once per watcher, so a plain subscribe (no defensive unsubscribe)
+        ///     matches the previous behaviour.
+        /// </summary>
+        private static FileSystemWatcher CreateWatcher(string path, string filter, FileSystemEventHandler onChange)
         {
-            watcher.Path = path;
-            watcher.Filter = filter;
-            watcher.EnableRaisingEvents = true;
-
-            if (filter == "*.onnx")
-            {
-                watcher.Changed -= LoadModelsIntoListBox;
-                watcher.Created -= LoadModelsIntoListBox;
-                watcher.Deleted -= LoadModelsIntoListBox;
-                watcher.Renamed -= LoadModelsIntoListBox;
-
-                watcher.Changed += LoadModelsIntoListBox;
-                watcher.Created += LoadModelsIntoListBox;
-                watcher.Deleted += LoadModelsIntoListBox;
-                watcher.Renamed += LoadModelsIntoListBox;
-            }
-            else if (filter == "*.cfg")
-            {
-                watcher.Changed -= LoadConfigsIntoListBox;
-                watcher.Created -= LoadConfigsIntoListBox;
-                watcher.Deleted -= LoadConfigsIntoListBox;
-                watcher.Renamed -= LoadConfigsIntoListBox;
-
-                watcher.Changed += LoadConfigsIntoListBox;
-                watcher.Created += LoadConfigsIntoListBox;
-                watcher.Deleted += LoadConfigsIntoListBox;
-                watcher.Renamed += LoadConfigsIntoListBox;
-            }
+            var watcher = new FileSystemWatcher { Path = path, Filter = filter, EnableRaisingEvents = true };
+            watcher.Changed += onChange;
+            watcher.Created += onChange;
+            watcher.Deleted += onChange;
+            watcher.Renamed += (s, e) => onChange(s, e);
+            return watcher;
         }
 
-        public void LoadModelsIntoListBox(object? sender, FileSystemEventArgs? e)
+        public void LoadModelsIntoListBox(object? sender, FileSystemEventArgs? e) =>
+            LoadFilesIntoListBox(ModelListBox, Constants.ModelsBasePath, Constants.ModelFileFilter,
+                () => AppConfig.Current.LastLoadedModel,
+                last => SelectedModelNotifier.Content = Locale.LoadedModel.FormatWith(last));
+
+        public void LoadConfigsIntoListBox(object? sender, FileSystemEventArgs? e) =>
+            LoadFilesIntoListBox(ConfigListBox, Constants.ConfigBasePath, Constants.ConfigFileFilter,
+                () => AppConfig.Current.LastLoadedConfig,
+                last => SelectedConfigNotifier.Content = "Loaded Config: " + last);
+
+        /// <summary>
+        ///     Shared list refresh used by both watchers: re-list the <paramref name="filter"/> files
+        ///     under <paramref name="dir"/> into <paramref name="listBox"/>, restore the last-loaded
+        ///     selection and update the notifier. No-op while quitting; marshals onto the UI thread.
+        /// </summary>
+        private void LoadFilesIntoListBox(ListBox listBox, string dir, string filter,
+            Func<string?> getLastLoaded, Action<string?> updateNotifier)
         {
-            if (!InQuittingState)
+            if (InQuittingState) return;
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                Application.Current.Dispatcher.Invoke(() =>
+                listBox.Items.Clear();
+                foreach (string filePath in Directory.GetFiles(dir, filter))
+                    listBox.Items.Add(Path.GetFileName(filePath));
+
+                if (listBox.Items.Count > 0)
                 {
-                    string[] onnxFiles = Directory.GetFiles("bin/models", "*.onnx");
-                    ModelListBox.Items.Clear();
-
-                    foreach (string filePath in onnxFiles)
-                    {
-                        ModelListBox.Items.Add(Path.GetFileName(filePath));
-                    }
-
-                    if (ModelListBox.Items.Count > 0)
-                    {
-                        string? lastLoadedModel = AppConfig.Current.LastLoadedModel;
-                        if (lastLoadedModel != "N/A" && !ModelListBox.Items.Contains(lastLoadedModel)) { ModelListBox.SelectedItem = lastLoadedModel; }
-                        SelectedModelNotifier.Content = Locale.LoadedModel.FormatWith(lastLoadedModel);
-                    }
-                    ModelListBox.EnsureRenderedAndInitialized();
-                    MainWindow.Instance.FillMenus();
-                });
-            }
-        }
-
-        public void LoadConfigsIntoListBox(object? sender, FileSystemEventArgs? e)
-        {
-            if (!InQuittingState)
-            {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    string[] configFiles = Directory.GetFiles("bin/configs", "*.cfg");
-                    ConfigListBox.Items.Clear();
-
-                    foreach (string filePath in configFiles)
-                    {
-                        ConfigListBox.Items.Add(Path.GetFileName(filePath));
-                    }
-
-                    if (ConfigListBox.Items.Count > 0)
-                    {
-                        string? lastLoadedConfig = AppConfig.Current.LastLoadedConfig;
-                        if (lastLoadedConfig != "N/A" && !ConfigListBox.Items.Contains(lastLoadedConfig)) { ConfigListBox.SelectedItem = lastLoadedConfig; }
-
-                        SelectedConfigNotifier.Content = "Loaded Config: " + lastLoadedConfig;
-                    }
-                    ConfigListBox.EnsureRenderedAndInitialized();
-                    MainWindow.Instance.FillMenus();
-                });
-            }
+                    string? lastLoaded = getLastLoaded();
+                    if (lastLoaded != "N/A" && !listBox.Items.Contains(lastLoaded))
+                        listBox.SelectedItem = lastLoaded;
+                    updateNotifier(lastLoaded);
+                }
+                listBox.EnsureRenderedAndInitialized();
+                MainWindow.Instance.FillMenus();
+            });
         }
 
         public static async Task<HashSet<string>> RetrieveAndAddFiles(string repoLink, string localPath, HashSet<string> allFiles)
@@ -318,27 +282,16 @@ namespace Other
 
         public void Dispose()
         {
+            // Set first so any in-flight watcher callback short-circuits, then stop + dispose both
+            // watchers. Disposing the watcher detaches its handlers, so no manual unsubscribe needed.
             InQuittingState = true;
-            if (ConfigFileWatcher != null)
-            {
-                ConfigFileWatcher.EnableRaisingEvents = false;
-                ConfigFileWatcher.Changed -= LoadModelsIntoListBox;
-                ConfigFileWatcher.Created -= LoadModelsIntoListBox;
-                ConfigFileWatcher.Deleted -= LoadModelsIntoListBox;
-                ConfigFileWatcher.Renamed -= LoadModelsIntoListBox;
-            }
 
-            if (ModelFileWatcher != null)
+            foreach (var watcher in new[] { ConfigFileWatcher, ModelFileWatcher })
             {
-                ModelFileWatcher.EnableRaisingEvents = false;
-                ModelFileWatcher.Changed -= LoadConfigsIntoListBox;
-                ModelFileWatcher.Created -= LoadConfigsIntoListBox;
-                ModelFileWatcher.Deleted -= LoadConfigsIntoListBox;
-                ModelFileWatcher.Renamed -= LoadConfigsIntoListBox;
+                if (watcher is null) continue;
+                watcher.EnableRaisingEvents = false;
+                watcher.Dispose();
             }
-
-            ConfigFileWatcher?.Dispose();
-            ModelFileWatcher?.Dispose();
         }
     }
 }

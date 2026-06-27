@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using Core;
 using PowerAim;
 using PowerAim.Config;
 using PowerAim.Extensions;
@@ -41,7 +42,7 @@ namespace Visuality
 
         private void WriteJSON()
         {
-            var path = $"bin\\configs\\{ConfigNameTextbox.Text}.cfg";
+            var path = $"{Constants.ConfigBasePath}\\{ConfigNameTextbox.Text}.cfg";
             AppConfig.Current.Save(path);
             new NoticeBar("Config has been saved to bin/configs.", 4000).Show();
             Close();

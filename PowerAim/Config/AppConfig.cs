@@ -2,6 +2,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Forms;
+using Core;
 using PowerAim.AILogic;
 using PowerAim.InputLogic;
 using PowerAim.InputLogic.Contracts;
@@ -14,7 +15,8 @@ namespace PowerAim.Config;
 
 public class AppConfig : BaseSettings
 {
-    public const string DefaultConfigPath = "bin\\configs\\Default.cfg";
+    
+    public const string DefaultConfigPath = $"{Constants.ConfigBasePath}\\Default.cfg";
 
     /// <summary>
     ///     Walks the loaded JSON and removes every <c>OcrConditionTree</c> /
