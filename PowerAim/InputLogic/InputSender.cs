@@ -147,6 +147,36 @@ namespace PowerAim.InputLogic
 
         public static async Task SendKeyAsync(StoredInputBinding evt, KeyPressState pressState, CancellationTokenSource token = default)
         {
+            if (!evt.IsCombo)
+            {
+                await SendSingleAsync(evt, pressState, token);
+                return;
+            }
+
+            // Chord: press components in order, release in reverse — e.g. Ctrl+A → Ctrl↓ A↓ A↑ Ctrl↑.
+            // Never forward DownAndUp to a child (that would release a modifier before the main key).
+            switch (pressState)
+            {
+                case KeyPressState.Down:
+                    foreach (var c in evt.Components!)
+                        await SendSingleAsync(c, KeyPressState.Down, token);
+                    break;
+                case KeyPressState.Up:
+                    foreach (var c in Enumerable.Reverse(evt.Components!))
+                        await SendSingleAsync(c, KeyPressState.Up, token);
+                    break;
+                default: // DownAndUp
+                    foreach (var c in evt.Components!)
+                        await SendSingleAsync(c, KeyPressState.Down, token);
+                    foreach (var c in Enumerable.Reverse(evt.Components!))
+                        await SendSingleAsync(c, KeyPressState.Up, token);
+                    break;
+            }
+        }
+
+        /// <summary>Sends ONE input (mouse / gamepad / keyboard). Chords are decomposed into these by <see cref="SendKeyAsync"/>.</summary>
+        private static async Task SendSingleAsync(StoredInputBinding evt, KeyPressState pressState, CancellationTokenSource token = default)
+        {
             if (evt.Is<MouseEventArgs>())
             {
                 MouseEventArgs mouseArgs = evt.MouseEventArgs;

@@ -255,6 +255,18 @@ namespace PowerAim.UILibrary
                 KeyNotifierLabel.Content = InvalidText;
                 return;
             }
+            if (keybind.IsCombo)
+            {
+                // Chord: pick a device glyph from the components (gamepad > mouse > keyboard) and join
+                // the per-component names. Never feed the synthetic joined Key to ConvertToRegularKey
+                // (it parses a single key via WPF's KeyConverter and would throw on "Ctrl+X").
+                SetDeviceIcon(keybind.Components!.Any(c => c.Is<GamepadEventArgs>()) ? "\uE7FC"
+                    : keybind.Components!.Any(c => c.Is<MouseEventArgs>()) ? "\uF8AF" : "\uE765");
+                var comboName = string.Join(" + ", keybind.Components!.Select(c => KeybindNameManager.ConvertToRegularKey(c.Key)));
+                ToolTip = Locale.KeyChangerToolTipWithBinding.FormatWith(Locale.GetString(keybind.DeviceName), comboName);
+                KeyNotifierLabel.Content = comboName;
+                return;
+            }
             if (keybind.Is<GamepadEventArgs>())
             {
                 SetDeviceIcon("\uE7FC");
