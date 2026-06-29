@@ -61,16 +61,23 @@ public partial class ToolActionEditDialog : BaseDialog
         _ => new MoveMouseAction()
     };
 
+    private bool _buildingType;
+
     private void BuildTypeDropdown()
     {
         TypeHost.RemoveAll();
+        // The combo auto-selects its first item while populating, raising Selected synchronously.
+        // Without this guard that spurious onSelect would swap an existing action (e.g. SendKeys) to a
+        // fresh MoveMouse and discard its data the moment the editor opens.
+        _buildingType = true;
         TypeHost.AddDropdown(Locale.ToolActionType, KindOf(_action), kind =>
         {
-            if (kind == KindOf(_action)) return;
+            if (_buildingType || kind == KindOf(_action)) return;
             _action = Create(kind);
             _action.BeginEdit();
             BuildFields();
         }, dropdown => dropdown.BorderBrush = dropdown.Background = Brushes.Transparent);
+        _buildingType = false;
     }
 
     private void BuildFields()

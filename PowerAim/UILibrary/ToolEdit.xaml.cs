@@ -49,12 +49,23 @@ public partial class ToolEdit : UserControl
 
     // ── Options ──────────────────────────────────────────────────────────────────────────────────
 
+    private bool _buildingOptions;
+
     private void RebuildOptions()
     {
         OptionsHost.Children.Clear();
         if (Tool == null) return;
-        foreach (var opt in Tool.Options)
-            OptionsHost.Children.Add(BuildOptionCard(opt));
+        // The type ComboBox auto-selects its first item while populating, synchronously raising
+        // Selected (see AimProfileEdit._buildingTunePanel). Without this guard that spurious onSelect
+        // flips opt.Type back and queues another RebuildOptions each time -> unbounded dispatcher
+        // queue = freeze. Suppress option-dropdown writes for the duration of the build.
+        _buildingOptions = true;
+        try
+        {
+            foreach (var opt in Tool.Options)
+                OptionsHost.Children.Add(BuildOptionCard(opt));
+        }
+        finally { _buildingOptions = false; }
     }
 
     private FrameworkElement BuildOptionCard(ToolOption opt)
@@ -78,10 +89,11 @@ public partial class ToolEdit : UserControl
 
         stack.AddDropdown(Locale.ToolOptionType2, opt.Type, v =>
         {
-            if (v == opt.Type) return;
+            // _buildingOptions: ignore the spurious auto-select fired while populating the combo.
+            // The defer is still needed for the REAL pick: rebuilding here would tear down the very
+            // dropdown firing this event (re-entrancy). Let the selection event finish first.
+            if (_buildingOptions || v == opt.Type) return;
             opt.Type = v;
-            // Defer: rebuilding OptionsHost here would tear down the very dropdown firing this event
-            // (re-entrancy) and crash. Let the selection event finish first.
             Dispatcher.BeginInvoke(new Action(RebuildOptions));
         }, dd => dd.BorderBrush = dd.Background = Brushes.Transparent);
 
