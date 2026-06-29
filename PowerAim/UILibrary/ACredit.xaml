@@ -23,7 +23,7 @@
                        Grid.Row="0"
                        FontFamily="Segoe UI Variable Text"
                        FontWeight="SemiBold"
-                       Content="BabyHamsta"
+                       Content="gilde.org"
                        Foreground="{DynamicResource FluentTextPrimary}"
                        VerticalContentAlignment="Center"
                        FontSize="13"

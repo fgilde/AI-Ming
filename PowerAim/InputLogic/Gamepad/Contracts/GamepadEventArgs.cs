@@ -40,9 +40,15 @@ public class GamepadEventArgs : EventArgs
     public float? Value { get; set; }
     public string Code => ToString();
 
-    public GamepadButton? GamepadButton => Enum.GetValues<GamepadButton>().FirstOrDefault(b => b.ToDescriptionString() == Button) is var match && match.ToDescriptionString() == Button ? match : null;
-    public GamepadSlider? GamepadSlider => Enum.GetValues<GamepadSlider>().FirstOrDefault(b => b.ToDescriptionString() == Button) is var match && match.ToDescriptionString() == Button ? match : null;
-    public GamepadAxis? GamepadAxis => Enum.GetValues<GamepadAxis>().FirstOrDefault(b => b.ToDescriptionString() == Button) is var match && match.ToDescriptionString() == Button ? match : null;
+    public GamepadButton? GamepadButton => MatchEnum<GamepadButton>();
+    public GamepadSlider? GamepadSlider => MatchEnum<GamepadSlider>();
+    public GamepadAxis? GamepadAxis => MatchEnum<GamepadAxis>();
+
+    // Resolve the enum value whose [Description] equals Button. FirstOrDefault yields default(T)
+    // (the zero-valued member) when nothing matches, so re-check the description to distinguish a
+    // genuine match at the zero index from "no match" — identical to the original per-property logic.
+    private T? MatchEnum<T>() where T : struct, Enum =>
+        Enum.GetValues<T>().FirstOrDefault(b => b.ToDescriptionString() == Button) is var match && match.ToDescriptionString() == Button ? match : null;
     
     public override string ToString()
     {

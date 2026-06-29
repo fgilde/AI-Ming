@@ -4,7 +4,7 @@ using PowerAim.Config;
 using PowerAim.Extensions;
 using PowerAim.Visuality;
 
-namespace Visuality
+namespace PowerAim.Visuality
 {
     public partial class AutoPlayProfileEditDialog : BaseDialog
     {

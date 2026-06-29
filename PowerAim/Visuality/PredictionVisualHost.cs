@@ -1,4 +1,4 @@
-﻿using PowerAim.AILogic;
+using PowerAim.AILogic;
 using System.Windows.Media;
 using System.Windows;
 using PowerAim.Other;
@@ -6,7 +6,7 @@ using PowerAim.Config;
 using PowerAim.Types;
 using System.Windows.Forms;
 
-namespace Visuality;
+namespace PowerAim.Visuality;
 
 public class PredictionVisualHost : FrameworkElement
 {

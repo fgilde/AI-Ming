@@ -1,4 +1,4 @@
-﻿using PowerAim.Class;
+using PowerAim.Class;
 using PowerAim.Config;
 using PowerAim.UILibrary;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using UserControl = System.Windows.Controls.UserControl;
 
-namespace UILibrary
+namespace PowerAim.UILibrary
 {
     /// <summary>
     /// Interaction logic for ADropdown.xaml

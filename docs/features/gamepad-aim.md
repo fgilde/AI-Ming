@@ -25,6 +25,23 @@ When picked, every component that previously sent mouse deltas (aim, anti-recoil
 
 The **Gamepad** option stays *selectable* even when no virtual controller is configured, so you can preselect it (the warning fires, then you fix the underlying issue and try again).
 
+## Gamepad backends (Send Mode)
+
+The virtual controller can be driven through several backends, picked on the Gamepad settings page. The active one is the `GamepadSendMode` value:
+
+| Send Mode | What it does | Use it for |
+|:----------|:-------------|:-----------|
+| **ViGEm** *(default)* | Creates a virtual **Xbox 360** controller via the ViGEmBus driver. | **Real games — this is the one to use.** |
+| **vJoy** | Drives a vJoy virtual device (generic DirectInput joystick). | Games / tools that read vJoy specifically. |
+| **XInputHook** | Spawns an external `XInputEmu.exe` (from `Resources/XInputEmu/`) targeting a chosen game process and sends inputs to it over **UDP** (127.0.0.1:13000). Requires the **Gamepad process** (target window) to be set. | Niche XInput-injection scenarios. |
+| **Internal** | Builds the controller state purely **in memory** — no virtual device is registered, so real games cannot see it. | Testing the pipeline / mapping logic only. |
+| **None** | No sender is created. | Disable gamepad output. |
+
+{: .warning }
+**XInputHook is experimental and x86-only.** The bundled `XInputHook.dll` cannot inject into 64-bit games, so it fails for most modern titles. **Internal is for testing only** — because nothing is registered with the OS, real games receive no input. For actually playing a game, use **ViGEm**.
+
+When you select vJoy, ViGEm, or Internal, the Gamepad settings page also exposes the [Hidden Controllers]({{ '/features/hidden-controllers/' | relative_url }}) options (auto-hide toggle + HidHide path) so the game sees only the virtual pad.
+
 ## Configuration
 
 The aim sensitivity sliders still apply, but their values now map to **stick deflection** rather than **pixel movement**:
@@ -34,7 +51,38 @@ The aim sensitivity sliders still apply, but their values now map to **stick def
 | **Mouse Sensitivity** | Acts as a stick-deflection scale. Tune by feel. |
 | **EMA Smoothening** | Same as before — smooths the target before deflection is computed. |
 | **Movement Path** | Same as before. |
-| **GamepadMinimumLT / RT** | (Settings page) thresholds below which trigger pulls are ignored. |
+| **GamepadMinimumLT / RT** | (Settings page) how far the analog triggers must travel before they count as pressed — see below. |
+
+### Gamepad trigger thresholds
+
+When a **physical** controller trigger feeds a binding (a trigger source, gun-switch, etc.), PowerAim only treats it as "pressed" once the analog pull crosses a threshold. Two sliders on **Settings → Input Settings** set this:
+
+| Setting | Field | Default | Meaning |
+|:--------|:------|:--------|:--------|
+| **GamepadMinimumLT** | `SliderSettings.GamepadMinimumLT` | `0.7` | LT counts as pressed at ≥ 70% travel |
+| **GamepadMinimumRT** | `SliderSettings.GamepadMinimumRT` | `0.7` | RT counts as pressed at ≥ 70% travel |
+
+The reader normalises the raw trigger value to `0.0–1.0` and fires the press when `value >= threshold`. Sliders range `0.1–1.0`. Lower the value for a hair-trigger; raise it to avoid accidental light pulls.
+
+## Diagnostics & tester
+
+Two tools help confirm the gamepad path actually reaches your game.
+
+**Gamepad diagnostics** — a live panel on the Gamepad settings page (also available as a dialog) shows:
+
+- The **XInput slot map** (slots 0–3): which are connected and each one's live RT/LT/button readout, so you can spot whether your real pad is sitting in slot 0 (the slot most games read) and crowding out the virtual pad.
+- **Sender status**: active send mode, the concrete sender type, and `CanWork`.
+- A context-aware **suggestion** (e.g. "ViGEm bus missing", "switch to XInputHook", or "enable Hide physical controller").
+- A **Fire test RT pulse** button that briefly pushes RT to full so you can watch which slot lights up.
+
+**Gamepad tester** — a live button / trigger / stick panel (pop it out via **Gamepad settings → Open Gamepad Tester** to keep it floating while you edit). A **controller picker** at the top chooses which controller it visualises:
+
+- pick the **virtual** pad to watch exactly what PowerAim and a built-in **test sequence** inject (read from the injected virtual state, or the virtual pad's XInput slot);
+- pick a **physical** pad to watch your own input — a test sequence won't appear there, because it's sent to the virtual pad.
+
+That side-by-side makes the sync / virtual-output path visible at a glance. The tester also runs built-in sequences (A press, A+B combo, D-pad circle, left-stick circle, trigger press, complex combo). See [Controller Overview]({{ '/features/controller-overview' | relative_url }}) for the picker control, and [Controller Mapping]({{ '/features/controller-mapping/' | relative_url }}) for the mapping-side view.
+
+**Driver install buttons** — the Gamepad settings page also has in-app installers: **Install vJoy** (runs the bundled `vJoySetup.exe`, shown when vJoy mode isn't working yet) and **Install HidHide** (runs the bundled HidHide installer, shown when HidHide isn't found). For ViGEm, a button links to `vigembusdriver.com` when the bus driver is missing.
 
 ## Tips
 

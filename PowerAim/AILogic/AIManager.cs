@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Windows;
 using PowerAim;
 using PowerAim.AILogic;
@@ -8,9 +8,8 @@ using PowerAim.Class.Native;
 using PowerAim.Config;
 using PowerAim.Models;
 using Nextended.Core.Extensions;
-using Other;
-using PowerAim;
-using Visuality;
+using PowerAim.Other;
+using PowerAim.Visuality;
 
 
 public class AIManager : IDisposable
@@ -18,7 +17,7 @@ public class AIManager : IDisposable
     public static AIManager Instance { get; private set; }
     private readonly IList<IAction> _actions;
     private bool _isAiLoopRunning;
-    private Thread _aiLoopThread;
+    private readonly Thread _aiLoopThread;
     private bool _pausedNotified = false;
     private readonly FpsCapHelper _fpsCap = new();
     public bool IsRunning => _isAiLoopRunning;
@@ -107,7 +106,15 @@ public class AIManager : IDisposable
                 var targetX = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.X - area.Left : area.Width / 2;
                 var targetY = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.Y - area.Top : area.Height / 2;
 
-                Rectangle detectionBox = new(targetX - PowerAim.AILogic.PredictionLogic.IMAGE_SIZE / 2, targetY - PowerAim.AILogic.PredictionLogic.IMAGE_SIZE / 2, PowerAim.AILogic.PredictionLogic.IMAGE_SIZE, PowerAim.AILogic.PredictionLogic.IMAGE_SIZE);
+                // The captured region is driven by the FOV size (centered on the aim point), NOT by
+                // the model input resolution. PredictionLogic downscales the captured patch to the
+                // model input before inference, so the FOV can be larger than the model resolution
+                // and the AI then "sees" a wider slice of the screen. Clamp to the screen so the
+                // centered box always fits. At FOV == model input this is identical to the old box.
+                int fov = (int)Math.Round(AppConfig.Current.SliderSettings.ActualFovSize);
+                int maxCapture = Math.Max(16, Math.Min(area.Width, area.Height));
+                int captureSize = Math.Clamp(fov, 16, maxCapture);
+                Rectangle detectionBox = new(targetX - captureSize / 2, targetY - captureSize / 2, captureSize, captureSize);
                 try
                 {
                     var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -164,7 +171,13 @@ public class AIManager : IDisposable
 
     private async Task SetActionsState(bool paused)
     {
-        await Task.WhenAll(_actions.Select(a => paused ? a.OnPause() : a.OnResume()));
+        try
+        {
+            await Task.WhenAll(_actions.Select(a => paused ? a?.OnPause() : a?.OnResume()).ToArray());
+        }
+        catch (Exception)
+        {
+        }
     }
 
 

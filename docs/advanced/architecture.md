@@ -214,4 +214,4 @@ PowerAim/
 └── MainWindow.xaml + .cs    # composition + sidebar navigation
 ```
 
-For licensing, see [Source Available]({{ '/advanced/source-available' | relative_url }}).
+For the license, terms and credits, see [LicenseInfo.md](https://github.com/fgilde/AI-Ming/blob/main/LicenseInfo.md).

@@ -1,12 +1,12 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.IO;
 using System.Management;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Windows;
-using Visuality;
+using PowerAim.Visuality;
 
-namespace MouseMovementLibraries.RazerSupport;
+namespace PowerAim.MouseMovementLibraries.RazerSupport;
 
 internal class RZMouse
 {

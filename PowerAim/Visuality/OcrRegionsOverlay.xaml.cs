@@ -37,7 +37,7 @@ public partial class OcrRegionsOverlay : Window
     private const int WS_EX_NOACTIVATE = 0x08000000;
 
     private readonly System.Windows.Threading.DispatcherTimer _timer;
-    private readonly List<RegionVisual> _visuals = new();
+    private readonly List<RegionVisual> _visuals = [];
     private OcrSettings? _settings;
     private double _dpi = 1.0;
     /// <summary>Set true while we mutate region.X/Y/W/H from inside a drag so the resulting

@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using PowerAim.UILibrary;
 using System.Windows;
 using System.Windows.Controls;
@@ -7,13 +7,12 @@ using System.Windows.Markup;
 using System.Windows.Media;
 using PowerAim.Config;
 using PowerAim.InputLogic;
-using InputLogic;
 using Nextended.Core.Extensions;
 using Nextended.Core.Helper;
-using UILibrary;
 using Microsoft.Xaml.Behaviors.Core;
 using Nextended.UI.Helper;
 using System.Windows.Interop;
+using UILibrary;
 using Brushes = System.Windows.Media.Brushes;
 using Color = System.Windows.Media.Color;
 using Size = System.Windows.Size;
@@ -72,7 +71,8 @@ public static class UIElementExtensions
             var menuItem = new MenuItem
             {
                 Header = item?.ToString(),
-                Foreground = Brushes.Black,
+                // No explicit foreground: inherit the themed MenuItem style (FluentTextPrimary) so
+                // dropdown items stay readable in dark mode (hard-coded black was unreadable there).
                 Tag = item,
             };
             menuItem.Command = new ActionCommand(() => onClick(menuItem));
@@ -276,8 +276,7 @@ public static class UIElementExtensions
         changer.KeyBind = keyCodeValue;
         changer.ShowTitle = false;
         changer.BindingManager = bindingManager;
-        if(changerCfg != null)
-            changerCfg.Invoke(changer);
+        changerCfg?.Invoke(changer);
         changer.GlobalKeyPressed += (sender, args) =>
         {
             if (!updating && toggle.IsEnabled)
@@ -380,10 +379,12 @@ public static class UIElementExtensions
         return panel.Add(new AColorChanger(title));
     }
 
-    public static ASlider AddSlider(this IAddChild panel, string title, string label, double frequency, double buttonsteps, double min, double max, bool forAntiRecoil = false)
+    public static ASlider AddSlider(this IAddChild panel, string title, string label, double frequency, double buttonsteps, double min, double max, bool forAntiRecoil = false, int decimals = 2, bool snapToTick = true)
     {
         var slider = new ASlider(title, label, frequency)
         {
+            Decimals = decimals,
+            SnapToTick = snapToTick,
             Slider =
             {
                 Minimum = min,

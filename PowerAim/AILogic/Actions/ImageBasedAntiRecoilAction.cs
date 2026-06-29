@@ -3,7 +3,6 @@ using System.Drawing.Imaging;
 using System.Windows.Forms;
 using PowerAim.Config;
 using PowerAim.InputLogic;
-using InputLogic;
 using OpenCvSharp;
 using Size = OpenCvSharp.Size;
 

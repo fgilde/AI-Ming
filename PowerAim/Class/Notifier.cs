@@ -27,7 +27,7 @@ public static class Notifier
         if (app == null) return;
         app.Dispatcher.BeginInvoke(new Action(() =>
         {
-            try { new global::Visuality.NoticeBar(message, duration).Show(); }
+            try { new global::PowerAim.Visuality.NoticeBar(message, duration).Show(); }
             catch { /* notice bar is best-effort feedback only */ }
         }));
     }

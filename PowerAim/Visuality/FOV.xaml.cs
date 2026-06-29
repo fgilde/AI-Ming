@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using PowerAim.Class;
-using Class;
 using System.Windows;
 using System.Windows.Interop;
 using PowerAim.Config;
@@ -9,14 +8,14 @@ using PowerAim.AILogic.Contracts;
 using System.Windows.Threading;
 using PowerAim.Class.Native;
 
-namespace Visuality
+namespace PowerAim.Visuality
 {
     /// <summary>
     /// Interaction logic for FOV.xaml
     /// </summary>
     public partial class FOV : Window
     {
-        private DispatcherTimer _mousePositionTimer;
+        private readonly DispatcherTimer _mousePositionTimer;
 
         public static FOV? Instance { get; private set; }
         protected override void OnSourceInitialized(EventArgs e)

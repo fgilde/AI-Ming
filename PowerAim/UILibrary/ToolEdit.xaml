@@ -1,0 +1,98 @@
+<UserControl x:Class="PowerAim.UILibrary.ToolEdit"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:uiLibrary="clr-namespace:PowerAim.UILibrary"
+             mc:Ignorable="d"
+             VerticalAlignment="Stretch"
+             HorizontalAlignment="Stretch"
+             d:DesignHeight="700" d:DesignWidth="520">
+    <StackPanel Margin="2">
+        <!-- Tool name -->
+        <TextBlock Style="{StaticResource FluentSectionTitle}"
+                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ToolName'}" />
+        <Border Background="{DynamicResource FluentSurface3}"
+                BorderBrush="{DynamicResource FluentStroke}"
+                BorderThickness="1"
+                CornerRadius="6">
+            <TextBox BorderThickness="0"
+                     Background="Transparent"
+                     Padding="10,8,10,8"
+                     Text="{Binding Tool.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     Tag="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ToolNamePlaceholder'}"
+                     FontFamily="Segoe UI Variable Text"
+                     FontSize="13"
+                     Style="{DynamicResource placeHolder}"
+                     Foreground="{DynamicResource FluentTextPrimary}" />
+        </Border>
+
+        <!-- How variables work -->
+        <Border Margin="0,16,0,0"
+                Background="{DynamicResource FluentSurface2}"
+                BorderBrush="{DynamicResource FluentStroke}"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="12,10,12,10">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="&#xE946;"
+                               FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                               FontSize="14"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource FluentAccent}" />
+                    <TextBlock Margin="8,0,0,0"
+                               VerticalAlignment="Center"
+                               FontWeight="SemiBold"
+                               FontFamily="Segoe UI Variable Text"
+                               Foreground="{DynamicResource FluentTextPrimary}"
+                               Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ToolVariableHelpTitle'}" />
+                </StackPanel>
+                <TextBlock Margin="0,6,0,0"
+                           TextWrapping="Wrap"
+                           FontSize="12"
+                           Foreground="{DynamicResource FluentTextSecondary}"
+                           FontFamily="Segoe UI Variable Small"
+                           Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ToolVariableHelpBody'}" />
+            </StackPanel>
+        </Border>
+
+        <!-- Options -->
+        <Grid Margin="0,18,0,0">
+            <TextBlock Style="{StaticResource FluentSectionTitle}"
+                       Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ToolOptions'}" />
+            <Button Style="{StaticResource FluentIconButton}"
+                    HorizontalAlignment="Right"
+                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ToolAddOption'}"
+                    Click="AddOption_Click"
+                    Foreground="{DynamicResource FluentTextPrimary}"
+                    Content="&#xECC8;"
+                    Padding="0"
+                    FontSize="18"
+                    Width="40" />
+        </Grid>
+        <TextBlock Style="{StaticResource FluentCaption}"
+                   Visibility="{Binding Converter={StaticResource helpVis}}"
+                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ToolOptionsHelp'}" />
+        <StackPanel x:Name="OptionsHost" Margin="0,4,0,0" />
+
+        <!-- Actions -->
+        <Grid Margin="0,18,0,0">
+            <TextBlock Style="{StaticResource FluentSectionTitle}"
+                       Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ToolActions'}" />
+            <Button Style="{StaticResource FluentIconButton}"
+                    HorizontalAlignment="Right"
+                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ToolAddAction'}"
+                    Click="AddAction_Click"
+                    Foreground="{DynamicResource FluentTextPrimary}"
+                    Content="&#xECC8;"
+                    Padding="0"
+                    FontSize="18"
+                    Width="40" />
+        </Grid>
+        <TextBlock Style="{StaticResource FluentCaption}"
+                   Visibility="{Binding Converter={StaticResource helpVis}}"
+                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ToolActionsHelp'}" />
+        <StackPanel x:Name="ActionsHost" Margin="0,4,0,0" />
+    </StackPanel>
+</UserControl>

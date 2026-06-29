@@ -17,7 +17,11 @@ namespace Core
 
         public GithubManager()
         {
-            httpClient = new CachingHttpClient();
+            // 1-hour disk cache: model/config listings and release info change rarely, so this keeps
+            // repeated launches well under GitHub's 60-req/hour anonymous limit. On a rate-limit or
+            // network error CachingHttpClient additionally serves the stale cache, so the store
+            // never breaks just because the window was exhausted.
+            httpClient = new CachingHttpClient(TimeSpan.FromHours(1));
             httpClient.DefaultRequestHeaders.Add("User-Agent", "PowerAim");
             httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
         }

@@ -5,6 +5,116 @@ All notable changes to PowerAim are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0]
+
+### Added
+
+#### 🎯 Aim — profile-based, simpler, calibrated
+- **Aim is now fully profile-based** — there is no single "global" aim config. Every
+  aim setting (key, feel, FOV, region, smoothing, prediction, disengage, OCR
+  auto-activation) lives on an **aim profile**; the old global settings are migrated
+  into a seeded **Default** profile on first load, so nothing is lost.
+- **Multiple active profiles at once.** The aim action iterates every profile whose
+  **aim key is held** and whose **OCR auto-activation condition** is met, replacing the
+  single-active radio. Each profile shows an *engaged* badge while it's aiming.
+- **A required aim key per profile**, with a **duplicate-key warning** and the key
+  control moved to the top of the editor. The profile list row keybind toggles a
+  profile's *enabled* state.
+- **Rebuilt pipeline** — a lean **nearest-target + proportional move** by default
+  instead of an always-on tracker, far less jitter/overshoot in the closed
+  capture→move loop.
+- **Per-profile smoothing modes** — **None**, **EMA**, or an adaptive **1€ filter**
+  (min-cutoff + beta exposed).
+- **Opt-in target tracking** — SORT-style tracking, frame **coasting** and **switch
+  hysteresis** are now an optional per-profile layer, not a forced default. **Legacy
+  prediction** (Kalman / Shalloe / WiseTheFox) + EMA remain available per profile.
+- **Sensitivity calibrator** — the calibration wizard measures real
+  screen-pixels-per-mouse-count so a profile feels **game-independent**.
+- **Random aim point** moved into the profile's **Aim region** section; the aim-profile
+  editor is redesigned with icon-badged sections and opens as a full in-window **page**.
+
+#### 🧰 Dynamic Tools (new)
+- **The Tools page is a unified list of expandable cards** — built-in **Magnifier** and
+  **HWID Spoofer** plus your own tools, each with a **start keybind**, a **start
+  button**, an enable toggle and a panel.
+- **Build your own tools** — an ordered sequence of typed actions that runs **once** per
+  start: **Move mouse** (relative/absolute), **Click** (l/r/m, down/up/down-and-up),
+  **Send key(s)** (the trigger multi-key control with **record-sequence** and
+  **Sequential / Simultaneous** execution), **Run program** (path/args, as-admin,
+  wait-for-exit), **Delay**.
+- **Options as variables** — define typed options (String/Number/Bool/Path/Enum) and
+  reference them in any action field as `{name}`; values are editable on the tool's card.
+- **In-window editor page** with a reorderable action sequence; it edits a clone so
+  **Cancel truly discards**. **Fire-once with restart** — a re-press cancels and restarts,
+  releasing anything the sequence latched (no stuck inputs).
+
+#### 🎮 Controller Overview (new)
+- **One list for every controller** — all physical pads **and** the virtual one, each
+  with a connected dot, **XInput slot**, and chips for the **sync source** and **hidden**
+  state. The virtual pad is named by the active send mode.
+- **Set the sync source** and **hide a controller from games** (HidHide when installed,
+  else an internal soft-hide).
+- **One-click "make games use the virtual pad"** — hides the physical pad from XInput
+  (HidHide cloak, or a system disable when elevated) and reconnects the virtual one into
+  the low slot games read first, with a **Restore**.
+
+#### 🕹️ Gamepad Tester
+- **A controller picker** chooses which controller the live panel visualizes. Select the
+  **virtual** pad to watch what PowerAim and a **test sequence** inject; select a
+  **physical** pad to watch your own input — a test sequence won't show there (it goes to
+  the virtual pad), making the sync / virtual-output path visible at a glance.
+
+#### ⌨️ Combo keybinds
+- **Keybinds can be chords** — keyboard, mouse and gamepad freely mixed
+  (`Ctrl+Shift+X`, `Ctrl+Left-Click`, `X+B`, `G+Mouse-Left`). **Record-on-release**
+  captures everything held; matching fires only while **all** parts are held; chords are
+  sent ordered (`Ctrl+A` → Ctrl↓ A↓ A↑ Ctrl↑). Works everywhere a single key does; old
+  single-key configs stay byte-identical.
+
+#### ⚡ Quick Config
+- **A floating config tab + switcher** — see the active config's label (and rename it),
+  swap configs from a pop-up, and bind a **per-config hotkey** (shared with the Models &
+  Configs page) that loads a config even while Global Active is off.
+
+### Changed
+
+- **Aim config schema** bumped with an idempotent migration (seeds Default, moves the
+  global aim key / EMA / prediction onto the previously-active profile).
+- **The Magnifier's start hotkey** is now the unified per-tool keybind on the Tools list
+  (the old standalone binding is migrated onto it on first load); zoom-in/out stay in the
+  Magnifier's panel.
+- A **static landing page + features page** (`docs/index.html`, `docs/features.html`) and
+  a refreshed `docs/` set.
+
+### Fixed
+
+- **Startup crash** migrating the Magnifier hotkey — the `BindingSettings` indexer
+  returns null for a never-set key and the migration dereferenced it; now null-safe.
+- **Freeze switching a tool option from String to Number** — the option type dropdown
+  rebuilt its own list mid-selection, re-firing its auto-select and queuing unbounded
+  rebuilds; guarded with a build flag (the same fix stops an existing action being reset
+  when its editor opens).
+- **Stuck mouse button / key** when a tool sequence is cancelled between a standalone Down
+  and its Up — the runner force-releases anything it latched in a `finally`.
+- **Silent data loss on editor Cancel** — the tool editor now works on a clone.
+- **`NullReferenceException` in `HidHideHelper.GetHidHidePath()`** during a config (re)load
+  tick — null-safe against a not-yet-loaded `AppConfig.Current` / `FileLocationState`.
+- **Corrupt config no longer silently resets to defaults** — `AppConfig.Load` backs the
+  original up to `*.corrupt.bak` and logs the real exception before falling back.
+- Null-safety hardening on the new tool model and Number-option bounds normalization
+  (an inverted Min/Max no longer throws).
+
+### Internal
+
+- New models — `ToolDefinition` / `CustomTool`, `ToolOption`, polymorphic `ToolAction`
+  (System.Text.Json `$type`, mirroring `OcrConditionNode`) in `AppConfig.UserTools`;
+  `ControllerSettings`.
+- New runtime — `ToolRunner`, `ToolLauncher`, `ControllerCatalog` / `ControllerInfo`.
+- New UI — `ToolsList`, `ToolEdit` (page) + `ToolActionEditDialog`,
+  `ControllerManageControl` (Manage + Select), `QuickConfigWindow`, `ConfigLabelOverlay`.
+- `StoredInputBinding` gained an optional `Components` list (combo) with combo-aware
+  recording / matching / chord-send in `InputBindingManager` / `InputSender`.
+
 ## [2.0.0.2]
 
 ### Added
@@ -139,8 +249,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   always reported "not installed". The check now probes every documented Razer
   Synapse process name — `RazerAppEngine`, `Razer Synapse Service`,
   `Razer Synapse Service Process`, `Razer Synapse`, `RazerCentralService` and
-  `Razer Central` — and counts any of them as "installed and running". The two
-  leftover `"Aimmy"` titles in the Razer dialogs were renamed to `"PowerAim"`.
+  `Razer Central` — and counts any of them as "installed and running". Two
+  leftover legacy window titles in the Razer dialogs were renamed to `"PowerAim"`.
 - **No-model screen no longer flashes at startup.** The "no model loaded" card now
   shows a loading spinner while the initial model load is in flight, and only
   flips to the empty-state message + "Load default model" button once the load

@@ -7,7 +7,7 @@ using static CoreDX.vJoy.Wrapper.VJoyControllerManager;
 public class GamepadSenderVJoy : IGamepadSender
 {
     private Controller _physicalController;
-    private IVJoyController _vJoyController;
+    private readonly IVJoyController _vJoyController;
     private readonly BlockingCollection<Action> _actions = new();
     private bool _isRunning;
 

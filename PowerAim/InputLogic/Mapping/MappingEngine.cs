@@ -2,7 +2,6 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Gma.System.MouseKeyHook;
-using Nefarius.ViGEm.Client.Targets.Xbox360;
 using PowerAim.Class.Native;
 using PowerAim.Config;
 using PowerAim.InputLogic.Contracts;
@@ -377,9 +376,9 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
         => p.Mappings.Any(m => m.Enabled && IsGamepadKind(m.SourceKind));
 
     private static bool IsGamepadKind(MappingInputKind k)
-        => k == MappingInputKind.GamepadButton
-        || k == MappingInputKind.GamepadTrigger
-        || k == MappingInputKind.GamepadStickDirection;
+        => k is MappingInputKind.GamepadButton
+            or MappingInputKind.GamepadTrigger
+            or MappingInputKind.GamepadStickDirection;
 
     // ============================================================================ KB/MOUSE → PAD ====
 
@@ -683,7 +682,7 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
         foreach (var m in profile.Mappings)
         {
             if (!m.Enabled) continue;
-            if (m.SourceKind != MappingInputKind.GamepadButton && m.SourceKind != MappingInputKind.GamepadTrigger) continue;
+            if (m.SourceKind is not (MappingInputKind.GamepadButton or MappingInputKind.GamepadTrigger)) continue;
             if (m.SourceCode != code) continue;
             if (!IsDirectionAllowed(m)) continue;
             if (!ModifierSatisfied(m)) continue;

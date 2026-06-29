@@ -1,41 +1,14 @@
-﻿using PowerAim.InputLogic;
-using Nextended.Core.Types;
 using System.ComponentModel;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using Visuality;
+using PowerAim.Visuality;
 
 namespace PowerAim.Config;
 
 public abstract class BaseSettings : BaseSettings<object>
 {
-
-    //public Dictionary<string, object> PropertyValues { get; set; }
-
-    //// TODO: Remove reflection indexer
-    //public object? this[string propertyName]
-    //{
-    //    get
-    //    {
-    //        PropertyValues ??= new();
-    //        var name = PrepareName(propertyName);
-    //        PropertyInfo? property = GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
-    //        return property == null ? PropertyValues.GetValueOrDefault(propertyName) : property.GetValue(this);
-    //    }
-    //    set
-    //    {
-    //        PropertyValues ??= new();
-    //        var name = PrepareName(propertyName);
-    //        PropertyInfo? property = GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
-    //        if (property == null)
-    //            PropertyValues[propertyName] = value;
-    //        else
-    //            property.SetValue(this, value);
-    //    }
-    //}
-
     // TODO: Remove and just store hashed values for minimized boxes
     protected string PrepareName(string name)
     {

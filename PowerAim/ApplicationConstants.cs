@@ -27,19 +27,21 @@ public class ApplicationConstants : Constants
     public const string ShowOnly = "";
     public const bool EasyMode = false;
 
+    /// <summary>Marketing / download landing page (the GitHub Pages site root).</summary>
+    public const string WebsiteUrl = "https://fgilde.github.io/AI-Ming/";
+
     /// <summary>
-    ///     URL the in-app Help button opens. Points to the GitHub Pages-hosted documentation.
-    ///     Bundled docs live under <c>docs/</c> in the repo and are auto-published to this URL
-    ///     by GitHub Pages on push. Update when the repo path changes.
+    ///     URL the in-app Help button opens. Points to the GitHub Pages-hosted <b>documentation</b>
+    ///     home — NOT the site root, which is now the marketing landing page (<see cref="WebsiteUrl"/>).
+    ///     The docs live under <c>docs/</c> in the repo and are auto-published by GitHub Pages on push.
     /// </summary>
-    public const string DocsUrl = "https://fgilde.github.io/AI-Ming/";
+    public const string DocsUrl = "https://fgilde.github.io/AI-Ming/documentation/";
     public static Uri DocsUri = new Uri(DocsUrl);
 
     // ---- Project / author links -----------------------------------------------------------
     public const string Copyright    = "© Florian Gilde";
     public static Uri AuthorUrl    = new Uri("https://www.gilde.org");
-    public const string RepoOwner    = "fgilde";
-    public const string RepoName     = "AI-Ming";
+    // RepoOwner / RepoName are inherited from Core.Constants (single source of truth).
     public const string RepoUrl      = "https://github.com/" + RepoOwner + "/" + RepoName;
     public static Uri RepoUri = new Uri(RepoUrl);
     public const string ReleasesUrl  = RepoUrl + "/releases";

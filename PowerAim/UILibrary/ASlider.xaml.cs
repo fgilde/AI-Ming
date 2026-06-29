@@ -2,14 +2,10 @@
 using System.ComponentModel;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading.Channels;
 using System.Windows.Controls;
-using System.Windows.Input;
 using PowerAim.Extensions;
 using System.Numerics;
-using System.Windows.Media;
 using System.Windows;
-using static System.Net.Mime.MediaTypeNames;
 using System.Windows.Controls.Primitives;
 
 namespace PowerAim.UILibrary
@@ -49,6 +45,33 @@ namespace PowerAim.UILibrary
             get => Slider.TickFrequency;
             set => Slider.TickFrequency = value;
         }
+
+        /// <summary>
+        ///     Number of decimal places used for the readout label and the +/- button rounding.
+        ///     Defaults to 2 (the original behaviour). Raise it for fine-grained sliders such as
+        ///     Mouse Sensitivity where the user needs sub-0.01 values (see GitHub issue #10).
+        /// </summary>
+        public int Decimals
+        {
+            get => (int)GetValue(DecimalsProperty);
+            set => SetValue(DecimalsProperty, value);
+        }
+
+        public static readonly DependencyProperty DecimalsProperty =
+            DependencyProperty.Register(nameof(Decimals), typeof(int), typeof(ASlider), new PropertyMetadata(2));
+
+        /// <summary>
+        ///     Proxies the inner slider's tick-snapping. Snapping coerces both drags AND
+        ///     programmatic <c>Value</c> sets to the nearest tick, which silently rounds e.g. a
+        ///     config value of 0.001 up to the 0.01 tick. Turn it off for sliders that must honour
+        ///     arbitrary config values (Mouse Sensitivity).
+        /// </summary>
+        public bool SnapToTick
+        {
+            get => Slider.IsSnapToTickEnabled;
+            set => Slider.IsSnapToTickEnabled = value;
+        }
+
         public double Minimum
         {
             get => Slider.Minimum;
@@ -75,7 +98,7 @@ namespace PowerAim.UILibrary
         private void OnTextOrLabelChanged()
         {
             SliderTitle.Text = Label;
-            AdjustNotifier.Content = $"{Slider.Value:F2} {Text}";
+            AdjustNotifier.Content = $"{Slider.Value.ToString("F" + Decimals, System.Globalization.CultureInfo.InvariantCulture)} {Text}";
         }
 
         [Category("Behavior")]
@@ -92,7 +115,7 @@ namespace PowerAim.UILibrary
             AddOne.Click += (s, e) => UpdateSliderValue(Steps);
             Slider.ValueChanged += (s, e) =>
             {
-                AdjustNotifier.Content = $"{Slider.Value:F2} {Text}";
+                AdjustNotifier.Content = $"{Slider.Value.ToString("F" + Decimals, System.Globalization.CultureInfo.InvariantCulture)} {Text}";
                 RaiseEvent(new RoutedPropertyChangedEventArgs<double>(e.OldValue, e.NewValue, RangeBase.ValueChangedEvent));
             };
         }
@@ -132,7 +155,7 @@ namespace PowerAim.UILibrary
 
         private void UpdateSliderValue(double change)
         {
-            Slider.Value = Math.Round(Slider.Value + change, 2);
+            Slider.Value = Math.Round(Slider.Value + change, Decimals);
         }
     }
 }

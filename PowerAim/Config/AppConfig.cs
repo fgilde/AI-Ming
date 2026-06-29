@@ -2,6 +2,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Forms;
+using Core;
 using PowerAim.AILogic;
 using PowerAim.InputLogic;
 using PowerAim.InputLogic.Contracts;
@@ -14,7 +15,8 @@ namespace PowerAim.Config;
 
 public class AppConfig : BaseSettings
 {
-    public const string DefaultConfigPath = "bin\\configs\\Default.cfg";
+    
+    public const string DefaultConfigPath = $"{Constants.ConfigBasePath}\\Default.cfg";
 
     /// <summary>
     ///     Walks the loaded JSON and removes every <c>OcrConditionTree</c> /
@@ -62,8 +64,37 @@ public class AppConfig : BaseSettings
     public string? Path
     {
         get;
-        set => SetField(ref field, value);
+        set
+        {
+            if (SetField(ref field, value))
+                OnPropertyChanged(nameof(EffectiveConfigLabel));
+        }
     }
+
+    /// <summary>
+    ///     Optional user-facing display name for this config, shown (and inline-editable) in the
+    ///     title bar above the source select. When empty, the UI falls back to the config file
+    ///     name without extension via <see cref="EffectiveConfigLabel"/>.
+    /// </summary>
+    public string ConfigLabel
+    {
+        get;
+        set
+        {
+            if (SetField(ref field, value))
+                OnPropertyChanged(nameof(EffectiveConfigLabel));
+        }
+    } = "";
+
+    /// <summary>
+    ///     The label to display: <see cref="ConfigLabel"/> when set, otherwise the current config's
+    ///     file name without extension (or "Default" when no path is known yet).
+    /// </summary>
+    [JsonIgnore]
+    public string EffectiveConfigLabel =>
+        !string.IsNullOrWhiteSpace(ConfigLabel)
+            ? ConfigLabel
+            : (!string.IsNullOrEmpty(Path) ? System.IO.Path.GetFileNameWithoutExtension(Path) : "Default");
 
     public static AppConfig Current { get; private set; }
 
@@ -102,22 +133,24 @@ public class AppConfig : BaseSettings
     }
 
     public AppThemeMode ThemeMode { get; set; } = AppThemeMode.System;
-    public BindingSettings BindingSettings { get; set; } = new BindingSettings();
-    public SliderSettings SliderSettings { get; set; } = new SliderSettings();
-    public ToggleState ToggleState { get; set; } = new ToggleState();
-    public MinimizeState MinimizeState { get; set; } = new MinimizeState();
-    public DropdownState DropdownState { get; set; } = new DropdownState();
-    public ColorState ColorState { get; set; } = new ColorState();
-    public AntiRecoilSettings AntiRecoilSettings { get; set; } = new AntiRecoilSettings();
-    public FileLocationState FileLocationState { get; set; } = new FileLocationState();
-    public OllamaSettings OllamaSettings { get; set; } = new OllamaSettings();
-    public AISettings AISettings { get; set; } = new AISettings();
-    public ActiveProcessSettings ActiveProcessSettings { get; set; } = new ActiveProcessSettings();
-    public CrosshairSettings CrosshairSettings { get; set; } = new CrosshairSettings();
-    public OcrSettings OcrSettings { get; set; } = new OcrSettings();
-    public ReplaySettings ReplaySettings { get; set; } = new ReplaySettings();
-    public AutoPlayLearningSettings AutoPlayLearningSettings { get; set; } = new AutoPlayLearningSettings();
-    public LayoutConfiguration LayoutConfiguration { get; set; } = new LayoutConfiguration();
+    public BindingSettings BindingSettings { get; set; } = new();
+    public SliderSettings SliderSettings { get; set; } = new();
+    public ToggleState ToggleState { get; set; } = new();
+    public MinimizeState MinimizeState { get; set; } = new();
+    public DropdownState DropdownState { get; set; } = new();
+    public ColorState ColorState { get; set; } = new();
+    public AntiRecoilSettings AntiRecoilSettings { get; set; } = new();
+    public FileLocationState FileLocationState { get; set; } = new();
+    public OllamaSettings OllamaSettings { get; set; } = new();
+    public AISettings AISettings { get; set; } = new();
+    public AimSettings AimSettings { get; set; } = new();
+    public ControllerSettings ControllerSettings { get; set; } = new();
+    public ActiveProcessSettings ActiveProcessSettings { get; set; } = new();
+    public CrosshairSettings CrosshairSettings { get; set; } = new();
+    public OcrSettings OcrSettings { get; set; } = new();
+    public ReplaySettings ReplaySettings { get; set; } = new();
+    public AutoPlayLearningSettings AutoPlayLearningSettings { get; set; } = new();
+    public LayoutConfiguration LayoutConfiguration { get; set; } = new();
 
     public ObservableCollection<ControllerMappingProfile> ControllerMappingProfiles
     {
@@ -234,6 +267,17 @@ public class AppConfig : BaseSettings
         }
     };
 
+    /// <summary>
+    ///     User-built custom tools shown on the Tools page (built-in Magnifier/HWID tools are injected
+    ///     into the display list at runtime, not persisted here). Each is an action sequence + options
+    ///     with its own start keybind. New collection — old configs deserialize this as empty.
+    /// </summary>
+    public ObservableCollection<CustomTool> UserTools
+    {
+        get;
+        set => SetField(ref field, value ?? new());
+    } = new();
+
     public string? Language
     {
         get;
@@ -248,8 +292,6 @@ public class AppConfig : BaseSettings
 
     public static AppConfig Load(string? path = null)
     {
-        //Current = new AppConfig();
-        //return Current;
         if (path == null)
         {
             path = GetLastConfigPath();
@@ -289,14 +331,25 @@ public class AppConfig : BaseSettings
         }
         catch (Exception ex)
         {
-            // Fehlerbehandlung hier hinzufügen
-            Console.WriteLine($"Error loading configuration: {ex.Message}");
+            // A corrupt / forward-incompatible config (e.g. an unknown polymorphic $type from a renamed
+            // type or a hand-edited file) must NOT silently vanish: back up the original before falling
+            // back to defaults, because the next Save would otherwise overwrite it for good.
+            Console.WriteLine($"Error loading configuration: {ex}");
+            try
+            {
+                if (path != null && File.Exists(path))
+                    File.Copy(path, path + ".corrupt.bak", overwrite: true);
+            }
+            catch { /* backup is best-effort */ }
             Current = new AppConfig();
         }
         // Migrations that translate older config schemas into the new shapes. Each MigrateXyz
         // method is idempotent (gated by its own schema-version field) so re-loading the same
         // config doesn't double-seed anything.
         Current.AntiRecoilSettings?.MigrateLegacyIfNeeded();
+        // Seed a Default aim profile from the live aim settings on first load under the profile
+        // schema, and repair a dangling/empty active id. Idempotent.
+        Current.AimSettings?.MigrateLegacyIfNeeded();
 
         // Triggers: migrate the legacy flat OcrConditions list into the new OcrConditionTree
         // (AND group by default). Idempotent — re-running on an already-migrated config is a no-op.
@@ -335,7 +388,6 @@ public class AppConfig : BaseSettings
 
     public void Save(string? path = null)
     {
-        var cs = CaptureSource;
         path ??= Path ?? DefaultConfigPath;
         Save<AppConfig>(path);
     }

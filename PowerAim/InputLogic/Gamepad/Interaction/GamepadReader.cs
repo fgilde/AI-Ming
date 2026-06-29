@@ -1,9 +1,6 @@
 ﻿using SharpDX.XInput;
-using System.Threading;
-using PowerAim.Class;
 using PowerAim.Config;
 using PowerAim.InputLogic.Contracts;
-using Newtonsoft.Json;
 
 namespace PowerAim.InputLogic.Gamepad.Interaction;
 
@@ -11,7 +8,7 @@ namespace PowerAim.InputLogic.Gamepad.Interaction;
 
 public class GamepadReader : IGamepadReader
 {
-    private readonly UserIndex _userIndex;
+    private UserIndex _userIndex;
     public Controller Controller { get; private set; }
     public State State { get; private set; }
 
@@ -25,9 +22,44 @@ public class GamepadReader : IGamepadReader
     {
         _userIndex = userIndex;
         _scheduler = TaskScheduler.FromCurrentSynchronizationContext();
-        Controller = new Controller(_userIndex);
+        Controller = ConnectController();
 
         StartPolling();
+    }
+
+    // The physical pad isn't always on XInput slot One — another device (or a virtual ViGEm pad)
+    // can take a lower slot and leave slot One empty. The old code hard-wired slot One, so when the
+    // pad sat elsewhere Controller.IsConnected stayed false forever and NO ButtonEvents ever fired
+    // (keybind recording + reaction dead), even though the pad worked in the tester — which scans
+    // all four slots. Prefer the last-known slot (stay on the same pad across brief drop-outs),
+    // otherwise scan all four. Never returns null so Controller is always assigned.
+    private Controller ConnectController()
+    {
+        var preferred = new Controller(_userIndex);
+        if (preferred.IsConnected) return preferred;
+        for (var i = UserIndex.One; i <= UserIndex.Four; i++)
+        {
+            var candidate = new Controller(i);
+            if (candidate.IsConnected) { _userIndex = i; return candidate; }
+        }
+        return preferred; // none connected yet — keep retrying the preferred slot
+    }
+
+    /// <summary>The XInput slot currently being read as the sync source.</summary>
+    public UserIndex CurrentSlot => _userIndex;
+
+    /// <summary>
+    ///     Switch the physical source to a specific XInput slot at runtime (the user picks a different
+    ///     controller). The poll loop simply continues against the new <see cref="Controller"/> — no
+    ///     teardown/restart. Reference assignment is atomic in .NET; a transient stale GetState on the
+    ///     poll thread during the swap is swallowed by the loop's try/catch. State is reset so we don't
+    ///     diff the new pad against the old pad's last state.
+    /// </summary>
+    public void UseSlot(UserIndex slot)
+    {
+        _userIndex = slot;
+        Controller = new Controller(slot);
+        State = default;
     }
 
     public bool IsConnected => Controller.IsConnected;
@@ -90,12 +122,13 @@ public class GamepadReader : IGamepadReader
             {
                 if (IsConnected)
                 {
-                    Poll();
+                    try { Poll(); }
+                    catch { /* transient Controller.GetState() failure (brief disconnect) — keep the loop alive */ }
                 }
                 else
                 {
                     await Task.Delay(1000, token);
-                    Controller = new Controller(_userIndex); // Retry connecting
+                    Controller = ConnectController(); // re-scan all slots — the pad may be on a different one
                 }
                 await Task.Delay(10, token); // Reduce CPU usage
             }

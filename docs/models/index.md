@@ -28,7 +28,7 @@ This section covers:
 ## Where models come from
 
 - **Bundled** — `bin\models\` ships several Universal models out of the box
-- **In-app Store** — Models tab → Downloadable Models. Merges this fork's `models/` folder with the upstream Babyhamsta/Aimmy repo
+- **In-app Store** — Models tab → Downloadable Models. Merges PowerAim's `models/` folder with a configured upstream community model repo
 - **Trained yourself** — see [Training Your Own]({{ '/models/training-your-own' | relative_url }})
 - **Manually placed** — drop any `.onnx` into `bin\models\` and click refresh
 

@@ -1,16 +1,5 @@
 # Contributing Models to PowerAim
 
-PowerAim has a **Downloadable Models** tab that pulls models from two GitHub repositories transparently:
-
-1. **This repository** — `fgilde/AI-Ming` (the PowerAim fork)
-2. **Upstream** — `Babyhamsta/Aimmy`
-
-The in-app downloader merges both lists by filename. If the same model exists in both, the **newer commit wins**; on a tie, this repository wins. Users see one combined list without knowing which repo a given file comes from.
-
-## How the merge works
-
-For each pair of duplicate filenames, PowerAim calls the GitHub commits API once per file (`/commits?path=models/<name>&per_page=1`) and picks the entry with the latest commit date. If the API is unreachable or both timestamps are identical, the fork's copy wins. Downloads always come from the picked repo's `raw` URL — there is no proxy or mirroring.
-
 ## Naming convention
 
 If you'd like to be credited, name your model:
@@ -32,16 +21,9 @@ You can submit a model to either repository — both feed the same downloader.
 3. Open a Pull Request against `main`
 4. Once merged, your model appears in everyone's in-app **Downloadable Models** tab on next refresh
 
-### Option B — upload to the upstream Babyhamsta/Aimmy repo
-
-1. Fork `https://github.com/Babyhamsta/Aimmy`
-2. Add your `.onnx` to `models/`
-3. Open a PR against `master`
-4. The same model will be visible in PowerAim once the upstream PR is merged
-
 ## Visual walkthrough
 
-The screenshots below are taken from the upstream Aimmy guide — the GitHub workflow is identical for either repo.
+The screenshots below show the standard GitHub workflow for adding a model.
 
 <img src="readme_assets/DT1.png" />
 <img src="readme_assets/DT2.png" />

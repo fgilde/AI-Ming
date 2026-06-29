@@ -2,7 +2,6 @@ using System.Windows.Forms;
 using PowerAim.AILogic;
 using PowerAim.Config;
 using PowerAim.InputLogic;
-using InputLogic;
 
 namespace PowerAim.AILogic.Actions;
 

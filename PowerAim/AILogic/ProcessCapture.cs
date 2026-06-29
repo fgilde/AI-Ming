@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using PowerAim.AILogic.Contracts;
 using System.Diagnostics;
 using System.Drawing;
@@ -8,7 +8,7 @@ using System.Windows.Forms;
 using PowerAim.Class.Native;
 using PowerAim.Config;
 using Nextended.Core;
-using Visuality;
+using PowerAim.Visuality;
 
 namespace PowerAim.AILogic;
 

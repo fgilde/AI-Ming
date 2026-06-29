@@ -1,7 +1,6 @@
-﻿using PowerAim.AILogic.Contracts;
+using PowerAim.AILogic.Contracts;
 using PowerAim.Config;
 using PowerAim.InputLogic;
-using InputLogic;
 using Nextended.Core.Helper;
 
 namespace PowerAim.AILogic.Actions;

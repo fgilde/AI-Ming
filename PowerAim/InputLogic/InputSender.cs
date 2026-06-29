@@ -1,11 +1,10 @@
-﻿using PowerAim.InputLogic.Contracts;
+using PowerAim.InputLogic.Contracts;
 using PowerAim.Config;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using Accord.Diagnostics;
 using PowerAim.Class.Native;
 using WindowsInput;
-using InputLogic;
+using PowerAim.InputLogic;
 
 namespace PowerAim.InputLogic
 {
@@ -18,7 +17,7 @@ namespace PowerAim.InputLogic
 
     public class InputSender
     {
-        private static InputSimulator _inputSimulator = new();
+        private static readonly InputSimulator _inputSimulator = new();
 
         // ===========================================================================
         //  Crosshair / aim movement — routes either through MouseManager (synth mouse)
@@ -148,6 +147,36 @@ namespace PowerAim.InputLogic
 
         public static async Task SendKeyAsync(StoredInputBinding evt, KeyPressState pressState, CancellationTokenSource token = default)
         {
+            if (!evt.IsCombo)
+            {
+                await SendSingleAsync(evt, pressState, token);
+                return;
+            }
+
+            // Chord: press components in order, release in reverse — e.g. Ctrl+A → Ctrl↓ A↓ A↑ Ctrl↑.
+            // Never forward DownAndUp to a child (that would release a modifier before the main key).
+            switch (pressState)
+            {
+                case KeyPressState.Down:
+                    foreach (var c in evt.Components!)
+                        await SendSingleAsync(c, KeyPressState.Down, token);
+                    break;
+                case KeyPressState.Up:
+                    foreach (var c in Enumerable.Reverse(evt.Components!))
+                        await SendSingleAsync(c, KeyPressState.Up, token);
+                    break;
+                default: // DownAndUp
+                    foreach (var c in evt.Components!)
+                        await SendSingleAsync(c, KeyPressState.Down, token);
+                    foreach (var c in Enumerable.Reverse(evt.Components!))
+                        await SendSingleAsync(c, KeyPressState.Up, token);
+                    break;
+            }
+        }
+
+        /// <summary>Sends ONE input (mouse / gamepad / keyboard). Chords are decomposed into these by <see cref="SendKeyAsync"/>.</summary>
+        private static async Task SendSingleAsync(StoredInputBinding evt, KeyPressState pressState, CancellationTokenSource token = default)
+        {
             if (evt.Is<MouseEventArgs>())
             {
                 MouseEventArgs mouseArgs = evt.MouseEventArgs;
@@ -200,14 +229,14 @@ namespace PowerAim.InputLogic
         {
             if(sendMode == KeyboardSendMode.UseInputSimulator)
             {
-                if(pressState == KeyPressState.DownAndUp || pressState == KeyPressState.Down)
+                if (pressState is KeyPressState.DownAndUp or KeyPressState.Down)
                 {
                     _inputSimulator.Keyboard.KeyDown((VirtualKeyCode)keyArgs.KeyCode);
                     InputEventBus.Key((int)keyArgs.KeyCode, true);
                 }
                 if (pressState == KeyPressState.DownAndUp)
                     await Task.Delay(MouseManager.GetRandomDelay());
-                if (pressState == KeyPressState.DownAndUp || pressState == KeyPressState.Up)
+                if (pressState is KeyPressState.DownAndUp or KeyPressState.Up)
                 {
                     _inputSimulator.Keyboard.KeyUp((VirtualKeyCode)keyArgs.KeyCode);
                     InputEventBus.Key((int)keyArgs.KeyCode, false);
@@ -219,7 +248,7 @@ namespace PowerAim.InputLogic
             {
                 List<INPUT> inputs = [];
 
-                if (pressState == KeyPressState.DownAndUp || pressState == KeyPressState.Down)
+                if (pressState is KeyPressState.DownAndUp or KeyPressState.Down)
                 {
                     // Key down event
                     INPUT downInput = new()
@@ -237,7 +266,7 @@ namespace PowerAim.InputLogic
                     inputs.Add(downInput);
                 }
 
-                if (pressState == KeyPressState.DownAndUp || pressState == KeyPressState.Up)
+                if (pressState is KeyPressState.DownAndUp or KeyPressState.Up)
                 {
                     // Key up event
                     INPUT upInput = new()
@@ -265,7 +294,7 @@ namespace PowerAim.InputLogic
                 ushort scanCode = (ushort)MapVirtualKey((uint)keyArgs.KeyCode, 0);
                 List<INPUT> inputs = [];
 
-                if (pressState == KeyPressState.DownAndUp || pressState == KeyPressState.Down)
+                if (pressState is KeyPressState.DownAndUp or KeyPressState.Down)
                 {
                     // Key down event
                     INPUT downInput = new()
@@ -283,7 +312,7 @@ namespace PowerAim.InputLogic
                     inputs.Add(downInput);
                 }
 
-                if (pressState == KeyPressState.DownAndUp || pressState == KeyPressState.Up)
+                if (pressState is KeyPressState.DownAndUp or KeyPressState.Up)
                 {
                     // Key up event
                     INPUT upInput = new()

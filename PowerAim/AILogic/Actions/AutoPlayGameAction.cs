@@ -6,7 +6,6 @@ using PowerAim.AILogic.Contracts;
 using PowerAim.Config;
 using PowerAim.InputLogic;
 using PowerAim.InputLogic.Contracts;
-using InputLogic;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
 

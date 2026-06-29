@@ -1,7 +1,7 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using PowerAim.InputLogic.Contracts;
 using System.Windows.Forms;
-using InputLogic;
+using PowerAim.InputLogic;
 
 namespace PowerAim.InputLogic;
 
@@ -9,8 +9,22 @@ public class StoredInputBinding
 {
     public bool Equals(StoredInputBinding other)
     {
+        if (other is null) return false;
         if (!IsValid && !other.IsValid)
             return true;
+        if (IsCombo || other.IsCombo)
+        {
+            // Combos compare as an order-independent SET of components; a combo never equals a single.
+            if (!IsCombo || !other.IsCombo || Components!.Count != other.Components!.Count) return false;
+            var remaining = new List<StoredInputBinding>(other.Components!);
+            foreach (var c in Components!)
+            {
+                int idx = remaining.FindIndex(o => c.Equals(o));
+                if (idx < 0) return false;
+                remaining.RemoveAt(idx);
+            }
+            return true;
+        }
         return Key == other.Key &&
                (Is<GamepadEventArgs>() && other.Is<GamepadEventArgs>() || Is<MouseEventArgs>() && other.Is<MouseEventArgs>() || Is<KeyEventArgs>() && other.Is<KeyEventArgs>());
     }
@@ -22,6 +36,14 @@ public class StoredInputBinding
 
     public override int GetHashCode()
     {
+        // Combos must hash order-independently so {Ctrl,X} and {X,Ctrl} collide (Equals is a set
+        // compare). XOR of component hashes is order-independent; components are distinct in practice.
+        if (IsCombo)
+        {
+            int h = 19;
+            foreach (var c in Components!) h ^= c.GetHashCode();
+            return h;
+        }
         return HashCode.Combine(Key, MouseEventArgs, KeyEventArgs, GamepadEventArgs);
     }
 
@@ -31,11 +53,44 @@ public class StoredInputBinding
     public GamepadEventArgs? GamepadEventArgs { get; set; }
     public double MinTime { get; set; } = 0;
 
+    /// <summary>
+    ///     Component inputs of a CHORD/COMBO binding (e.g. Ctrl+Shift+X, X+B, Ctrl+LeftMouse).
+    ///     <c>null</c> = a plain single binding (the <see cref="Key"/>/<see cref="KeyEventArgs"/>/…
+    ///     fields are used). When set, every child must be held simultaneously to match, and they are
+    ///     sent as a chord. Children are always plain singles (never nested combos).
+    /// </summary>
+    public List<StoredInputBinding>? Components { get; set; }
+
+    /// <summary>True when this binding is a multi-input chord rather than a single input.</summary>
+    public bool IsCombo => Components is { Count: > 0 };
+
     public StoredInputBinding SetMinTime(double value)
     {
         MinTime = value;
         return this;
     }
+
+    /// <summary>
+    ///     Build a chord from its parts. Invalid parts are dropped; an empty result is
+    ///     <see cref="Empty"/>, and a single surviving part collapses back to that plain single — so
+    ///     there is never a 1-element combo (keeps <see cref="Equals"/>/<see cref="GetHashCode"/>
+    ///     unambiguous). The parent carries a joined <see cref="Key"/> for display/equality and leaves
+    ///     its own device-event fields null.
+    /// </summary>
+    public static StoredInputBinding Combo(IEnumerable<StoredInputBinding> parts)
+    {
+        var valid = parts.Where(p => p is { IsValid: true }).ToList();
+        if (valid.Count == 0) return Empty;
+        if (valid.Count == 1) return valid[0];
+        return new StoredInputBinding
+        {
+            Components = valid,
+            Key = string.Join("+", valid.Select(p => p.Key)),
+        };
+    }
+
+    /// <summary>The component singles of a combo, or this single itself — always plain singles.</summary>
+    public IEnumerable<StoredInputBinding> Flatten() => IsCombo ? Components! : new[] { this };
 
     public bool Is<T>() where T : EventArgs => typeof(T) switch
     {
@@ -56,9 +111,11 @@ public class StoredInputBinding
     public bool Matches(MouseEventArgs data) => Is<MouseEventArgs>() && MouseEventArgs.Button == data.Button;
     public bool Matches(KeyEventArgs data) => Is<KeyEventArgs>() && KeyEventArgs.KeyCode.ToString() == data.KeyCode.ToString();
 
-    public bool IsValid => !string.IsNullOrWhiteSpace(Key) && Key.ToLower() != "none" && (MouseEventArgs != null || KeyEventArgs != null || GamepadEventArgs != null);
+    public bool IsValid => IsCombo
+        ? Components!.All(c => c is { IsValid: true })
+        : !string.IsNullOrWhiteSpace(Key) && Key.ToLower() != "none" && (MouseEventArgs != null || KeyEventArgs != null || GamepadEventArgs != null);
     public static StoredInputBinding Empty => new();
-    public string DeviceName => MouseEventArgs != null ? "Mouse" : KeyEventArgs != null ? "Keyboard" : GamepadEventArgs != null ? "Gamepad" : "Unknown";
+    public string DeviceName => IsCombo ? "Combo" : MouseEventArgs != null ? "Mouse" : KeyEventArgs != null ? "Keyboard" : GamepadEventArgs != null ? "Gamepad" : "Unknown";
 
 
     public StoredInputBinding()

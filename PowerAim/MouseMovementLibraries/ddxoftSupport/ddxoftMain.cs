@@ -1,10 +1,10 @@
-﻿using System.IO;
+using System.IO;
 using System.Net.Http;
 using System.Security.Principal;
 using System.Windows;
-using Visuality;
+using PowerAim.Visuality;
 
-namespace MouseMovementLibraries.ddxoftSupport;
+namespace PowerAim.MouseMovementLibraries.ddxoftSupport;
 
 internal class DdxoftMain
 {

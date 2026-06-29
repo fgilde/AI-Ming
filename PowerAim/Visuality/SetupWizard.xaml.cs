@@ -356,11 +356,6 @@ public partial class SetupWizard : BaseDialog
         Close();
     }
 
-    private void Step4_OpenCalibration_Click(object sender, RoutedEventArgs e)
-    {
-        new CalibrationWizardDialog { Owner = this }.ShowDialog();
-    }
-
     private void Step5_OpenPatterns_Click(object sender, RoutedEventArgs e)
     {
         new RecoilPatternsDialog { Owner = this }.ShowDialog();

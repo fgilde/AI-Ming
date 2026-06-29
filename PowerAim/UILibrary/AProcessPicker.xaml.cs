@@ -1,12 +1,9 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using PowerAim.Models;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Forms;
-using Visuality;
-using ListBox = System.Windows.Forms.ListBox;
+using PowerAim.Visuality;
 
 namespace PowerAim.UILibrary
 {
@@ -59,26 +56,4 @@ namespace PowerAim.UILibrary
             return true;
         }
     }
-
-    //public class ProcessPickerForm : Form
-    //{
-    //    public Process SelectedProcess { get; private set; }
-
-    //    public ProcessPickerForm()
-    //    {
-    //        var listBox = new ListBox { Dock = DockStyle.Fill };
-    //        listBox.Items.AddRange(Process.GetProcesses().Where(p => !string.IsNullOrEmpty(p.MainWindowTitle)).ToArray());
-    //        listBox.DisplayMember = "MainWindowTitle";
-    //        listBox.DoubleClick += (sender, args) =>
-    //        {
-    //            SelectedProcess = listBox.SelectedItem as Process;
-    //            DialogResult = DialogResult.OK;
-    //            Close();
-    //        };
-
-    //        Controls.Add(listBox);
-    //        Width = 400;
-    //        Height = 300;
-    //    }
-    //}
 }

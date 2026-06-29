@@ -6,12 +6,7 @@ nav_order: 3
 
 # Contributing Models
 
-PowerAim's in-app **Downloadable Models** tab pulls from two GitHub repos and merges them transparently:
-
-1. **This repo** — `fgilde/AI-Ming` (the PowerAim fork)
-2. **Upstream** — `Babyhamsta/Aimmy`
-
-If the same filename exists in both, the **newer commit wins**; on a tie, this repo wins. Users see one combined list with no idea which side a model came from.
+PowerAim's in-app **Downloadable Models** tab pulls from `fgilde/AI-Ming` plus a configured upstream community model repo and merges them transparently. If the same filename exists in both, the **newer commit wins**; on a tie, PowerAim's repo wins. Users see one combined list.
 
 ## Naming convention
 
@@ -29,21 +24,12 @@ If you'd rather stay anonymous:
 
 ## How to upload
 
-You can submit to either repo — both feed the same in-app downloader.
-
-### Option A — Upload to PowerAim's fork
+Submit to PowerAim's repo:
 
 1. Fork `https://github.com/fgilde/AI-Ming`
 2. Drop your `.onnx` into the `models/` folder of your fork
 3. Open a Pull Request against `main`
 4. Once merged, your model appears in everyone's in-app **Downloadable Models** tab on next refresh
-
-### Option B — Upload to the upstream Babyhamsta/Aimmy repo
-
-1. Fork `https://github.com/Babyhamsta/Aimmy`
-2. Add your `.onnx` to `models/`
-3. Open a PR against `master`
-4. The same model will be visible in PowerAim once the upstream PR is merged
 
 ## Quality bar
 

@@ -1,5 +1,4 @@
-﻿using PowerAim.Class;
-using Class;
+using PowerAim.Class;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
@@ -11,7 +10,7 @@ using PowerAim.Config;
 using PowerAim.Class.Native;
 using PowerAim.Visuality;
 
-namespace Visuality;
+namespace PowerAim.Visuality;
 
 /// <summary>
 ///     Modal dialog offering download mirrors for Logitech G HUB. After download it verifies file

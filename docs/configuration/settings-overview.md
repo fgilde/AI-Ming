@@ -40,8 +40,8 @@ Disabling **Hide UI from Capture** is irreversible during the session — PowerA
 
 | Setting | What it does | Default |
 |:--------|:-------------|:--------|
-| **Collect Data While Playing** | Saves FOV-cropped frames to `bin\images\` during play (for training data) | Off |
-| **Auto Label Data** | Writes YOLO `.txt` label files alongside captured frames using the current model | Off |
+| **Collect Data While Playing** | Saves capture frames as JPEGs to `bin\images\` during play (throttled to ~2/sec). See [Training Your Own]({{ '/models/training-your-own#in-app-training-data-capture' | relative_url }}). | Off |
+| **Auto Label Data** | Also writes a YOLO `.txt` label file to `bin\labels\` for each captured frame, from the current model's detections | Off |
 | **AI Minimum Confidence** | Drop detections below this confidence threshold (1–100%) | 45% |
 | **Ensure Capture Process Foreground** | Pause AI loop unless the capture target is the foreground window | Off |
 | **Show Captured Area** | Draw a border around the captured region | On |
@@ -123,3 +123,38 @@ See [AutoPlay]({{ '/features/autoplay#learning-mode' | relative_url }}).
 | **Bias Strength** | 0 (ignore) – 1 (dominate) | 0.5 |
 | **Sample Interval** | 50–1000 ms | 150 |
 | **Save / Load / Clear Model** | Persist or reset the JSON state | — |
+
+## Customizing the layout
+
+The cards on every page can be rearranged and pruned to fit how you work — the layout is saved per page and restored on next launch.
+
+- **Drag to reorder.** Each card shows a small drag handle near its top-right corner. Drag it to move the card within its column; on two-column pages you can also drag a card across to the other column.
+- **Hide a card.** Next to the drag handle is a small **×** that hides the card.
+- **Restore hidden cards.** When at least one card on the current page is hidden, a floating pill (e.g. "3 hidden sections") appears in the bottom-right corner. Click it for a flyout listing the hidden cards; click any entry to bring it back.
+
+## Instant search
+
+Press **Ctrl+F** anywhere in the app to open a search box. It indexes the labels of settings and section headers across the whole window — toggles, sliders, keybinds, color pickers, buttons, and section titles, plus their help/tooltip text — and matches as you type.
+
+Pick a result (click it or press **Enter** for the first match) and PowerAim switches to the right page, scrolls the control into view, and briefly **flashes** its border so your eye lands on it.
+
+## Hotkey safeguards
+
+Two options change how global keybinds behave:
+
+| Setting | What it does | Default |
+|:--------|:-------------|:--------|
+| **Show toggle notifications** | When a toggle is flipped via its global keybind, briefly show an on-screen notice of the new on/off state. (Also listed under UI Settings.) | On |
+| **Require Global Active for keybinds** | Global keybinds (toggle hotkeys, trigger / mapping enable hotkeys, model & config switch hotkeys, …) only fire while **Global Active** is on. The Global Active hotkey itself is always exempt so you can switch back on. | On |
+
+## Related controls (outside the Settings cards)
+
+A few inference-related controls live elsewhere in the app rather than on the Settings page, but are worth knowing about here:
+
+| Control | Where | What it does |
+|:--------|:------|:-------------|
+| **Image Size Override** | Models page | Slider (192–1280 px) that sets the runtime square input size. Only meaningful for dynamic-shape ONNX models — fixed-size models snap to their declared dimension. Bound to `SliderSettings.ImageSize`. See [Training Your Own]({{ '/models/training-your-own' | relative_url }}). |
+| **GPU device picker** | Title-bar pill ("GPU") | Lists the DXGI adapters PowerAim detects and lets you pick which one runs ONNX inference (`AISettings.InferenceGpuDeviceId`). Lets you keep inference off the GPU the game runs on. The model reloads on the new device when you switch. |
+
+{: .note }
+The **Switch to DirectML / CUDA** button (UI Settings, above) swaps the whole app between the two release builds from inside it: it finds the matching release, downloads the other build, and updates in place via the same [updater]({{ '/getting-started/installation#updating' | relative_url }}) — your config is preserved.

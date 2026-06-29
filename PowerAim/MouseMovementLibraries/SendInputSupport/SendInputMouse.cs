@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace MouseMovementLibraries.SendInputSupport;
+namespace PowerAim.MouseMovementLibraries.SendInputSupport;
 
 internal class SendInputMouse
 {

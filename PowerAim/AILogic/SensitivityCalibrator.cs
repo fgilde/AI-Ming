@@ -53,23 +53,32 @@ public static class SensitivityCalibrator
             using var hann = new Mat();
             Cv2.CreateHanningWindow(hann, new Size(PatchSize, PatchSize), MatType.CV_32F);
 
-            var samples = new List<double>();
+            // Phase correlation can only resolve a shift up to ~half the patch; a fixed impulse that
+            // is right for one game over- or under-shoots another (e.g. 200 units on a ratio≈0.67 game
+            // drifts ~133 px > the 96 px ceiling → every sample wrapped → "no motion"). So ADAPT the
+            // impulse: too big → halve, too small → double, until the drift lands in the usable band.
+            const double floorPx = 0.5;
+            double ceilingPx = PatchSize / 2.0;        // 96
+            var samples = new List<double>();          // px-per-input-unit ratios (impulse-independent)
+            int amount = Math.Clamp(moveAmount, 8, 4000);
             int directionSign = +1;
+            int attempts = 0;
+            int maxAttempts = Math.Max(rounds * 4, 20);
 
-            for (int i = 0; i < rounds; i++)
+            while (samples.Count < rounds && attempts < maxAttempts)
             {
+                attempts++;
                 if (cancellation.IsCancellationRequested) return CalibrationResult.Cancelled();
 
                 // Don't dispose bitmaps returned from ICapture — DxgiScreenCapture caches the last
-                // frame and returns the same instance on WaitTimeout (very common when aiming at a
-                // static wall, which is exactly what the user does during calibration). Disposing
-                // would invalidate the cached object and the next call's Width access would throw.
+                // frame and returns the same instance on WaitTimeout (common when aiming at a static
+                // wall). Disposing would invalidate the cached object.
                 Bitmap? before = SafeCapture(capture, patchRect);
                 if (before == null) return CalibrationResult.Failed("Failed to capture before-frame.");
                 using var beforeMat = ToFloatGray(before);
 
-                MoveMouse(directionSign * moveAmount, 0);
-                // Let the game render — short pause is enough; phase correlation tolerates a few stragglers.
+                MoveMouse(directionSign * amount, 0);
+                // Let the game render — short pause is enough; phase correlation tolerates stragglers.
                 Thread.Sleep(140);
 
                 Bitmap? after = SafeCapture(capture, patchRect);
@@ -77,22 +86,29 @@ public static class SensitivityCalibrator
                 using var afterMat = ToFloatGray(after);
 
                 var shift = Cv2.PhaseCorrelate(beforeMat, afterMat, hann, out _);
-                // We sent a positive-X impulse. Screen content shifts left → measured shift.X negative.
-                // We care about magnitude vs. impulse magnitude.
-                double measured = Math.Abs(shift.X);
-                if (measured < 0.5 || measured > PatchSize / 2.0)
+                double measured = Math.Abs(shift.X);   // we drive X; content shifts the opposite way
+                directionSign = -directionSign;        // alternate so the view stays near its start yaw
+
+                if (measured > ceilingPx)
                 {
-                    // Outliers (no movement / wrapped) — skip silently.
+                    // Overshot the patch (wraps) — use a smaller impulse next time.
+                    if (amount > 8) amount = Math.Max(8, amount / 2);
+                    continue;
                 }
-                else
+                if (measured < floorPx)
                 {
-                    samples.Add(measured);
+                    // Barely moved — bigger impulse. If even a large one yields nothing the game
+                    // isn't receiving the input (not focused) or the view is at a look limit.
+                    if (amount < 4000) amount = Math.Min(4000, amount * 2);
+                    continue;
                 }
 
-                directionSign = -directionSign;
+                samples.Add(measured / amount);
             }
 
-            if (samples.Count < 2) return CalibrationResult.Failed("Couldn't detect screen motion. Aim at a static, textured wall and try again.");
+            if (samples.Count < 2)
+                return CalibrationResult.Failed(
+                    "Couldn't detect usable screen motion. Make sure the GAME WINDOW is focused (click into it during the countdown), aim at a textured surface near eye level, and don't hold the view against a look up/down limit.");
 
             // Trim mean: drop the highest and lowest sample to suppress single-frame jitter.
             samples.Sort();
@@ -101,10 +117,8 @@ public static class SensitivityCalibrator
                 samples.RemoveAt(0);
                 samples.RemoveAt(samples.Count - 1);
             }
-            double meanPixels = samples.Average();
-            double ratio = meanPixels / moveAmount; // screen pixels per input unit
-
-            return CalibrationResult.Success(ratio, meanPixels, moveAmount, samples.Count);
+            double ratio = samples.Average();           // screen pixels per input unit
+            return CalibrationResult.Success(ratio, ratio * amount, amount, samples.Count);
         }, cancellation);
     }
 
@@ -169,22 +183,6 @@ public class CalibrationResult
 
     /// <summary>Number of samples that survived outlier rejection.</summary>
     public int SamplesUsed { get; private init; }
-
-    /// <summary>
-    ///     Recommended <c>MouseSensitivity</c> damping value, derived from the measured ratio. The
-    ///     current MouseManager applies the value as <c>t = 1 - sensitivity</c> in a lerp from 0 to
-    ///     the AI-requested delta, so a high in-game sens (ratio > 1) needs a high damping factor.
-    /// </summary>
-    public double SuggestedSensitivity
-    {
-        get
-        {
-            if (!Ok || Ratio <= 0) return 0;
-            if (Ratio <= 1.05) return 0.0;
-            double s = 1.0 - 1.0 / Ratio;
-            return Math.Clamp(s, 0.0, 0.95);
-        }
-    }
 
     public static CalibrationResult Success(double ratio, double measured, int amount, int samples) =>
         new() { Ok = true, Ratio = ratio, MeasuredPixels = measured, MoveAmount = amount, SamplesUsed = samples };

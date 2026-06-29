@@ -1,0 +1,254 @@
+<UserControl x:Class="PowerAim.UILibrary.AimProfileEdit"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:PowerAim.UILibrary"
+             mc:Ignorable="d"
+             d:DesignHeight="760" d:DesignWidth="560">
+    <UserControl.Resources>
+        <!-- Section header styling — mirrors the Trigger edit page (icon badge + title + subtitle). -->
+        <Style x:Key="SectionIcon" TargetType="Border">
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Background" Value="{DynamicResource FluentAccent}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,10,0" />
+        </Style>
+        <Style x:Key="SectionIconGlyph" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe Fluent Icons,Segoe MDL2 Assets" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{DynamicResource FluentAccentForeground}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="SectionTitleBig" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource FluentTextPrimary}" />
+            <Setter Property="FontFamily" Value="Segoe UI Variable Display" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="SectionSubtitle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource FluentTextTertiary}" />
+            <Setter Property="FontFamily" Value="Segoe UI Variable Small" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Margin" Value="0,1,0,0" />
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel HorizontalAlignment="Stretch" Margin="2,4,2,8">
+
+        <!-- ====== Profile (name + on/off) ====== -->
+        <Border Style="{StaticResource FluentCard}">
+            <StackPanel>
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Style="{StaticResource SectionIcon}">
+                        <TextBlock Text="&#xE77B;" Style="{StaticResource SectionIconGlyph}" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource SectionTitleBig}"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimEditSecProfile'}" />
+                        <TextBlock Style="{StaticResource SectionSubtitle}"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimEditSecProfileSub'}" />
+                    </StackPanel>
+                    <local:AToggle Grid.Column="2" Background="Transparent" BorderBrush="Transparent"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='EnabledActive'}"
+                                   Checked="{Binding Profile.Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </Grid>
+                <TextBox Text="{Binding Profile.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         Tag="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ProfileName'}"
+                         Style="{DynamicResource placeHolder}" />
+            </StackPanel>
+        </Border>
+
+        <!-- ====== Aim key (HOLD) — the defining per-profile setting ====== -->
+        <Border Style="{StaticResource FluentCard}">
+            <StackPanel>
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Style="{StaticResource SectionIcon}">
+                        <TextBlock Text="&#xE765;" Style="{StaticResource SectionIconGlyph}" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource SectionTitleBig}"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimProfileAimKey'}" />
+                        <TextBlock Style="{StaticResource SectionSubtitle}"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimEditSecKeySub'}" />
+                    </StackPanel>
+                </Grid>
+                <!-- The titled MultiKeyChanger is built into this panel in code-behind (PopulateAimKeyBinder). -->
+                <StackPanel x:Name="AimKeyPanel" />
+                <TextBlock x:Name="AimKeyWarning"
+                           Visibility="Collapsed"
+                           Margin="2,2,2,0"
+                           FontFamily="Segoe UI Variable Small"
+                           FontSize="11"
+                           TextWrapping="Wrap"
+                           Foreground="#E8A33D" />
+            </StackPanel>
+        </Border>
+
+        <!-- ====== Feel (preset + tuning) ====== -->
+        <Border Style="{StaticResource FluentCard}">
+            <StackPanel>
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Style="{StaticResource SectionIcon}">
+                        <TextBlock Text="&#xE713;" Style="{StaticResource SectionIconGlyph}" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource SectionTitleBig}"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimEditSecFeel'}" />
+                        <TextBlock Style="{StaticResource SectionSubtitle}"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimEditSecFeelSub'}" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- Preset dropdown — selecting one overwrites the tuning fields (after a warning). -->
+                <Label Foreground="{StaticResource Foreground}" FontSize="12" FontFamily="Segoe UI Variable Text"
+                       Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimPreset'}" />
+                <ComboBox x:Name="PresetCombo" Margin="2,2,2,4"
+                          ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimPresetTooltip'}"
+                          SelectionChanged="PresetCombo_SelectionChanged" />
+
+                <!-- Tuning controls built in code-behind (reuse AddSlider/AddToggle/AddDropdown + BindTo). -->
+                <StackPanel x:Name="TunePanel" Margin="0,4,0,0" />
+            </StackPanel>
+        </Border>
+
+        <!-- ====== Aim region (+ random aim point, which picks a point inside the region) ====== -->
+        <Border Style="{StaticResource FluentCard}">
+            <StackPanel>
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Style="{StaticResource SectionIcon}">
+                        <TextBlock Text="&#xE7B3;" Style="{StaticResource SectionIconGlyph}" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource SectionTitleBig}"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='UseAimRegion'}" />
+                        <TextBlock Style="{StaticResource SectionSubtitle}"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimEditSecRegionSub'}" />
+                    </StackPanel>
+                    <Button Grid.Column="2" x:Name="EditRegionButton" VerticalAlignment="Center"
+                            Padding="12,4,12,4" MinHeight="28"
+                            Style="{DynamicResource FluentStandardButton}"
+                            Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='EditAimRegion'}"
+                            Click="EditRegion_Click" />
+                </Grid>
+                <local:AToggle Background="Transparent" BorderBrush="Transparent"
+                               Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='RandomAimPoint'}"
+                               ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='RandomAimPointTooltip'}"
+                               Checked="{Binding Profile.RandomAimPoint, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            </StackPanel>
+        </Border>
+
+        <!-- ====== Aim disengage (per-profile pause rules) ====== -->
+        <Border Style="{StaticResource FluentCard}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Style="{StaticResource SectionIcon}">
+                    <TextBlock Text="&#xE711;" Style="{StaticResource SectionIconGlyph}" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Style="{StaticResource SectionTitleBig}"
+                               Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ConfigureAimDisengage'}" />
+                    <TextBlock Style="{StaticResource SectionSubtitle}"
+                               Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimEditSecDisengageSub'}" />
+                </StackPanel>
+                <Button Grid.Column="2" x:Name="EditDisengageButton" VerticalAlignment="Center"
+                        Padding="12,4,12,4" MinHeight="28"
+                        Style="{DynamicResource FluentStandardButton}"
+                        Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Edit'}"
+                        ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimDisengageDescription'}"
+                        Click="EditDisengage_Click" />
+            </Grid>
+        </Border>
+
+        <!-- ====== Auto-activation (OCR weapon filter — an extra gate ON TOP of the aim key) ====== -->
+        <Border Style="{StaticResource FluentCard}">
+            <StackPanel>
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Style="{StaticResource SectionIcon}">
+                        <TextBlock Text="&#xE721;" Style="{StaticResource SectionIconGlyph}" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource SectionTitleBig}"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimEditSecActivation'}" />
+                        <TextBlock Style="{StaticResource SectionSubtitle}"
+                                   Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimEditSecActivationSub'}" />
+                    </StackPanel>
+                </Grid>
+
+                <Label Foreground="{StaticResource Foreground}" FontSize="12" FontFamily="Segoe UI Variable Text"
+                       Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='MatchProcessOptional'}" />
+                <TextBox Margin="2,5"
+                         Text="{Binding Profile.MatchProcess, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         Tag="cs2*, valorant, *fortnite*"
+                         FontFamily="Segoe UI Variable Text"
+                         Style="{DynamicResource placeHolder}" />
+
+                <local:AToggle Margin="0,8,0,0"
+                               BorderBrush="Transparent" Background="Transparent"
+                               Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AntiRecoilAutoSwitchOnOcr'}"
+                               Checked="{Binding Profile.AutoSwitchOnOcr, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                <Label Foreground="{StaticResource Foreground}" FontSize="12" FontFamily="Segoe UI Variable Text"
+                       Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AntiRecoilOcrRegion'}"
+                       ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AntiRecoilOcrRegionHelp'}" />
+                <Grid Margin="2,5,2,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ComboBox x:Name="OcrRegionCombo" Grid.Column="0"
+                              SelectionChanged="OcrRegionCombo_SelectionChanged"
+                              IsEnabled="{Binding Profile.AutoSwitchOnOcr}" />
+                    <Button Grid.Column="1"
+                            Margin="6,0,0,0" Padding="12,4,12,4" MinHeight="28"
+                            Style="{DynamicResource FluentStandardButton}"
+                            Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='EditOcrRegionsButton'}"
+                            ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='EditOcrRegionsButtonTooltip'}"
+                            Click="EditRegions_Click" />
+                </Grid>
+
+                <Label Foreground="{StaticResource Foreground}" FontSize="12" FontFamily="Segoe UI Variable Text"
+                       Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AntiRecoilWeaponMatch'}"
+                       ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AntiRecoilWeaponMatchHelp'}" />
+                <TextBox Margin="2,5"
+                         Text="{Binding Profile.WeaponMatch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         IsEnabled="{Binding Profile.AutoSwitchOnOcr}"
+                         Tag="AK, Vandal, AWP, ..."
+                         FontFamily="Segoe UI Variable Text"
+                         Style="{DynamicResource placeHolder}" />
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

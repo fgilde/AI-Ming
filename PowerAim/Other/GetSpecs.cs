@@ -1,5 +1,5 @@
-﻿using System.Management;
-using Visuality;
+using System.Management;
+using PowerAim.Visuality;
 
 namespace PowerAim.Class
 {

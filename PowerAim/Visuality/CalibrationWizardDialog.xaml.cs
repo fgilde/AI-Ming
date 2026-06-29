@@ -10,7 +10,10 @@ namespace PowerAim.Visuality;
 
 /// <summary>
 ///     Step-based wizard that drives <see cref="SensitivityCalibrator"/> from the UI, presents the
-///     result, and offers to apply the suggested <see cref="SliderSettings.MouseSensitivity"/>.
+///     result, and applies the measured calibration ratio (screen pixels per mouse count) to
+///     <see cref="AISettings.CalibratedPixelsPerCount"/> / <see cref="AimProfile.CalibratedPixelsPerCount"/>.
+///     With that ratio set, the aim converts a target's pixel offset into exact mouse counts, so the
+///     strength slider feels the same in every game — the ratio is the calibration, the slider is the feel.
 ///     <para>
 ///     The wizard temporarily forces <c>GlobalActive = false</c> while it runs so the aim/trigger
 ///     pipelines don't fight the calibration impulses. The previous state is restored on close.
@@ -26,7 +29,14 @@ public partial class CalibrationWizardDialog
     private Step _step = Step.Welcome;
     private CancellationTokenSource? _cts;
     private CalibrationResult? _lastResult;
+    private double _suggestedRatio;
     private bool _restoredGlobalActive;
+
+    /// <summary>
+    ///     When set, "Apply" writes the measured calibration ratio to this profile (so the profile
+    ///     editor's bound value updates) instead of the global live <see cref="AISettings"/>.
+    /// </summary>
+    public AimProfile? TargetProfile { get; set; }
 
     public CalibrationWizardDialog()
     {
@@ -193,13 +203,17 @@ public partial class CalibrationWizardDialog
 
     private void ShowResult(CalibrationResult result)
     {
-        var settings = AppConfig.Current?.SliderSettings;
-        double currentSens = settings?.MouseSensitivity ?? 0;
+        // The measured ratio (screen pixels per mouse count) IS the value we store — applying it lets
+        // the aim convert a pixel offset into exact counts. (Old behaviour derived a "suggested
+        // sensitivity" from it, which is why apply produced a value unrelated to the displayed ratio.)
+        double currentCal = TargetProfile?.CalibratedPixelsPerCount
+                            ?? AppConfig.Current?.AISettings?.CalibratedPixelsPerCount ?? 0;
+        _suggestedRatio = result.Ratio;
 
         RatioText.Text = $"{result.Ratio:0.000}  ({result.MeasuredPixels:0.0} px / {result.MoveAmount} units)";
         SamplesText.Text = result.SamplesUsed.ToString();
-        CurrentSensText.Text = currentSens.ToString("0.00");
-        SuggestedSensText.Text = result.SuggestedSensitivity.ToString("0.00");
+        CurrentSensText.Text = currentCal > 0 ? currentCal.ToString("0.000") : "—";
+        SuggestedSensText.Text = _suggestedRatio.ToString("0.000");
 
         InterpretationText.Text = result.Ratio switch
         {
@@ -223,9 +237,16 @@ public partial class CalibrationWizardDialog
 
     private void ApplySuggested()
     {
-        var settings = AppConfig.Current?.SliderSettings;
-        if (settings is null || _lastResult is null || !_lastResult.Ok) return;
-        settings.MouseSensitivity = _lastResult.SuggestedSensitivity;
+        if (_lastResult is not { Ok: true }) return;
+        if (TargetProfile != null)
+        {
+            // Profile edit flow: store on the profile. Apply() mirrors it to AISettings on activate.
+            TargetProfile.CalibratedPixelsPerCount = _suggestedRatio;
+            return;
+        }
+        var ai = AppConfig.Current?.AISettings;
+        if (ai is null) return;
+        ai.CalibratedPixelsPerCount = _suggestedRatio;
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e)

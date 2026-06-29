@@ -1,21 +1,17 @@
-﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using PowerAim.AILogic.Actions;
 using PowerAim.AILogic;
 using PowerAim.Config;
 using PowerAim.InputLogic;
 using PowerAim.Types;
-using InputLogic;
-using System.Windows.Input;
 
 
 public class AutoTriggerAction : BaseAction
 {
     private Prediction? _lastPrediction;
-    private List<CancellationTokenSource> _autoTriggerCtsList = [];
-    private Dictionary<ActionTrigger, DateTime> _triggerCooldowns = []; // Track cooldowns for each trigger
-    private Dictionary<ActionTrigger, KeyPressState> _triggerKeyStates = []; // Store current key states for each trigger
+    private readonly List<CancellationTokenSource> _autoTriggerCtsList = [];
+    private readonly Dictionary<ActionTrigger, DateTime> _triggerCooldowns = []; // Track cooldowns for each trigger
+    private readonly Dictionary<ActionTrigger, KeyPressState> _triggerKeyStates = []; // Store current key states for each trigger
 
     public AutoTriggerAction()
     {

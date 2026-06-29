@@ -22,9 +22,9 @@ public sealed class PageLayoutManager
 {
     private readonly string _pageName;
     private readonly FrameworkElement _pageRoot;
-    private readonly List<BoxRef> _boxes = new();
+    private readonly List<BoxRef> _boxes = [];
     /// <summary>Distinct host StackPanels in document order. Index = column ID for persistence.</summary>
-    private readonly List<StackPanel> _hosts = new();
+    private readonly List<StackPanel> _hosts = [];
 
     private PageLayoutManager(string pageName, FrameworkElement pageRoot)
     {
@@ -226,6 +226,21 @@ public sealed class PageLayoutManager
 
     public IEnumerable<BoxRef> HiddenBoxes()
         => _boxes.Where(b => b.Border.Visibility == Visibility.Collapsed);
+
+    /// <summary>
+    ///     Re-apply the active config's layout from scratch. Used when the config changes while the
+    ///     page's boxes already exist (the boxes survive <c>CreateUI()</c>, so without this the
+    ///     previous config's hidden/order state would stick). Resets every box to visible, then
+    ///     hides + reorders per the current <see cref="AppConfig.LayoutConfiguration"/>. Sets
+    ///     <see cref="UIElement.Visibility"/> directly (not via Hide/RestoreBox) so it does NOT
+    ///     fire <see cref="LayoutChanged"/> — re-applying on load must never trigger a save.
+    /// </summary>
+    public void ReapplyLayout()
+    {
+        foreach (var box in _boxes)
+            box.Border.Visibility = Visibility.Visible;
+        ApplyPersistedLayout();
+    }
 
     // ============================================================================ DRAG ====
 

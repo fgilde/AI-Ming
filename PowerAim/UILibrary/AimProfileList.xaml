@@ -1,0 +1,120 @@
+<UserControl x:Class="PowerAim.UILibrary.AimProfileList"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:uiLibrary="clr-namespace:PowerAim.UILibrary"
+             xmlns:poweraim="clr-namespace:PowerAim"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Border BorderThickness="0" Background="Transparent">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <ListBox
+                x:Name="ProfilesList"
+                ItemsSource="{Binding Profiles, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                Foreground="{DynamicResource FluentTextPrimary}"
+                FontFamily="Segoe UI Variable Text"
+                Margin="0"
+                Padding="2"
+                HorizontalContentAlignment="Stretch">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <!-- Effective badge: shown on whichever profile is currently DRIVING
+                                         the aim (a held aim-key profile, else the selected one). -->
+                                    <TextBlock Text="&#x25CF;"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,6,0"
+                                               FontSize="10"
+                                               Foreground="{DynamicResource FluentAccent}"
+                                               ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimProfileAimingNow'}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsEffective}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding Name}"
+                                               ToolTip="{Binding Description}"
+                                               Foreground="{DynamicResource FluentTextPrimary}"
+                                               FontWeight="SemiBold"
+                                               FontSize="14"
+                                               TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                <TextBlock Foreground="{DynamicResource FluentTextSecondary}"
+                                           FontFamily="Segoe UI Variable Small"
+                                           FontSize="11"
+                                           TextTrimming="CharacterEllipsis"
+                                           Text="{Binding Description}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <!-- Per-profile keybind: press to toggle this profile Enabled/disabled
+                                     (like a trigger's enable key). Persisted under AIM_PROFILE_<id>. -->
+                                <uiLibrary:AKeyChanger KeyConfigName="{Binding Id}"
+                                                       Tag="{Binding}"
+                                                       KeyConfigPrefix="AIM_PROFILE"
+                                                       BindingManager="{Binding DataContext.BindingManager, RelativeSource={RelativeSource AncestorType=poweraim:MainWindow}}"
+                                                       MouseDown="SwallowMouse"
+                                                       GlobalKeyPressed="ApplyBindingEnabled"
+                                                       WithBorder="False"
+                                                       Text="" />
+                                <!-- Enabled toggle: a disabled profile never engages (no radio any more;
+                                     every enabled profile aims on its own aim-key set in the editor). -->
+                                <uiLibrary:AToggle BorderBrush="Transparent" Text=""
+                                                   ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimProfileEnabledTooltip'}"
+                                                   Checked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <Button Style="{StaticResource FluentIconButton}"
+                                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Edit'}"
+                                    Tag="{Binding}"
+                                    MouseDown="SwallowMouse"
+                                    Click="EditProfile_Click"
+                                    Foreground="{DynamicResource FluentTextPrimary}"
+                                    Content="&#xEB7E;"
+                                    Padding="0,0,0,0"
+                                    FontSize="20"
+                                    Width="50" />
+                                <Button Style="{StaticResource FluentIconButton}"
+                                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Delete'}"
+                                    Tag="{Binding}"
+                                    MouseDown="SwallowMouse"
+                                    Click="DeleteProfile_Click"
+                                    Foreground="{DynamicResource FluentTextPrimary}"
+                                    Content="&#xE74D;"
+                                    Padding="0,0,0,0"
+                                    FontSize="20"
+                                    Width="50" />
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <Border Grid.Row="1">
+                <Button Style="{StaticResource FluentIconButton}"
+                    HorizontalAlignment="Right"
+                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimAddProfile'}"
+                    MouseDown="SwallowMouse"
+                    Click="AddProfile_Click"
+                    Foreground="{DynamicResource FluentTextPrimary}"
+                    Content="&#xECC8;"
+                    Padding="0,0,0,0"
+                    FontSize="20"
+                    Width="50" />
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>

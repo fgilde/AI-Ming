@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
-using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using PowerAim.Config;
 using Newtonsoft.Json;
@@ -11,7 +10,7 @@ namespace PowerAim.InputLogic.HidHide;
 
 public static class HidHideHelper
 {
-    private static ConcurrentDictionary<string, HidHideDeviceResult> _deviceCache = new();
+    private static readonly ConcurrentDictionary<string, HidHideDeviceResult> _deviceCache = new();
 
     public static void Hide(this Controller controller)
     {
@@ -195,8 +194,8 @@ public static class HidHideHelper
 
     public static string GetHidHidePath()
     {
-        string hidHidePath = AppConfig.Current.FileLocationState.HidHidePath;
-        if (!File.Exists(hidHidePath))
+        var hidHidePath = AppConfig.Current?.FileLocationState?.HidHidePath;
+        if (string.IsNullOrEmpty(hidHidePath) || !File.Exists(hidHidePath))
             hidHidePath = GetHidHideDefaultPath();
         return File.Exists(hidHidePath) ? hidHidePath : null;
     }

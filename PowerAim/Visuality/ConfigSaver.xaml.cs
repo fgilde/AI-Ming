@@ -1,10 +1,10 @@
 using PowerAim.Class;
-using Class;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using Core;
 using PowerAim;
 using PowerAim.Config;
 using PowerAim.Extensions;
@@ -12,16 +12,18 @@ using Color = System.Windows.Media.Color;
 using ColorConverter = System.Windows.Media.ColorConverter;
 using MessageBox = System.Windows.MessageBox;
 
-namespace Visuality
+namespace PowerAim.Visuality
 {
     /// <summary>
     /// Interaction logic for ConfigSaver.xaml
     /// </summary>
     public partial class ConfigSaver 
     {
-        private static Color EnableColor = (Color)ColorConverter.ConvertFromString("#FF722ED1");
         private static Color DisableColor = (Color)ColorConverter.ConvertFromString("#FFFFFFFF");
         private static TimeSpan AnimationDuration = TimeSpan.FromMilliseconds(500);
+
+        // Always center on the owner (MainWindow) instead of restoring a free-floating position.
+        protected override bool SaveRestorePosition => false;
 
         public void SetColorAnimation(Color fromColor, Color toColor, TimeSpan duration)
         {
@@ -39,7 +41,7 @@ namespace Visuality
 
         private void WriteJSON()
         {
-            var path = $"bin\\configs\\{ConfigNameTextbox.Text}.cfg";
+            var path = $"{Constants.ConfigBasePath}\\{ConfigNameTextbox.Text}.cfg";
             AppConfig.Current.Save(path);
             new NoticeBar("Config has been saved to bin/configs.", 4000).Show();
             Close();
@@ -51,7 +53,7 @@ namespace Visuality
             if (ExtraStrings == string.Empty)
             {
                 ExtraStrings = " (Found in Downloadable Model menu)";
-                SetColorAnimation((Color)SwitchMoving.Background.GetValue(SolidColorBrush.ColorProperty), EnableColor, AnimationDuration);
+                SetColorAnimation((Color)SwitchMoving.Background.GetValue(SolidColorBrush.ColorProperty), ApplicationConstants.AccentColor, AnimationDuration);
                 Animator.ObjectShift(AnimationDuration, SwitchMoving, SwitchMoving.Margin, new(0, 0, -1, 0));
             }
             else

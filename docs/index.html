@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PowerAim — AI aim alignment for Windows</title>
+<meta name="description" content="PowerAim is a free, source-available AI aim-alignment tool for Windows. Real-time YOLOv8 detection, smart target tracking, gamepad support, OCR triggers and an LLM AutoPlay system. 100% local." />
+<meta name="theme-color" content="#07050d" />
+<link rel="icon" type="image/png" href="images/PowerAim-icon-256.png" />
+<meta property="og:title" content="PowerAim — AI aim alignment for Windows" />
+<meta property="og:description" content="Real-time detection, smart tracking, gamepad + OCR, LLM AutoPlay. Free, source-available, 100% local." />
+<meta property="og:image" content="images/main.png" />
+<meta property="og:type" content="website" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#07050d; --bg-2:#0b0816; --panel:rgba(255,255,255,.026);
+    --panel-2:rgba(255,255,255,.05); --line:rgba(255,255,255,.09);
+    --line-strong:rgba(255,255,255,.16);
+    --purple:#8e5ae0; --purple-bright:#a87bf0; --cyan:#60cdff;
+    --ink:#ece9f7; --muted:#9c95b8; --muted-2:#6f6889;
+    --display:'Space Grotesk',system-ui,sans-serif;
+    --mono:ui-monospace,'SF Mono','JetBrains Mono','Cascadia Code',Consolas,monospace;
+    --maxw:1180px;
+    --grad:linear-gradient(110deg,var(--purple) 0%,var(--cyan) 100%);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; line-height:1.6;
+    overflow-x:hidden;
+  }
+  /* deep background: dot grid + twin radial glows + grain */
+  body::before{
+    content:""; position:fixed; inset:0; z-index:-2; pointer-events:none;
+    background:
+      radial-gradient(60% 50% at 18% 0%, rgba(142,90,224,.20), transparent 60%),
+      radial-gradient(55% 45% at 92% 8%, rgba(96,205,255,.13), transparent 55%),
+      var(--bg);
+  }
+  body::after{
+    content:""; position:fixed; inset:0; z-index:-2; pointer-events:none; opacity:.5;
+    background-image:
+      linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+    background-size:46px 46px;
+    -webkit-mask-image:radial-gradient(circle at 50% 28%,#000,transparent 78%);
+            mask-image:radial-gradient(circle at 50% 28%,#000,transparent 78%);
+  }
+  .grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 26px}
+  .mono{font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase}
+  .accent-text{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  /* ---- nav ---- */
+  header.nav{position:sticky;top:0;z-index:50;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    background:rgba(7,5,13,.62);border-bottom:1px solid transparent;transition:border-color .3s,background .3s}
+  header.nav.scrolled{border-bottom-color:var(--line);background:rgba(7,5,13,.85)}
+  .nav-in{display:flex;align-items:center;gap:28px;height:66px}
+  .brand{display:flex;align-items:center;gap:11px;font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:-.01em}
+  .brand img{width:28px;height:28px;border-radius:7px}
+  .brand b{font-weight:700}
+  .nav-links{display:flex;gap:26px;margin-left:auto}
+  .nav-links a{color:var(--muted);font-size:14.5px;font-weight:500;transition:color .2s;position:relative}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-cta{margin-left:6px}
+  .btn{display:inline-flex;align-items:center;gap:9px;font-family:var(--display);font-weight:600;
+    font-size:15px;padding:11px 20px;border-radius:11px;cursor:pointer;border:1px solid transparent;
+    transition:transform .15s ease,box-shadow .25s ease,background .2s,border-color .2s;white-space:nowrap}
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--grad);color:#0a0614;box-shadow:0 6px 30px -8px rgba(142,90,224,.6)}
+  .btn-primary:hover{box-shadow:0 10px 38px -8px rgba(96,205,255,.6);transform:translateY(-2px)}
+  .btn-ghost{background:var(--panel);border-color:var(--line-strong);color:var(--ink)}
+  .btn-ghost:hover{background:var(--panel-2);border-color:var(--purple)}
+  .btn svg{width:17px;height:17px}
+  @media(max-width:780px){.nav-links{display:none}}
+
+  /* ---- hero ---- */
+  .hero{position:relative;padding:84px 0 70px}
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:54px;align-items:center}
+  .eyebrow{display:inline-flex;align-items:center;gap:10px;color:var(--cyan);
+    border:1px solid var(--line-strong);background:var(--panel);border-radius:999px;padding:6px 14px;margin-bottom:26px}
+  .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 12px var(--cyan);animation:pulse 2.4s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  h1.title{font-family:var(--display);font-weight:700;font-size:clamp(40px,6vw,68px);line-height:1.02;letter-spacing:-.025em}
+  h1.title span{display:block}
+  .lede{color:var(--muted);font-size:19px;max-width:30em;margin:24px 0 34px}
+  .lede b{color:var(--ink);font-weight:600}
+  .hero-cta{display:flex;gap:14px;flex-wrap:wrap}
+  .trust{display:flex;gap:22px;margin-top:30px;flex-wrap:wrap;color:var(--muted-2)}
+  .trust span{display:flex;align-items:center;gap:8px;font-size:13.5px}
+  .trust svg{width:15px;height:15px;color:var(--cyan)}
+
+  /* hero visual: framed screenshot with HUD reticle */
+  .scope{position:relative;aspect-ratio:16/11;border-radius:16px;overflow:hidden;
+    border:1px solid var(--line-strong);background:#0a0717;
+    box-shadow:0 40px 90px -30px rgba(0,0,0,.8),0 0 0 1px rgba(142,90,224,.12) inset;
+    transform:perspective(1400px) rotateY(-9deg) rotateX(3deg);transition:transform .5s ease}
+  .scope:hover{transform:perspective(1400px) rotateY(-3deg) rotateX(1deg)}
+  .scope img{width:100%;height:100%;object-fit:cover;object-position:top left;display:block;opacity:.96}
+  .scope .scan{position:absolute;left:0;right:0;height:42%;top:-42%;
+    background:linear-gradient(180deg,transparent,rgba(96,205,255,.10),transparent);animation:scan 5.5s linear infinite;pointer-events:none}
+  @keyframes scan{0%{top:-42%}100%{top:100%}}
+  .reticle{position:absolute;width:108px;height:108px;left:53%;top:44%;transform:translate(-50%,-50%);pointer-events:none}
+  .reticle .ring{position:absolute;inset:0;border:1.5px solid rgba(96,205,255,.7);border-radius:50%;
+    border-right-color:transparent;border-bottom-color:transparent;animation:spin 7s linear infinite}
+  .reticle .ring.r2{inset:18px;border-color:rgba(142,90,224,.6);border-left-color:transparent;border-top-color:transparent;animation-duration:5s;animation-direction:reverse}
+  .reticle .cx,.reticle .cy{position:absolute;background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+  .reticle .cx{left:50%;top:0;bottom:0;width:1.5px;transform:translateX(-50%)}
+  .reticle .cy{top:50%;left:0;right:0;height:1.5px;transform:translateY(-50%)}
+  .reticle .gap{position:absolute;left:50%;top:50%;width:26px;height:26px;transform:translate(-50%,-50%);background:#0a0717;border-radius:50%}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  /* detection box label on the scope */
+  .tag-box{position:absolute;left:36%;top:30%;width:30%;height:36%;border:1.5px solid rgba(96,205,255,.55);border-radius:3px}
+  .tag-box::before{content:"target · 0.98";position:absolute;top:-22px;left:-1px;font-family:var(--mono);
+    font-size:10.5px;letter-spacing:.1em;color:#0a0614;background:var(--cyan);padding:2px 7px;border-radius:3px}
+
+  /* corner brackets utility */
+  .brackets{position:relative}
+  .brackets::before,.brackets::after{content:"";position:absolute;width:14px;height:14px;border:1.5px solid var(--purple);opacity:.55;transition:opacity .25s,border-color .25s}
+  .brackets::before{left:-1px;top:-1px;border-right:0;border-bottom:0}
+  .brackets::after{right:-1px;bottom:-1px;border-left:0;border-top:0}
+  .brackets:hover::before,.brackets:hover::after{opacity:1;border-color:var(--cyan)}
+
+  @media(max-width:880px){.hero-grid{grid-template-columns:1fr;gap:40px}.scope{transform:none}.scope:hover{transform:none}}
+
+  /* ---- section frame ---- */
+  section{padding:74px 0;position:relative}
+  .sec-head{margin-bottom:42px;max-width:42em}
+  .sec-kicker{color:var(--purple-bright);margin-bottom:14px}
+  .sec-title{font-family:var(--display);font-weight:700;font-size:clamp(28px,3.6vw,40px);letter-spacing:-.02em;line-height:1.08}
+  .sec-sub{color:var(--muted);margin-top:14px;font-size:17px}
+  .divider{height:1px;background:linear-gradient(90deg,transparent,var(--line-strong),transparent)}
+
+  /* ---- stats strip ---- */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  .stat{background:var(--bg-2);padding:26px 24px}
+  .stat .n{font-family:var(--display);font-weight:700;font-size:clamp(26px,3.4vw,40px);letter-spacing:-.02em;line-height:1}
+  .stat .l{color:var(--muted);font-size:13.5px;margin-top:9px}
+  @media(max-width:720px){.stats{grid-template-columns:repeat(2,1fr)}}
+
+  /* ---- features ---- */
+  .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .feat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px 24px 24px;transition:transform .2s,border-color .2s,background .2s}
+  .feat:hover{transform:translateY(-4px);border-color:var(--line-strong);background:var(--panel-2)}
+  .feat .ix{font-family:var(--mono);font-size:11px;color:var(--muted-2);letter-spacing:.2em}
+  .feat h3{font-family:var(--display);font-weight:600;font-size:19px;margin:14px 0 9px;letter-spacing:-.01em}
+  .feat p{color:var(--muted);font-size:14.5px}
+  .feat .ico{width:34px;height:34px;color:var(--cyan);float:right;margin-top:-4px}
+  @media(max-width:880px){.feat-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:560px){.feat-grid{grid-template-columns:1fr}}
+
+  /* any-game band */
+  .anygame{margin-bottom:46px;padding-bottom:40px;border-bottom:1px solid var(--line)}
+  .anygame .line{font-family:var(--display);font-weight:600;font-size:clamp(20px,2.6vw,28px);
+    letter-spacing:-.01em;line-height:1.25;max-width:22em;margin:14px 0 22px}
+  .anygame .line b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .chips{display:flex;flex-wrap:wrap;gap:9px}
+  .chip{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--muted);
+    border:1px solid var(--line-strong);background:var(--panel);border-radius:999px;padding:7px 14px;transition:color .2s,border-color .2s}
+  .chip:hover{color:var(--ink);border-color:var(--purple)}
+  .chip.more{color:var(--muted-2);border-style:dashed}
+
+  /* ---- downloads ---- */
+  .dl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .dl{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:28px 26px 26px;display:flex;flex-direction:column;transition:transform .2s,border-color .25s,box-shadow .3s}
+  .dl:hover{transform:translateY(-5px);border-color:var(--line-strong)}
+  .dl.feat-rec{border-color:rgba(142,90,224,.5);background:linear-gradient(180deg,rgba(142,90,224,.10),var(--panel))}
+  .dl.feat-rec:hover{box-shadow:0 24px 60px -24px rgba(142,90,224,.5)}
+  .dl .pill{position:absolute;top:-11px;left:26px;font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;
+    background:var(--grad);color:#0a0614;padding:4px 11px;border-radius:999px;font-weight:600}
+  .dl .kind{font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--cyan)}
+  .dl h3{font-family:var(--display);font-weight:600;font-size:21px;margin:10px 0 8px}
+  .dl p{color:var(--muted);font-size:14px;flex:1;margin-bottom:20px}
+  .dl .meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;color:var(--muted-2);font-size:12.5px;font-family:var(--mono);letter-spacing:.06em}
+  .dl .dc{color:var(--ink)}
+  .dl .btn{width:100%;justify-content:center}
+  @media(max-width:880px){.dl-grid{grid-template-columns:1fr}}
+  .dl-note{margin-top:22px;color:var(--muted-2);font-size:13.5px;display:flex;gap:10px;align-items:flex-start}
+  .dl-note svg{width:16px;height:16px;flex:none;margin-top:2px;color:var(--purple-bright)}
+
+  /* downloads-by-version bars */
+  .verbars{display:flex;flex-direction:column;gap:11px;margin-top:8px}
+  .verbar{display:grid;grid-template-columns:96px 1fr auto;align-items:center;gap:14px}
+  .verbar .vt{font-family:var(--mono);font-size:12.5px;color:var(--ink)}
+  .verbar .track{height:9px;border-radius:6px;background:var(--panel-2);overflow:hidden}
+  .verbar .fill{height:100%;border-radius:6px;background:var(--grad);width:0;transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
+  .verbar .vc{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+
+  /* ---- changelog ---- */
+  .rel{border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden;background:var(--panel)}
+  .rel summary{list-style:none;cursor:pointer;padding:20px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .rel summary::-webkit-details-marker{display:none}
+  .rel .vtag{font-family:var(--mono);font-weight:600;font-size:14px;color:var(--ink);
+    border:1px solid var(--line-strong);padding:4px 12px;border-radius:8px}
+  .rel .vtag.latest{background:var(--grad);color:#0a0614;border-color:transparent}
+  .rel .rdate{color:var(--muted-2);font-size:13.5px}
+  .rel .rdc{margin-left:auto;color:var(--muted);font-family:var(--mono);font-size:12.5px;display:flex;align-items:center;gap:7px}
+  .rel .rdc svg{width:14px;height:14px;color:var(--cyan)}
+  .rel .chev{transition:transform .25s;color:var(--muted-2)}
+  .rel[open] .chev{transform:rotate(90deg)}
+  .rel .body{padding:4px 26px 26px;color:var(--muted);font-size:15px;border-top:1px solid var(--line)}
+  .rel .body h1,.rel .body h2,.rel .body h3{font-family:var(--display);color:var(--ink);margin:18px 0 8px;font-size:17px;font-weight:600}
+  .rel .body ul{margin:8px 0 8px 20px}.rel .body li{margin:5px 0}
+  .rel .body a{color:var(--cyan);border-bottom:1px solid rgba(96,205,255,.3)}
+  .rel .body code{font-family:var(--mono);font-size:.86em;background:var(--panel-2);padding:1px 6px;border-radius:5px;color:var(--purple-bright)}
+  .rel .body strong{color:var(--ink)}
+
+  .loading{color:var(--muted-2);font-family:var(--mono);font-size:13px;letter-spacing:.1em;display:flex;align-items:center;gap:12px}
+  .loading::before{content:"";width:14px;height:14px;border:2px solid var(--line-strong);border-top-color:var(--cyan);border-radius:50%;animation:spin .8s linear infinite}
+  .err{color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 22px;font-size:14.5px}
+  .err a{color:var(--cyan)}
+
+  /* ---- footer ---- */
+  footer{border-top:1px solid var(--line);padding:50px 0 60px;margin-top:30px}
+  .foot-grid{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap;align-items:flex-start}
+  .foot-brand{max-width:30em}
+  .foot-brand p{color:var(--muted-2);font-size:13.5px;margin-top:14px}
+  .foot-links{display:flex;gap:54px;flex-wrap:wrap}
+  .foot-col h4{font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--muted-2);margin-bottom:14px;text-transform:uppercase}
+  .foot-col a{display:block;color:var(--muted);font-size:14px;margin:8px 0;transition:color .2s}
+  .foot-col a:hover{color:var(--cyan)}
+  .foot-bottom{margin-top:40px;padding-top:24px;border-top:1px solid var(--line);color:var(--muted-2);font-size:13px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+  /* reveal on scroll */
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<header class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top"><img src="images/PowerAim-icon-256.png" alt="" /><span>Power<b class="accent-text">Aim</b></span></a>
+    <nav class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#download">Download</a>
+      <a href="#changelog">Changelog</a>
+      <a href="documentation/">Docs</a>
+    </nav>
+    <a class="btn btn-ghost nav-cta" href="https://github.com/fgilde/AI-Ming" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.6.5.5 5.6.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.6 18.4.5 12 .5Z"/></svg>
+      GitHub
+    </a>
+  </div>
+</header>
+
+<a id="top"></a>
+<main>
+
+<!-- ===================== HERO ===================== -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow mono"><span class="dot"></span> AI aim alignment · .NET 10 · 100% local</span>
+      <h1 class="title"><span>Lock on.</span><span class="accent-text">Stay smooth.</span></h1>
+      <p class="lede">PowerAim runs a real-time <b>YOLOv8</b> model on your screen and nudges the aim toward the target — with persistent <b>multi-target tracking</b>, adaptive smoothing, gamepad output, OCR triggers and an <b>LLM-driven AutoPlay</b>. Free, source-available, no key system.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#download">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 21h16"/></svg>
+          Download
+        </a>
+        <a class="btn btn-ghost" href="getting-started/">Read the docs</a>
+      </div>
+      <div class="trust">
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> 100% local — no telemetry</span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Source-available</span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> 9 languages</span>
+      </div>
+    </div>
+    <div class="reveal">
+      <div class="scope">
+        <img src="images/main.png" alt="PowerAim main window" loading="eager" />
+        <div class="tag-box"></div>
+        <div class="reticle">
+          <div class="ring"></div><div class="ring r2"></div>
+          <div class="cx"></div><div class="cy"></div><div class="gap"></div>
+        </div>
+        <div class="scan"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== STATS ===================== -->
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="stats reveal" id="stats">
+      <div class="stat"><div class="n" data-count id="st-total">—</div><div class="l">Total downloads</div></div>
+      <div class="stat"><div class="n" id="st-latest">—</div><div class="l">Latest version</div></div>
+      <div class="stat"><div class="n" data-count id="st-releases">—</div><div class="l">Releases shipped</div></div>
+      <div class="stat"><div class="n accent-text">Free</div><div class="l">Forever · no paywall</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FEATURES ===================== -->
+<section id="features">
+  <div class="wrap">
+    <div class="anygame reveal">
+      <div class="sec-kicker mono">// Works with any game</div>
+      <p class="line">It reads the screen, not the game — so it isn't tied to a single title. The same setup works in <b>Call of Duty, Battlefield, Apex, Fortnite</b> and just about anything else.</p>
+      <div class="chips">
+        <span class="chip">Call of Duty</span>
+        <span class="chip">Battlefield</span>
+        <span class="chip">Apex Legends</span>
+        <span class="chip">Fortnite</span>
+        <span class="chip">Valorant</span>
+        <span class="chip">CS2</span>
+        <span class="chip">PUBG</span>
+        <span class="chip">Rust</span>
+        <span class="chip more">+ any other</span>
+      </div>
+    </div>
+    <div class="sec-head reveal">
+      <div class="sec-kicker mono">// Capabilities</div>
+      <h2 class="sec-title">Built like a tool, not a toy.</h2>
+      <p class="sec-sub">A decoupled service architecture, a real Fluent UI, and a capture → inference → control pipeline that you can tune end to end.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat brackets reveal">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><circle cx="12" cy="12" r="2.4"/></svg>
+        <div class="ix">01</div><h3>Profile-based aim</h3>
+        <p>Every aim setting lives on a profile — run several at once, each on its own key, calibrated to your real sensitivity so it feels the same in any game.</p>
+      </div>
+      <div class="feat brackets reveal">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg>
+        <div class="ix">02</div><h3>Adaptive smoothing</h3>
+        <p>Per profile: None, EMA, or an adaptive 1€ filter — steady when slow, responsive on flicks — with optional SORT-style tracking and prediction.</p>
+      </div>
+      <div class="feat brackets reveal">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="7" width="20" height="10" rx="5"/><circle cx="8" cy="12" r="1.6"/><path d="M15 11v2M17 12h-4"/></svg>
+        <div class="ix">03</div><h3>Gamepad in & out</h3>
+        <p>Aim on a virtual Xbox stick via ViGEm, or map controller ↔ keyboard both ways with per-profile hotkeys and presets.</p>
+      </div>
+      <div class="feat brackets reveal">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h4M7 13h6M15 8v8"/></svg>
+        <div class="ix">04</div><h3>OCR HUD reader</h3>
+        <p>Read ammo, health or weapon names off the HUD and gate triggers or auto-switch profiles on AND/OR condition trees.</p>
+      </div>
+      <div class="feat brackets reveal">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3a4 4 0 0 1 4 4c2 .5 3 2 3 4a4 4 0 0 1-1 7H6a4 4 0 0 1-1-7c0-2 1-3.5 3-4a4 4 0 0 1 4-4Z"/><path d="M9 13l2 2 4-4"/></svg>
+        <div class="ix">05</div><h3>LLM AutoPlay</h3>
+        <p>Feed detections + OCR context to a local Ollama model and let it drive scripted actions with cooldowns and a learning mode.</p>
+      </div>
+      <div class="feat brackets reveal">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h10"/><circle cx="19" cy="18" r="2"/></svg>
+        <div class="ix">06</div><h3>Anti-recoil profiles</h3>
+        <p>Record real recoil patterns and replay them, or use image-based compensation — all per-profile with hotkey & OCR activation.</p>
+      </div>
+      <div class="feat brackets reveal">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4l-6 6 2.9 2.9 6-6a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-2.4 2.5-2.5Z"/></svg>
+        <div class="ix">07</div><h3>Dynamic tools</h3>
+        <p>Build your own tools from move / click / send-key / run-exe / delay steps with option variables — each on a start key, next to the Magnifier and HWID spoofer.</p>
+      </div>
+    </div>
+    <div class="reveal" style="margin-top:28px">
+      <a class="btn btn-ghost" href="features.html">Explore all features
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<div class="wrap"><div class="divider"></div></div>
+
+<!-- ===================== STEALTH / EXTERNAL ===================== -->
+<section id="stealth">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-kicker mono">// External by design</div>
+      <h2 class="sec-title">It never touches the game.</h2>
+      <p class="sec-sub">PowerAim works entirely from the outside — it watches the screen and moves your input devices. It does <b style="color:var(--ink)">not</b> read or write game memory, inject code, or load a kernel driver, and <b style="color:var(--ink)">everything it draws</b> — every window and overlay — stays out of screen recordings.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat brackets reveal">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+        <div class="ix">No injection</div><h3>No hooks, no driver</h3>
+        <p>It reads the screen through the OS desktop-duplication API — the same one OBS uses — and never attaches to, hooks, or reads the memory of the game process. Nothing is injected.</p>
+      </div>
+      <div class="feat brackets reveal">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="6" width="20" height="9" rx="3"/><path d="M6 19h12M9 11h.01M13 10h4"/></svg>
+        <div class="ix">Real input only</div><h3>Just your devices</h3>
+        <p>Output is ordinary mouse, keyboard and virtual-controller input — the same kind your real hardware sends. It can even route moves through your Razer, Logitech or ddxoft mouse driver.</p>
+      </div>
+      <div class="feat brackets reveal">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><path d="m4 4 16 16"/></svg>
+        <div class="ix">Hidden from capture</div><h3>Invisible to recorders</h3>
+        <p>Everything PowerAim draws — the main window, every dialog and the crosshair / FOV / ESP overlays — is excluded from screen capture (<span class="mono" style="font-size:11px">WDA_EXCLUDEFROMCAPTURE</span>), so OBS, Discord screen-share, recorders and capture-based tools see nothing of it. On by default.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap"><div class="divider"></div></div>
+
+<!-- ===================== FREE VS PAID ===================== -->
+<section id="free">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-kicker mono">// Free, not freemium</div>
+      <h2 class="sec-title">Don't rent your aim.</h2>
+      <p class="sec-sub">You can pay a recurring subscription for a single-purpose aim tool — or use PowerAim, which does far more, for free.</p>
+    </div>
+    <div class="feat-grid" style="grid-template-columns:1fr 1fr">
+      <div class="feat brackets reveal">
+        <div class="kind mono" style="color:var(--muted,#9c95b8);margin-bottom:10px">Paid aim tools · e.g. NobleAim</div>
+        <h3>A subscription, for aim alone</h3>
+        <p>Single-purpose tools like <a href="#" target="_blank" rel="noopener" style="color:var(--cyan,#60cdff)">NobleAim</a> charge a recurring fee — mostly for aim and a trigger, closed-source, with the meter always running.</p>
+      </div>
+      <div class="feat brackets reveal">
+        <div class="kind mono" style="color:var(--purple-bright,#a87bf0);margin-bottom:10px">PowerAim · free</div>
+        <h3>Get far more, for nothing</h3>
+        <p>Aim profiles, triggers, anti-recoil, OCR, gamepad in &amp; out, LLM AutoPlay, custom tools and the overlays — <b style="color:var(--ink,#ece9f7)">free</b> and source-available, 100% local, no key system, no paywall, no ads.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap"><div class="divider"></div></div>
+
+<!-- ===================== DOWNLOAD ===================== -->
+<section id="download">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-kicker mono">// Get PowerAim · <span id="dl-version">latest</span></div>
+      <h2 class="sec-title">Three ways to run it.</h2>
+      <p class="sec-sub">Not sure? Grab the <b style="color:var(--ink)">Installer</b> — it sets everything up. Pick a zip if you prefer a portable build.</p>
+    </div>
+    <div class="dl-grid" id="dl-cards">
+      <div class="loading" style="grid-column:1/-1">Fetching the latest release…</div>
+    </div>
+    <p class="dl-note reveal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+      <span><b style="color:var(--ink)">DirectML</b> runs on virtually any GPU (AMD, Intel, NVIDIA) and is the safe default. <b style="color:var(--ink)">CUDA</b> is fastest but needs an NVIDIA card with the CUDA runtime. Both are the same app — only the inference backend differs.</span>
+    </p>
+  </div>
+</section>
+
+<div class="wrap"><div class="divider"></div></div>
+
+<!-- ===================== STATS BY VERSION + CHANGELOG ===================== -->
+<section id="changelog">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-kicker mono">// Releases &amp; download stats</div>
+      <h2 class="sec-title">Every version, every change.</h2>
+      <p class="sec-sub">Live from GitHub — what shipped, when, and how many times each build was downloaded.</p>
+    </div>
+
+    <div class="feat brackets reveal" style="margin-bottom:34px;padding:26px 26px 28px">
+      <div class="kind mono" style="color:var(--purple-bright);margin-bottom:18px">Downloads by version</div>
+      <div class="verbars" id="verbars"><div class="loading">Loading stats…</div></div>
+    </div>
+
+    <div id="changelog-list">
+      <div class="loading">Loading changelog…</div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top"><img src="images/PowerAim-icon-256.png" alt="" /><span>Power<b class="accent-text">Aim</b></span></a>
+        <p>AI-powered aim alignment for accessibility, training and fun — a decoupled architecture, Fluent UI, gamepad, OCR, AutoPlay and a fast capture &amp; inference pipeline.</p>
+      </div>
+      <div class="foot-links">
+        <div class="foot-col">
+          <h4>Product</h4>
+          <a href="#features">Features</a>
+          <a href="#download">Download</a>
+          <a href="#changelog">Changelog</a>
+        </div>
+        <div class="foot-col">
+          <h4>Docs</h4>
+          <a href="getting-started/">Getting started</a>
+          <a href="features/">Feature guide</a>
+          <a href="configuration/">Configuration</a>
+        </div>
+        <div class="foot-col">
+          <h4>Project</h4>
+          <a href="https://github.com/fgilde/AI-Ming" target="_blank" rel="noopener">GitHub repo</a>
+          <a href="https://github.com/fgilde/AI-Ming/releases" target="_blank" rel="noopener">All releases</a>
+          <a href="https://github.com/fgilde/AI-Ming/issues" target="_blank" rel="noopener">Report an issue</a>
+        </div>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© <span id="year"></span> Florian Gilde · Source-available under PolyForm Noncommercial — commercial use prohibited.</span>
+      <span>Use responsibly &amp; only where permitted.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var REPO = "fgilde/AI-Ming";
+  var API  = "https://api.github.com/repos/" + REPO + "/releases?per_page=30";
+  var RELEASES_URL = "https://github.com/" + REPO + "/releases";
+  var CACHE_KEY = "poweraim_releases_v1";
+  var CACHE_TTL = 30 * 60 * 1000; // 30 min — be gentle on GitHub's anonymous rate limit
+
+  // Releases older than what the GitHub API returns. They have no live download counts / assets
+  // (archived), and are appended to the changelog for the full version history.
+  var LEGACY_RELEASES = [
+    { tag_name:"1.0.0.6", published_at:"2024-10-20", archived:true, body:
+      "- **Version switch**: toggle between CUDA and DirectML right from settings\n"+
+      "- More human-like mouse click delays\n"+
+      "- Built-in HWID spoofer (SecHex Spoofy) for changing hardware IDs\n"+
+      "- Two new ESP drawing methods: `MediaDrawingContext` and `GDI Context`" },
+    { tag_name:"1.0.0.5", published_at:"2024-10-08", archived:true, body:
+      "- Full **CUDA** support with automatic CPU fallback\n"+
+      "- Multi-trigger system — several independently configurable triggers\n"+
+      "- Sequential key sending with configurable delays\n"+
+      "- Trigger cooldown / break-time\n"+
+      "- Multiple aim keys" },
+    { tag_name:"1.0.0.4", published_at:"2024-09-06", archived:true, body:
+      "- UI hidden during screen capture for clean OBS streaming\n"+
+      "- Multi-language support (9 languages)\n"+
+      "- Magnifier improvements + auto-trigger compatibility\n"+
+      "- Capture border settings\n"+
+      "- Cross-screen / process stability + auto-reattach when the process terminates" },
+    { tag_name:"1.0.0.1 – 1.0.0.3", published_at:"2024-07-10", archived:true, body:
+      "Initial releases and early updates:\n"+
+      "- Gamepad read / send support\n"+
+      "- Global active switch with on-screen indicator\n"+
+      "- FOV opacity slider\n"+
+      "- Auto-trigger independent of Aim Assist\n"+
+      "- ESP improvements with trigger head-area display\n"+
+      "- Trigger delay fixes · Chinese language support" }
+  ];
+
+  document.getElementById("year").textContent = new Date().getFullYear();
+
+  // sticky nav shadow
+  var nav = document.getElementById("nav");
+  addEventListener("scroll", function(){ nav.classList.toggle("scrolled", scrollY > 8); }, {passive:true});
+
+  // reveal on scroll
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); } });
+  }, {threshold:.12});
+  document.querySelectorAll(".reveal").forEach(function(el){ io.observe(el); });
+
+  function fmt(n){ return (n||0).toLocaleString("en-US"); }
+  function esc(s){ return (s||"").replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+  // very small, safe markdown → HTML for release bodies (headings, lists, bold, code, links)
+  function md(src){
+    if(!src) return "<p style='color:var(--muted-2)'>No release notes.</p>";
+    var lines = src.replace(/\r/g,"").split("\n"), out=[], inList=false;
+    function inline(t){
+      t = esc(t);
+      t = t.replace(/`([^`]+)`/g, "<code>$1</code>");
+      t = t.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+      t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+      t = t.replace(/(^|\s)(https?:\/\/[^\s)]+)/g, '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+      return t;
+    }
+    for(var i=0;i<lines.length;i++){
+      var l=lines[i], m;
+      if((m=l.match(/^\s*#{1,6}\s+(.*)/))){ if(inList){out.push("</ul>");inList=false;} out.push("<h3>"+inline(m[1])+"</h3>"); continue; }
+      if((m=l.match(/^\s*[-*+]\s+(.*)/))){ if(!inList){out.push("<ul>");inList=true;} out.push("<li>"+inline(m[1])+"</li>"); continue; }
+      if(/^\s*$/.test(l)){ if(inList){out.push("</ul>");inList=false;} continue; }
+      if(inList){out.push("</ul>");inList=false;}
+      out.push("<p>"+inline(l)+"</p>");
+    }
+    if(inList) out.push("</ul>");
+    return out.join("");
+  }
+
+  // classify a release's assets into installer / directml / cuda
+  function pick(assets){
+    var r={installer:null,directml:null,cuda:null};
+    (assets||[]).forEach(function(a){
+      var n=(a.name||"").toLowerCase();
+      if(/\.exe$/.test(n) || n.indexOf("installer")>=0){ if(!r.installer) r.installer=a; }
+      else if(n.indexOf("cuda")>=0){ if(!r.cuda) r.cuda=a; }
+      else if(/\.zip$/.test(n)){ if(!r.directml) r.directml=a; }
+    });
+    return r;
+  }
+  function dcount(a){ return a ? (a.download_count||0) : 0; }
+  function relDownloads(rel){ return (rel.assets||[]).reduce(function(s,a){return s+(a.download_count||0);},0); }
+
+  function dlCard(opts){
+    var a=opts.asset;
+    var has=!!a;
+    var btn = has
+      ? '<a class="btn btn-primary" href="'+a.browser_download_url+'">'+
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 21h16"/></svg> Download</a>'
+      : '<a class="btn btn-ghost" href="'+RELEASES_URL+'" target="_blank" rel="noopener">View on GitHub</a>';
+    return '<div class="dl '+(opts.rec?'feat-rec':'')+' reveal">'+
+      (opts.rec?'<span class="pill">Recommended</span>':'')+
+      '<div class="kind">'+opts.kind+'</div>'+
+      '<h3>'+opts.title+'</h3>'+
+      '<p>'+opts.desc+'</p>'+
+      '<div class="meta"><span>'+esc(opts.tag||"")+'</span><span class="dc">'+(has?fmt(dcount(a))+" downloads":"n/a")+'</span></div>'+
+      btn+'</div>';
+  }
+
+  function render(releases){
+    releases = (releases||[]).filter(function(r){ return !r.draft; });
+    if(!releases.length) throw new Error("no releases");
+
+    var live = releases;                                  // real GitHub releases (have assets + counts)
+    var have = {}; live.forEach(function(r){ have[r.tag_name]=1; });
+    var all = live.concat(LEGACY_RELEASES.filter(function(L){ return !have[L.tag_name]; })); // + archived history
+
+    var latest = live[0];
+    var totalAll = live.reduce(function(s,r){return s+relDownloads(r);},0);
+
+    // stats
+    countTo(document.getElementById("st-total"), totalAll);
+    document.getElementById("st-latest").textContent = latest.tag_name || "—";
+    countTo(document.getElementById("st-releases"), all.length);
+    document.getElementById("dl-version").textContent = latest.tag_name || "latest";
+
+    // download cards (from latest)
+    var p = pick(latest.assets);
+    var cards = "";
+    cards += dlCard({rec:true, kind:"// 01 · setup.exe", title:"Installer", tag:latest.tag_name,
+      desc:"The easy path — installs PowerAim and everything it needs. Best if you just want it running.", asset:p.installer});
+    cards += dlCard({kind:"// 02 · portable zip", title:"DirectML build", tag:latest.tag_name,
+      desc:"Portable. Runs on any modern GPU — AMD, Intel or NVIDIA. The safe default.", asset:p.directml});
+    cards += dlCard({kind:"// 03 · portable zip", title:"CUDA build", tag:latest.tag_name,
+      desc:"Portable. Fastest inference on NVIDIA GPUs with the CUDA runtime installed.", asset:p.cuda});
+    document.getElementById("dl-cards").innerHTML = cards;
+
+    // downloads-by-version bars (live only — archived legacy has no counts)
+    var withDl = live.map(function(r){ return {tag:r.tag_name, dc:relDownloads(r)}; })
+                         .filter(function(r){ return r.dc>0; });
+    var max = withDl.reduce(function(m,r){return Math.max(m,r.dc);},0) || 1;
+    var vbWrap = document.getElementById("verbars");
+    if(!withDl.length){ vbWrap.innerHTML = '<p style="color:var(--muted-2);font-size:14px">No download counts yet.</p>'; }
+    else {
+      vbWrap.innerHTML = withDl.slice(0,8).map(function(r){
+        return '<div class="verbar"><span class="vt">'+esc(r.tag)+'</span>'+
+               '<span class="track"><span class="fill" data-w="'+Math.round(r.dc/max*100)+'"></span></span>'+
+               '<span class="vc">'+fmt(r.dc)+'</span></div>';
+      }).join("");
+      // animate bars when visible
+      var bio = new IntersectionObserver(function(es){
+        es.forEach(function(e){ if(e.isIntersecting){
+          vbWrap.querySelectorAll(".fill").forEach(function(f){ f.style.width=f.getAttribute("data-w")+"%"; });
+          bio.disconnect();
+        }});
+      }, {threshold:.3});
+      bio.observe(vbWrap);
+    }
+
+    // changelog — live releases first, then archived legacy versions for the full history
+    var list = document.getElementById("changelog-list");
+    list.innerHTML = all.map(function(r,i){
+      var date = r.published_at ? new Date(r.published_at).toLocaleDateString("en-US",{year:"numeric",month:"short",day:"numeric"}) : "";
+      var right = r.archived
+        ? '<span class="rdc" style="opacity:.65">archived</span>'
+        : '<span class="rdc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 21h16"/></svg>'+fmt(relDownloads(r))+'</span>';
+      var body = md(r.body) + (r.archived
+        ? '<p style="margin-top:16px;color:var(--muted-2);font-size:13px">Archived release — downloads for this version are no longer hosted.</p>'
+        : '');
+      return '<details class="rel reveal"'+(i===0?" open":"")+'>'+
+        '<summary>'+
+          '<svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m9 6 6 6-6 6"/></svg>'+
+          '<span class="vtag'+(i===0?" latest":"")+'">'+esc(r.tag_name||"")+'</span>'+
+          '<span class="rdate">'+date+'</span>'+
+          right+
+        '</summary>'+
+        '<div class="body">'+body+'</div>'+
+      '</details>';
+    }).join("");
+    // re-observe newly added reveals
+    document.querySelectorAll("#changelog-list .reveal,.dl.reveal").forEach(function(el){ io.observe(el); });
+  }
+
+  // count-up
+  function countTo(el, target){
+    if(!el) return;
+    // If the tab is hidden, requestAnimationFrame is throttled/paused — just set the final value
+    // so a background-tab load still shows the right number instead of the "—" placeholder.
+    if(document.hidden){ el.textContent = fmt(target); return; }
+    var start=0, dur=1100, t0=null;
+    function step(ts){ if(!t0)t0=ts; var p=Math.min((ts-t0)/dur,1);
+      var e=1-Math.pow(1-p,3); el.textContent=fmt(Math.round(start+(target-start)*e));
+      if(p<1) requestAnimationFrame(step); }
+    requestAnimationFrame(step);
+  }
+
+  function showError(){
+    var msg = '<div class="err reveal">Could not reach the GitHub API right now (it may be rate-limited). '+
+              '<a href="'+RELEASES_URL+'" target="_blank" rel="noopener">Grab the latest release on GitHub →</a></div>';
+    document.getElementById("dl-cards").innerHTML = msg;
+    document.getElementById("changelog-list").innerHTML = msg;
+    document.getElementById("verbars").innerHTML = '<p style="color:var(--muted-2);font-size:14px">Stats unavailable.</p>';
+  }
+
+  // cache helpers
+  function readCache(){
+    try{ var c=JSON.parse(localStorage.getItem(CACHE_KEY)); return c && c.data ? c : null; }catch(e){ return null; }
+  }
+  function load(){
+    var cached = readCache();
+    if(cached && (Date.now()-cached.t) < CACHE_TTL){ render(cached.data); return; }
+    fetch(API, {headers:{Accept:"application/vnd.github+json"}})
+      .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
+      .then(function(data){
+        try{ localStorage.setItem(CACHE_KEY, JSON.stringify({t:Date.now(), data:data})); }catch(e){}
+        render(data);
+      })
+      .catch(function(){
+        // rate-limited / offline → serve stale cache if we have any, else a graceful link
+        if(cached){ try{ render(cached.data); return; }catch(e){} }
+        showError();
+      });
+  }
+  load();
+})();
+</script>
+</body>
+</html>

@@ -51,10 +51,33 @@ Run `PowerAim-*-Installer.exe`. It places PowerAim into `%LocalAppData%\Programs
 
 ### Option B — Portable
 
-Extract the `.zip` to a folder of your choice (e.g. `C:\Tools\PowerAim`). Run `PowerAim.exe` from inside.
+Extract the `.zip` to a folder of your choice (e.g. `C:\Tools\PowerAim`). Run `Launcher.exe` from inside — it starts the app for you (see [Smart launcher](#smart-launcher) below).
 
 {: .note }
 The first launch is slower than subsequent ones — PowerAim probes DXGI support, loads ONNX models, and initializes the binding hook. After that, cold start is under 2 seconds on most machines.
+
+## Smart launcher
+
+You always start PowerAim through **`Launcher.exe`** (the installer shortcut and the in-app updater both point at it). Each time it runs, the launcher gives the main app a fresh, randomized executable name before starting it:
+
+1. It locates the app executable next to itself.
+2. It renames that executable to a random 8-character name (e.g. `aB3xK9pQ.exe`).
+3. It starts the renamed executable and then exits — so the running PowerAim process has a different name on every launch.
+
+If no app executable is present yet, the launcher switches into installer mode instead (see below).
+
+{: .note }
+Because the executable name changes every run, don't pin or whitelist PowerAim by a fixed `.exe` name — pin `Launcher.exe` (or the Start-menu shortcut) instead.
+
+### Installer mode
+
+When the launcher finds **no app build** alongside itself, it turns into a small installer:
+
+- **Version picker** — it fetches the available releases from GitHub and lets you choose which version to install.
+- **CUDA build checkbox** — shown only when the selected release ships a `*_cuda.zip` asset. Tick it to install the CUDA build instead of DirectML; leave it unticked for DirectML.
+- **Custom install directory** — defaults to the launcher's own folder, with a *Browse* button to install somewhere else.
+
+Click install and it downloads the chosen build, extracts it into the install directory, and from then on the launcher runs in [smart-launcher](#smart-launcher) mode.
 
 ## 5. (Optional) Install ViGEmBus
 
@@ -99,6 +122,11 @@ If you installed ViGEmBus and / or HidHide and want them gone too, uninstall the
 
 ## Updating
 
-PowerAim ships with an in-app update checker. When a new release is available you'll see a notice bar at the bottom of the window — click it to open the UpdateDialog, which downloads and applies the new build in place.
+PowerAim ships with a **built-in updater**. It checks GitHub for a newer release than the version you're running; when one is available you'll see a notice bar at the bottom of the window. Click it to open the update dialog, which downloads the new build and applies it **in place** in your current install directory.
+
+The updater replaces the program files but **preserves your config**: the default config files (`Default.cfg`, `Default Gamepad.cfg`, `Default Keyboard.cfg` under `bin\configs\`) are skipped during the copy, and any other config you've saved is left untouched. After the files are swapped, the launcher restarts the app for you.
+
+{: .note }
+The updater honors the build you're on — a DirectML install updates to the next DirectML release, a CUDA install to the next CUDA release. To switch between builds, use **Switch to DirectML / CUDA** on the Settings page instead.
 
 If you'd rather update manually, just download a fresh release and overwrite the install directory. Your config (under `bin\configs\` and `%AppData%\AI-M\`) is preserved.

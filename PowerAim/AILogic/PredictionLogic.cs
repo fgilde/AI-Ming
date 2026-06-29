@@ -6,8 +6,8 @@ using System.IO;
 using System.Windows;
 using PowerAim.AILogic.Contracts;
 using PowerAim.Extensions;
-using Visuality;
-using Other;
+using PowerAim.Visuality;
+using PowerAim.Other;
 using PowerAim.Config;
 using PowerAim;
 using Supercluster.KDTree;
@@ -211,7 +211,11 @@ public class PredictionLogic : IPredictionLogic
     {
         return Task.Run(() =>
         {
-            int maxResultCount = 1;
+            // Return ALL detections (nearest-to-centre first), capped for sanity. The old value of
+            // 1 meant every consumer — overlay/ESP, triggers, AutoPlay context AND the aim — only
+            // ever saw the single closest box. The smart-aim tracker needs every detection to keep
+            // stable per-target identities, and ESP showing all enemies is the expected behaviour.
+            int maxResultCount = 64;
 
             if (frame == null || _onnxModel == null) return Array.Empty<Prediction>();
 
@@ -224,19 +228,40 @@ public class PredictionLogic : IPredictionLogic
                 CurrentImageSize = _imageSize;
             }
 
-            float[] inputArray = frame.ToFloatArray();
+            // The captured patch is FOV-sized (see AIManager) and may differ from the model input
+            // resolution (_imageSize). Downscale/upscale it to a square _imageSize bitmap before
+            // building the tensor. When they're equal (the default — FOV == model input) we skip
+            // the resize entirely and feed the captured frame as-is, identical to before.
+            int captureSize = frame.Width;
+            Bitmap modelFrame = frame;
+            bool resizedFrame = false;
+            if (frame.Width != _imageSize || frame.Height != _imageSize)
+            {
+                modelFrame = new Bitmap(_imageSize, _imageSize, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                using (var g = Graphics.FromImage(modelFrame))
+                {
+                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.Bilinear;
+                    g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.Half;
+                    g.DrawImage(frame, new Rectangle(0, 0, _imageSize, _imageSize));
+                }
+                resizedFrame = true;
+            }
 
-            Tensor<float> inputTensor = new DenseTensor<float>(inputArray, [1, 3, frame.Height, frame.Width]);
+            float[] inputArray = modelFrame.ToFloatArray();
+
+            Tensor<float> inputTensor = new DenseTensor<float>(inputArray, [1, 3, modelFrame.Height, modelFrame.Width]);
             var inputs = new List<NamedOnnxValue> { NamedOnnxValue.CreateFromTensor("images", inputTensor) };
             var results = _onnxModel.Run(inputs, _outputNames, _modeloptions);
+            if (resizedFrame) modelFrame.Dispose();
 
             var outputTensor = results[0].AsTensor<float>();
 
-            float FovSize = (float)AppConfig.Current.SliderSettings.ActualFovSize;
-            float fovMinX = (_imageSize - FovSize) / 2.0f;
-            float fovMaxX = (_imageSize + FovSize) / 2.0f;
-            float fovMinY = (_imageSize - FovSize) / 2.0f;
-            float fovMaxY = (_imageSize + FovSize) / 2.0f;
+            // FOV now sizes the capture region itself, so the whole captured frame already IS the
+            // field of view — no additional in-frame clipping. Accept the full model-space extent.
+            float fovMinX = 0f;
+            float fovMaxX = _imageSize;
+            float fovMinY = 0f;
+            float fovMaxY = _imageSize;
 
             float minConfidence = (float)AppConfig.Current.SliderSettings.AIMinimumConfidence / 100.0f;
             IReadOnlyCollection<int>? allowedClassIds = ResolveAllowedClassIds();
@@ -270,14 +295,21 @@ public class PredictionLogic : IPredictionLogic
             double[] centerPoint = [_imageSize / 2.0, _imageSize / 2.0];
             var allNearest = tree.NearestNeighbors(centerPoint, Math.Min(kdPredictions.Count, maxResultCount)).Select(n => n.Item2).ToArray();
 
+            // prediction.Rectangle is in model space (0.._imageSize). The captured region is
+            // captureSize wide, so scale model→capture pixels before offsetting by the box origin
+            // to land on absolute screen coords. scale == 1 when FOV == model input (the default).
+            float captureScale = captureSize / (float)_imageSize;
             foreach (var prediction in allNearest)
             {
-                float translatedXMin = prediction.Rectangle.X + detectionBox.Left;
-                float translatedYMin = prediction.Rectangle.Y + detectionBox.Top;
-                prediction.TranslatedRectangle = new RectangleF(translatedXMin, translatedYMin, prediction.Rectangle.Width, prediction.Rectangle.Height);
-
-                _ = SaveFrameAsync(frame, prediction);
+                float translatedXMin = prediction.Rectangle.X * captureScale + detectionBox.Left;
+                float translatedYMin = prediction.Rectangle.Y * captureScale + detectionBox.Top;
+                prediction.TranslatedRectangle = new RectangleF(translatedXMin, translatedYMin,
+                    prediction.Rectangle.Width * captureScale, prediction.Rectangle.Height * captureScale);
             }
+
+            // Replay capture only for the primary (nearest-to-centre) target — saving every box
+            // each tick would hammer the replay buffer now that we return the whole detection set.
+            if (allNearest.Length > 0) _ = SaveFrameAsync(frame, allNearest[0]);
 
             return allNearest;
         });

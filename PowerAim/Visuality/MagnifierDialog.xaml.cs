@@ -8,7 +8,7 @@ using System.Windows.Interop;
 using PowerAim.AILogic.Contracts;
 using PowerAim.Class.Native;
 
-namespace Visuality
+namespace PowerAim.Visuality
 {
     public partial class MagnifierDialog : IDisposable
     {
@@ -51,9 +51,6 @@ namespace Visuality
         private void DoCenter()
         {
             this.Center(AIManager.Instance.ImageCapture.CaptureArea);
-            //if(AIManager.Instance?.ImageCapture != null && AIManager.Instance.IsRunning)
-            //    this.Center(AIManager.Instance.ImageCapture.CaptureArea);
-            //this.Center(AIManager.Instance?.ImageCapture?.Screen);
         }
 
 

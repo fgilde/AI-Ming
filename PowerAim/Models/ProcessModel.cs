@@ -8,7 +8,7 @@ public class ProcessModel: INotifyPropertyChanged
 {
     private string _title;
     private Process? _process;
-    private int _id = 0;
+    private int _id;
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public string Display => ToString();

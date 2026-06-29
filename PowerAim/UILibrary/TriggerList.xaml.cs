@@ -1,4 +1,4 @@
-﻿using PowerAim.Config;
+using PowerAim.Config;
 using PowerAim.UILibrary;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -12,9 +12,9 @@ using PowerAim;
 using PowerAim.InputLogic;
 using PowerAim.Types;
 using Nextended.Core.Extensions;
-using Visuality;
+using PowerAim.Visuality;
 
-namespace UILibrary
+namespace PowerAim.UILibrary
 {
     /// <summary>
     /// Interaction logic for TriggerList.xaml

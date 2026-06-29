@@ -5,51 +5,25 @@ nav_order: 10
 ---
 
 # Calibration Wizard
+{: .no_toc }
 
-A guided 4-step wizard that **automatically measures your in-game sensitivity** and writes a `MouseSensitivity` value that matches. No more trial-and-error.
+{: .warning }
+**This feature has been removed.** The sensitivity-calibration wizard is no longer part of
+PowerAim. It existed to measure your in-game sensitivity and write a matching
+`MouseSensitivity` value — but the aim pipeline is now a **closed-loop controller**: it observes
+where the target actually is each frame and corrects toward it, so a one-off sensitivity
+measurement is no longer needed.
 
-![Calibration Wizard dialog](../images/calibration-wizard.png)
+## What replaced it
 
-## What it does
+The current aim pipeline (default) tracks each target across frames and drives the mouse with a
+frame-rate-independent damped controller. Instead of calibrating a fixed multiplier, you set how
+*snappy* the correction is:
 
-The wizard:
+- **Mouse Sensitivity** — now the per-frame approach fraction. Higher = snappier, lower = smoother.
+  Start around `0.25` and adjust to taste.
+- **Aim presets** — pick a starting feel (smooth tracking, snappy/flick, precise, humanized) on the
+  aim-profile editor instead of measuring a number.
 
-1. Temporarily forces `GlobalActive = false` so the aim pipeline doesn't fight the calibration
-2. Sends a known sequence of mouse-delta impulses
-3. Measures how much your in-game cursor actually moved by reading captured frames
-4. Computes the multiplier needed to make PowerAim's pixel-deltas match in-game pixel-deltas
-5. Offers to apply the result to `SliderSettings.MouseSensitivity`
-
-It's the same logic you'd get from a 360°-rotation manual calibration, but driven from the screen capture so you don't need a math degree.
-
-## How to use
-
-1. Open the game you want to calibrate for. Be in a quiet area — no enemies, no UI overlays in the FOV.
-2. Alt-tab back to PowerAim
-3. **Aim Tools → AimConfig → Calibrate Sensitivity**
-4. Read the welcome step, then click **Start Calibration**
-5. The wizard runs for a few seconds; **don't move your mouse** during this period
-6. The result step shows the suggested `MouseSensitivity`
-7. Click **Apply** to write it to your config, or **Discard** to keep your old value
-
-## Wizard states
-
-The wizard cycles through four steps internally (you'll see all of them):
-
-1. **Welcome** — explanation + Start button
-2. **Running** — sends impulses, captures frames, computes
-3. **Result** — shows the suggested value with Apply / Discard
-4. **Error** — capture failed or detection was inconclusive
-
-## Tips
-
-- **Don't move your physical mouse during calibration.** Even small drift skews the measurement.
-- **Calibrate per-game.** Different games have different mouse sensitivities and acceleration curves. Re-run the wizard whenever you switch games.
-- **Calibrate after a config change.** If you change Mouse Movement Method (SendInput → LGHub etc.), re-run the wizard — different drivers send different deltas.
-- **The wizard restores `GlobalActive`.** Whatever it was before you opened the wizard, that's what it'll be when the wizard closes — even on errors.
-
-## Troubleshooting
-
-- **"Calibration inconclusive"** — usually means the wizard couldn't detect a stable feature to track. Move closer to a wall or a clear texture and try again.
-- **Result is wildly different from manual setting** — check the Mouse Movement Method. If you've recently switched from SendInput to LGHub, expect a different scale.
-- **GlobalActive stays off after the wizard** — that's a bug; report it. Workaround: toggle Global Active on manually.
+See **[Aim Assist]({{ '/features/aim-assist' | relative_url }})** for the full, current aim
+configuration.

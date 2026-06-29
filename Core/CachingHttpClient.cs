@@ -31,22 +31,32 @@ public class CachingHttpClient : IDisposable
     public async Task<string> GetAsync(string url)
     {
         string cacheFile = GetCacheFilePath(url);
+        bool haveCache = File.Exists(cacheFile);
 
-        if (File.Exists(cacheFile) && DateTime.Now - File.GetCreationTime(cacheFile) < _cacheDuration)
+        // Fresh cache → serve it without touching the network.
+        if (haveCache && DateTime.Now - File.GetLastWriteTime(cacheFile) < _cacheDuration)
         {
             return await File.ReadAllTextAsync(cacheFile);
         }
 
-        if (File.Exists(cacheFile))
-            File.Delete(cacheFile);
-
-        var response = await _httpClient.GetAsync(url);
-        response.EnsureSuccessStatusCode();
-        string content = await response.Content.ReadAsStringAsync();
-
-        _= File.WriteAllTextAsync(cacheFile, content);
-
-        return content;
+        try
+        {
+            var response = await _httpClient.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            string content = await response.Content.ReadAsStringAsync();
+            // Overwrite (refreshes LastWriteTime). Awaited so the cache is durable before return.
+            await File.WriteAllTextAsync(cacheFile, content);
+            return content;
+        }
+        catch
+        {
+            // Network failure or GitHub rate-limit (403/429): fall back to the stale cache if we
+            // have one, so the UI keeps showing the last-known-good data instead of breaking or
+            // re-hammering the API. The stale entry is intentionally NOT deleted up front (the old
+            // code deleted it before the request, destroying the only fallback on a failed call).
+            if (haveCache) return await File.ReadAllTextAsync(cacheFile);
+            throw;
+        }
     }
 
     static string GetHash(string text)

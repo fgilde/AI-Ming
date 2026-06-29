@@ -7,7 +7,7 @@ using PowerAim.AILogic;
 using PowerAim.Config;
 using PowerAim.Extensions;
 
-namespace UILibrary
+namespace PowerAim.UILibrary
 {
     /// <summary>
     ///     Form for editing a single <see cref="AntiRecoilProfile"/>. Hosted by the in-window

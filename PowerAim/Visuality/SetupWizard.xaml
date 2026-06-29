@@ -176,13 +176,6 @@
                         <TextBlock Margin="0,8,0,0" TextWrapping="Wrap"
                                    Foreground="{DynamicResource FluentTextSecondary}" FontSize="13"
                                    Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupCalibrateHelp'}" />
-                        <Button x:Name="Step4_OpenCalibrationBtn"
-                                Margin="0,18,0,0"
-                                HorizontalAlignment="Left"
-                                Style="{DynamicResource FluentAccentButton}"
-                                Padding="14,6,14,6"
-                                Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SetupCalibrateOpen'}"
-                                Click="Step4_OpenCalibration_Click" />
                         <TextBlock Margin="0,12,0,0" TextWrapping="Wrap"
                                    FontSize="12"
                                    Foreground="{DynamicResource FluentTextTertiary}"

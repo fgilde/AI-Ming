@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using System.Reflection;
 using System.Windows;
 using PowerAim.AILogic;
 using PowerAim.Config;

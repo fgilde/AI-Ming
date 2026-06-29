@@ -60,11 +60,13 @@ The activator picks **when** the target fires relative to the source:
 |:----------|:-----------|
 | **Press** (default) | Target held while source is held; released when source releases |
 | **LongPress** | Target fires only after source has been held for `LongPressMs` ms |
-| **DoubleTap** | Target fires on a second press within ~300 ms |
+| **DoubleTap** | Target fires on a second press within ~320 ms of the first release |
 | **Toggle** | Each press flips the target on/off (latching) |
 | **Pulse** | Target presses for `LongPressMs` ms on each source press, then auto-releases |
 
-Mix these in a single profile — one button can drive multiple mappings with different timings (e.g. A = Jump on Press, A = Crouch on LongPress 300 ms).
+`LongPressMs` defaults to **350 ms** (used as the hold time for LongPress and the pulse length for Pulse / DoubleTap; ignored by Press and Toggle).
+
+Mix these in a single profile — one button can drive multiple mappings with different timings (e.g. A = Jump on Press, A = Crouch on LongPress 350 ms).
 
 ### Modifier (shift-layer)
 
@@ -78,7 +80,7 @@ This is the canonical "shift layer" pattern from reWASD / Steam Input.
 ## How to enable
 
 1. **Mapping** in the sidebar
-2. Toggle **Active** at the top. (The Active toggle has its own hotkey support — see [Keybinds & Hotkeys]({{ '/configuration/keybinds-hotkeys' | relative_url }}).)
+2. Toggle **Active** at the top. This is the master switch for the whole engine (`ToggleState.MappingActive`); when off, no profile resolves and nothing is read or synthesised. It has a **global hotkey**, so you can flip mapping on/off mid-game without alt-tabbing back to PowerAim — see [Keybinds & Hotkeys]({{ '/configuration/keybinds-hotkeys' | relative_url }}).
 3. Pick a direction: **Both / KB→Pad / Pad→KB**
 4. Pick a profile from the list. Click **+ FPS preset** for one of the built-in starter profiles, or **+ New profile** for an empty one.
 5. Click **Edit** to open the per-profile editor.

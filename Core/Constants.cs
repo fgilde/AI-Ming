@@ -11,6 +11,20 @@ public class Constants
     public const float MinMagnificationFactor = 0.1f;
     public const float MaxMagnificationFactor = 100;
 
+    // ---- Local content directories (relative to the app base dir) ----------------------------
+    public const string BinBasePath = "bin";
+    public const string ModelsBasePath = "bin\\models";
+    public const string ConfigBasePath = "bin\\configs";
+    public const string AntiRecoilConfigBasePath = "bin\\anti_recoil_configs";
+    public const string ImagesBasePath = "bin\\images";
+    public const string LabelsBasePath = "bin\\labels";
+
+    public const string ModelFileFilter = "*.onnx";
+    public const string ConfigFileFilter = "*.cfg";
+    public const string ModelFileExtension = ".onnx";
+    public const string ConfigFileExtension = ".cfg";
+
+
     public const string RepoOwner = "fgilde";
     public const string RepoName = "AI-Ming";
 

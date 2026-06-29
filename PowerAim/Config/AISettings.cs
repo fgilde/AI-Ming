@@ -74,6 +74,112 @@ public class AISettings : BaseSettings
         set => SetField(ref field, value);
     } = new();
 
+    // ============================================================ Smart aim ====
+    // Layered aim path. Always-on core: pick the nearest detection, move a proportional fraction of
+    // the remaining offset each frame (frame-rate-independent, optionally ratio-calibrated). On top
+    // of that two OPT-IN quality layers that each default to the core behaviour when off and have no
+    // closed-loop (ego-motion) coupling: adaptive aim-point smoothing (SmoothingMode) and stable
+    // multi-target tracking with switch hysteresis (UseTargetTracking). Velocity LEAD is deliberately
+    // absent — it is broken in this closed loop without ego-motion compensation.
+
+    /// <summary>
+    ///     Master switch for the smart aim path (nearest detection + frame-rate-independent
+    ///     proportional move, with optional smoothing/tracking and pixel→count calibration). When off,
+    ///     the legacy sticky-selector + lerp path runs instead. Default <c>true</c>.
+    /// </summary>
+    public bool SmartAimEnabled
+    {
+        get;
+        set => SetField(ref field, value);
+    } = true;
+
+    /// <summary>Crosshair-to-target radius (screen px) within which the controller stops nudging. ~3.</summary>
+    public double AimDeadzonePx
+    {
+        get;
+        set => SetField(ref field, Math.Clamp(value, 0.0, 50.0));
+    } = 3.0;
+
+    // ---- Opt-in layer 1a: aim-point smoothing (no closed-loop coupling) ----
+
+    /// <summary>
+    ///     How to smooth the aim point before moving. <see cref="AimSmoothingMode.None"/> = raw
+    ///     detection; <see cref="AimSmoothingMode.Ema"/> = cheap fixed-weight EMA;
+    ///     <see cref="AimSmoothingMode.OneEuro"/> = adaptive 1€ filter (heavy smoothing at rest, light
+    ///     during flicks — the better choice for an aim cursor). All only smooth POSITION, never
+    ///     extrapolate, so none are affected by the closed-loop ego-motion problem. Default
+    ///     <see cref="AimSmoothingMode.OneEuro"/> — restores the adaptive-filter behaviour that the
+    ///     pre-simplification default (the old <c>UseOneEuro=true</c>) had, so configs that predate the
+    ///     enum (where the key is dropped on load) keep their 1€ feel instead of silently dropping to EMA.
+    /// </summary>
+    public AimSmoothingMode SmoothingMode
+    {
+        get;
+        set => SetField(ref field, value);
+    } = AimSmoothingMode.OneEuro;
+
+    /// <summary>1€ filter minimum cutoff (Hz). Lower = smoother at rest. Only used in OneEuro mode. ~1.0.</summary>
+    public double OneEuroMinCutoff
+    {
+        get;
+        set => SetField(ref field, Math.Clamp(value, 0.1, 10.0));
+    } = 1.0;
+
+    /// <summary>1€ filter speed coefficient. Higher = less lag during fast flicks. Only used in OneEuro mode. ~0.7.</summary>
+    public double OneEuroBeta
+    {
+        get;
+        set => SetField(ref field, Math.Clamp(value, 0.0, 5.0));
+    } = 0.7;
+
+    // ---- Opt-in layer 1b: stable multi-target tracking + switch hysteresis (ego-motion-immune) ----
+    // Uses the SORT-style tracker for identity/association ONLY; the aim point is always taken from
+    // the raw last detection (TargetTrack.LastDetectionBox), never the velocity-extrapolated box, so
+    // the assist's own view-pan can never bias the crosshair.
+
+    /// <summary>
+    ///     Track targets across frames (stable identity in crowds) and keep the aim on the same enemy
+    ///     with switch hysteresis, instead of always snapping to whoever is nearest. When off the
+    ///     simpler sticky-nearest selection runs. Default <c>false</c> (core behaviour).
+    /// </summary>
+    public bool UseTargetTracking
+    {
+        get;
+        set => SetField(ref field, value);
+    } = false;
+
+    /// <summary>Frames a track may coast (no matching detection) before it's dropped — bridges 1-3 dropped YOLO frames. ~8.</summary>
+    public int TrackMaxAgeFrames
+    {
+        get;
+        set => SetField(ref field, Math.Clamp(value, 1, 60));
+    } = 8;
+
+    /// <summary>Consecutive frames a challenger must stay clearly better before the aim switches targets. ~6.</summary>
+    public int SwitchFrames
+    {
+        get;
+        set => SetField(ref field, Math.Clamp(value, 1, 60));
+    } = 6;
+
+    /// <summary>A challenger must beat the held target by this fraction to be eligible for a switch. ~0.25.</summary>
+    public double SwitchMarginPct
+    {
+        get;
+        set => SetField(ref field, Math.Clamp(value, 0.0, 2.0));
+    } = 0.25;
+
+    /// <summary>
+    ///     Measured screen-pixels per unit of raw mouse input (from the calibration wizard). When
+    ///     &gt; 0 the aim converts a target's pixel offset into EXACT mouse counts, so the strength
+    ///     slider feels the same in every game. 0 = uncalibrated (pixel offset used 1:1 as counts).
+    /// </summary>
+    public double CalibratedPixelsPerCount
+    {
+        get;
+        set => SetField(ref field, Math.Max(0.0, value));
+    } = 0.0;
+
     /// <summary>
     ///     DXGI adapter index the ONNX inference session should run on. Passed straight through to
     ///     <c>AppendExecutionProvider_CUDA(deviceId)</c> / <c>AppendExecutionProvider_DML(deviceId)</c>,
@@ -99,4 +205,17 @@ public enum TargetClassFilterMode
 
     /// <summary>Only accept detections whose class id is listed in <c>TargetClassIds</c>.</summary>
     SpecificIds = 1
+}
+
+/// <summary>How the aim point is smoothed before the proportional move (see <see cref="AISettings.SmoothingMode"/>).</summary>
+public enum AimSmoothingMode
+{
+    /// <summary>No smoothing — aim straight at the raw detection.</summary>
+    None = 0,
+
+    /// <summary>Cheap fixed-weight exponential moving average.</summary>
+    Ema = 1,
+
+    /// <summary>Adaptive 1€ filter — heavy smoothing at rest, light during fast motion.</summary>
+    OneEuro = 2
 }

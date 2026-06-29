@@ -46,6 +46,19 @@ The entry stays selectable even when ViGEm isn't ready — picking it then pops 
 
 The dropdown is at the top of the Input Settings card. Selecting a method that needs an external dependency (LG HUB / Razer / ddxoft / ViGEm for Gamepad) attempts to load it; if loading fails, PowerAim **automatically falls back** to MouseEvent and shows a notice bar (or, for Gamepad, the dialog above) explaining why.
 
+## Driver auto-install
+
+Three of the mouse-movement methods rely on a helper driver/DLL. When you pick one and the dependency is missing, PowerAim offers to fetch or install it rather than just failing:
+
+| Method | What it installs / checks |
+|:-------|:--------------------------|
+| **Razer Synapse** | If no Synapse process is running, offers to download and launch the Synapse installer (`rzr.to` mirror). It also auto-downloads `rzctl.dll` (from the `MarsQQ/rzctl` GitHub release) the first time, then asks you to re-select the method to load it. Finally it confirms a real Razer peripheral is present (a `Win32_PnPEntity` whose Manufacturer starts with "Razer") before enabling. |
+| **LG HUB** | Opens a downloader dialog with mirrors for the Logitech G HUB installer. The downloaded file is verified by **exact size (41,131,424 bytes) and MD5 hash** before it hands off to the OS installer. Loading also requires that **HVCI / Memory Integrity (Core Isolation) is disabled** — if it's on, PowerAim refuses and tells you to turn it off. It additionally checks that the running G HUB build is a 2021-era version. |
+| **ddxoft** | Auto-downloads `ddxoft.dll` (from a GitLab mirror) if it's missing. This driver **requires PowerAim to run as administrator** — if you're not elevated, PowerAim shows a warning and the method stays unusable until you relaunch as admin. |
+
+{: .warning }
+G HUB's downloader reminds you to disable "Automatic Updates" in G HUB after installing — a newer auto-updated build can break the scripting path PowerAim relies on, and the size/MD5 check is tied to that specific build.
+
 ## Which one should I use?
 
 A rough decision tree:

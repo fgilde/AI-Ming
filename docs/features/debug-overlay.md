@@ -6,27 +6,27 @@ nav_order: 5
 
 # Debug Overlay
 
-A topmost diagnostic panel that displays the AI pipeline's live state — FPS, inference time, detection count, current target, prediction trail.
+A topmost diagnostic panel that displays the AI pipeline's live state — FPS, inference time, detection count, the active intent / profile / process, plus optional OCR readouts, an AutoPlay activity log, and a sent-input visualizer.
 
-<!-- SCREENSHOT NEEDED (../images/debug-overlay.png): Game running with the PowerAim Debug Overlay in the top-left corner, showing FPS, inference time, detection count, currently locked target. -->
+<!-- SCREENSHOT NEEDED (../images/debug-overlay.png): Game running with the PowerAim Debug Overlay in the top-left corner, showing FPS, inference time, detection count, intent, profile and process. -->
 
 ## What it does
 
 The Debug Overlay is a compact panel — small enough to fit in a corner of the screen — that updates every UI tick with:
 
 - **FPS** — instantaneous frames per second of the AI loop
-- **Inference time (ms)** — how long the last ONNX forward pass took
+- **Inference** (ms) — how long the last ONNX forward pass took
 - **Detections** — number of detection boxes on the current frame
-- **Shots Fired** — total triggers fired this session
-- **Frames Processed** — running count
-- **Tactical Actions** — AutoPlay actions taken this session
-- **Session Duration** — `hh:mm:ss`
-- **OCR readings** — every enabled OCR region with its live recognised value (hidden when OCR is off)
-- **AutoPlay activity log** — a rolling list of the last ~8 strategic intents / tactical actions / OCR cues with timestamps (hidden when AutoPlay is off)
+- **Shots** — total triggers fired this session
+- **Intent** — AutoPlay's current strategic intent (`—` when idle)
+- **Profile** — the active [aim profile]({{ '/features/aim-assist#aim-profiles' | relative_url }}) name
+- **Process** — the focused process PowerAim is acting on
+- **OCR readings** — a middle column with every enabled OCR region and its live recognised value (hidden when OCR is off)
+- **AutoPlay activity log** — a right-hand column: a rolling list of the last 8 strategic intents / tactical actions / OCR cues with timestamps (hidden when AutoPlay is off)
+
+The OCR and AutoPlay columns appear only when their feature is enabled, so the panel stays compact when you're just watching FPS.
 
 The panel **follows the capture source**: it subscribes to `ICapture.PropertyChanged` and repositions live when you change the captured monitor or process window from the title bar — no more stranded overlays after picking a non-primary monitor.
-
-It also shows the Sticky-Aim lock state, the predicted aim point, and a tracer to the current target — so you can see at a glance what PowerAim is "thinking."
 
 ## How to enable
 
