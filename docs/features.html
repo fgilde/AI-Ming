@@ -148,12 +148,13 @@
       <div class="fr-body">
         <div class="fr-kicker mono">// 01 · Aiming</div>
         <h2>Smart aim &amp; tracking</h2>
-        <p>The core of PowerAim. A YOLOv8 model detects targets each frame and a tracking pipeline turns that into smooth, stable aim — not the jittery snap most tools settle for.</p>
+        <p>The core of PowerAim. A YOLOv8 model detects targets each frame and a per-profile pipeline turns that into smooth, stable aim — calibrated to your real sensitivity so a profile feels the same in every game.</p>
         <ul class="fr-list">
-          <li><b>Persistent tracking</b> — a SORT-style tracker keeps a stable identity per target and <b>coasts</b> through dropped detection frames, so the aim doesn't fling away when a box flickers.</li>
-          <li><b>Switch hysteresis</b> — won't flip-flop between two enemies; a challenger has to stay clearly better before the lock moves.</li>
-          <li><b>Adaptive smoothing</b> — a 1€ filter plus a frame-rate-independent damped controller: calm when the target is slow, responsive on flicks.</li>
-          <li><b>Aim region &amp; profiles</b> — draw exactly where in the target to aim, optionally a randomized point, and save it all as switchable per-game / per-weapon profiles.</li>
+          <li><b>Profile-based, multiple active</b> — every aim setting lives on a profile; run several at once, each gated by its own aim key and an optional OCR condition.</li>
+          <li><b>Calibrated, predictable move</b> — a lean nearest-target + proportional move by default, scaled by measured screen-pixels-per-count, so it's game-independent.</li>
+          <li><b>Pick your smoothing</b> — None, EMA, or an adaptive 1€ filter: calm when the target is slow, responsive on flicks.</li>
+          <li><b>Opt-in tracking &amp; prediction</b> — switch on SORT-style tracking, frame <b>coasting</b>, switch hysteresis and lead/prediction per profile when you want them.</li>
+          <li><b>Aim region &amp; random point</b> — draw exactly where in the target to aim, optionally a randomized point inside it.</li>
         </ul>
         <a class="fr-link" href="features/aim-assist/">Open the aim guide <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       </div>
@@ -217,7 +218,8 @@
         <ul class="fr-list">
           <li><b>Aim on a virtual stick</b> — route aim onto a virtual Xbox controller through ViGEm.</li>
           <li><b>Two-way mapping</b> — map controller ↔ keyboard/mouse with per-profile hotkeys, presets and live visual controller + keyboard diagrams.</li>
-          <li><b>Hidden controllers</b> — keep a physical pad from reaching the game while PowerAim drives the virtual one.</li>
+          <li><b>Controller overview</b> — every physical pad and the virtual one in one list, with slot, sync source, hide, and a one-click "make games use the virtual pad".</li>
+          <li><b>Gamepad tester</b> — a live button/stick panel you can point at any controller to see exactly what's injected vs. your own input.</li>
         </ul>
         <a class="fr-link" href="features/controller-mapping/">Open the mapping guide <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       </div>
@@ -256,6 +258,23 @@
       <div class="fr-media"><img src="images/crosshair-overlay.png" alt="Crosshair overlay" loading="lazy" /></div>
     </section>
 
+    <!-- 08 Dynamic tools -->
+    <section class="frow rev reveal">
+      <div class="fr-body">
+        <div class="fr-kicker mono">// 08 · Tools</div>
+        <h2>Dynamic tools you build</h2>
+        <p>The Tools page is a list of expandable cards — the built-in Magnifier and HWID spoofer, plus any tool you build yourself. Each gets a start key and a start button.</p>
+        <ul class="fr-list">
+          <li><b>Action sequences</b> — chain move-mouse, click, send-key(s), run-program and delay steps that run once per start.</li>
+          <li><b>Options as variables</b> — define typed options and reference them in any action field as <code>{name}</code>, editable right on the card before you run.</li>
+          <li><b>Send keys like triggers</b> — the same multi-key control with record-sequence and Sequential / Simultaneous execution.</li>
+          <li><b>Per-tool keybind</b> — start any tool by hotkey or button; a re-press cancels and restarts, releasing anything it held.</li>
+        </ul>
+        <a class="fr-link" href="features/dynamic-tools/">Open the tools guide <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+      <div class="fr-media"><img src="images/tools-page.png" alt="PowerAim Tools page" loading="lazy" /></div>
+    </section>
+
   </div>
 
   <!-- also includes -->
@@ -276,6 +295,9 @@
       <div class="mcard reveal"><h3>Aim presets</h3><p>Start from a built-in feel — smooth tracking, snappy flick, high-DPI precise, humanized or legacy — then fine-tune.</p><a href="features/aim-assist/">features/aim-assist →</a></div>
       <div class="mcard reveal"><h3>Tunable tracking</h3><p>Every tracker knob is exposed — association IoU, alpha/beta gains, switch margin, target max-age and an on-target deadzone.</p><a href="features/aim-assist/">features/aim-assist →</a></div>
       <div class="mcard reveal"><h3>Adaptive lead-time</h3><p>Lead the shot by target velocity, with an optional Kalman lead that scales with how fast the target is moving.</p><a href="features/aim-assist/">features/aim-assist →</a></div>
+      <div class="mcard reveal"><h3>Multiple active profiles</h3><p>Run several aim profiles at once — each engaged by its own held aim key and optional OCR condition, not a single-active radio.</p><a href="features/aim-assist/">features/aim-assist →</a></div>
+      <div class="mcard reveal"><h3>Smoothing modes</h3><p>Per profile: None, EMA, or an adaptive 1€ filter with exposed min-cutoff and beta.</p><a href="features/aim-assist/">features/aim-assist →</a></div>
+      <div class="mcard reveal"><h3>Calibrated sensitivity</h3><p>The calibration wizard measures your real screen-px-per-count so a profile feels identical across games.</p><a href="features/calibration-wizard/">features/calibration-wizard →</a></div>
     </div>
 
     <div class="mgroup mono">// Triggers &amp; anti-recoil</div>
@@ -326,6 +348,16 @@
       <div class="mcard reveal"><h3>Mapping presets</h3><p>Ready-made layouts — FPS in either direction, driving, and a controller-as-mouse mode for accessibility.</p><a href="features/controller-mapping/">features/controller-mapping →</a></div>
       <div class="mcard reveal"><h3>Gamepad diagnostics</h3><p>A live panel shows the XInput slot map and sender status, fires a test trigger pulse, and pops out a full tester.</p><a href="features/gamepad-aim/">features/gamepad-aim →</a></div>
       <div class="mcard reveal"><h3>Trigger thresholds</h3><p>Set how far the analog triggers must travel before LT/RT count as pressed.</p><a href="features/controller-mapping/">features/controller-mapping →</a></div>
+      <div class="mcard reveal"><h3>Controller overview</h3><p>Every physical pad and the virtual one in one list — slot, sync source, hide, and a one-click "make games use the virtual pad".</p><a href="features/controller-overview/">features/controller-overview →</a></div>
+      <div class="mcard reveal"><h3>Gamepad tester source</h3><p>Point the live tester at any controller — watch what PowerAim injects on the virtual pad vs. your own input on the physical one.</p><a href="features/gamepad-aim/">features/gamepad-aim →</a></div>
+    </div>
+
+    <div class="mgroup mono">// Tools &amp; power-user</div>
+    <div class="mgrid">
+      <div class="mcard reveal"><h3>Custom tools</h3><p>Build your own tools from move/click/send-key/run-exe/delay steps with option variables, each on a start key.</p><a href="features/dynamic-tools/">features/dynamic-tools →</a></div>
+      <div class="mcard reveal"><h3>Combo keybinds</h3><p>Bind chords across keyboard, mouse and gamepad — Ctrl+Shift+X, Ctrl+Left-Click, X+B — recorded on release.</p><a href="configuration/keybinds-hotkeys/">configuration/keybinds-hotkeys →</a></div>
+      <div class="mcard reveal"><h3>Quick Config</h3><p>A floating config tab + switcher: see the active config, swap it, or hit a per-config hotkey — without opening the full UI.</p><a href="configuration/quick-config/">configuration/quick-config →</a></div>
+      <div class="mcard reveal"><h3>Magnifier &amp; HWID</h3><p>The fixed built-in tools live in the same unified list, each with a start key, button and their own panel.</p><a href="features/dynamic-tools/">features/dynamic-tools →</a></div>
     </div>
 
     <div class="mgroup mono">// Capture, models &amp; performance</div>
@@ -355,7 +387,7 @@
       <div class="mcard reveal"><h3>Setup wizard</h3><p>A guided first-run wizard that walks you through models, capture and binds.</p><a href="getting-started/">getting-started →</a></div>
       <div class="mcard reveal"><h3>HWID spoofer</h3><p>A bundled tool to change hardware IDs from inside the app.</p><a href="getting-started/">tools →</a></div>
       <div class="mcard reveal"><h3>9 languages</h3><p>Fully localized in English, German, Spanish, French, Italian, Russian, Turkish, Ukrainian and Chinese.</p><a href="advanced/localization/">advanced/localization →</a></div>
-      <div class="mcard reveal"><h3>100% local &amp; free</h3><p>No telemetry, no key system, no paywall. Source-available under PolyForm Noncommercial.</p><a href="advanced/source-available/">advanced/source-available →</a></div>
+      <div class="mcard reveal"><h3>100% local &amp; free</h3><p>No telemetry, no key system, no paywall. Source-available — free for non-commercial use.</p><a href="https://github.com/fgilde/AI-Ming/blob/main/LicenseInfo.md" target="_blank" rel="noopener">license &amp; credits →</a></div>
       <div class="mcard reveal"><h3>Custom layout</h3><p>Drag the settings cards into the order you like and hide the ones you don't — a pill brings them back.</p><a href="configuration/settings-overview/">configuration →</a></div>
       <div class="mcard reveal"><h3>Instant search</h3><p>Ctrl+F searches every setting and section, then jumps to and flashes the matching control.</p><a href="configuration/settings-overview/">configuration →</a></div>
       <div class="mcard reveal"><h3>Hotkey safeguards</h3><p>Optionally require Global-Active before hotkeys fire, with an on-screen notice each time a key flips a toggle.</p><a href="configuration/keybinds-hotkeys/">configuration/keybinds-hotkeys →</a></div>

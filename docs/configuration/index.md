@@ -15,6 +15,7 @@ This section is the **reference manual** for everything PowerAim persists to dis
 - **[Per-game profiles]({{ '/configuration/per-game-profiles' | relative_url }})** — `MatchProcess`, auto-switch, auto-pause
 - **[Keybinds & hotkeys]({{ '/configuration/keybinds-hotkeys' | relative_url }})** — the global hotkey system
 - **[Config file]({{ '/configuration/config-file' | relative_url }})** — JSON structure, location, manual editing
+- **[Quick Config]({{ '/configuration/quick-config' | relative_url }})** — the floating config tab + switcher with per-config hotkeys
 
 ## The config file in 30 seconds
 

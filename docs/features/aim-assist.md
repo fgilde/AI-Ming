@@ -43,17 +43,20 @@ e.g. while a knife is equipped or you're not scoped — even though the aim key 
 
 ## Aim profiles
 
-Aim is organised into **named profiles**, exactly like [Anti-Recoil]({{ '/features/anti-recoil' | relative_url }}).
-Each profile bundles the full aim feel (responsiveness, aim region, tracking/smoothing tuning) plus
-optional activation conditions. **One profile is active at a time.**
+Aim is organised into **named profiles**, exactly like [Anti-Recoil]({{ '/features/anti-recoil' | relative_url }}) —
+there is no single "global" aim config any more. Each profile bundles the full aim feel
+(responsiveness, aim region, tracking/smoothing tuning, prediction) plus its own **required aim key**
+and optional activation conditions. **Several profiles can be active at once** — the aim action runs
+every profile whose aim key is held and whose OCR condition (if any) is met.
 
-- **Profile list** (Aim section) — add / duplicate / delete profiles; the row toggle makes a profile active.
-- **Per-profile hotkey** — bind a key on the row to toggle that profile active in-game.
-- **OCR weapon auto-switch** — set an OCR region + a weapon-name substring; the profile activates when the HUD shows that weapon (needs **Auto-switch on OCR** on the profile). See [OCR]({{ '/features/ocr' | relative_url }}).
+- **Profile list** (Aim section) — add / duplicate / delete profiles; the row toggle **enables** a profile, and an **engaged** badge shows which are aiming right now.
+- **Required aim key** — set at the top of the profile editor; a profile can't aim without one, and PowerAim warns if two profiles share the same key.
+- **Per-profile row hotkey** — bind a key on the list row to flip that profile's *enabled* state in-game.
+- **OCR weapon auto-switch** — set an OCR region + a weapon-name substring; the profile engages when the HUD shows that weapon (needs **Auto-switch on OCR** on the profile). See [OCR]({{ '/features/ocr' | relative_url }}).
 - **Process scope** — limit auto-activation to specific games via a process-name pattern.
 
-Activating a profile copies its values into the live settings the pipeline reads — there's no
-separate runtime path, so switching a profile simply re-applies its feel.
+The old global aim key, EMA and prediction settings are migrated onto a seeded **Default** profile on
+first load, so nothing is lost.
 
 ### Presets
 

@@ -6,7 +6,7 @@ nav_order: 2
 
 # Triggers (AutoTrigger)
 
-PowerAim's trigger system is a complete rewrite of the original Aimmy autotrigger. Each profile holds an **arbitrary number of independent triggers** — each with its own keys, actions, intersection checks, and timing.
+PowerAim's trigger system lets each profile hold an **arbitrary number of independent triggers** — each with its own keys, actions, intersection checks, and timing.
 
 ![Aim Tools page showing the Auto Trigger card](../images/aim-tools-page.png)
 

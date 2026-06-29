@@ -330,13 +330,13 @@
     <div class="feat-grid">
       <div class="feat brackets reveal">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><circle cx="12" cy="12" r="2.4"/></svg>
-        <div class="ix">01</div><h3>Smart tracking</h3>
-        <p>Persistent SORT-style target IDs with coasting through detection drop-outs and switch hysteresis — no more snapping between enemies.</p>
+        <div class="ix">01</div><h3>Profile-based aim</h3>
+        <p>Every aim setting lives on a profile — run several at once, each on its own key, calibrated to your real sensitivity so it feels the same in any game.</p>
       </div>
       <div class="feat brackets reveal">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg>
         <div class="ix">02</div><h3>Adaptive smoothing</h3>
-        <p>A 1€ filter plus a frame-rate-independent damped controller: steady when slow, responsive on flicks. Aim profiles per game or weapon.</p>
+        <p>Per profile: None, EMA, or an adaptive 1€ filter — steady when slow, responsive on flicks — with optional SORT-style tracking and prediction.</p>
       </div>
       <div class="feat brackets reveal">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="7" width="20" height="10" rx="5"/><circle cx="8" cy="12" r="1.6"/><path d="M15 11v2M17 12h-4"/></svg>
@@ -357,6 +357,11 @@
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h10"/><circle cx="19" cy="18" r="2"/></svg>
         <div class="ix">06</div><h3>Anti-recoil profiles</h3>
         <p>Record real recoil patterns and replay them, or use image-based compensation — all per-profile with hotkey & OCR activation.</p>
+      </div>
+      <div class="feat brackets reveal">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4l-6 6 2.9 2.9 6-6a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-2.4 2.5-2.5Z"/></svg>
+        <div class="ix">07</div><h3>Dynamic tools</h3>
+        <p>Build your own tools from move / click / send-key / run-exe / delay steps with option variables — each on a start key, next to the Magnifier and HWID spoofer.</p>
       </div>
     </div>
     <div class="reveal" style="margin-top:28px">
@@ -392,6 +397,31 @@
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><path d="m4 4 16 16"/></svg>
         <div class="ix">Hidden from capture</div><h3>Invisible to recorders</h3>
         <p>Everything PowerAim draws — the main window, every dialog and the crosshair / FOV / ESP overlays — is excluded from screen capture (<span class="mono" style="font-size:11px">WDA_EXCLUDEFROMCAPTURE</span>), so OBS, Discord screen-share, recorders and capture-based tools see nothing of it. On by default.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap"><div class="divider"></div></div>
+
+<!-- ===================== FREE VS PAID ===================== -->
+<section id="free">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-kicker mono">// Free, not freemium</div>
+      <h2 class="sec-title">Don't rent your aim.</h2>
+      <p class="sec-sub">You can pay a recurring subscription for a single-purpose aim tool — or use PowerAim, which does far more, for free.</p>
+    </div>
+    <div class="feat-grid" style="grid-template-columns:1fr 1fr">
+      <div class="feat brackets reveal">
+        <div class="kind mono" style="color:var(--muted,#9c95b8);margin-bottom:10px">Paid aim tools · e.g. NobleAim</div>
+        <h3>A subscription, for aim alone</h3>
+        <p>Single-purpose tools like <a href="#" target="_blank" rel="noopener" style="color:var(--cyan,#60cdff)">NobleAim</a> charge a recurring fee — mostly for aim and a trigger, closed-source, with the meter always running.</p>
+      </div>
+      <div class="feat brackets reveal">
+        <div class="kind mono" style="color:var(--purple-bright,#a87bf0);margin-bottom:10px">PowerAim · free</div>
+        <h3>Get far more, for nothing</h3>
+        <p>Aim profiles, triggers, anti-recoil, OCR, gamepad in &amp; out, LLM AutoPlay, custom tools and the overlays — <b style="color:var(--ink,#ece9f7)">free</b> and source-available, 100% local, no key system, no paywall, no ads.</p>
       </div>
     </div>
   </div>
@@ -446,7 +476,7 @@
     <div class="foot-grid">
       <div class="foot-brand">
         <a class="brand" href="#top"><img src="images/PowerAim-icon-256.png" alt="" /><span>Power<b class="accent-text">Aim</b></span></a>
-        <p>AI-powered aim alignment for accessibility, training and fun. A heavily reworked fork of Babyhamsta/Aimmy — decoupled architecture, Fluent UI, gamepad, OCR, AutoPlay and a faster pipeline.</p>
+        <p>AI-powered aim alignment for accessibility, training and fun — a decoupled architecture, Fluent UI, gamepad, OCR, AutoPlay and a fast capture &amp; inference pipeline.</p>
       </div>
       <div class="foot-links">
         <div class="foot-col">
@@ -484,11 +514,9 @@
   var RELEASES_URL = "https://github.com/" + REPO + "/releases";
   var CACHE_KEY = "poweraim_releases_v1";
   var CACHE_TTL = 30 * 60 * 1000; // 30 min — be gentle on GitHub's anonymous rate limit
-  var DISCUSSION_URL = "https://github.com/Babyhamsta/Aimmy/discussions/1440";
 
-  // Releases older than what the GitHub API returns. The original repo that hosted these is gone;
-  // the notes were reconstructed from the release thread linked above. They have no live download
-  // counts / assets (archived), and are appended to the changelog for the full version history.
+  // Releases older than what the GitHub API returns. They have no live download counts / assets
+  // (archived), and are appended to the changelog for the full version history.
   var LEGACY_RELEASES = [
     { tag_name:"1.0.0.6", published_at:"2024-10-20", archived:true, body:
       "- **Version switch**: toggle between CUDA and DirectML right from settings\n"+
@@ -644,7 +672,7 @@
         ? '<span class="rdc" style="opacity:.65">archived</span>'
         : '<span class="rdc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 21h16"/></svg>'+fmt(relDownloads(r))+'</span>';
       var body = md(r.body) + (r.archived
-        ? '<p style="margin-top:16px;color:var(--muted-2);font-size:13px">Reconstructed from the original <a href="'+DISCUSSION_URL+'" target="_blank" rel="noopener">release thread</a> — downloads for this version are no longer hosted.</p>'
+        ? '<p style="margin-top:16px;color:var(--muted-2);font-size:13px">Archived release — downloads for this version are no longer hosted.</p>'
         : '');
       return '<details class="rel reveal"'+(i===0?" open":"")+'>'+
         '<summary>'+

@@ -44,7 +44,7 @@ A profile's **Mode** decides which compensation engine runs while you're firing.
 
 | Mode | What it does | Best for |
 |:-----|:-------------|:---------|
-| **Legacy** | Fixed per-tick X/Y pixel offset applied every `FireRate` ms while the anti-recoil key is held. The original Aimmy mode. | Quick setups, games where you already know your gun's recoil values. |
+| **Legacy** | Fixed per-tick X/Y pixel offset applied every `FireRate` ms while the anti-recoil key is held. The simplest, original mode. | Quick setups, games where you already know your gun's recoil values. |
 | **ImageBased** | Phase-correlation on the captured frame estimates crosshair drift and counter-moves accordingly. No per-gun calibration. BETA. | "Generic" coverage when you have no idea which gun you're holding. |
 | **PatternPlayback** | Replays a named [Recoil Pattern]({{ '/features/recoil-patterns' | relative_url }}) sample-by-sample, scaled by `PatternStrength`. The most accurate mode for known guns. | Per-weapon spray control once you've recorded a pattern. |
 

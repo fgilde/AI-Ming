@@ -23,7 +23,7 @@ You can submit a model to either repository — both feed the same downloader.
 
 ## Visual walkthrough
 
-The screenshots below are taken from the upstream Aimmy guide — the GitHub workflow is identical for either repo.
+The screenshots below show the standard GitHub workflow for adding a model.
 
 <img src="readme_assets/DT1.png" />
 <img src="readme_assets/DT2.png" />

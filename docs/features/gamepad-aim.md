@@ -75,7 +75,12 @@ Two tools help confirm the gamepad path actually reaches your game.
 - A context-aware **suggestion** (e.g. "ViGEm bus missing", "switch to XInputHook", or "enable Hide physical controller").
 - A **Fire test RT pulse** button that briefly pushes RT to full so you can watch which slot lights up.
 
-**Gamepad tester** — a pop-out window (`GamepadTesterWindow`, opened from **Gamepad settings → Open Gamepad Tester**) that visualises the controller live and floats above other windows, so you can keep it open while editing. See [Controller Mapping]({{ '/features/controller-mapping/' | relative_url }}) for the mapping-side view of the same tester.
+**Gamepad tester** — a live button / trigger / stick panel (pop it out via **Gamepad settings → Open Gamepad Tester** to keep it floating while you edit). A **controller picker** at the top chooses which controller it visualises:
+
+- pick the **virtual** pad to watch exactly what PowerAim and a built-in **test sequence** inject (read from the injected virtual state, or the virtual pad's XInput slot);
+- pick a **physical** pad to watch your own input — a test sequence won't appear there, because it's sent to the virtual pad.
+
+That side-by-side makes the sync / virtual-output path visible at a glance. The tester also runs built-in sequences (A press, A+B combo, D-pad circle, left-stick circle, trigger press, complex combo). See [Controller Overview]({{ '/features/controller-overview' | relative_url }}) for the picker control, and [Controller Mapping]({{ '/features/controller-mapping/' | relative_url }}) for the mapping-side view.
 
 **Driver install buttons** — the Gamepad settings page also has in-app installers: **Install vJoy** (runs the bundled `vJoySetup.exe`, shown when vJoy mode isn't working yet) and **Install HidHide** (runs the bundled HidHide installer, shown when HidHide isn't found). For ViGEm, a button links to `vigembusdriver.com` when the bus driver is missing.
 

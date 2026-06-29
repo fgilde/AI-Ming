@@ -40,10 +40,10 @@ You can bind a **Model Switch Keybind** that cycles through local models without
 
 ## The Downloadable Models store
 
-The right column shows community models pulled from two GitHub repos:
+The right column shows community models pulled from GitHub:
 
-- **fgilde/AI-Ming** (this fork) — `models/` directory
-- **Babyhamsta/Aimmy** (upstream) — `models/` directory
+- **fgilde/AI-Ming** (PowerAim) — `models/` directory
+- a configured **upstream community model repo** — `models/` directory
 
 PowerAim merges the lists by filename and shows one row per unique name. Clicking download writes the file to your local `bin\models\` and immediately offers to load it.
 

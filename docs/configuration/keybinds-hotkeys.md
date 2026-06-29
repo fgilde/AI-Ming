@@ -19,16 +19,29 @@ Every keybind chip in PowerAim:
 
 The binding is captured via a low-level keyboard + mouse hook (`Gma.System.MouseKeyHook`), so it works regardless of which application has focus.
 
+## Combo bindings (chords)
+
+Any single keybind chip can hold a **combination** — keyboard, mouse and gamepad freely mixed — not just one key. Examples: `Ctrl+Shift+X`, `Ctrl+Left-Click`, `X+B` (two pad buttons), `G+Mouse-Left`.
+
+- **Recording is commit-on-release** — click the chip, **hold** the whole combination, then let go. At the first release PowerAim captures everything still held as the combo.
+- **Matching needs all parts** — the binding fires only while **every** part is held, and releases as soon as one part lets go.
+- **Sending a chord is ordered** — e.g. `Ctrl+A` is sent as Ctrl↓ A↓ A↑ Ctrl↑.
+
+Combos work anywhere a single key does — aim keys, trigger keys, tool start keys, toggle hotkeys. Existing single-key bindings are unchanged (old configs stay byte-identical).
+
+> A **combo** (one chip = a chord, *all* parts required) is different from a **multi-key list** with an AND/OR operator (the Trigger / Anti-Trigger key lists further down), where you add several *separate* bindings and choose whether any or all must be held.
+
 ## Common keybinds
 
 | Feature | Default binding | Where to change |
 |:--------|:----------------|:----------------|
-| **Aim Key Bindings** | RMB + LAlt | Aim Tools → Aim Assist → Aim Key Bindings |
+| **Aim key** | RMB + LAlt | **Per aim profile** — required, at the top of the aim profile editor |
 | **Anti-Recoil** | LMB | Aim Tools → AntiRecoil → Anti-Recoil Keybind |
 | **Disable Anti-Recoil** | `]` | Aim Tools → AntiRecoil → Disable Anti-Recoil Keybind |
 | **Dynamic FOV** | LMB | Aim Tools → FOVConfig → Dynamic FOV Keybind |
-| **Magnifier** | (none) | Tools → Magnifier → Magnifier Keybind |
-| **Magnifier Zoom In/Out** | `+` / `-` | Tools → Magnifier |
+| **Magnifier (start)** | (none) | Tools → Magnifier card → start keybind |
+| **Magnifier Zoom In/Out** | `+` / `-` | Tools → Magnifier card panel |
+| **Custom tool (start)** | (none) | Tools → the tool's card → start keybind |
 | **Model Switch** | (none) | Aim Tools → Model Settings → Model Switch Keybind |
 | **Gun 1 / Gun 2** | `1` / `2` | Aim Tools → AntiRecoilConfig |
 
@@ -66,12 +79,15 @@ Toggles with hotkey support:
 
 ## Per-profile hotkeys
 
-Every row of the Trigger, Mapping, AutoPlay and Anti-Recoil profile lists exposes its own hotkey chip via `AKeyChanger`. Press the bound key in-game to toggle that profile:
+Every row of the Aim, Trigger, Mapping, AutoPlay and Anti-Recoil profile lists exposes its own hotkey chip via `AKeyChanger`. Press the bound key in-game to toggle that profile:
 
+- **Aim** — each profile's row key toggles its `Enabled` flag; the profile's own **aim key** (set in the editor) is what actually engages aiming while held. Several aim profiles can be active at once.
 - **Triggers** — toggles the trigger's `Enabled` flag.
 - **Mapping** — toggles the mapping profile's active state (radio across mapping profiles).
 - **AutoPlay** — toggles the profile's `Enabled` flag.
 - **Anti-Recoil** — toggles the radio-active profile via `AntiRecoilProfileManager.SetActiveProfile`; pressing the same key again on the currently-active profile clears it.
+
+The **Tools** page works the same way: every tool (built-in or custom) has a start-key chip that runs the tool once — see [Dynamic Tools]({{ '/features/dynamic-tools' | relative_url }}).
 
 Per-row bindings persist under `BindingSettings` with a profile-type prefix (e.g. `ANTIRECOIL_PROFILE_<id>`), so they survive config reloads.
 

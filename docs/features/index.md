@@ -11,7 +11,7 @@ Every user-facing feature of PowerAim, grouped by what it does. Pages are writte
 
 ## Aim & targeting
 
-- **[Aim Assist]({{ '/features/aim-assist' | relative_url }})** — the core aim feature, FOV, sensitivity, EMA smoothening, predictions
+- **[Aim Assist]({{ '/features/aim-assist' | relative_url }})** — the core aim feature: multiple active profiles, FOV, calibrated sensitivity, smoothing modes (None/EMA/1€), optional tracking & prediction
 - **[Triggers]({{ '/features/triggers' | relative_url }})** — multi-trigger AutoTrigger with charge mode and AND/OR operators
 - **[Anti-Recoil]({{ '/features/anti-recoil' | relative_url }})** — three independent anti-recoil modes
 - **[Recoil Patterns]({{ '/features/recoil-patterns' | relative_url }})** — record + play back per-gun drift curves
@@ -33,9 +33,14 @@ Every user-facing feature of PowerAim, grouped by what it does. Pages are writte
 ## Controller & input
 
 - **[Controller Mapping]({{ '/features/controller-mapping' | relative_url }})** — reWASD-style KB↔Pad remapping engine
-- **[Gamepad Aim]({{ '/features/gamepad-aim' | relative_url }})** — use the virtual right stick instead of the mouse
+- **[Gamepad Aim]({{ '/features/gamepad-aim' | relative_url }})** — use the virtual right stick instead of the mouse, plus the gamepad tester
+- **[Controller Overview]({{ '/features/controller-overview' | relative_url }})** — every physical + virtual pad in one list: slot, sync source, hide, make-virtual-primary
 - **[Hidden Controllers]({{ '/features/hidden-controllers' | relative_url }})** — HidHide cloak + device disable
 - **[Movement Methods]({{ '/features/mouse-input-methods' | relative_url }})** — SendInput, MouseEvent, LGHub, Razer, ddxoft, Gamepad
+
+## Tools & utilities
+
+- **[Dynamic Tools]({{ '/features/dynamic-tools' | relative_url }})** — build your own tools from typed action sequences with option variables, plus the built-in Magnifier and HWID spoofer
 
 ## AI / automation
 

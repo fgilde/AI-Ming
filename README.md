@@ -15,9 +15,6 @@
 
 PowerAim is a **universal AI-based aim alignment tool**. It captures the screen, runs a YOLOv8 ONNX model on the frame, and nudges the mouse towards the detected target — fully configurable, with a clean Fluent UI built on .NET 10 and WPF.
 
-PowerAim started as a fork of [Babyhamsta/Aimmy](https://github.com/Babyhamsta/Aimmy) but has since been heavily reworked: a decoupled service architecture, a complete trigger-system overhaul, a Fluent-styled UI, gamepad / AutoPlay support, localization in 9 languages, dynamic model sizes, and a much faster capture & inference pipeline.
-
-PowerAim is **100% free**: no ads, no key system, no paywalled features. It is **source-available** but **not open source** — please do not make commercial forks.
 
 <p align="center">
   <img src="docs/images/main.png" alt="PowerAim" width="800" />
@@ -52,7 +49,7 @@ Quick links:
 - [Performance Tools](#performance-tools)
 - [Web Model & Training](#web-model--training)
 - [Contributing Models](MODELS.md)
-- [Credits](#credits)
+- [License & Credits](LicenseInfo.md)
 
 ---
 
@@ -132,7 +129,7 @@ Each block is an independent service — the capture loop, the inference pipelin
 For CUDA acceleration, download the `_cuda` variant of the release.
 
 ## Trigger System
-PowerAim's trigger system is a complete rewrite of the original Aimmy autotrigger.
+PowerAim's trigger system is a full multi-trigger engine.
 
 - Each **trigger** is an `ActionTrigger` with its own name, active state, keys, actions, intersection checks, and timing.
 - **Trigger Keys / Anti-Trigger Keys** support AND or OR operators — combine `LMB AND Shift`, or `LMB OR Q`, or `NOT (R OR Tab)` to block firing while reloading.
@@ -153,17 +150,4 @@ A short walkthrough video for training your own model:
 [![Watch on YouTube](https://img.youtube.com/vi/i98wF4218-Q/maxresdefault.jpg)](https://youtu.be/i98wF4218-Q)
 
 ## Want to contribute a model?
-See **[MODELS.md](MODELS.md)** for the full step-by-step guide. PowerAim's in-app downloader merges models from this fork **and** from the upstream Babyhamsta/Aimmy repo — newer commit wins on a name conflict, fork wins on a tie.
-
-## Credits
-
-PowerAim is built on the shoulders of [Babyhamsta/Aimmy](https://github.com/Babyhamsta/Aimmy) by BabyHamsta, MarsQQ and Taylor — without their original work and ONNX/DirectML wiring this project would not exist. Thank you. ❤️
-
-**Model creators (kept from upstream):**
-- Babyhamsta — UniversalV4, Phantom Forces
-- Natdog400 — AIO V2, V7
-- Themida — Arsenal, Strucid, Bad Business, Blade Ball, LGHub check
-- Hogthewog — Da Hood, FN
-- Ninja — MarsQQ's emotional support
-
-PowerAim is **source-available** (see [SourceAvailable.md](SourceAvailable.md)). Commercial forks are not permitted.
+See **[MODELS.md](MODELS.md)** for the full step-by-step guide. PowerAim's in-app downloader merges models from PowerAim's repo **and** from a configured upstream community model repo — newer commit wins on a name conflict, PowerAim's repo wins on a tie.
