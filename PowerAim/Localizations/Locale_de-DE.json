@@ -1078,5 +1078,10 @@
   "ToolVariableHelpTitle": "Variablen verwenden",
   "ToolVariableHelpBody": "Jede Option ist eine Variable. Verwende sie als {name} in den Textfeldern einer Aktion — Programmpfad/Argumente, Maus-X/Y oder eine Verzögerung in ms — und der Wert der Option wird beim Ausführen eingesetzt. Beispiel: eine Option namens target mit Wert 100, dann Maus bewegen X = {target}.",
   "GamepadTestSource": "Angezeigter Controller",
-  "GamepadTestSourceHint": "Wähle, welchen Controller die Anzeige unten spiegelt. Den virtuellen Pad wählen, um zu sehen, was PowerAim und die Test-Sequenz einspeisen; einen physischen Pad wählen, um deine eigene Eingabe zu sehen — eine Test-Sequenz erscheint dort nicht, weil sie an den virtuellen Pad geht."
+  "GamepadTestSourceHint": "Wähle, welchen Controller die Anzeige unten spiegelt. Den virtuellen Pad wählen, um zu sehen, was PowerAim und die Test-Sequenz einspeisen; einen physischen Pad wählen, um deine eigene Eingabe zu sehen — eine Test-Sequenz erscheint dort nicht, weil sie an den virtuellen Pad geht.",
+  "ToolCrosshair": "Fadenkreuz",
+  "MagnifierScaling": "Skalierung",
+  "MagnifierScalingNone": "Keine (scharfe Pixel)",
+  "MagnifierScalingSmooth": "Glatt HQ (bilinear)",
+  "MagnifierScalingEnhanced": "Verbessert (bikubisch, experimentell)"
 }

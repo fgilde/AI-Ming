@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Interop;
+using Microsoft.Win32;
 using PowerAim.Class.Native;
+using PowerAim.Config;
 using PowerAim.Extensions;
 
 public class Magnifier : IDisposable
@@ -10,6 +12,8 @@ public class Magnifier : IDisposable
     private IntPtr hwndMag;
     private float magnification;
     private bool initialized;
+    private int? _prevSmoothing;
+    private bool _smoothingApplied;
     private RECT magWindowRect = new RECT();
     private System.Windows.Forms.Timer timer;
 
@@ -25,6 +29,13 @@ public class Magnifier : IDisposable
 
         timer = new System.Windows.Forms.Timer();
         timer.Tick += new EventHandler(timer_Tick);
+
+        // High-quality (bilinear) upscaling: the Magnification runtime reads UseBitmapSmoothing when it
+        // initializes (the same toggle Windows Magnifier's "smooth edges of images and text" sets). We
+        // flip it for the lifetime of the magnifier and restore the user's value on dispose, so the
+        // zoomed image is smoothed instead of showing blocky nearest-neighbour pixels.
+        // Native magnifier is used for None (sharp) and SmoothHQ (bilinear); Enhanced uses its own renderer.
+        ApplyBitmapSmoothing(AppConfig.Current?.SliderSettings?.MagnifierScaling == MagnifierScalingMode.SmoothHQ);
 
         initialized = NativeAPIMethods.MagInitialize();
         if (initialized)
@@ -181,8 +192,18 @@ public class Magnifier : IDisposable
 
     protected void RemoveMagnifier()
     {
+        // Destroy the magnifier child window so a live recreate (e.g. toggling smoothing) doesn't
+        // leave an orphaned, frozen magnifier control behind the new one.
+        if (hwndMag != IntPtr.Zero)
+        {
+            NativeAPIMethods.DestroyWindow(hwndMag);
+            hwndMag = IntPtr.Zero;
+        }
         if (initialized)
+        {
             NativeAPIMethods.MagUninitialize();
+            initialized = false;
+        }
     }
 
     protected virtual void Dispose(bool disposing)
@@ -196,7 +217,38 @@ public class Magnifier : IDisposable
 
         timer = null;
         form.SizeChanged -= form_Resize;
+        form.Closing -= form_FormClosing;
         RemoveMagnifier();
+        RestoreBitmapSmoothing();
+    }
+
+    private const string MagnifierRegPath = @"Software\Microsoft\ScreenMagnifier";
+
+    /// <summary>Set the Magnification runtime's bilinear-smoothing flag, remembering the previous value.</summary>
+    private void ApplyBitmapSmoothing(bool smooth)
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.CreateSubKey(MagnifierRegPath);
+            if (key == null) return;
+            _prevSmoothing = key.GetValue("UseBitmapSmoothing") as int?;
+            key.SetValue("UseBitmapSmoothing", smooth ? 1 : 0, RegistryValueKind.DWord);
+            _smoothingApplied = true;
+        }
+        catch { /* registry access is best-effort — fall back to whatever the OS default is */ }
+    }
+
+    /// <summary>Restore the user's previous smoothing value so we don't change their Windows Magnifier.</summary>
+    private void RestoreBitmapSmoothing()
+    {
+        if (!_smoothingApplied) return;
+        _smoothingApplied = false;
+        try
+        {
+            using var key = Registry.CurrentUser.CreateSubKey(MagnifierRegPath);
+            key?.SetValue("UseBitmapSmoothing", _prevSmoothing ?? 0, RegistryValueKind.DWord);
+        }
+        catch { /* best-effort */ }
     }
 
     #region IDisposable Members

@@ -13,6 +13,7 @@ namespace PowerAim.Visuality
     public partial class MagnifierDialog : IDisposable
     {
         private Magnifier? magnifier;
+        private EnhancedMagnifier? enhanced;
         protected override bool SaveRestorePosition => false;
 
         protected override void OnSourceInitialized(EventArgs e)
@@ -32,10 +33,17 @@ namespace PowerAim.Visuality
 
         private void OnConfigChange(object? sender, PropertyChangedEventArgs e)
         {
-            if(e.PropertyName == nameof(SliderSettings.MagnificationFactor) && magnifier is not null)
+            if (e.PropertyName == nameof(SliderSettings.MagnificationFactor))
             {
-                magnifier.Magnification = AppConfig.Current.SliderSettings.MagnificationFactor;
-                magnifier.UpdateMagnifier();
+                var f = AppConfig.Current.SliderSettings.MagnificationFactor;
+                if (magnifier is not null) { magnifier.Magnification = f; magnifier.UpdateMagnifier(); }
+                if (enhanced is not null) enhanced.Magnification = f;
+            }
+            else if (e.PropertyName == nameof(SliderSettings.MagnifierScaling))
+            {
+                // Switching scaling mode swaps the whole renderer (native API vs. custom bicubic).
+                StopRenderers();
+                StartMagnification();
             }
         }
 
@@ -64,11 +72,30 @@ namespace PowerAim.Visuality
 
         private void StartMagnification()
         {
-            magnifier = new Magnifier(this)
+            var f = AppConfig.Current.SliderSettings.MagnificationFactor;
+            if (AppConfig.Current.SliderSettings.MagnifierScaling == MagnifierScalingMode.Enhanced)
             {
-                Magnification = AppConfig.Current.SliderSettings.MagnificationFactor
-            };
-            magnifier.UpdateMagnifier();
+                // The custom renderer screen-grabs the source region, so the magnifier window must be
+                // excluded from capture (regardless of the global hide-from-capture setting), or it
+                // would capture itself and feed back.
+                this.HideForCapture();
+                EnhancedImage.Visibility = Visibility.Visible;
+                enhanced = new EnhancedMagnifier(this, EnhancedImage) { Magnification = f };
+            }
+            else
+            {
+                EnhancedImage.Visibility = Visibility.Collapsed;
+                magnifier = new Magnifier(this) { Magnification = f };
+                magnifier.UpdateMagnifier();
+            }
+        }
+
+        private void StopRenderers()
+        {
+            magnifier?.Dispose();
+            magnifier = null;
+            enhanced?.Dispose();
+            enhanced = null;
         }
 
 
@@ -80,7 +107,7 @@ namespace PowerAim.Visuality
         public void Dispose()
         {
             AppConfig.Current.SliderSettings.PropertyChanged -= OnConfigChange;
-            magnifier.Dispose();
+            StopRenderers();
         }
 
         private void MagnifierDialog_OnGotFocus(object sender, RoutedEventArgs e)

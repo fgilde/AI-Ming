@@ -444,7 +444,13 @@ public partial class MainWindow
         if (bs[magKey] is not { IsValid: true } && bs.MagnifierKeybind is { IsValid: true })
             bs[magKey] = bs.MagnifierKeybind;
 
-        // The unified Tools list: built-ins (Magnifier, HWID spoofer) + the user's custom tools.
+        // Same for the crosshair: the old "Show Custom Crosshair" toggle hotkey (stored under
+        // "ShowCustomCrosshair") moves onto the Crosshair tool's start keybind.
+        var crosshairKey = AKeyChanger.CodeFor(CrosshairTool.ToolId, "USER_TOOL");
+        if (bs[crosshairKey] is not { IsValid: true } && bs[nameof(Locale.ShowCustomCrosshair)] is { IsValid: true })
+            bs[crosshairKey] = bs[nameof(Locale.ShowCustomCrosshair)];
+
+        // The unified Tools list: built-ins (Magnifier, Crosshair, HWID spoofer) + the user's custom tools.
         ToolsConfig.Add(new ToolsList { UserTools = AppConfig.Current.UserTools });
 
         ToolsConfig.AddSeparator();
@@ -528,46 +534,9 @@ public partial class MainWindow
             .BindTo(() => AppConfig.Current.ToggleState.ShowInputVisualizer);
 
 
-        OverlaySettings.AddToggleWithKeyBind(Locale.ShowCustomCrosshair, nameof(Locale.ShowCustomCrosshair), BindingManager)
-            .InitWith(t => t.ToolTip = Locale.ShowCustomCrosshairTooltip)
-            .BindTo(() => AppConfig.Current.ToggleState.ShowCrosshairOverlay);
-
-        OverlaySettings.AddDropdown(Locale.CrosshairShape,
-            AppConfig.Current.CrosshairSettings.Shape,
-            v => AppConfig.Current.CrosshairSettings.Shape = v);
-        OverlaySettings.AddSlider(Locale.CrosshairSize, Locale.Pixels, 1, 1, 4, 80)
-            .BindTo(() => AppConfig.Current.CrosshairSettings.Size);
-        OverlaySettings.AddSlider(Locale.CrosshairThickness, Locale.Pixels, 1, 1, 1, 10)
-            .BindTo(() => AppConfig.Current.CrosshairSettings.Thickness);
-        OverlaySettings.AddSlider(Locale.CrosshairGap, Locale.Pixels, 1, 1, 0, 30)
-            .BindTo(() => AppConfig.Current.CrosshairSettings.Gap);
-        OverlaySettings.AddSlider(Locale.CrosshairOutline, Locale.Pixels, 1, 1, 0, 4)
-            .BindTo(() => AppConfig.Current.CrosshairSettings.OutlineThickness);
-        OverlaySettings.AddColorChanger(Locale.CrosshairColor).BindTo(() => AppConfig.Current.CrosshairSettings.ColorValue);
-        OverlaySettings.AddColorChanger(Locale.CrosshairOutlineColor).BindTo(() => AppConfig.Current.CrosshairSettings.OutlineColorValue);
-
-        // Detection-flash cue: tints the crosshair briefly whenever the detector finds a target.
-        // The dependent picker + duration slider hide when the toggle is off — matches the
-        // conditional-UI pattern used in the Anti-Recoil section.
-        var detectionFlashToggle = OverlaySettings.AddToggle(Locale.DetectionFlash)
-            .InitWith(t => t.ToolTip = Locale.DetectionFlashHelp)
-            .BindTo(() => AppConfig.Current.CrosshairSettings.DetectionFlashEnabled);
-        var detectionFlashColor = OverlaySettings.AddColorChanger(Locale.DetectionFlashColor);
-        detectionFlashColor.BindTo(() => AppConfig.Current.CrosshairSettings.DetectionFlashColorValue);
-        var detectionFlashDuration = OverlaySettings.AddSlider(Locale.DetectionFlashDuration, Locale.Milliseconds, 10, 10, 50, 1000)
-            .BindTo(() => AppConfig.Current.CrosshairSettings.DetectionFlashMs);
-        void UpdateDetectionFlashVisibility()
-        {
-            var on = AppConfig.Current.CrosshairSettings.DetectionFlashEnabled;
-            detectionFlashColor.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
-            detectionFlashDuration.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
-        }
-        AppConfig.Current.CrosshairSettings.PropertyChanged += (_, e) =>
-        {
-            if (e.PropertyName == nameof(CrosshairSettings.DetectionFlashEnabled))
-                Dispatcher.Invoke(UpdateDetectionFlashVisibility);
-        };
-        UpdateDetectionFlashVisibility();
+        // The custom crosshair (toggle + shape/size/colours/detection-flash) now lives on the Tools
+        // page as the built-in "Crosshair" tool — it's really a tool, not an overlay setting. See
+        // ToolsList.BuildCrosshairPanel. Only the debug/input-visualizer overlays stay here.
         OverlaySettings.AddSeparator();
 
         // ===== Stats =====

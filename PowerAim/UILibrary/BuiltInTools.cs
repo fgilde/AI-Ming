@@ -32,6 +32,34 @@ public sealed class MagnifierTool : ToolDefinition
     }
 }
 
+/// <summary>Built-in: the custom crosshair overlay. Start toggles it on/off; the panel holds its
+/// appearance settings (shape, size, colours, detection flash). Toggling
+/// <see cref="ToggleState.ShowCrosshairOverlay"/> shows/hides the overlay via its own setter.</summary>
+public sealed class CrosshairTool : ToolDefinition
+{
+    public const string ToolId = "builtin:crosshair";
+
+    public CrosshairTool()
+    {
+        Id = ToolId;
+        Name = Locale.ToolCrosshair;
+    }
+
+    public override bool IsBuiltIn => true;
+    public override bool IsEditable => false;
+    public override string Subtitle => Locale.ToolBuiltIn;
+
+    public override Task RunAsync(CancellationToken ct)
+    {
+        Application.Current?.Dispatcher.Invoke(() =>
+        {
+            var ts = AppConfig.Current?.ToggleState;
+            if (ts != null) ts.ShowCrosshairOverlay = !ts.ShowCrosshairOverlay;
+        });
+        return Task.CompletedTask;
+    }
+}
+
 /// <summary>Built-in: opens the HWID spoofer (delegates to <c>MainWindow.OpenSpoofer</c>).</summary>
 public sealed class HwidSpooferTool : ToolDefinition
 {

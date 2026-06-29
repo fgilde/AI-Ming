@@ -3,6 +3,17 @@ using PowerAim.Types;
 
 namespace PowerAim.Config;
 
+/// <summary>How the magnifier upscales the zoomed region.</summary>
+public enum MagnifierScalingMode
+{
+    /// <summary>Native magnifier, nearest-neighbour — sharp but blocky pixels.</summary>
+    None,
+    /// <summary>Native magnifier, bilinear smoothing (via the Magnification runtime).</summary>
+    SmoothHQ,
+    /// <summary>Custom renderer: capture + high-quality bicubic upscale (sharper, experimental).</summary>
+    Enhanced,
+}
+
 public class SliderSettings : BaseSettings
 {
     /// <summary>
@@ -62,6 +73,10 @@ public class SliderSettings : BaseSettings
     public double MagnifierWindowHeight { get; set => SetField(ref field, value); } = 250;
 
     public double MagnifierWindowWidth { get; set => SetField(ref field, value); } = 350;
+
+    /// <summary>How the magnifier upscales the zoom: None (sharp pixels), SmoothHQ (native bilinear via
+    /// the Magnification runtime), or Enhanced (custom capture + bicubic upscale).</summary>
+    public MagnifierScalingMode MagnifierScaling { get; set => SetField(ref field, value); } = MagnifierScalingMode.SmoothHQ;
 
     public double GamepadMinimumLT { get; set => SetField(ref field, value); } = 0.7;
 

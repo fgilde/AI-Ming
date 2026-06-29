@@ -25,11 +25,18 @@
 
     <Grid MinHeight="50" MinWidth="50">
 
+        <!-- Enhanced-mode surface: the custom bicubic renderer writes frames here. The native
+             magnifier (None / SmoothHQ) draws into a child HWND on top, so this stays hidden then. -->
+        <Image x:Name="EnhancedImage"
+               Stretch="Fill"
+               Visibility="Collapsed"
+               RenderOptions.BitmapScalingMode="HighQuality" />
+
         <Border x:Name="MainBorder"
                 CornerRadius="5"
                 BorderThickness="1"
                 Background="Transparent">
-            
+
         </Border>
     </Grid>
 </visuality:BaseDialog>

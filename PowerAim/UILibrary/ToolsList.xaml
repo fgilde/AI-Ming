@@ -104,8 +104,6 @@
                                                                WithBorder="False"
                                                                Text="" />
 
-                                        <uiLibrary:AToggle BorderBrush="Transparent" Text=""
-                                                           Checked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
                                         <Button Style="{StaticResource FluentIconButton}"
                                                 ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Edit'}"

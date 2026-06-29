@@ -27,6 +27,7 @@ namespace PowerAim.UILibrary;
 public partial class ToolsList : UserControl
 {
     private readonly MagnifierTool _magnifier = new();
+    private readonly CrosshairTool _crosshair = new();
     private readonly HwidSpooferTool _hwid = new();
 
     public ToolsList()
@@ -62,6 +63,7 @@ public partial class ToolsList : UserControl
     {
         AllTools.Clear();
         AllTools.Add(_magnifier);
+        AllTools.Add(_crosshair);
         AllTools.Add(_hwid);
         if (UserTools != null)
             foreach (var t in UserTools)
@@ -185,24 +187,87 @@ public partial class ToolsList : UserControl
     private FrameworkElement BuildPanel(ToolDefinition tool) => tool switch
     {
         MagnifierTool => BuildMagnifierPanel(),
+        CrosshairTool => BuildCrosshairPanel(),
         HwidSpooferTool => BuildHwidPanel(),
         CustomTool c => BuildCustomPanel(c),
         _ => new StackPanel()
     };
 
+    // The custom-crosshair appearance settings, moved here from the Overlays settings card (the
+    // crosshair is really a tool). The tool's start key/button toggles ShowCrosshairOverlay; this
+    // panel just holds the appearance settings — the crosshair is toggled on/off by the tool's start
+    // button / start key (RunAsync flips ShowCrosshairOverlay), so a separate "Show crosshair" toggle
+    // here would be redundant.
+    private FrameworkElement BuildCrosshairPanel()
+    {
+        var p = new StackPanel();
+
+        p.AddDropdown(Locale.CrosshairShape, AppConfig.Current.CrosshairSettings.Shape,
+            v => AppConfig.Current.CrosshairSettings.Shape = v);
+        p.AddSlider(Locale.CrosshairSize, Locale.Pixels, 1, 1, 4, 80).BindTo(() => AppConfig.Current.CrosshairSettings.Size);
+        p.AddSlider(Locale.CrosshairThickness, Locale.Pixels, 1, 1, 1, 10).BindTo(() => AppConfig.Current.CrosshairSettings.Thickness);
+        p.AddSlider(Locale.CrosshairGap, Locale.Pixels, 1, 1, 0, 30).BindTo(() => AppConfig.Current.CrosshairSettings.Gap);
+        p.AddSlider(Locale.CrosshairOutline, Locale.Pixels, 1, 1, 0, 4).BindTo(() => AppConfig.Current.CrosshairSettings.OutlineThickness);
+        p.AddColorChanger(Locale.CrosshairColor).BindTo(() => AppConfig.Current.CrosshairSettings.ColorValue);
+        p.AddColorChanger(Locale.CrosshairOutlineColor).BindTo(() => AppConfig.Current.CrosshairSettings.OutlineColorValue);
+
+        // Detection-flash cue + its dependent picker/duration that hide when the toggle is off.
+        p.AddToggle(Locale.DetectionFlash)
+            .InitWith(t => t.ToolTip = Locale.DetectionFlashHelp)
+            .BindTo(() => AppConfig.Current.CrosshairSettings.DetectionFlashEnabled);
+        var flashColor = p.AddColorChanger(Locale.DetectionFlashColor);
+        flashColor.BindTo(() => AppConfig.Current.CrosshairSettings.DetectionFlashColorValue);
+        var flashDuration = p.AddSlider(Locale.DetectionFlashDuration, Locale.Milliseconds, 10, 10, 50, 1000)
+            .BindTo(() => AppConfig.Current.CrosshairSettings.DetectionFlashMs);
+        void UpdateFlashVis()
+        {
+            var on = AppConfig.Current.CrosshairSettings.DetectionFlashEnabled;
+            flashColor.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+            flashDuration.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+        }
+        AppConfig.Current.CrosshairSettings.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(CrosshairSettings.DetectionFlashEnabled))
+                Dispatcher.Invoke(UpdateFlashVis);
+        };
+        UpdateFlashVis();
+        return p;
+    }
+
+    private bool _buildingMagPanel;
+
     private FrameworkElement BuildMagnifierPanel()
     {
         var bm = MainWindow.Instance?.BindingManager;
         var p = new StackPanel();
-        p.AddSlider(Locale.MagnificationValue, Locale.ZoomFactor, 0.1, 0.1, ApplicationConstants.MinMagnificationFactor, ApplicationConstants.MaxMagnificationFactor)
-            .BindTo(() => AppConfig.Current.SliderSettings.MagnificationFactor);
-        p.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.MagnifierZoomInKeybind), () => AppConfig.Current.BindingSettings.MagnifierZoomInKeybind, bm);
-        p.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.MagnifierZoomOutKeybind), () => AppConfig.Current.BindingSettings.MagnifierZoomOutKeybind, bm);
-        p.AddSlider(Locale.ZoomStep, Locale.Step, 0.1, 0.1, 0.1, 4).BindTo(() => AppConfig.Current.SliderSettings.MagnificationStepFactor);
-        p.AddSlider(Locale.WindowSizeWidth, Locale.Width, 1, 10, 50, 1500).BindTo(() => AppConfig.Current.SliderSettings.MagnifierWindowWidth);
-        p.AddSlider(Locale.WindowSizeHeight, Locale.Height, 1, 10, 50, 1500).BindTo(() => AppConfig.Current.SliderSettings.MagnifierWindowHeight);
+        _buildingMagPanel = true;
+        try
+        {
+            p.AddSlider(Locale.MagnificationValue, Locale.ZoomFactor, 0.1, 0.1, ApplicationConstants.MinMagnificationFactor, ApplicationConstants.MaxMagnificationFactor)
+                .BindTo(() => AppConfig.Current.SliderSettings.MagnificationFactor);
+            // Scaling quality: None (sharp pixels) / SmoothHQ (native bilinear) / Enhanced (custom bicubic).
+            // _buildingMagPanel ignores the combo's spurious auto-select-first onSelect during populate.
+            p.AddDropdown(Locale.MagnifierScaling, AppConfig.Current.SliderSettings.MagnifierScaling,
+                new[] { MagnifierScalingMode.None, MagnifierScalingMode.SmoothHQ, MagnifierScalingMode.Enhanced },
+                v => { if (!_buildingMagPanel) AppConfig.Current.SliderSettings.MagnifierScaling = v; },
+                toStringFn: ScalingLabel);
+            p.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.MagnifierZoomInKeybind), () => AppConfig.Current.BindingSettings.MagnifierZoomInKeybind, bm);
+            p.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.MagnifierZoomOutKeybind), () => AppConfig.Current.BindingSettings.MagnifierZoomOutKeybind, bm);
+            p.AddSlider(Locale.ZoomStep, Locale.Step, 0.1, 0.1, 0.1, 4).BindTo(() => AppConfig.Current.SliderSettings.MagnificationStepFactor);
+            p.AddSlider(Locale.WindowSizeWidth, Locale.Width, 1, 10, 50, 1500).BindTo(() => AppConfig.Current.SliderSettings.MagnifierWindowWidth);
+            p.AddSlider(Locale.WindowSizeHeight, Locale.Height, 1, 10, 50, 1500).BindTo(() => AppConfig.Current.SliderSettings.MagnifierWindowHeight);
+        }
+        finally { _buildingMagPanel = false; }
         return p;
     }
+
+    private static string ScalingLabel(MagnifierScalingMode m) => m switch
+    {
+        MagnifierScalingMode.None => Locale.MagnifierScalingNone,
+        MagnifierScalingMode.SmoothHQ => Locale.MagnifierScalingSmooth,
+        MagnifierScalingMode.Enhanced => Locale.MagnifierScalingEnhanced,
+        _ => m.ToString()
+    };
 
     private FrameworkElement BuildHwidPanel()
     {
