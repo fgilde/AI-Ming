@@ -78,6 +78,9 @@ public class SliderSettings : BaseSettings
     /// the Magnification runtime), or Enhanced (custom capture + bicubic upscale).</summary>
     public MagnifierScalingMode MagnifierScaling { get; set => SetField(ref field, value); } = MagnifierScalingMode.SmoothHQ;
 
+    /// <summary>Seconds between Anti-AFK nudges while the Anti-AFK tool is active.</summary>
+    public double AntiAfkIntervalSeconds { get; set => SetField(ref field, value); } = 45;
+
     public double GamepadMinimumLT { get; set => SetField(ref field, value); } = 0.7;
 
     public double GamepadMinimumRT { get; set => SetField(ref field, value); } = 0.7;

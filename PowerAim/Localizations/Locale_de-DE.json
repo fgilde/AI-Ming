@@ -1083,5 +1083,8 @@
   "MagnifierScaling": "Skalierung",
   "MagnifierScalingNone": "Keine (scharfe Pixel)",
   "MagnifierScalingSmooth": "Glatt HQ (bilinear)",
-  "MagnifierScalingEnhanced": "Verbessert (bikubisch, experimentell)"
+  "MagnifierScalingEnhanced": "Verbessert (bikubisch, experimentell)",
+  "ToolAntiAfk": "Anti-AFK",
+  "AntiAfkInterval": "Stups-Intervall",
+  "AntiAfkHelp": "Solange aktiv, bewegt es die Maus in diesem Intervall einen Pixel hin und zurück, damit du nicht als inaktiv giltst — kein AFK-Kick, kein Queue-Verlust. Über den Start-Button oder den Keybind umschalten; der Cursor bleibt netto an Ort und Stelle."
 }

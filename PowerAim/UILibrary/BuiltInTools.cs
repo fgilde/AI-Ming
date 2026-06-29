@@ -60,6 +60,29 @@ public sealed class CrosshairTool : ToolDefinition
     }
 }
 
+/// <summary>Built-in: Anti-AFK. Start toggles a background loop that nudges the mouse on an interval so
+/// the session isn't flagged idle (no AFK-kick / queue drop). Delegates to <c>AntiAfkService</c>.</summary>
+public sealed class AntiAfkTool : ToolDefinition
+{
+    public const string ToolId = "builtin:antiafk";
+
+    public AntiAfkTool()
+    {
+        Id = ToolId;
+        Name = Locale.ToolAntiAfk;
+    }
+
+    public override bool IsBuiltIn => true;
+    public override bool IsEditable => false;
+    public override string Subtitle => Locale.ToolBuiltIn;
+
+    public override Task RunAsync(CancellationToken ct)
+    {
+        PowerAim.InputLogic.Tools.AntiAfkService.Toggle();
+        return Task.CompletedTask;
+    }
+}
+
 /// <summary>Built-in: opens the HWID spoofer (delegates to <c>MainWindow.OpenSpoofer</c>).</summary>
 public sealed class HwidSpooferTool : ToolDefinition
 {

@@ -28,6 +28,7 @@ public partial class ToolsList : UserControl
 {
     private readonly MagnifierTool _magnifier = new();
     private readonly CrosshairTool _crosshair = new();
+    private readonly AntiAfkTool _antiAfk = new();
     private readonly HwidSpooferTool _hwid = new();
 
     public ToolsList()
@@ -64,6 +65,7 @@ public partial class ToolsList : UserControl
         AllTools.Clear();
         AllTools.Add(_magnifier);
         AllTools.Add(_crosshair);
+        AllTools.Add(_antiAfk);
         AllTools.Add(_hwid);
         if (UserTools != null)
             foreach (var t in UserTools)
@@ -188,10 +190,26 @@ public partial class ToolsList : UserControl
     {
         MagnifierTool => BuildMagnifierPanel(),
         CrosshairTool => BuildCrosshairPanel(),
+        AntiAfkTool => BuildAntiAfkPanel(),
         HwidSpooferTool => BuildHwidPanel(),
         CustomTool c => BuildCustomPanel(c),
         _ => new StackPanel()
     };
+
+    private FrameworkElement BuildAntiAfkPanel()
+    {
+        var p = new StackPanel();
+        p.AddSlider(Locale.AntiAfkInterval, Locale.Seconds, 1, 5, 5, 300)
+            .BindTo(() => AppConfig.Current.SliderSettings.AntiAfkIntervalSeconds);
+        p.Add<TextBlock>(t =>
+        {
+            t.Text = Locale.AntiAfkHelp;
+            t.TextWrapping = TextWrapping.Wrap;
+            t.FontSize = 11;
+            t.Foreground = UIElementExtensions.LookupBrush("FluentTextSecondary", ApplicationConstants.Foreground);
+        });
+        return p;
+    }
 
     // The custom-crosshair appearance settings, moved here from the Overlays settings card (the
     // crosshair is really a tool). The tool's start key/button toggles ShowCrosshairOverlay; this

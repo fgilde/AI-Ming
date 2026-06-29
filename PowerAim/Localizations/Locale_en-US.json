@@ -1083,5 +1083,8 @@
   "MagnifierScaling": "Scaling",
   "MagnifierScalingNone": "None (sharp pixels)",
   "MagnifierScalingSmooth": "Smooth HQ (bilinear)",
-  "MagnifierScalingEnhanced": "Enhanced (bicubic, experimental)"
+  "MagnifierScalingEnhanced": "Enhanced (bicubic, experimental)",
+  "ToolAntiAfk": "Anti-AFK",
+  "AntiAfkInterval": "Nudge interval",
+  "AntiAfkHelp": "While active, nudges the mouse a pixel and back on this interval so you aren't flagged idle — no AFK-kick or queue drop. Toggle it with the start button or its keybind; net cursor movement is zero."
 }
