@@ -144,6 +144,7 @@ public class AppConfig : BaseSettings
     public OllamaSettings OllamaSettings { get; set; } = new();
     public AISettings AISettings { get; set; } = new();
     public AimSettings AimSettings { get; set; } = new();
+    public ControllerSettings ControllerSettings { get; set; } = new();
     public ActiveProcessSettings ActiveProcessSettings { get; set; } = new();
     public CrosshairSettings CrosshairSettings { get; set; } = new();
     public OcrSettings OcrSettings { get; set; } = new();

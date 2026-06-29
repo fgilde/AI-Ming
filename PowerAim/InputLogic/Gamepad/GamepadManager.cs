@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using SharpDX.XInput;
 using PowerAim.Config;
 using PowerAim.InputLogic.Contracts;
 using PowerAim.InputLogic.Gamepad.Interaction;
@@ -34,6 +35,7 @@ public static class GamepadManager
         if (GamepadReader == null)
         {
             GamepadReader = new GamepadReader();
+            ResolvePreferredSource(); // honour a persisted sync-source choice (re-resolved by device id)
             ReadingControllerId = GamepadReader.Controller.GetControllerId(); // Needs to be called before virtual one is created
         }
 
@@ -128,6 +130,48 @@ public static class GamepadManager
         {
             Console.WriteLine($"[GamepadSenderXInputEmu] Setup failed: {ex.Message}");
             return null;
+        }
+    }
+
+    /// <summary>
+    ///     Switch which physical XInput slot feeds the sync (mirror into the virtual pad) at runtime.
+    ///     No reader teardown / sender restart — the sync loop reads the physical reference fresh each
+    ///     tick. The choice is persisted by DEVICE ID so it survives restarts and slot changes.
+    /// </summary>
+    public static void SetSyncSource(UserIndex slot)
+    {
+        if (GamepadReader == null) return;
+        GamepadReader.UseSlot(slot);
+        ReadingControllerId = GamepadReader.Controller.GetControllerId();
+        GamepadSender?.SyncWith(GamepadReader.Controller);
+        if (AppConfig.Current?.ControllerSettings != null)
+            AppConfig.Current.ControllerSettings.PreferredSyncDeviceId = ReadingControllerId ?? "";
+    }
+
+    /// <summary>
+    ///     Force the ViGEm virtual pad to disconnect+reconnect — Windows treats it as a fresh plug and
+    ///     re-enumerates XInput slots, so it can claim a freed low slot. Uses <see cref="RawSender"/>
+    ///     (the unwrapped concrete sender), not the reporting wrapper. No-op for non-ViGEm send modes.
+    /// </summary>
+    public static bool ReconnectVirtual() => RawSender is global::GamepadSenderViGEm v && v.Reconnect();
+
+    /// <summary>
+    ///     If the user previously picked a sync source (persisted by device id), find which XInput slot
+    ///     currently holds that device and switch the reader to it. If it isn't present on any slot, the
+    ///     auto-scanned source (last-known slot, then scan) is kept.
+    /// </summary>
+    private static void ResolvePreferredSource()
+    {
+        var pref = AppConfig.Current?.ControllerSettings?.PreferredSyncDeviceId;
+        if (string.IsNullOrEmpty(pref) || GamepadReader == null) return;
+        for (var i = UserIndex.One; i <= UserIndex.Four; i++)
+        {
+            var c = new Controller(i);
+            if (c.IsConnected && c.GetControllerId() == pref)
+            {
+                GamepadReader.UseSlot(i);
+                return;
+            }
         }
     }
 

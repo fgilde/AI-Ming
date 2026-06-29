@@ -358,20 +358,45 @@ public partial class MainWindow
             }
         }
 
-        // Inline live diagnostics — replaces the earlier modal dialog. Stays on the Gamepad page
-        // so the user can read the slot map while tweaking other settings on the same screen.
+        // ── Controllers (primary) ─────────────────────────────────────────────────────────────
+        // All detected pads + the virtual one in one tidy list, the current sync source tagged, with
+        // per-row actions (use for sync / hide).
+        GamepadSettingsConfig.AddTitle(Locale.ControllerManagerTitle, false);
+        GamepadSettingsConfig.AddCredit("", Locale.ControllerManagerSubHeader);
+        GamepadSettingsConfig.Children.Add(new PowerAim.UILibrary.ControllerManageControl
+        {
+            Mode = PowerAim.UILibrary.ControllerListMode.Manage,
+            Margin = new Thickness(0, 4, 0, 8),
+        });
+
+        // One-click "make games read the virtual pad": games read the lowest XInput slot and an app
+        // can't reassign slots, so this removes the physical from XInput (HidHide cloak / admin disable)
+        // and reconnects the virtual to claim that slot. Undo restores the physical.
+        if (AppConfig.Current.DropdownState.GamepadSendMode is GamepadSendMode.ViGEm
+            or GamepadSendMode.VJoy or GamepadSendMode.Internal)
+        {
+            GamepadSettingsConfig.AddButton(Locale.ControllerMakeVirtualPrimary, b =>
+                b.Reader.Click += (s, e) => { PowerAim.InputLogic.Gamepad.ControllerCatalog.MakeVirtualPrimary(); Reload(); });
+            GamepadSettingsConfig.AddButton(Locale.ControllerRestorePhysical, b =>
+                b.Reader.Click += (s, e) => { PowerAim.InputLogic.Gamepad.ControllerCatalog.RestorePhysical(); Reload(); });
+            GamepadSettingsConfig.AddCredit("", Locale.ControllerMakeVirtualHelp);
+        }
+
+        GamepadSettingsConfig.AddSeparator();
+
+        // ── Details / diagnostics (collapsible) ───────────────────────────────────────────────
+        // The slot map, sender internals, test pulses and the per-device hide config live here — handy
+        // for troubleshooting but out of the way for everyday use.
+        GamepadSettingsConfig.AddTitle(Locale.GamepadDetailsTitle, true);
         GamepadSettingsConfig.Children.Add(new PowerAim.UILibrary.GamepadDiagnosticsPanel
         {
             Margin = new Thickness(0, 8, 0, 8),
         });
 
-        GamepadSettingsConfig.AddSeparator();
-
         if (AppConfig.Current.DropdownState.GamepadSendMode == GamepadSendMode.VJoy ||
             AppConfig.Current.DropdownState.GamepadSendMode == GamepadSendMode.ViGEm ||
             AppConfig.Current.DropdownState.GamepadSendMode == GamepadSendMode.Internal)
         {
-            GamepadSettingsConfig.AddTitle(Locale.HidePhysicalController, false);
             GamepadSettingsConfig.AddCredit(Locale.HIDHideHeader, Locale.HIDHideSubHeader);
 
             GamepadSettingsConfig.AddToggle(Locale.AutoHideControllerText, toggle =>
@@ -386,9 +411,6 @@ public partial class MainWindow
                     locator.FileSelected += (sender, args) => Reload();
                 });
 
-            // Install button stays here because it triggers a heavy installer; the run-time
-            // buttons (Launch HidHide UI / Open Gamepad Tester / joy.cpl) moved into the diagnostic
-            // panel above so all live actions sit in one place.
             if (!File.Exists(HidHideHelper.GetHidHidePath()))
             {
                 GamepadSettingsConfig.AddButton(Locale.InstallHidHide, b =>

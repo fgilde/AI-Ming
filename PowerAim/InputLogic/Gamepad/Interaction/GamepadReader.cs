@@ -45,6 +45,23 @@ public class GamepadReader : IGamepadReader
         return preferred; // none connected yet — keep retrying the preferred slot
     }
 
+    /// <summary>The XInput slot currently being read as the sync source.</summary>
+    public UserIndex CurrentSlot => _userIndex;
+
+    /// <summary>
+    ///     Switch the physical source to a specific XInput slot at runtime (the user picks a different
+    ///     controller). The poll loop simply continues against the new <see cref="Controller"/> — no
+    ///     teardown/restart. Reference assignment is atomic in .NET; a transient stale GetState on the
+    ///     poll thread during the swap is swallowed by the loop's try/catch. State is reset so we don't
+    ///     diff the new pad against the old pad's last state.
+    /// </summary>
+    public void UseSlot(UserIndex slot)
+    {
+        _userIndex = slot;
+        Controller = new Controller(slot);
+        State = default;
+    }
+
     public bool IsConnected => Controller.IsConnected;
     public bool IsAPressed => IsConnected && State.Gamepad.Buttons.HasFlag(GamepadButtonFlags.A);
     public bool IsBPressed => IsConnected && State.Gamepad.Buttons.HasFlag(GamepadButtonFlags.B);
