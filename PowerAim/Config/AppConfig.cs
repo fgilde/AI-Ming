@@ -267,6 +267,17 @@ public class AppConfig : BaseSettings
         }
     };
 
+    /// <summary>
+    ///     User-built custom tools shown on the Tools page (built-in Magnifier/HWID tools are injected
+    ///     into the display list at runtime, not persisted here). Each is an action sequence + options
+    ///     with its own start keybind. New collection — old configs deserialize this as empty.
+    /// </summary>
+    public ObservableCollection<CustomTool> UserTools
+    {
+        get;
+        set => SetField(ref field, value ?? new());
+    } = new();
+
     public string? Language
     {
         get;
@@ -320,8 +331,16 @@ public class AppConfig : BaseSettings
         }
         catch (Exception ex)
         {
-            // Fehlerbehandlung hier hinzufügen
-            Console.WriteLine($"Error loading configuration: {ex.Message}");
+            // A corrupt / forward-incompatible config (e.g. an unknown polymorphic $type from a renamed
+            // type or a hand-edited file) must NOT silently vanish: back up the original before falling
+            // back to defaults, because the next Save would otherwise overwrite it for good.
+            Console.WriteLine($"Error loading configuration: {ex}");
+            try
+            {
+                if (path != null && File.Exists(path))
+                    File.Copy(path, path + ".corrupt.bak", overwrite: true);
+            }
+            catch { /* backup is best-effort */ }
             Current = new AppConfig();
         }
         // Migrations that translate older config schemas into the new shapes. Each MigrateXyz

@@ -1,0 +1,164 @@
+<UserControl x:Class="PowerAim.UILibrary.ToolsList"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:poweraim="clr-namespace:PowerAim"
+             xmlns:uiLibrary="clr-namespace:PowerAim.UILibrary"
+             mc:Ignorable="d"
+             x:Name="ThisControl"
+             d:DesignHeight="450" d:DesignWidth="500">
+    <Border BorderThickness="0" Background="Transparent">
+        <StackPanel>
+            <ItemsControl ItemsSource="{Binding AllTools, ElementName=ThisControl}"
+                          HorizontalContentAlignment="Stretch">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="0,0,0,6"
+                                CornerRadius="6"
+                                Background="{DynamicResource FluentSurface2}"
+                                BorderBrush="{DynamicResource FluentStroke}"
+                                BorderThickness="1">
+                            <StackPanel>
+                                <!-- Header row -->
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Clickable region (chevron + name) toggles the panel -->
+                                    <Border Grid.Column="0"
+                                            Background="Transparent"
+                                            Cursor="Hand"
+                                            Padding="10,8,4,8"
+                                            Tag="{Binding}"
+                                            MouseLeftButtonUp="Header_Click">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0"
+                                                       Text="&#xE76C;"
+                                                       FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                                                       FontSize="10"
+                                                       VerticalAlignment="Center"
+                                                       Margin="2,0,10,0"
+                                                       Foreground="{DynamicResource FluentTextSecondary}"
+                                                       RenderTransformOrigin="0.5,0.5">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="RenderTransform">
+                                                            <Setter.Value>
+                                                                <RotateTransform Angle="0" />
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsExpanded}" Value="True">
+                                                                <Setter Property="RenderTransform">
+                                                                    <Setter.Value>
+                                                                        <RotateTransform Angle="90" />
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}"
+                                                           FontWeight="SemiBold"
+                                                           FontFamily="Segoe UI Variable Text"
+                                                           Foreground="{Binding Enabled, Converter={StaticResource boolToBrush}}"
+                                                           VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding Subtitle}"
+                                                           FontSize="10"
+                                                           Opacity="0.7"
+                                                           Foreground="{DynamicResource FluentTextSecondary}"
+                                                           VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Controls -->
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,6,0">
+                                        <Button Style="{StaticResource FluentIconButton}"
+                                                ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ToolStart'}"
+                                                Tag="{Binding}"
+                                                MouseDown="UIElement_OnMouseDown"
+                                                Click="StartTool_Click"
+                                                Foreground="{DynamicResource FluentAccent}"
+                                                Content="&#xE768;"
+                                                Padding="0"
+                                                FontSize="18"
+                                                Width="44" />
+
+                                        <uiLibrary:AKeyChanger KeyConfigName="{Binding Id}"
+                                                               Tag="{Binding}"
+                                                               KeyConfigPrefix="USER_TOOL"
+                                                               CanEditMinTime="False"
+                                                               BindingManager="{Binding DataContext.BindingManager, RelativeSource={RelativeSource AncestorType=poweraim:MainWindow}}"
+                                                               MouseDown="UIElement_OnMouseDown"
+                                                               GlobalKeyPressed="StartToolKey"
+                                                               WithBorder="False"
+                                                               Text="" />
+
+                                        <uiLibrary:AToggle BorderBrush="Transparent" Text=""
+                                                           Checked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                                        <Button Style="{StaticResource FluentIconButton}"
+                                                ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Edit'}"
+                                                Tag="{Binding}"
+                                                Visibility="{Binding IsEditable, Converter={StaticResource boolToVis}}"
+                                                MouseDown="UIElement_OnMouseDown"
+                                                Click="EditTool_Click"
+                                                Foreground="{DynamicResource FluentTextPrimary}"
+                                                Content="&#xEB7E;"
+                                                Padding="0"
+                                                FontSize="18"
+                                                Width="44" />
+
+                                        <Button Style="{StaticResource FluentIconButton}"
+                                                ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Delete'}"
+                                                Tag="{Binding}"
+                                                Visibility="{Binding IsEditable, Converter={StaticResource boolToVis}}"
+                                                MouseDown="UIElement_OnMouseDown"
+                                                Click="DeleteTool_Click"
+                                                Foreground="{DynamicResource FluentTextPrimary}"
+                                                Content="&#xE74D;"
+                                                Padding="0"
+                                                FontSize="18"
+                                                Width="44" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- Expandable panel (built-in bespoke controls / custom option values) -->
+                                <Border Visibility="{Binding IsExpanded, Converter={StaticResource boolToVis}}"
+                                        BorderBrush="{DynamicResource FluentStroke}"
+                                        BorderThickness="0,1,0,0"
+                                        Padding="12,8,12,12">
+                                    <ContentControl Tag="{Binding}" Loaded="Panel_Loaded" />
+                                </Border>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- Add a custom tool -->
+            <Border>
+                <Button Style="{StaticResource FluentIconButton}"
+                        HorizontalAlignment="Right"
+                        ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='ToolAddCustom'}"
+                        MouseDown="UIElement_OnMouseDown"
+                        Click="AddTool_Click"
+                        Foreground="{DynamicResource FluentTextPrimary}"
+                        Content="&#xECC8;"
+                        Padding="0"
+                        FontSize="20"
+                        Width="50" />
+            </Border>
+        </StackPanel>
+    </Border>
+</UserControl>

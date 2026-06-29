@@ -379,6 +379,98 @@ public partial class MainWindow
     private void AutoPlayEditCancel_Click(object sender, RoutedEventArgs e) => CloseAutoPlayEditor(false);
     private void AutoPlayEditSave_Click(object sender, RoutedEventArgs e) => CloseAutoPlayEditor(true);
 
+    // ===== Tool editor (in-window page, analog to AutoPlayEditPage) =====
+    private global::PowerAim.UILibrary.ToolEdit? _toolEditor;
+    private string? _toolEditReturnTo;
+    private PowerAim.Config.CustomTool? _toolEditTarget;
+    private bool _toolEditIsNew;
+    private Action<PowerAim.Config.CustomTool?>? _toolEditCommit;
+    private bool _toolEditDirty;
+    private System.ComponentModel.PropertyChangedEventHandler? _toolDirtyHandler;
+
+    /// <summary>
+    ///     Open the custom-tool editor in-window (Page) instead of a modal dialog, mirroring
+    ///     <see cref="OpenAutoPlayEditor"/>. The caller edits a clone and commits it on save (so Cancel
+    ///     is a true no-op — Nextended's CancelEdit doesn't roll back the Options/Actions collections).
+    /// </summary>
+    public void OpenToolEditor(PowerAim.Config.CustomTool target, bool isNew, Action<PowerAim.Config.CustomTool?> commit)
+    {
+        _toolEditReturnTo = CurrentMenu;
+        _toolEditTarget = target;
+        _toolEditIsNew = isNew;
+        _toolEditCommit = commit;
+        if (!isNew) target.BeginEdit();
+        ToolEditTitle.Text = isNew ? Locale.ToolAdd : Locale.ToolEdit;
+        ToolEditName.Text = target.Name ?? "";
+        _toolEditDirty = false;
+        ToolEditDirty.Visibility = Visibility.Collapsed;
+        if (_toolEditor == null)
+        {
+            _toolEditor = new global::PowerAim.UILibrary.ToolEdit();
+            ToolEditorHost.Content = _toolEditor;
+        }
+        _toolEditor.Tool = target;
+
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            if (!ReferenceEquals(_toolEditTarget, target)) return;
+            _toolDirtyHandler = (s, e) =>
+            {
+                _toolEditDirty = true;
+                ToolEditDirty.Visibility = Visibility.Visible;
+                if (e.PropertyName == nameof(PowerAim.Config.CustomTool.Name))
+                    ToolEditName.Text = target.Name ?? "";
+            };
+            target.PropertyChanged += _toolDirtyHandler;
+        }), System.Windows.Threading.DispatcherPriority.Background);
+
+        SetSidebarLocked(true);
+        _ = NavigateTo(nameof(ToolEditPage));
+    }
+
+    private void CloseToolEditor(bool save)
+    {
+        var target = _toolEditTarget;
+        var isNew = _toolEditIsNew;
+        var commit = _toolEditCommit;
+        var returnTo = _toolEditReturnTo ?? nameof(Tools);
+
+        if (!save && _toolEditDirty)
+        {
+            var res = MessageDialog.Show(
+                Locale.UnsavedChangesMessage,
+                Locale.UnsavedChanges,
+                MessageDialog.DialogButtons.YesNoCancel,
+                MessageDialog.DialogIcon.Warning,
+                owner: this,
+                defaultResult: MessageDialog.DialogResult.Yes);
+            if (res == MessageDialog.DialogResult.Cancel) return;
+            if (res == MessageDialog.DialogResult.Yes) save = true;
+        }
+
+        if (target != null && _toolDirtyHandler != null)
+            target.PropertyChanged -= _toolDirtyHandler;
+        _toolDirtyHandler = null;
+        _toolEditDirty = false;
+        ToolEditDirty.Visibility = Visibility.Collapsed;
+
+        if (target != null && !isNew)
+        {
+            if (save) target.EndEdit();
+            else target.CancelEdit();
+        }
+
+        SetSidebarLocked(false);
+        _toolEditTarget = null;
+        _toolEditCommit = null;
+        commit?.Invoke(save ? target : null);
+        _ = NavigateTo(returnTo);
+    }
+
+    private void ToolEditBack_Click(object sender, RoutedEventArgs e) => CloseToolEditor(false);
+    private void ToolEditCancel_Click(object sender, RoutedEventArgs e) => CloseToolEditor(false);
+    private void ToolEditSave_Click(object sender, RoutedEventArgs e) => CloseToolEditor(true);
+
     // ===== AntiRecoil profile editor (in-window page, analog to TriggerEditPage / AutoPlayEditPage) =====
     private global::PowerAim.UILibrary.AntiRecoilProfileEdit? _antiRecoilEditor;
     private string? _antiRecoilEditReturnTo;
@@ -828,9 +920,7 @@ public partial class MainWindow
                 AppConfig.Current.SliderSettings.MagnificationFactor -= AppConfig.Current.SliderSettings.MagnificationStepFactor;
                 ValidateMagnificationFactor();
                 break;
-            case nameof(AppConfig.Current.BindingSettings.MagnifierKeybind):
-                ToggleMagnifier();
-                break;
+            // MagnifierKeybind removed: the magnifier is now started via the unified Tools list keybind.
             case nameof(AppConfig.Current.BindingSettings.ModelSwitchKeybind):
                 if (AppConfig.Current.BindingSettings.ModelSwitchKeybind.IsValid)
                     if (!FileManager.CurrentlyLoadingModel)

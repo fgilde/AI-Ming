@@ -37,7 +37,7 @@ public partial class MainWindow
         e.Handled = true;
     }
 
-    private void ToggleMagnifier(bool? show = null)
+    internal void ToggleMagnifier(bool? show = null)
     {
         if (_magnifier is null && show is null or true)
         {

@@ -432,30 +432,22 @@ public partial class MainWindow
     private void LoadTools()
     {
         ToolsConfig.RemoveAll();
-        ToolsConfig.AddTitle(Locale.Magnifier, true);
-        ToolsConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.MagnifierKeybind), () => AppConfig.Current.BindingSettings.MagnifierKeybind, BindingManager);
 
-        ToolsConfig.AddButton(Locale.ToggleMagnifier).Reader.Click += (_, _) => ToggleMagnifier();
+        // One-time migration: move the legacy standalone Magnifier hotkey onto the unified per-tool
+        // start keybind so existing users keep their key (the old MagnifierKeybind global registration
+        // was dropped from CreateUI — the Tools list row drives the magnifier now). The zoom-in/out
+        // keybinds stay registered and live inside the magnifier's expandable panel.
+        // NOTE: the BindingSettings indexer returns null for a never-set key (and named getters can too),
+        // so this must be null-safe — a direct .IsValid here was a hard startup NRE.
+        var bs = AppConfig.Current.BindingSettings;
+        var magKey = AKeyChanger.CodeFor(MagnifierTool.ToolId, "USER_TOOL");
+        if (bs[magKey] is not { IsValid: true } && bs.MagnifierKeybind is { IsValid: true })
+            bs[magKey] = bs.MagnifierKeybind;
 
-        ToolsConfig.AddSlider(Locale.MagnificationValue, Locale.ZoomFactor, 0.1, 0.1, ApplicationConstants.MinMagnificationFactor, ApplicationConstants.MaxMagnificationFactor).BindTo(() => AppConfig.Current.SliderSettings.MagnificationFactor);
-        ToolsConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.MagnifierZoomInKeybind), () => AppConfig.Current.BindingSettings.MagnifierZoomInKeybind, BindingManager);
-        ToolsConfig.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.MagnifierZoomOutKeybind), () => AppConfig.Current.BindingSettings.MagnifierZoomOutKeybind, BindingManager);
-
-        ToolsConfig.AddSlider(Locale.ZoomStep, Locale.Step, 0.1, 0.1, 0.1, 4).BindTo(() => AppConfig.Current.SliderSettings.MagnificationStepFactor);
-
-        ToolsConfig.AddSlider(Locale.WindowSizeWidth, Locale.Width, 1, 10, 50, 1500).BindTo(() => AppConfig.Current.SliderSettings.MagnifierWindowWidth);
-        ToolsConfig.AddSlider(Locale.WindowSizeHeight, Locale.Height, 1, 10, 50, 1500).BindTo(() => AppConfig.Current.SliderSettings.MagnifierWindowHeight);
-
-
-        ToolsConfig.AddSeparator();
-
-        ToolsConfig.AddTitle(Locale.HwidSpoofer, false);
-
-        ToolsConfig.AddButton(Locale.OpenHwidSpoofer).Reader.Click += (_, _) => OpenSpoofer();
-        ToolsConfig.AddCredit("", Locale.HwidSpooferHelp);
+        // The unified Tools list: built-ins (Magnifier, HWID spoofer) + the user's custom tools.
+        ToolsConfig.Add(new ToolsList { UserTools = AppConfig.Current.UserTools });
 
         ToolsConfig.AddSeparator();
-
         BuildSettingsExtras();
     }
 
@@ -736,7 +728,7 @@ public partial class MainWindow
         label.Content = string.Format(Locale.LearningStatusFormat, model.TotalSamples, model.StateCount);
     }
 
-    private void OpenSpoofer()
+    internal void OpenSpoofer()
     {
         WindowsHelper.RunResourceToolAsAdmin("SecHex-GUI.exe", DefenderExclusionType.Folder, () => Topmost = false, _ => Topmost = AppConfig.Current.ToggleState.UITopMost);
     }

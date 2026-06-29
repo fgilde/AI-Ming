@@ -163,9 +163,10 @@ public partial class MainWindow
         // Seed the default keybinds in one pass (was nine near-identical SetupDefault calls).
         // nameof(b.X) yields the same binding id ("X") the explicit calls used, so this is 1:1.
         var b = AppConfig.Current.BindingSettings;
+        // NOTE: MagnifierKeybind is intentionally absent — the magnifier's start key is now the unified
+        // per-tool keybind (USER_TOOL_<id>) registered by the Tools list row's AKeyChanger.
         (string Id, StoredInputBinding Bind)[] keybindDefaults =
         [
-            (nameof(b.MagnifierKeybind),         b.MagnifierKeybind),
             (nameof(b.MagnifierZoomInKeybind),   b.MagnifierZoomInKeybind),
             (nameof(b.MagnifierZoomOutKeybind),  b.MagnifierZoomOutKeybind),
             (nameof(b.DynamicFOVKeybind),        b.DynamicFOVKeybind),
