@@ -6,7 +6,10 @@ nav_order: 3
 
 # Keybinds & Hotkeys
 
-PowerAim supports global hotkeys — keys that work even when the PowerAim window isn't focused. Every major toggle can be bound to a key.
+PowerAim's keybind system is arguably its most powerful feature. Every hotkey is **global** (it works even when the PowerAim window isn't focused), every binding can be a **chord that mixes keyboard, mouse and gamepad**, and you can bind almost anything — a toggle, a profile, a custom tool, or a whole config. Combine those and a single key drives a complete, game-specific **workflow**.
+
+{: .important }
+**You can bind a key — or a chord — to:** any **toggle** (Aim Assist, AutoTrigger, FOV, the overlays, Global Active…), any **profile** (aim / trigger / mapping / anti-recoil) to switch it on/off, any **custom tool** to run it, and any **config** to load it. Mix and match to build workflows — see [Build workflows](#build-workflows).
 
 ## How key binding works
 
@@ -22,6 +25,8 @@ The binding is captured via a low-level keyboard + mouse hook (`Gma.System.Mouse
 ## Combo bindings (chords)
 
 Any single keybind chip can hold a **combination** — keyboard, mouse and gamepad freely mixed — not just one key. Examples: `Ctrl+Shift+X`, `Ctrl+Left-Click`, `X+B` (two pad buttons), `G+Mouse-Left`.
+
+**Yes, across devices too.** A chord can span all three input kinds at once — e.g. **`Ctrl + Q + Gamepad LT`** (keyboard + keyboard + a controller trigger) is a perfectly valid binding and fires only when you're holding all three. That cross-device freedom is what makes the binds so flexible: a combination almost nothing else in your setup will trigger by accident.
 
 - **Recording is commit-on-release** — click the chip, **hold** the whole combination, then let go. At the first release PowerAim captures everything still held as the combo.
 - **Matching needs all parts** — the binding fires only while **every** part is held, and releases as soon as one part lets go.
@@ -51,7 +56,16 @@ The Magnifier and HWID Spoofer live on the **Tools** page:
 
 ## Toggle hotkeys
 
-Many toggles have a **chip next to them** that lets you bind a global hotkey for the toggle itself. Press the hotkey in-game to flip the toggle on/off without alt-tabbing.
+Most toggles can be **flipped by a hotkey** — press it in-game to turn the toggle on/off without alt-tabbing.
+
+**How to set one:**
+
+1. Find the toggle you want (e.g. **Aim Assist**) — next to it is a small **keybind chip**.
+2. **Click the chip.** It switches to "press a key" mode.
+3. **Press the key — or hold a whole chord** (e.g. `Ctrl + Q + Gamepad LT`) and let go. The chord is captured on release.
+4. Done. Pressing that key/chord now toggles it; the change persists in the config.
+
+Because the chip is a normal keybind, a toggle can sit behind a **cross-device chord** — so `Ctrl + Q + Gamepad LT` toggling Aim Assist is exactly as easy to set up as a single key. (To clear a chip, click it and press `Delete`.)
 
 Toggles with hotkey support:
 
@@ -90,6 +104,18 @@ Every row of the Aim, Trigger, Mapping, AutoPlay and Anti-Recoil profile lists e
 The **Tools** page works the same way: every tool (built-in or custom) has a start-key chip that runs the tool once — see [Dynamic Tools]({{ '/features/dynamic-tools' | relative_url }}).
 
 Per-row bindings persist under `BindingSettings` with a profile-type prefix (e.g. `ANTIRECOIL_PROFILE_<id>`), so they survive config reloads.
+
+## Build workflows
+
+Because a key (or chord) can drive a **toggle**, a **profile**, a **tool**, or a whole **config**, you can compose them into setups that would normally need a separate macro program:
+
+- **One key = a whole game setup.** Give a config a per-config hotkey (see [Quick Config]({{ '/configuration/quick-config' | relative_url }})). Loading it swaps in *its* aim / trigger / anti-recoil profiles, tools and keybinds in a single press — so `F1` = "CS2 rifle setup", `F2` = "Apex controller setup".
+- **A chord arms a weapon profile.** Bind an aim or anti-recoil profile's row key to, say, `Gamepad LT + D-Pad Up`, so picking that weapon in-game arms the matching recoil pattern.
+- **A tool runs a multi-step sequence.** A [custom tool]({{ '/features/dynamic-tools' | relative_url }}) is itself an ordered sequence (move, click, send keys, run a program, delay). Put it on a chord and one press fires the whole thing — re-pressing cancels and restarts it.
+- **A safe "big red button" chord.** Use a combination you'd never hit by accident — like `Ctrl + Q + Gamepad LT` — for a powerful action (toggle Global Active, switch configs, run a tool), so a stray key can't set it off.
+- **Stack them.** A trigger already mixes OCR conditions + AND/OR keys; combine that with a profile bound to a chord and a config-load hotkey, and one workflow can read the HUD, switch the weapon profile and arm the trigger — all keyed off a single combination.
+
+> Tip: keep a chord's parts on **different devices** (a keyboard key + a pad button) for combinations the game itself can never produce — maximum flexibility, zero accidental triggers.
 
 ## Trigger keys
 

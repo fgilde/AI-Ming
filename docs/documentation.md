@@ -36,6 +36,12 @@ trigger system, a Fluent-styled UI, gamepad / mapping / AutoPlay support, locali
 PowerAim is free to use. For the license, terms and credits, see
 [LicenseInfo](https://github.com/fgilde/AI-Ming/blob/main/LicenseInfo.md).
 
+{: .note }
+**Start here — keybinds are the most powerful part of PowerAim.** Any binding can be a chord across
+keyboard, mouse and gamepad at once (even `Ctrl + Q + Gamepad LT`), and you can bind toggles, profiles,
+custom tools and whole configs — combine them to build complete, game-specific workflows from a single
+key. See **[Keybinds & Hotkeys]({{ '/configuration/keybinds-hotkeys' | relative_url }})**.
+
 ## Find your way around
 
 - **[Getting started]({{ '/getting-started/' | relative_url }})** — install, first aim, system requirements and best practices.
