@@ -4,6 +4,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using PowerAim.InputLogic;
 using PowerAim.InputLogic.Contracts;
+using PowerAim.InputLogic.Gamepad;
 using PowerAim.InputLogic.Gamepad.Interaction;
 using PowerAim;
 using SharpDX.XInput;
@@ -15,6 +16,9 @@ public partial class GamepadTesterPanel : UserControl
     private const double TARGET_FPS = 60;
     private readonly DispatcherTimer _updateTimer;
     private Controller? _controller;
+    // The controller the user picked to visualize (null = auto-detected default). Virtual + internal
+    // send mode is read from the injected virtual state; everything else from its XInput slot.
+    private ControllerInfo? _selected;
     private readonly SolidColorBrush _pressedBrush = new(Color.FromArgb(255, 73, 215, 132));
     private readonly SolidColorBrush _connectedDot = new(Color.FromArgb(255, 73, 215, 132));
     private readonly SolidColorBrush _disconnectedDot = new(Color.FromArgb(255, 232, 17, 35));
@@ -45,6 +49,7 @@ public partial class GamepadTesterPanel : UserControl
         _releasedBrush = TryFindResource("FluentSurface3") as SolidColorBrush
                          ?? new(Color.FromArgb(255, 44, 44, 44));
         InitializeController();
+        ControllerPicker.SelectionChanged += OnControllerPicked;
         _updateTimer.Start();
     }
 
@@ -52,6 +57,20 @@ public partial class GamepadTesterPanel : UserControl
     {
         _updateTimer.Stop();
         _sequenceCts?.Cancel();
+        ControllerPicker.SelectionChanged -= OnControllerPicked;
+    }
+
+    /// <summary>
+    ///     The user picked a controller to visualize. A physical pad (or a ViGEm virtual with a known
+    ///     slot) is read from its XInput slot; the virtual pad in internal send mode is read from the
+    ///     injected virtual state in the tick. This is what lets you SEE that a test sequence lands on
+    ///     the virtual pad (select it → buttons light up) but not on the physical one (select it → no
+    ///     test effect, only your own input).
+    /// </summary>
+    private void OnControllerPicked(object? sender, ControllerInfo? info)
+    {
+        _selected = info;
+        _controller = info?.Slot is int slot ? new Controller((UserIndex)slot) : null;
     }
 
     private void BackButton_Click(object sender, RoutedEventArgs e)
@@ -108,23 +127,43 @@ public partial class GamepadTesterPanel : UserControl
 
     private void UpdateTimer_Tick(object? sender, EventArgs e)
     {
-        if (_controller == null || !_controller.IsConnected)
+        var state = ReadState();
+        if (state == null)
         {
             ConnectionStatus.Text = Locale.Disconnected;
             StatusDot.Fill = _disconnectedDot;
             return;
         }
 
-        State state;
-        // RawSender is the unwrapped concrete sender (GamepadSender is the reporting decorator).
-        if (GamepadManager.RawSender is GamepadSenderInternal internalSender)
-            state = internalSender.CurrentVirtualState;
-        else
-            state = _controller.GetState();
+        StatusDot.Fill = _connectedDot;
+        ConnectionStatus.Text = _selected?.Name ?? Locale.Connected;
 
-        UpdateButtonStates(state);
-        UpdateTriggerStates(state);
-        UpdateThumbstickStates(state);
+        UpdateButtonStates(state.Value);
+        UpdateTriggerStates(state.Value);
+        UpdateThumbstickStates(state.Value);
+    }
+
+    /// <summary>
+    ///     Live state of the currently-visualized source. The internal-mode virtual pad has no real
+    ///     XInput device, so it's read from the injected virtual state; physical pads (and a ViGEm
+    ///     virtual with a known slot) are read from their XInput slot. RawSender is the unwrapped
+    ///     concrete sender (GamepadSender is the reporting decorator).
+    /// </summary>
+    private State? ReadState()
+    {
+        var internalSender = GamepadManager.RawSender as GamepadSenderInternal;
+
+        if (_selected != null)
+        {
+            if (_selected.Kind == ControllerKind.Virtual && internalSender != null)
+                return internalSender.CurrentVirtualState;
+            return _controller is { IsConnected: true } ? _controller.GetState() : (State?)null;
+        }
+
+        // No explicit pick: internal mode shows the virtual state (nothing else to read), otherwise
+        // the auto-detected physical reader from InitializeController.
+        if (internalSender != null) return internalSender.CurrentVirtualState;
+        return _controller is { IsConnected: true } ? _controller.GetState() : (State?)null;
     }
 
     private void UpdateButtonStates(State state)

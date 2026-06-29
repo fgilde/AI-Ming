@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="clr-namespace:PowerAim.UILibrary"
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="780">
     <UserControl.Resources>
@@ -112,6 +113,22 @@
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel>
+                <!-- Visualized controller: pick which device's live state the panel below mirrors.
+                     Virtual = what PowerAim / the test sequence injects; physical = your real input. -->
+                <Border Style="{StaticResource FluentCard}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='GamepadTestSource'}"
+                                   Style="{StaticResource SubHeader}" HorizontalAlignment="Left" Margin="0,0,0,8" />
+                        <ui:ControllerManageControl x:Name="ControllerPicker" Mode="Select" />
+                        <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='GamepadTestSourceHint'}"
+                                   Foreground="{DynamicResource FluentTextTertiary}"
+                                   FontFamily="Segoe UI Variable Small"
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Margin="0,4,0,0" />
+                    </StackPanel>
+                </Border>
+
                 <!-- Layout: D-Pad / Center / Face Buttons in a card -->
                 <Border Style="{StaticResource FluentCard}">
                     <Grid>

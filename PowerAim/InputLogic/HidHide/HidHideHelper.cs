@@ -194,8 +194,8 @@ public static class HidHideHelper
 
     public static string GetHidHidePath()
     {
-        string hidHidePath = AppConfig.Current.FileLocationState.HidHidePath;
-        if (!File.Exists(hidHidePath))
+        var hidHidePath = AppConfig.Current?.FileLocationState?.HidHidePath;
+        if (string.IsNullOrEmpty(hidHidePath) || !File.Exists(hidHidePath))
             hidHidePath = GetHidHideDefaultPath();
         return File.Exists(hidHidePath) ? hidHidePath : null;
     }
