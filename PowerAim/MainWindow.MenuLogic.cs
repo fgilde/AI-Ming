@@ -555,10 +555,11 @@ public partial class MainWindow
         _aimEditCommit = null;
         commit?.Invoke(save ? target : null);
 
-        // If the edited profile is the active one, re-apply its (possibly changed) values to the
-        // live settings the pipeline reads.
-        if (save && target != null && AppConfig.Current?.AimSettings?.ActiveProfileId == target.Id)
-            target.Apply();
+        // If the edited profile is the one currently DRIVING the aim, re-apply its (possibly changed)
+        // values to the live settings the pipeline reads (the per-frame resolver only re-applies on a
+        // profile-id change, not on value edits).
+        if (save && target != null)
+            AILogic.AimProfileManager.Instance.ReapplyIfEffective(target);
 
         _ = NavigateTo(returnTo);
     }

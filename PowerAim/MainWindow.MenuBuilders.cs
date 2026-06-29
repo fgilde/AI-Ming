@@ -46,10 +46,9 @@ public partial class MainWindow
         AimAssist.AddTitle(Locale.AimAssist, true);
         AimAssist.AddToggleWithKeyBind(Locale.AimAssist, nameof(Locale.AimAssist), BindingManager).BindTo(() => AppConfig.Current.ToggleState.AimAssist).BindActiveStateColor(AimAssist);
 
-        AimAssist.AddMultiKeyChanger(Locale.AimKeyBindings, Locale.DescriptionAimKeyBindings).BindTo(() => AppConfig.Current.BindingSettings.AimKeyBindings);
-
-        AimAssist.AddToggleWithKeyBind(Locale.Predictions, nameof(Locale.Predictions), BindingManager).BindTo(() => AppConfig.Current.ToggleState.Predictions);
-        AimAssist.AddToggleWithKeyBind(Locale.EMASmoothening, nameof(Locale.EMASmoothening), BindingManager).BindTo(() => AppConfig.Current.ToggleState.EMASmoothening);
+        // The aim KEY, EMA smoothing and prediction settings used to live here as globals. They are now
+        // PER-PROFILE (each profile carries its own aim key + feel) and edited in the profile page, so
+        // the global controls are gone — only the master AimAssist toggle and the profile list remain.
 
         // Aim profiles — formerly the separate "Aim Config" card, now merged into this one card
         // (the configs are a list, so a dedicated card no longer earns its place). All per-profile
@@ -96,7 +95,7 @@ public partial class MainWindow
 
 
         PredictionConfig.AddTitle(Locale.PredictionConfig, true);
-        PredictionConfig.AddDropdown(Locale.PredictionMethod, AppConfig.Current.DropdownState.PredictionMethod, v => AppConfig.Current.DropdownState.PredictionMethod = v);
+        // PredictionMethod is now per-profile (legacy-path feel) — edited in the aim profile page.
         PredictionConfig.AddDropdown(Locale.DetectionAreaType, AppConfig.Current.DropdownState.DetectionAreaType, v => AppConfig.Current.DropdownState.DetectionAreaType = v);
         PredictionConfig.AddSlider(Locale.MaxInferenceFPS, Locale.FPS, 1, 5, 0, 240)
             .InitWith(s => s.ToolTip = Locale.MaxInferenceFPSHelp)

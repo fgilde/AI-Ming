@@ -50,11 +50,12 @@ public static class OcrConditionEvaluator
 /// </summary>
 public static class AimDisengage
 {
-    public static bool ShouldPause()
+    public static bool ShouldPause(AimProfile? effectiveProfile = null)
     {
-        // Aim-disengage rules are now per-profile: read the active aim profile's list, falling back
-        // to the legacy global list when no profile is active (back-compat / pre-migration).
-        var rules = AppConfig.Current?.AimSettings?.ActiveProfile?.DisengageRules
+        // Aim-disengage rules are per-profile: use the EFFECTIVE profile (the one actually driving the
+        // aim — a held per-profile aim-key, else the selected active profile) when the caller knows it,
+        // otherwise the selected active profile, finally the legacy global list (back-compat / pre-migration).
+        var rules = (effectiveProfile ?? AppConfig.Current?.AimSettings?.ActiveProfile)?.DisengageRules
                     ?? AppConfig.Current?.AimDisengageRules;
         if (rules == null || rules.Count == 0) return false;
         if (AppConfig.Current!.OcrSettings is not { Enabled: true }) return false;

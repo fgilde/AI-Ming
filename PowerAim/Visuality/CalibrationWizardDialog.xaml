@@ -177,7 +177,7 @@
                                     <ColumnDefinition Width="180" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='CurrentMouseSensitivity'}"
+                                <TextBlock Grid.Column="0" Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='CurrentCalibration'}"
                                            Foreground="{DynamicResource FluentTextSecondary}"
                                            FontFamily="Segoe UI Variable Text" FontSize="13" />
                                 <TextBlock Grid.Column="1" x:Name="CurrentSensText"
@@ -189,7 +189,7 @@
                                     <ColumnDefinition Width="180" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SuggestedMouseSensitivity'}"
+                                <TextBlock Grid.Column="0" Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='NewCalibration'}"
                                            Foreground="{DynamicResource FluentAccent}"
                                            FontFamily="Segoe UI Variable Text" FontWeight="SemiBold" FontSize="13" />
                                 <TextBlock Grid.Column="1" x:Name="SuggestedSensText"

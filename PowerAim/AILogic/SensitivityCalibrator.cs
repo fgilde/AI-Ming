@@ -184,22 +184,6 @@ public class CalibrationResult
     /// <summary>Number of samples that survived outlier rejection.</summary>
     public int SamplesUsed { get; private init; }
 
-    /// <summary>
-    ///     Recommended <c>MouseSensitivity</c> damping value, derived from the measured ratio. The
-    ///     current MouseManager applies the value as <c>t = 1 - sensitivity</c> in a lerp from 0 to
-    ///     the AI-requested delta, so a high in-game sens (ratio > 1) needs a high damping factor.
-    /// </summary>
-    public double SuggestedSensitivity
-    {
-        get
-        {
-            if (!Ok || Ratio <= 0) return 0;
-            if (Ratio <= 1.05) return 0.0;
-            double s = 1.0 - 1.0 / Ratio;
-            return Math.Clamp(s, 0.0, 0.95);
-        }
-    }
-
     public static CalibrationResult Success(double ratio, double measured, int amount, int samples) =>
         new() { Ok = true, Ratio = ratio, MeasuredPixels = measured, MoveAmount = amount, SamplesUsed = samples };
 

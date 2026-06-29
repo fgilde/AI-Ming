@@ -22,7 +22,6 @@ public sealed class AimController
 {
     private double _accumX;
     private double _accumY;
-    private readonly Random _rng = new();
 
     public void Reset()
     {
@@ -30,28 +29,32 @@ public sealed class AimController
         _accumY = 0;
     }
 
-    /// <param name="targetScreenX">Target X in screen pixels (absolute within the capture area).</param>
-    /// <param name="targetScreenY">Target Y in screen pixels.</param>
-    /// <param name="area">The capture area (its centre is the crosshair).</param>
+    /// <param name="targetX">Target X in capture-box pixels (the box is square + centred on the crosshair).</param>
+    /// <param name="targetY">Target Y in capture-box pixels.</param>
+    /// <param name="area">The (square) capture box; its centre is the crosshair.</param>
     /// <param name="dt">Seconds since the previous move.</param>
-    /// <param name="sensitivity">Approach fraction per 60 Hz frame (0..1). Higher = snappier.</param>
-    /// <param name="deadzonePx">Skip output when the crosshair is within this radius of the target.</param>
-    /// <param name="maxStepPx">Clamp per-frame movement to ± this many pixels.</param>
-    /// <param name="jitterPx">Optional uniform random jitter added to the move (humanisation).</param>
-    public void MoveTo(double targetScreenX, double targetScreenY, Rectangle area, double dt,
-        double sensitivity, double deadzonePx, double maxStepPx, double jitterPx)
+    /// <param name="strength">Approach fraction per 60 Hz frame (0..1). Higher = snappier. &lt;1 never overshoots.</param>
+    /// <param name="deadzonePx">Skip output when the crosshair is within this radius (pixels) of the target.</param>
+    /// <param name="maxStepCounts">Clamp per-frame movement to ± this many mouse counts.</param>
+    /// <param name="pixelsPerCount">
+    ///     Calibration ratio (screen pixels per mouse count). &gt; 0 → convert the pixel error into exact
+    ///     mouse counts (game-independent). 0 → treat 1 pixel ≈ 1 count (the strength slider then
+    ///     absorbs the game's sensitivity).
+    /// </param>
+    public void MoveTo(double targetX, double targetY, Rectangle area, double dt,
+        double strength, double deadzonePx, double maxStepCounts, double pixelsPerCount)
     {
         if (dt <= 0) dt = 1.0 / 60.0;
 
         double centerX = area.Width / 2.0;
         double centerY = area.Height / 2.0;
-        double aspect = area.Height > 0 ? (double)area.Width / area.Height : 1.0;
 
-        double errX = targetScreenX - centerX;
-        double errY = (targetScreenY - centerY) * aspect;
+        // Error to the target in capture-box pixels (square box → no X/Y aspect skew).
+        double errPxX = targetX - centerX;
+        double errPxY = targetY - centerY;
 
-        double dist = Math.Sqrt(errX * errX + errY * errY);
-        if (dist <= deadzonePx)
+        double distPx = Math.Sqrt(errPxX * errPxX + errPxY * errPxY);
+        if (distPx <= deadzonePx)
         {
             // On target — stop nudging. Drop any tiny accumulated remainder so it can't drift.
             _accumX = 0;
@@ -59,27 +62,26 @@ public sealed class AimController
             return;
         }
 
-        // Frame-rate-independent proportional approach.
-        double s = Math.Clamp(sensitivity, 0.0001, 1.0);
+        // Pixel error → mouse counts. Calibrated → exact; otherwise 1:1 (legacy behaviour).
+        double cntX = pixelsPerCount > 0 ? errPxX / pixelsPerCount : errPxX;
+        double cntY = pixelsPerCount > 0 ? errPxY / pixelsPerCount : errPxY;
+
+        // Frame-rate-independent proportional approach: cover `strength` of the remaining distance per
+        // 60 Hz frame. With strength < 1 this never overshoots — the closed loop converges smoothly.
+        double s = Math.Clamp(strength, 0.0001, 1.0);
         double gain = 1.0 - Math.Pow(1.0 - s, dt * 60.0);
 
-        double moveX = errX * gain + _accumX;
-        double moveY = errY * gain + _accumY;
-
-        if (jitterPx > 0)
-        {
-            moveX += _rng.NextDouble() * 2 * jitterPx - jitterPx;
-            moveY += _rng.NextDouble() * 2 * jitterPx - jitterPx;
-        }
+        double moveX = cntX * gain + _accumX;
+        double moveY = cntY * gain + _accumY;
 
         int outX = (int)Math.Round(moveX);
         int outY = (int)Math.Round(moveY);
-        // Carry the sub-pixel remainder into the next frame.
+        // Carry the sub-pixel remainder into the next frame (kills integer-rounding micro-jitter).
         _accumX = moveX - outX;
         _accumY = moveY - outY;
 
-        outX = Math.Clamp(outX, (int)-maxStepPx, (int)maxStepPx);
-        outY = Math.Clamp(outY, (int)-maxStepPx, (int)maxStepPx);
+        outX = Math.Clamp(outX, (int)-maxStepCounts, (int)maxStepCounts);
+        outY = Math.Clamp(outY, (int)-maxStepCounts, (int)maxStepCounts);
 
         if (outX == 0 && outY == 0) return;
         InputSender.Move(outX, outY);

@@ -62,10 +62,11 @@ fields (name and activation conditions are kept). They're starting points — fi
 
 | Preset | Feel | Sensitivity | Notable |
 |:-------|:-----|:------------|:--------|
-| **Smooth tracking** | Calm, very sticky lock | 0.20 | `SwitchFrames` 8, heavy coast |
-| **Snappy / flick** | Fast convergence, quick target switches | 0.55 | `LeadTimeMs` 20, less smoothing |
-| **Precise (high DPI)** | Very fine and slow, for high-DPI mice | 0.08 | Heavy standstill smoothing |
-| **Humanized** | Natural feel with a random aim point | 0.18 | `RandomAimPoint` on, slight lead |
+| **Balanced (recommended)** | Firm, smooth, immediate — start here | 0.45 | 1€ smoothing, tracking off (instant lock) |
+| **Smooth tracking** | Calm, very sticky lock | 0.30 | 1€ smoothing, tracking (`SwitchFrames` 10) |
+| **Snappy / flick** | Fast convergence, snaps to nearest | 0.75 | No smoothing, no tracking |
+| **Precise (high DPI)** | Very fine and slow, for high-DPI mice | 0.15 | Heavy 1€ standstill smoothing, tracking |
+| **Humanized** | Natural feel with a random aim point | 0.40 | `RandomAimPoint` on, tracking |
 | **Legacy (no tracking)** | The old single-target path | 0.25 | `Smart Aim` off |
 
 ## Aim region
@@ -78,24 +79,29 @@ rectangle over the part of the body you want (head, upper chest…), and save.
 
 ## Smart aim tuning
 
-These are the knobs the smart pipeline exposes. Most live on the profile (mirrored to the live
-`AISettings` when the profile activates); a few advanced association params are global.
+The smart path is layered. An **always-on core** — aim at the nearest detection and move a
+proportional fraction of the remaining offset each frame — plus two **opt-in, ego-motion-immune**
+layers on top: aim-point **smoothing** and **target tracking**. With both off you get exactly the
+core. (Velocity *lead* was removed: it's broken in this closed loop, because the assist's own view
+pan looks like target motion. It only returns once ego-motion compensation exists.)
+
+These knobs live on the profile (mirrored to the live `AISettings` when the profile activates):
 
 | Setting | What it does | Default |
 |:--------|:-------------|:--------|
-| **Mouse Sensitivity** | Per-60 Hz-frame approach fraction. **Higher = snappier, lower = smoother.** | 0.25 |
-| **Aim Deadzone** | Crosshair-to-target radius (px) within which the controller stops nudging — kills standstill shake. | 3 px |
-| **Coast frames** | Frames a track may coast with no matching detection before it's dropped (bridges YOLO drop-outs). | 8 |
-| **Switch frames** | Consecutive frames a challenger must stay better before the lock actually moves. | 6 |
-| **Switch margin** | How much better (fraction) a challenger must be to be considered for a switch. | 0.25 |
-| **Lead time (ms)** | Aim ahead of the target by its estimated velocity to offset input/render latency. 0 = current position. | 0 |
-| **Use 1€ filter** | Adaptive jitter removal on the aim point — smooth at rest, responsive on flicks. | On |
-| **1€ min cutoff** | Lower = smoother when the target is still. | 1.0 |
-| **1€ beta** | Higher = less lag during fast flicks. | 0.7 |
+| **Mouse Sensitivity** | Per-60 Hz-frame approach fraction. **Higher = snappier, lower = smoother.** | 0.45 |
+| **Aim Deadzone** | Crosshair-to-target radius (px) within which the move stops nudging — kills standstill shake. | 3 px |
+| **Smoothing** | Aim-point smoothing mode: **None** (raw), **EMA** (cheap fixed), or **1€** (adaptive — heavy at rest, light on flicks). Position-only, never a lead. | 1€ |
+| **Target tracking** | Stable per-enemy identity + switch hysteresis so the aim stays on the same target. Aims only at the *raw* detection (no velocity), so it can't drift. Off = simple sticky-nearest. | Off |
+| **Coast frames** | *(Tracking)* Frames a track may coast through dropped detections before it's dropped (bridges YOLO drop-outs). | 8 |
+| **Switch frames** | *(Tracking)* Consecutive frames a challenger must stay better before the lock actually moves. | 6 |
+| **Switch margin** | *(Tracking)* How much better (fraction) a challenger must be to be considered for a switch. | 0.25 |
+| **Calibration (px/count)** | Set by the calibration wizard (the **Calibrate** button next to the sensitivity slider): measured screen-pixels per mouse count. Converts the pixel offset into *exact* mouse counts so the slider feels the same in every game. 0 = uncalibrated (1 px ≈ 1 count). | 0 |
 
-Global tracker/association params (not per-profile): **IoU threshold** (0.2) for matching detections
-to tracks, **min hits** (3) before a track is eligible to aim, and the alpha/beta correction gains
-(**0.5** / **0.2**).
+The **1€** mode's two parameters — *min cutoff* (1.0, lower = smoother at rest) and *beta* (0.7,
+higher = less lag on flicks) — are set per preset and live in the config; the editor exposes the mode
+itself. Tracking's association params (IoU threshold 0.2, min hits 3, alpha/beta 0.5/0.2) are fixed
+internal defaults.
 
 ### Per-profile aim-disengage
 

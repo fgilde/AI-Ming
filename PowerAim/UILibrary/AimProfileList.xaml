@@ -29,12 +29,33 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0">
-                                <TextBlock Text="{Binding Name}"
-                                           ToolTip="{Binding Description}"
-                                           Foreground="{DynamicResource FluentTextPrimary}"
-                                           FontWeight="SemiBold"
-                                           FontSize="14"
-                                           TextTrimming="CharacterEllipsis" />
+                                <StackPanel Orientation="Horizontal">
+                                    <!-- Effective badge: shown on whichever profile is currently DRIVING
+                                         the aim (a held aim-key profile, else the selected one). -->
+                                    <TextBlock Text="&#x25CF;"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,6,0"
+                                               FontSize="10"
+                                               Foreground="{DynamicResource FluentAccent}"
+                                               ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimProfileAimingNow'}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsEffective}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding Name}"
+                                               ToolTip="{Binding Description}"
+                                               Foreground="{DynamicResource FluentTextPrimary}"
+                                               FontWeight="SemiBold"
+                                               FontSize="14"
+                                               TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
                                 <TextBlock Foreground="{DynamicResource FluentTextSecondary}"
                                            FontFamily="Segoe UI Variable Small"
                                            FontSize="11"
@@ -42,18 +63,21 @@
                                            Text="{Binding Description}" />
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                <!-- Per-profile hotkey: toggles this profile's active state (radio).
-                                     Persisted by AKeyChanger under AIM_PROFILE_<id>. -->
+                                <!-- Per-profile keybind: press to toggle this profile Enabled/disabled
+                                     (like a trigger's enable key). Persisted under AIM_PROFILE_<id>. -->
                                 <uiLibrary:AKeyChanger KeyConfigName="{Binding Id}"
                                                        Tag="{Binding}"
                                                        KeyConfigPrefix="AIM_PROFILE"
                                                        BindingManager="{Binding DataContext.BindingManager, RelativeSource={RelativeSource AncestorType=poweraim:MainWindow}}"
                                                        MouseDown="SwallowMouse"
-                                                       GlobalKeyPressed="ApplyBindingActive"
+                                                       GlobalKeyPressed="ApplyBindingEnabled"
                                                        WithBorder="False"
                                                        Text="" />
+                                <!-- Enabled toggle: a disabled profile never engages (no radio any more;
+                                     every enabled profile aims on its own aim-key set in the editor). -->
                                 <uiLibrary:AToggle BorderBrush="Transparent" Text=""
-                                                   Checked="{Binding IsActiveSelfWrite, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}" />
+                                                   ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimProfileEnabledTooltip'}"
+                                                   Checked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                 <Button Style="{StaticResource FluentIconButton}"
                                     ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Edit'}"
                                     Tag="{Binding}"

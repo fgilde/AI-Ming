@@ -2,21 +2,23 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using Nextended.Core;
 using Nextended.Core.Extensions;
+using PowerAim.InputLogic;
 using PowerAim.Types;
 
 namespace PowerAim.Config;
 
 /// <summary>
-///     A named aim profile. Bundles the full aim "feel" (responsiveness, aim region, smart-tracking
-///     tuning) plus optional activation conditions (a keybind that toggles it active, a process
-///     filter, an OCR weapon-name match). Only ONE profile is active at a time — see
-///     <see cref="AimSettings.ActiveProfileId"/>.
+///     A named aim profile. Bundles the full aim "feel" (responsiveness, aim region, smoothing,
+///     tracking, calibration, legacy EMA/prediction) plus its own <see cref="AimKeyBindings"/> and an
+///     optional OCR weapon filter. There is NO single-active radio: every <see cref="Enabled"/> profile
+///     is live and DRIVES the aim while one of its own aim-keys is held (and its OCR condition, if any,
+///     is met) — put head on one key and chest on another and they coexist.
 ///     <para>
-///     Activation is "apply-on-activate": <see cref="Apply"/> copies this profile's values into the
-///     live global settings (<c>SliderSettings</c> / <c>ToggleState</c> / <c>AISettings</c>) that
-///     the aiming pipeline already reads. So the pipeline needs no per-profile awareness — switching
-///     a profile simply rewrites the settings it consumes. Mirrors the <see cref="AntiRecoilProfile"/>
-///     UX (list + per-row hotkey + edit page) without a parallel runtime path.
+///     The aiming pipeline reads the live global settings (<c>SliderSettings</c> / <c>ToggleState</c> /
+///     <c>AISettings</c>); each frame the resolver (<see cref="AimSettings.ResolveEffectiveProfile"/>)
+///     picks the engaged profile and <see cref="AILogic.AimProfileManager"/> copies its values into
+///     those globals when it changes — so the globals are just internal plumbing the UI never edits
+///     directly. <see cref="AimSettings.ActiveProfileId"/> is now only a migration/reconcile anchor.
 ///     </para>
 /// </summary>
 public class AimProfile : EditableNotificationObject
@@ -34,32 +36,13 @@ public class AimProfile : EditableNotificationObject
 
     private void DetectChanges()
     {
-        if (AppConfig.Current?.ToggleState != null)
-        {
-            AppConfig.Current.ToggleState.PropertyChanged -= OnToggleStateChange;
-            AppConfig.Current.ToggleState.PropertyChanged += OnToggleStateChange;
-        }
-        if (AppConfig.Current?.AimSettings != null)
-        {
-            AppConfig.Current.AimSettings.PropertyChanged -= OnSettingsChange;
-            AppConfig.Current.AimSettings.PropertyChanged += OnSettingsChange;
-        }
+        // React when the effective (currently-driving) profile changes so the list badge updates.
+        // Static event → no manager instantiation here (safe during deserialization).
+        AILogic.AimProfileManager.EffectiveProfileChanged -= OnEffectiveChange;
+        AILogic.AimProfileManager.EffectiveProfileChanged += OnEffectiveChange;
     }
 
-    private void OnToggleStateChange(object? s, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName is nameof(ToggleState.AimAssist) or nameof(ToggleState.GlobalActive))
-            RaisePropertyChanged(nameof(IsActive));
-    }
-
-    private void OnSettingsChange(object? s, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(AimSettings.ActiveProfileId))
-        {
-            RaisePropertyChanged(nameof(IsActive));
-            RaisePropertyChanged(nameof(IsActiveSelfWrite));
-        }
-    }
+    private void OnEffectiveChange() => RaisePropertyChanged(nameof(IsEffective));
 
     protected override void RaisePropertyChanged(string propertyName)
     {
@@ -78,7 +61,7 @@ public class AimProfile : EditableNotificationObject
             if (SetProperty(ref field, value))
             {
                 RaisePropertyChanged(nameof(IsValid));
-                RaisePropertyChanged(nameof(IsActive));
+                RaisePropertyChanged(nameof(IsEffective));
             }
         }
     } = "";
@@ -100,14 +83,50 @@ public class AimProfile : EditableNotificationObject
     /// <summary>Sub-rectangle inside the detection box to aim at (same model as the trigger head area).</summary>
     public RelativeRect AimRegion { get; set => SetProperty(ref field, value); } = RelativeRect.Default;
 
+    /// <summary>Crosshair-to-target radius (px) within which the aim stops nudging.</summary>
     public double DeadzonePx { get; set => SetProperty(ref field, value); } = 3.0;
-    public int CoastFrames { get; set => SetProperty(ref field, value); } = 8;
-    public int SwitchFrames { get; set => SetProperty(ref field, value); } = 6;
-    public double SwitchMarginPct { get; set => SetProperty(ref field, value); } = 0.25;
-    public double LeadTimeMs { get; set => SetProperty(ref field, value); }
-    public bool UseOneEuro { get; set => SetProperty(ref field, value); } = true;
+
+    /// <summary>How the aim point is smoothed (None / EMA / adaptive 1€). Mirrors to <see cref="AISettings.SmoothingMode"/>.</summary>
+    public AimSmoothingMode SmoothingMode { get; set => SetProperty(ref field, value); } = AimSmoothingMode.OneEuro;
+
+    /// <summary>1€ filter minimum cutoff (Hz) — only used in OneEuro smoothing mode.</summary>
     public double OneEuroMinCutoff { get; set => SetProperty(ref field, value); } = 1.0;
+
+    /// <summary>1€ filter speed coefficient — only used in OneEuro smoothing mode.</summary>
     public double OneEuroBeta { get; set => SetProperty(ref field, value); } = 0.7;
+
+    /// <summary>Track targets across frames (stable identity + switch hysteresis) instead of plain sticky-nearest.</summary>
+    public bool UseTargetTracking { get; set => SetProperty(ref field, value); }
+
+    /// <summary>Frames a track may coast through dropped detections before it's dropped (tracking only).</summary>
+    public int CoastFrames { get; set => SetProperty(ref field, value); } = 8;
+
+    /// <summary>Consecutive frames a challenger must stay better before the aim switches targets (tracking only).</summary>
+    public int SwitchFrames { get; set => SetProperty(ref field, value); } = 6;
+
+    /// <summary>Margin a challenger must beat the held target by to be eligible for a switch (tracking only).</summary>
+    public double SwitchMarginPct { get; set => SetProperty(ref field, value); } = 0.25;
+
+    /// <summary>
+    ///     Measured screen-pixels per mouse-count from the calibration wizard (0 = uncalibrated).
+    ///     When set, the aim converts a target's pixel offset into exact mouse counts so the strength
+    ///     slider feels identical in every game. Mirrors to <see cref="AISettings.CalibratedPixelsPerCount"/>.
+    /// </summary>
+    public double CalibratedPixelsPerCount { get; set => SetProperty(ref field, value); }
+
+    // ---- Legacy-path feel (only used when SmartAim is off; mirrored to globals by Apply) ----
+
+    /// <summary>Apply the legacy EMA smoothing to the mouse path (legacy path only). Mirrors <see cref="ToggleState.EMASmoothening"/>.</summary>
+    public bool EmaSmoothing { get; set => SetProperty(ref field, value); }
+
+    /// <summary>Legacy EMA blend factor 0..1. Mirrors <see cref="SliderSettings.EMASmoothening"/>.</summary>
+    public double EmaSmoothingFactor { get; set => SetProperty(ref field, value); } = 0.5;
+
+    /// <summary>Enable legacy velocity prediction (legacy path only). Mirrors <see cref="ToggleState.Predictions"/>.</summary>
+    public bool Predictions { get; set => SetProperty(ref field, value); }
+
+    /// <summary>Legacy prediction method. Mirrors <see cref="DropdownState.PredictionMethod"/>.</summary>
+    public PredictionMethod PredictionMethod { get; set => SetProperty(ref field, value); } = PredictionMethod.KalmanFilter;
 
     // -------------------------------------------------- Activation conditions --
 
@@ -136,6 +155,37 @@ public class AimProfile : EditableNotificationObject
     public bool AutoSwitchOnOcr { get; set => SetProperty(ref field, value); }
 
     /// <summary>
+    ///     This profile's aim keys, with HOLD semantics: while any of them is held (and the profile is
+    ///     <see cref="Enabled"/> + its OCR condition met) this profile DRIVES the aim — put "head" on one
+    ///     key and "chest/legit" on another and switch instantly by which key you hold. A profile with no
+    ///     valid key never aims (there is no global-key fallback any more); each profile should have its
+    ///     own unique key. Like <see cref="DisengageRules"/> this is NOT mirrored to globals by
+    ///     <see cref="Apply"/> — the effective-profile resolver reads it directly each frame.
+    /// </summary>
+    public ObservableCollection<StoredInputBinding> AimKeyBindings
+    {
+        get;
+        set => SetProperty(ref field, value);
+    } = new();
+
+    /// <summary>
+    ///     Whether this profile participates at all. Replaces the old single-active radio: every
+    ///     enabled profile is "live" and engages independently whenever its own <see cref="AimKeyBindings"/>
+    ///     is held (and its OCR condition, if any, is met). Lets the user keep a profile configured but
+    ///     turn it off without deleting it. Default <c>true</c>.
+    /// </summary>
+    public bool Enabled { get; set => SetProperty(ref field, value); } = true;
+
+    /// <summary>
+    ///     Runtime-only: does this profile's OCR weapon condition currently match? Updated by the
+    ///     750 ms OCR poll (<see cref="AILogic.AimProfileManager"/>); read by the per-frame resolver so
+    ///     the expensive OCR text match isn't done on the aim thread. <c>true</c> when no OCR filter is set.
+    /// </summary>
+    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool OcrConditionMet { get; set; } = true;
+
+    /// <summary>
     ///     Per-profile aim-disengage rules — OCR-driven conditions that pause aim assist while true
     ///     (e.g. "knife equipped", "not scoped"). Read directly by <see cref="AILogic.AimDisengage"/>
     ///     for the active profile (not mirrored to globals by <see cref="Apply"/>, unlike the feel
@@ -152,24 +202,18 @@ public class AimProfile : EditableNotificationObject
 
     public bool IsValid => !string.IsNullOrWhiteSpace(Name);
 
-    /// <summary>True iff this is the currently-selected profile.</summary>
-    public bool IsActive => IsValid && AppConfig.Current?.AimSettings?.ActiveProfileId == Id;
-
-    /// <summary>Writable wrapper around <see cref="IsActive"/> for the list-row toggle binding.</summary>
+    /// <summary>True iff this profile has at least one valid aim key (required to ever engage / aim).</summary>
     [Newtonsoft.Json.JsonIgnore]
     [System.Text.Json.Serialization.JsonIgnore]
-    public bool IsActiveSelfWrite
-    {
-        get => IsActive;
-        set
-        {
-            var settings = AppConfig.Current?.AimSettings;
-            if (settings == null) return;
-            var newId = value ? Id : (settings.ActiveProfileId == Id ? "" : settings.ActiveProfileId);
-            AILogic.AimProfileManager.Instance.SetActiveProfile(newId, notify: true);
-            RaisePropertyChanged(nameof(IsActiveSelfWrite));
-        }
-    }
+    public bool HasAimKey => AimKeyBindings.Any(k => k is { IsValid: true });
+
+    /// <summary>
+    ///     True iff this profile is the one currently DRIVING the aim (its aim-key is held + OCR met,
+    ///     and it won the per-frame resolve). Lets the list badge whichever profile is actually live.
+    /// </summary>
+    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool IsEffective => AILogic.AimProfileManager.Instance.EffectiveProfileId == Id;
 
     public string Description
     {
@@ -182,9 +226,9 @@ public class AimProfile : EditableNotificationObject
     }
 
     /// <summary>
-    ///     Copy this profile's values into the live global settings the aim pipeline reads. Called
-    ///     by <see cref="AILogic.AimProfileManager.SetActiveProfile"/> whenever this profile becomes
-    ///     active (hotkey, OCR auto-switch, manual toggle, or config load).
+    ///     Copy this profile's values into the live global settings the aim pipeline reads. Called by
+    ///     <see cref="AILogic.AimProfileManager"/> (<c>ApplyEffective</c> / <c>ReapplyIfEffective</c>)
+    ///     whenever this profile becomes the effective (currently-driving) one or is edited while live.
     /// </summary>
     public void Apply()
     {
@@ -196,22 +240,29 @@ public class AimProfile : EditableNotificationObject
             cfg.SliderSettings.MouseSensitivity = Sensitivity;
             cfg.SliderSettings.AimRegion = AimRegion;
         }
+        if (cfg.SliderSettings != null)
+            cfg.SliderSettings.EMASmoothening = EmaSmoothingFactor;
         if (cfg.ToggleState != null)
         {
             cfg.ToggleState.RandomAimPoint = RandomAimPoint;
+            cfg.ToggleState.EMASmoothening = EmaSmoothing;
+            cfg.ToggleState.Predictions = Predictions;
         }
+        if (cfg.DropdownState != null)
+            cfg.DropdownState.PredictionMethod = PredictionMethod;
         if (cfg.AISettings != null)
         {
             var ai = cfg.AISettings;
             ai.SmartAimEnabled = SmartAim;
             ai.AimDeadzonePx = DeadzonePx;
+            ai.SmoothingMode = SmoothingMode;
+            ai.OneEuroMinCutoff = OneEuroMinCutoff;
+            ai.OneEuroBeta = OneEuroBeta;
+            ai.UseTargetTracking = UseTargetTracking;
             ai.TrackMaxAgeFrames = CoastFrames;
             ai.SwitchFrames = SwitchFrames;
             ai.SwitchMarginPct = SwitchMarginPct;
-            ai.LeadTimeMs = LeadTimeMs;
-            ai.UseOneEuro = UseOneEuro;
-            ai.OneEuroMinCutoff = OneEuroMinCutoff;
-            ai.OneEuroBeta = OneEuroBeta;
+            ai.CalibratedPixelsPerCount = CalibratedPixelsPerCount;
         }
     }
 
@@ -225,19 +276,27 @@ public class AimProfile : EditableNotificationObject
             Sensitivity = cfg.SliderSettings.MouseSensitivity;
             AimRegion = cfg.SliderSettings.AimRegion;
         }
-        if (cfg.ToggleState != null) RandomAimPoint = cfg.ToggleState.RandomAimPoint;
+        if (cfg.ToggleState != null)
+        {
+            RandomAimPoint = cfg.ToggleState.RandomAimPoint;
+            EmaSmoothing = cfg.ToggleState.EMASmoothening;
+            Predictions = cfg.ToggleState.Predictions;
+        }
+        if (cfg.SliderSettings != null) EmaSmoothingFactor = cfg.SliderSettings.EMASmoothening;
+        if (cfg.DropdownState != null) PredictionMethod = cfg.DropdownState.PredictionMethod;
         if (cfg.AISettings != null)
         {
             var ai = cfg.AISettings;
             SmartAim = ai.SmartAimEnabled;
             DeadzonePx = ai.AimDeadzonePx;
+            SmoothingMode = ai.SmoothingMode;
+            OneEuroMinCutoff = ai.OneEuroMinCutoff;
+            OneEuroBeta = ai.OneEuroBeta;
+            UseTargetTracking = ai.UseTargetTracking;
             CoastFrames = ai.TrackMaxAgeFrames;
             SwitchFrames = ai.SwitchFrames;
             SwitchMarginPct = ai.SwitchMarginPct;
-            LeadTimeMs = ai.LeadTimeMs;
-            UseOneEuro = ai.UseOneEuro;
-            OneEuroMinCutoff = ai.OneEuroMinCutoff;
-            OneEuroBeta = ai.OneEuroBeta;
+            CalibratedPixelsPerCount = ai.CalibratedPixelsPerCount;
         }
     }
 }

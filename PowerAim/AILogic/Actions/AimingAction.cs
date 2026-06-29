@@ -27,12 +27,30 @@ public class AimingAction : BaseAction
     // Legacy single-target sticky selector — used only when SmartAimEnabled is off.
     private readonly StickyAimSelector _stickyAim = new();
 
-    // ---- Smart-aim pipeline (SmartAimEnabled): detect → track → select → smooth → control ----
-    private readonly TargetTracker _tracker = new();
-    private readonly TargetSelector _selector = new();
-    private readonly OneEuroFilter2D _oneEuro = new();
+    // ---- Smart aim (SmartAimEnabled): aim at a detection, move proportionally toward it ----
     private readonly AimController _controller = new();
     private DateTime _lastTickUtc = DateTime.MinValue;
+    // Sticky-nearest target (model space) — keeps the aim on the same enemy across frames instead of
+    // snapping to whoever happens to be nearest the crosshair. Used when target tracking is OFF.
+    private double _lastTargetX, _lastTargetY;
+    private bool _hasLastTarget;
+    // Opt-in target tracking (UseTargetTracking): stable identity + switch hysteresis. The aim point
+    // is always taken from the track's RAW last detection, never its velocity-extrapolated box, so the
+    // assist's own view-pan can't bias the crosshair (no ego-motion coupling).
+    private readonly TargetTracker _tracker = new();
+    private readonly TargetSelector _selector = new();
+    // Aim-point smoothing. EMA state (SmoothingMode.Ema) + the adaptive 1€ filter (SmoothingMode.OneEuro).
+    private double _emaX, _emaY;
+    private bool _hasEma;
+    private readonly OneEuroFilter2D _oneEuro = new();
+    // Last-seen mode flags — detect a mid-session mode flip so we never resume a smoother/tracker on
+    // stale state (a frozen track or a stale EMA/1€ anchor). Seeded to the config defaults.
+    private bool _lastUseTracking;
+    private AimSmoothingMode _lastSmoothingMode = AimSmoothingMode.OneEuro;
+
+    // The profile driving the aim THIS frame — the enabled profile whose own aim-key is held (+ OCR
+    // condition met); null when nothing is engaged. Set each frame at the top of ExecuteAsync.
+    private AimProfile? _effectiveProfile;
 
     public override Task ExecuteAsync(Prediction[] predictions)
     {
@@ -41,6 +59,18 @@ public class AimingAction : BaseAction
         double dt = _lastTickUtc == DateTime.MinValue ? 1.0 / 60.0 : (now - _lastTickUtc).TotalSeconds;
         dt = Math.Clamp(dt, 0.001, 0.1);
         _lastTickUtc = now;
+
+        // Resolve which profile drives the aim this frame (a held per-profile aim-key overrides the
+        // selected profile — head on one key, chest on another). On a change the manager applies the
+        // effective profile's feel into the live globals (marshalled to the UI thread); the pipeline
+        // below keeps reading those globals unchanged. With no per-profile keys this is the selected
+        // ActiveProfile every frame = today's behaviour.
+        var aimSettings = AppConfig.Current.AimSettings;
+        if (aimSettings != null)
+        {
+            _effectiveProfile = aimSettings.ResolveEffectiveProfile();
+            AimProfileManager.Instance.UpdateEffective(_effectiveProfile);
+        }
 
         if (AppConfig.Current.AISettings.SmartAimEnabled)
         {
@@ -67,16 +97,26 @@ public class AimingAction : BaseAction
         _oneEuro.Reset();
         _controller.Reset();
         _wasAiming = false;
+        _hasLastTarget = false;
+        _hasEma = false;
         _lastTickUtc = DateTime.MinValue;
+        // Paused → nothing is engaged. Clear the effective profile so the badge clears and the next
+        // resolve after resume re-applies cleanly (the resolver stops running while paused).
+        _effectiveProfile = null;
+        AimProfileManager.Instance.UpdateEffective(null);
         return base.OnPause();
     }
 
     /// <summary>True when the user actually wants the aim to move right now (toggle + key + not disengaged).</summary>
-    private bool IsAiming() =>
-        AppConfig.Current.ToggleState.AimAssist
-        && (!HasValidKey(AppConfig.Current.BindingSettings.AimKeyBindings)
-            || AnyKeyIsHold(AppConfig.Current.BindingSettings.AimKeyBindings))
-        && !AimDisengage.ShouldPause();
+    private bool IsAiming()
+    {
+        if (!AppConfig.Current.ToggleState.AimAssist) return false;
+        // A profile aims only while its OWN aim-key is held — the resolver put that profile in
+        // _effectiveProfile (null = no key held → not aiming). No global aim-key gate any more.
+        if (_effectiveProfile == null) return false;
+        // Disengage rules belong to the effective profile (the one actually aiming).
+        return !AimDisengage.ShouldPause(_effectiveProfile);
+    }
 
     // ============================================================================ SMART PATH ====
 
@@ -84,38 +124,73 @@ public class AimingAction : BaseAction
     {
         var ai = AppConfig.Current.AISettings;
 
-        // Keep the tracker tunables in sync with config (cheap; lets slider edits apply live).
-        _tracker.MaxAgeFrames = ai.TrackMaxAgeFrames;
-        _tracker.MinHits = ai.TrackMinHits;
-        _tracker.IoUThreshold = ai.TrackIoUThreshold;
-        _tracker.Alpha = ai.TrackAlpha;
-        _tracker.Beta = ai.TrackBeta;
-
-        // Always step the tracker — even when not pressing the aim key — so identities stay warm
-        // and the moment the user engages we're already locked, not acquiring from scratch.
-        var tracks = _tracker.Update(predictions, dt);
-
-        if (!IsAiming())
-        {
-            _wasAiming = false;
-            _controller.Reset();
-            _oneEuro.Reset();
-            return;
-        }
-
         float modelSize = Math.Max(1, global::PowerAim.AILogic.PredictionLogic.IMAGE_SIZE);
         double center = modelSize / 2.0; // crosshair in model space
 
-        var target = _selector.Select(tracks, center, center, ai.SwitchMarginPct, ai.SwitchFrames);
-        if (target == null)
+        // Resets everything that must not carry across a disengage. The tracker/selector are kept warm
+        // on purpose (so identities survive a brief aim-key release within a session); OnPause does the
+        // full reset when the assist is actually paused.
+        void Disengage()
         {
             _wasAiming = false;
-            _controller.Reset();
+            _hasLastTarget = false;
+            _hasEma = false;
             _oneEuro.Reset();
+            _controller.Reset();
+        }
+
+        // Mid-session mode flips must not resume a smoother/tracker on stale state: re-seed the
+        // smoother when the smoothing mode changes, and drop tracker/selector state when tracking is
+        // toggled (so re-enabling re-acquires cleanly instead of resuming frozen, aged-out tracks).
+        if (ai.SmoothingMode != _lastSmoothingMode)
+        {
+            _oneEuro.Reset();
+            _hasEma = false;
+            _lastSmoothingMode = ai.SmoothingMode;
+        }
+        if (ai.UseTargetTracking != _lastUseTracking)
+        {
+            _tracker.Reset();
+            _selector.Reset();
+            _lastUseTracking = ai.UseTargetTracking;
+        }
+
+        // Opt-in target tracking. Step it every frame (even when not pressing aim) so identities stay
+        // warm and we're locked the instant the user engages. Association is position/IoU-based and
+        // ego-motion-immune; we only ever aim at a track's RAW last detection (never the velocity-
+        // extrapolated box), so the assist's own view-pan can't bias the crosshair.
+        IReadOnlyList<TargetTrack>? tracks = null;
+        if (ai.UseTargetTracking)
+        {
+            _tracker.MaxAgeFrames = ai.TrackMaxAgeFrames;
+            tracks = _tracker.Update(predictions, dt);
+        }
+
+        if (!IsAiming())
+        {
+            Disengage();
             return;
         }
 
-        // New aim session → re-roll the random region point (if enabled) once.
+        // ---- Choose the box to aim at ----
+        RectangleF box;
+        if (ai.UseTargetTracking)
+        {
+            var track = _selector.Select(tracks!, center, center, ai.SwitchMarginPct, ai.SwitchFrames);
+            if (track == null) { Disengage(); return; }
+            box = track.LastDetectionBox; // RAW detection — never the extrapolated Box (ego-safe)
+        }
+        else
+        {
+            var target = SelectNearestSticky(predictions, center, center);
+            if (target == null) { Disengage(); return; }
+            box = target.Rectangle;
+        }
+        _lastTargetX = box.X + box.Width / 2.0;
+        _lastTargetY = box.Y + box.Height / 2.0;
+        _hasLastTarget = true;
+
+        // New aim session → re-roll the random region point (if enabled) once + reset the smoothers.
         if (!_wasAiming)
         {
             if (AppConfig.Current.ToggleState.RandomAimPoint)
@@ -128,60 +203,95 @@ public class AimingAction : BaseAction
                 _aimFracX = 0.5;
                 _aimFracY = 0.5;
             }
-            // Seed the smoother at the target so the first frame doesn't lurch from a stale value.
+            _hasEma = false;
             _oneEuro.Reset();
         }
         _wasAiming = true;
 
-        // Aim point inside the box (model space) using the configured aim region. ALWAYS use the raw
-        // latest detection — identical to the proven legacy aim point — NEVER the tracker's
-        // velocity-extrapolated Box. In a closed loop the tracker reads the assist's OWN view-pan as
-        // target velocity, so coasting on that estimate flung the crosshair off-target ("strange,
-        // like the video"). The tracker is kept only for stable identity/selection; during a detection
-        // gap this simply holds the last detected box instead of extrapolating.
-        var (px, py) = RegionPoint(target.LastDetectionBox);
+        // Aim point = the configured region (head area) inside the chosen detection — where the target
+        // actually IS this frame, exactly like the user (and simple tools like RootKit) would aim.
+        var (px, py) = RegionPoint(box);
 
-        // Optional velocity lead to compensate input+render latency.
-        double leadSec = ai.LeadTimeMs / 1000.0;
-        if (leadSec > 0)
+        // Optional aim-point smoothing. All modes act on POSITION only (never extrapolate), so none
+        // have closed-loop ego-motion coupling. The proportional move below is itself a low-pass too.
+        switch (ai.SmoothingMode)
         {
-            px += target.Vx * leadSec;
-            py += target.Vy * leadSec;
+            case AimSmoothingMode.Ema:
+            {
+                const double a = 0.5;
+                if (!_hasEma) { _emaX = px; _emaY = py; _hasEma = true; }
+                else { _emaX = a * px + (1 - a) * _emaX; _emaY = a * py + (1 - a) * _emaY; }
+                px = _emaX;
+                py = _emaY;
+                break;
+            }
+            case AimSmoothingMode.OneEuro:
+            {
+                _oneEuro.Configure(ai.OneEuroMinCutoff, ai.OneEuroBeta);
+                (px, py) = _oneEuro.Filter(px, py, dt);
+                break;
+            }
+            // AimSmoothingMode.None → aim at the raw point.
         }
 
-        // Adaptive jitter removal on the aim point.
-        if (ai.UseOneEuro)
-        {
-            _oneEuro.Configure(ai.OneEuroMinCutoff, ai.OneEuroBeta);
-            var f = _oneEuro.Filter(px, py, dt);
-            px = f.X;
-            py = f.Y;
-        }
-
-        // Model space (px,py ∈ [0,modelSize]) → capture-box pixels. The model only ever sees the FOV
-        // patch (a SQUARE box, captureSize×captureSize, centred on the crosshair) — NOT the whole
-        // screen. So the scale is FOV/model. Using screenWidth/model here over-scaled every move by
-        // screenWidth/FOV (≈3× on 1080p with a 640 FOV); combined with the controller's gain==
-        // sensitivity that pushed the effective per-frame gain above 1 and the aim diverged/ran away
-        // at higher sensitivities. captureSize mirrors AIManager's capture box so the units match.
+        // Model space (0..modelSize) → capture-box (FOV) pixels. The model only sees the square FOV
+        // patch centred on the crosshair, so the scale is FOV/model (resolution-independent).
         var area = ImageCapture.CaptureArea;
         double maxCap = Math.Min(area.Width, area.Height);
         double captureSize = Math.Clamp(Math.Round(AppConfig.Current.SliderSettings.ActualFovSize), 16.0, maxCap);
         double scale = captureSize / modelSize;
         double targetX = px * scale;
         double targetY = py * scale;
-        // Square reference box → crosshair sits at its centre and there's no X/Y aspect skew.
         var aimArea = new Rectangle(0, 0, (int)captureSize, (int)captureSize);
 
         // Feed the debug input visualiser the coarse aim direction (mouse path only).
         if (!InputSender.GamepadAimActive)
             InputEventBus.MouseMove(targetX - captureSize / 2.0, targetY - captureSize / 2.0);
 
-        // Damped, frame-rate-independent move. Sensitivity is the per-60Hz-frame approach fraction
-        // (higher = snappier). No per-frame jitter here — that's the shake we're removing; the
-        // optional random aim point already provides per-engagement variation.
+        // Proportional move toward the target. Strength = approach fraction per frame; the calibration
+        // ratio (if set) converts the pixel error to exact mouse counts → game-independent feel.
         _controller.MoveTo(targetX, targetY, aimArea, dt,
-            AppConfig.Current.SliderSettings.MouseSensitivity, ai.AimDeadzonePx, 150, 0);
+            AppConfig.Current.SliderSettings.MouseSensitivity, ai.AimDeadzonePx, 150, ai.CalibratedPixelsPerCount);
+    }
+
+    /// <summary>
+    ///     Pick the detection to aim at: stick to the one nearest last frame's target (so the aim
+    ///     stays on the same enemy), otherwise the one nearest the crosshair. If the held target drifts
+    ///     too far (it's gone), fall back to nearest-the-crosshair. No tracker, no extrapolation.
+    /// </summary>
+    private Prediction? SelectNearestSticky(Prediction[] predictions, double centerX, double centerY)
+    {
+        if (predictions.Length == 0) return null;
+
+        double refX = _hasLastTarget ? _lastTargetX : centerX;
+        double refY = _hasLastTarget ? _lastTargetY : centerY;
+        var (best, bestSq) = Nearest(predictions, refX, refY);
+
+        // If we were sticking but the closest detection is no longer near the old target, the enemy is
+        // gone/occluded — re-acquire whatever is nearest the crosshair instead of chasing a ghost.
+        if (_hasLastTarget)
+        {
+            double stick = modelSize() * 0.25;
+            if (Math.Sqrt(bestSq) > stick)
+                (best, _) = Nearest(predictions, centerX, centerY);
+        }
+        return best;
+
+        static float modelSize() => Math.Max(1, global::PowerAim.AILogic.PredictionLogic.IMAGE_SIZE);
+    }
+
+    private static (Prediction? Best, double DistSq) Nearest(Prediction[] predictions, double x, double y)
+    {
+        Prediction? best = null;
+        double bestSq = double.MaxValue;
+        foreach (var p in predictions)
+        {
+            double cx = p.Rectangle.X + p.Rectangle.Width / 2.0;
+            double cy = p.Rectangle.Y + p.Rectangle.Height / 2.0;
+            double dSq = (cx - x) * (cx - x) + (cy - y) * (cy - y);
+            if (dSq < bestSq) { bestSq = dSq; best = p; }
+        }
+        return (best, bestSq);
     }
 
     /// <summary>Compute the aim point (model space) inside <paramref name="box"/> from the configured aim region + frac.</summary>
