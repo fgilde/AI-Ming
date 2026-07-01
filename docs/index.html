@@ -157,6 +157,14 @@
   .feat .ico{width:34px;height:34px;color:var(--cyan);float:right;margin-top:-4px}
   @media(max-width:880px){.feat-grid{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:560px){.feat-grid{grid-template-columns:1fr}}
+  /* "More software" — other apps by the author, above the footer */
+  .ms-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:640px){.ms-grid{grid-template-columns:1fr}}
+  .ms-card{display:block;text-decoration:none;color:var(--ink)}
+  .ms-card .ms-name{font-size:18px;font-weight:700;color:var(--ink);margin:2px 0 9px;display:flex;align-items:center;gap:10px}
+  .ms-card .ms-name .dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .ms-card .ms-link{font-family:var(--mono);font-size:12.5px;letter-spacing:.05em;color:var(--muted);transition:color .2s}
+  .ms-card:hover .ms-link{color:var(--purple-bright)}
 
   /* any-game band */
   .anygame{margin-bottom:46px;padding-bottom:40px;border-bottom:1px solid var(--line)}
@@ -506,6 +514,25 @@
 </section>
 
 </main>
+
+<section class="more-software" style="padding:16px 0 4px">
+  <div class="wrap">
+    <div class="divider" style="margin-bottom:36px"></div>
+    <div class="kind mono" style="color:var(--purple-bright);font-size:12px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:16px">More useful software</div>
+    <div class="ms-grid">
+      <a class="feat ms-card" href="https://fgilde.github.io/PowerClean/" target="_blank" rel="noopener">
+        <div class="ms-name"><span class="dot" style="background:var(--cyan)"></span>PowerClean</div>
+        <p>A clean, ad-free way to keep your PC tidy — safely clears temp files, caches and clutter across Windows, browsers and dev tools, with a visual disk-usage treemap, a registry cleaner (with automatic backups) and autostart / process managers. No ads, no upsells, no nagging.</p>
+        <span class="ms-link">Visit PowerClean →</span>
+      </a>
+      <a class="feat ms-card" href="https://audiola.de/" target="_blank" rel="noopener">
+        <div class="ms-name"><span class="dot" style="background:var(--purple-bright)"></span>Audiola</div>
+        <p>A complete audio workstation — arrange multi-track projects, split songs into stems (vocals, drums, bass…), master to broadcast-standard loudness, and use on-device AI to swap or clone voices, synthesize speech and transcribe, plus immersive 3D spatial mixing.</p>
+        <span class="ms-link">Visit Audiola →</span>
+      </a>
+    </div>
+  </div>
+</section>
 
 <footer>
   <div class="wrap">
