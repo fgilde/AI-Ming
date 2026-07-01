@@ -13,13 +13,15 @@ namespace PowerAim.Visuality;
 
 /// <summary>
 ///     Edits one <see cref="ToolAction"/>. Because the action type is polymorphic, a type dropdown at
-///     the top swaps the concrete action instance (MoveMouse / Click / SendKeys / RunExe / Delay) and
-///     the field area below is rebuilt for that type. Mirrors <c>AutoPlayActionEditDialog</c>'s
-///     dynamic-UI approach. The (possibly swapped) instance is exposed as <see cref="Action"/> on save.
+///     the top swaps the concrete action instance (MoveMouse / Click / SendKeys / RunExe / Delay /
+///     SetVar / HttpRequest) and the field area below is rebuilt for that type. Below the type-specific
+///     fields every action also gets a "Run only if …" guard section. Mirrors
+///     <c>AutoPlayActionEditDialog</c>'s dynamic-UI approach. The (possibly swapped) instance is exposed
+///     as <see cref="Action"/> on save.
 /// </summary>
 public partial class ToolActionEditDialog : BaseDialog
 {
-    private enum Kind { MoveMouse, Click, SendKeys, RunExe, Delay }
+    private enum Kind { MoveMouse, Click, SendKeys, RunExe, Delay, SetVar, HttpRequest }
 
     private ToolAction _action = new MoveMouseAction();
 
@@ -48,6 +50,8 @@ public partial class ToolActionEditDialog : BaseDialog
         SendKeysAction => Kind.SendKeys,
         RunExeAction => Kind.RunExe,
         DelayAction => Kind.Delay,
+        SetVarAction => Kind.SetVar,
+        HttpRequestAction => Kind.HttpRequest,
         _ => Kind.MoveMouse
     };
 
@@ -58,6 +62,8 @@ public partial class ToolActionEditDialog : BaseDialog
         Kind.SendKeys => new SendKeysAction(),
         Kind.RunExe => new RunExeAction(),
         Kind.Delay => new DelayAction(),
+        Kind.SetVar => new SetVarAction(),
+        Kind.HttpRequest => new HttpRequestAction(),
         _ => new MoveMouseAction()
     };
 
@@ -73,7 +79,9 @@ public partial class ToolActionEditDialog : BaseDialog
         TypeHost.AddDropdown(Locale.ToolActionType, KindOf(_action), kind =>
         {
             if (_buildingType || kind == KindOf(_action)) return;
+            var carryGuard = _action.Condition;   // keep the "Run only if …" guard across a type swap
             _action = Create(kind);
+            _action.Condition = carryGuard;
             _action.BeginEdit();
             BuildFields();
         }, dropdown => dropdown.BorderBrush = dropdown.Background = Brushes.Transparent);
@@ -119,7 +127,61 @@ public partial class ToolActionEditDialog : BaseDialog
             case DelayAction d:
                 AddText(FieldsHost, Locale.ToolDelayMs, d, nameof(DelayAction.Milliseconds));
                 break;
+
+            case SetVarAction sv:
+                AddText(FieldsHost, Locale.ToolSetVarName, sv, nameof(SetVarAction.Name));
+                AddText(FieldsHost, Locale.ToolSetVarValue, sv, nameof(SetVarAction.Value));
+                break;
+
+            case HttpRequestAction h:
+                FieldsHost.AddDropdown(Locale.ToolHttpMethod, h.Method, v => h.Method = v);
+                AddText(FieldsHost, Locale.ToolHttpUrl, h, nameof(HttpRequestAction.Url));
+                AddText(FieldsHost, Locale.ToolHttpBody, h, nameof(HttpRequestAction.Body));
+                AddText(FieldsHost, Locale.ToolHttpHeaders, h, nameof(HttpRequestAction.Headers));
+                AddText(FieldsHost, Locale.ToolHttpStoreVar, h, nameof(HttpRequestAction.StoreVar));
+                break;
         }
+
+        AddGuardSection();
+    }
+
+    /// <summary>
+    ///     The per-action guard ("Run only if …"). Shown for every action type: pick an operator (leave
+    ///     it on <c>always</c> to run unconditionally) and the two values to compare. Both values support
+    ///     <c>{token}</c> substitution, so this is how "if var1 is true → X, else → Y" is built — give X
+    ///     the guard <c>{var1} is true</c> and Y the guard <c>{var1} is false</c>.
+    /// </summary>
+    private void AddGuardSection()
+    {
+        FieldsHost.Add<Border>(b =>
+        {
+            b.Height = 1;
+            b.Margin = new Thickness(0, 16, 0, 4);
+            b.Background = UIElementExtensions.LookupBrush("FluentStroke", Colors.Gray);
+        });
+        FieldsHost.Add<Label>(l =>
+        {
+            l.Content = Locale.ToolGuardHeader;
+            l.FontSize = 13;
+            l.FontWeight = FontWeights.SemiBold;
+            l.Padding = new Thickness(0);
+            l.Margin = new Thickness(2, 2, 0, 0);
+            l.Foreground = UIElementExtensions.LookupBrush("FluentTextPrimary", Colors.White);
+        });
+        FieldsHost.Add<TextBlock>(t =>
+        {
+            t.Text = Locale.ToolGuardHint;
+            t.TextWrapping = TextWrapping.Wrap;
+            t.FontSize = 11;
+            t.Opacity = 0.7;
+            t.Margin = new Thickness(2, 0, 0, 2);
+            t.Foreground = UIElementExtensions.LookupBrush("FluentTextPrimary", Colors.White);
+        });
+
+        var cond = _action.Condition;
+        FieldsHost.AddDropdown(Locale.ToolGuardOperator, cond.Op, v => cond.Op = v);
+        AddText(FieldsHost, Locale.ToolGuardLeft, cond, nameof(ToolCondition.Left));
+        AddText(FieldsHost, Locale.ToolGuardRight, cond, nameof(ToolCondition.Right));
     }
 
     private static void AddText(StackPanel host, string label, object source, string prop, bool browse = false)

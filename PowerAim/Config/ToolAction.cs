@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Text.Json.Serialization;
 using Nextended.Core;
 using PowerAim.InputLogic;
@@ -7,6 +8,35 @@ namespace PowerAim.Config;
 
 /// <summary>Which mouse button a <see cref="ClickAction"/> presses (kept independent of WinForms in the model).</summary>
 public enum ToolMouseButton { Left, Right, Middle }
+
+/// <summary>HTTP verb for <see cref="HttpRequestAction"/>.</summary>
+public enum HttpMethodKind { Get, Post, Put, Delete }
+
+/// <summary>Comparison for an action's optional guard. <see cref="Always"/> = run unconditionally.</summary>
+public enum ConditionOp
+{
+    [Description("always")] Always,
+    [Description("=")] Equals,
+    [Description("≠")] NotEquals,
+    [Description(">")] Greater,
+    [Description("<")] Less,
+    [Description("contains")] Contains,
+    [Description("is true")] IsTrue,
+    [Description("is false")] IsFalse,
+}
+
+/// <summary>
+///     A per-action guard: the action runs only when <see cref="Left"/> <see cref="Op"/> <see cref="Right"/>
+///     holds. Both sides go through <c>{token}</c> substitution, so you can compare option / response /
+///     prediction variables. This is how "if var1 is true → do X, else → do Y" is built — give X the
+///     guard <c>var1 is true</c> and Y the guard <c>var1 is false</c>.
+/// </summary>
+public class ToolCondition : EditableNotificationObject
+{
+    public string Left { get; set => SetProperty(ref field, value ?? ""); } = "";
+    public ConditionOp Op { get; set => SetProperty(ref field, value); } = ConditionOp.Always;
+    public string Right { get; set => SetProperty(ref field, value ?? ""); } = "";
+}
 
 /// <summary>
 ///     One step in a custom tool's action sequence. Polymorphic + serialized with a <c>$type</c>
@@ -20,12 +50,17 @@ public enum ToolMouseButton { Left, Right, Middle }
 [JsonDerivedType(typeof(SendKeysAction), nameof(SendKeysAction))]
 [JsonDerivedType(typeof(RunExeAction), nameof(RunExeAction))]
 [JsonDerivedType(typeof(DelayAction), nameof(DelayAction))]
+[JsonDerivedType(typeof(SetVarAction), nameof(SetVarAction))]
+[JsonDerivedType(typeof(HttpRequestAction), nameof(HttpRequestAction))]
 public abstract class ToolAction : EditableNotificationObject
 {
     /// <summary>Short label for the action-list row in the editor.</summary>
     [Newtonsoft.Json.JsonIgnore]
     [System.Text.Json.Serialization.JsonIgnore]
     public abstract string DisplayText { get; }
+
+    /// <summary>Optional guard — the action only runs when this holds (Op == Always means no guard).</summary>
+    public ToolCondition Condition { get; set => SetProperty(ref field, value ?? new()); } = new();
 }
 
 /// <summary>Move the cursor. Coordinates are strings so they can embed option tokens like <c>{targetX}</c>.</summary>
@@ -79,4 +114,29 @@ public class DelayAction : ToolAction
     public string Milliseconds { get; set => SetProperty(ref field, value ?? "100"); } = "100";
 
     public override string DisplayText => $"Wait {Milliseconds} ms";
+}
+
+/// <summary>Assign a runtime variable: <c>{Name} = Value</c> (Value supports <c>{token}</c> substitution).</summary>
+public class SetVarAction : ToolAction
+{
+    public string Name { get; set => SetProperty(ref field, value ?? ""); } = "";
+    public string Value { get; set => SetProperty(ref field, value ?? ""); } = "";
+
+    public override string DisplayText => $"Set {Name} = {Value}";
+}
+
+/// <summary>Send an HTTP request, wait for the response, and store its body in a variable. URL / body /
+/// headers support <c>{token}</c> substitution.</summary>
+public class HttpRequestAction : ToolAction
+{
+    public HttpMethodKind Method { get; set => SetProperty(ref field, value); } = HttpMethodKind.Get;
+    public string Url { get; set => SetProperty(ref field, value ?? ""); } = "";
+    public string Body { get; set => SetProperty(ref field, value ?? ""); } = "";
+    /// <summary>Optional request headers, one <c>Key: Value</c> per line.</summary>
+    public string Headers { get; set => SetProperty(ref field, value ?? ""); } = "";
+    /// <summary>Variable to receive the response body (leave empty to ignore the response).</summary>
+    public string StoreVar { get; set => SetProperty(ref field, value ?? ""); } = "";
+
+    public override string DisplayText =>
+        string.IsNullOrWhiteSpace(Url) ? $"HTTP {Method}" : $"HTTP {Method} {Url}";
 }

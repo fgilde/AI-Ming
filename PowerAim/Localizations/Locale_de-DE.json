@@ -1076,7 +1076,7 @@
   "ToolActionCountFormat": "{0} Aktion(en)",
   "ToolSendExecutionMode": "Ausführung",
   "ToolVariableHelpTitle": "Variablen verwenden",
-  "ToolVariableHelpBody": "Jede Option ist eine Variable. Verwende sie als {name} in den Textfeldern einer Aktion — Programmpfad/Argumente, Maus-X/Y oder eine Verzögerung in ms — und der Wert der Option wird beim Ausführen eingesetzt. Beispiel: eine Option namens target mit Wert 100, dann Maus bewegen X = {target}.",
+  "ToolVariableHelpBody": "Jede Option ist eine Variable — verwende sie als {name} in jedem Aktionsfeld (Pfad, Maus-X/Y, URL, ein Vergleichswert …), und ihr Wert wird beim Ausführen eingesetzt.\n\nAktionen können zur Laufzeit Variablen anlegen: „Variable setzen“ weist eine zu; „HTTP-Request“ speichert den Antwort-Body plus {name}.status und {name}.ok.\n\nAktuelles Ziel (beste Erkennung):\n•  {target.found} — true / false\n•  {target.confidence} — 0..1\n•  {target.class} — Klassenname\n•  {target.screenX}, {target.screenY} — absolute Bildschirm-Pixel → für Maus bewegen (absolut)\n•  {target.dx}, {target.dy} — Versatz zum Cursor → für Maus bewegen (relativ)\n•  {target.x}, {target.y} — normiert 0..1 in der Capture-Box (gut für Bedingungen)\n•  {targets.count} — Anzahl der Erkennungen\n\nVerzweige über den „Nur ausführen wenn …“-Guard jeder Aktion: gib einem Schritt {var1} is true und einem anderen {var1} is false.\nBeispiel — auf das beste Ziel schnappen: Maus bewegen (relativ) X = {target.dx}, Y = {target.dy}, mit Guard {target.found} is true.",
   "GamepadTestSource": "Angezeigter Controller",
   "GamepadTestSourceHint": "Wähle, welchen Controller die Anzeige unten spiegelt. Den virtuellen Pad wählen, um zu sehen, was PowerAim und die Test-Sequenz einspeisen; einen physischen Pad wählen, um deine eigene Eingabe zu sehen — eine Test-Sequenz erscheint dort nicht, weil sie an den virtuellen Pad geht.",
   "ToolCrosshair": "Fadenkreuz",
@@ -1086,5 +1086,17 @@
   "MagnifierScalingEnhanced": "Verbessert (bikubisch, experimentell)",
   "ToolAntiAfk": "Anti-AFK",
   "AntiAfkInterval": "Stups-Intervall",
-  "AntiAfkHelp": "Solange aktiv, bewegt es die Maus in diesem Intervall einen Pixel hin und zurück, damit du nicht als inaktiv giltst — kein AFK-Kick, kein Queue-Verlust. Über den Start-Button oder den Keybind umschalten; der Cursor bleibt netto an Ort und Stelle."
+  "AntiAfkHelp": "Solange aktiv, bewegt es die Maus in diesem Intervall einen Pixel hin und zurück, damit du nicht als inaktiv giltst — kein AFK-Kick, kein Queue-Verlust. Über den Start-Button oder den Keybind umschalten; der Cursor bleibt netto an Ort und Stelle.",
+  "ToolSetVarName": "Variablenname",
+  "ToolSetVarValue": "Wert",
+  "ToolHttpMethod": "Methode",
+  "ToolHttpUrl": "URL",
+  "ToolHttpBody": "Request-Body",
+  "ToolHttpHeaders": "Header (ein Key: Value pro Zeile)",
+  "ToolHttpStoreVar": "Antwort in Variable speichern",
+  "ToolGuardHeader": "Nur ausführen wenn …",
+  "ToolGuardHint": "Operator auf „immer“ lassen, damit dieser Schritt jedes Mal läuft. Sonst läuft er nur, wenn der Vergleich zutrifft. Beide Werte akzeptieren {Tokens}.",
+  "ToolGuardOperator": "Bedingung",
+  "ToolGuardLeft": "Linker Wert",
+  "ToolGuardRight": "Rechter Wert"
 }
