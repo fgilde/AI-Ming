@@ -1098,5 +1098,7 @@
   "ToolGuardHint": "Operator auf „immer“ lassen, damit dieser Schritt jedes Mal läuft. Sonst läuft er nur, wenn der Vergleich zutrifft. Beide Werte akzeptieren {Tokens}.",
   "ToolGuardOperator": "Bedingung",
   "ToolGuardLeft": "Linker Wert",
-  "ToolGuardRight": "Rechter Wert"
+  "ToolGuardRight": "Rechter Wert",
+  "AimSpeedMultiplier": "Geschwindigkeits-Multiplikator",
+  "AimSpeedMultiplierHint": "Zusätzliche Aim-Verstärkung, wenn selbst maximale Sensitivity zu langsam ist — z. B. hohe Maus-DPI mit niedriger In-Game-Sensitivity. 1 = aus (normal). Gilt für Smart Aim."
 }

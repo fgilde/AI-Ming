@@ -34,12 +34,22 @@ internal static class OnnxHelper
 
         foreach (var provider in fallbackOrder)
         {
+            // The picker stores a DXGI adapter index; CUDA/TensorRT need the NVIDIA-only CUDA ordinal
+            // instead (issue #12). -1 means the chosen adapter can't run this provider (e.g. an iGPU
+            // under CUDA) → skip it and let the fallback chain try the next one.
+            int providerDeviceId = ResolveDeviceId(provider, deviceId);
+            if (providerDeviceId < 0)
+            {
+                Console.WriteLine($"Skipping provider {provider}: selected adapter (DXGI index {deviceId}) is not a valid {provider} device.");
+                continue;
+            }
+
             try
             {
-                if (CanWork(provider, deviceId))
+                if (CanWork(provider, providerDeviceId))
                 {
-                    sessionOptions.AppendExecutionProvider(provider, deviceId);
-                    Console.WriteLine($"Initialized with provider {provider} on device {deviceId}");
+                    sessionOptions.AppendExecutionProvider(provider, providerDeviceId);
+                    Console.WriteLine($"Initialized with provider {provider} on device {providerDeviceId} (requested DXGI adapter index {deviceId}).");
                     return provider;
                 }
             }
@@ -51,6 +61,20 @@ internal static class OnnxHelper
 
         throw new InvalidOperationException("No suitable execution provider found.");
     }
+
+    /// <summary>
+    ///     Map the picker's DXGI adapter index to the device id a given provider actually expects.
+    ///     DirectML keys on the DXGI index directly; CUDA/TensorRT need the NVIDIA-only CUDA ordinal
+    ///     (see <see cref="GpuAdapterEnumerator.DxgiIndexToCudaOrdinal"/>) and return -1 when the chosen
+    ///     adapter isn't an NVIDIA GPU. CPU ignores the id entirely.
+    /// </summary>
+    private static int ResolveDeviceId(OnnxExecutionProvider provider, int dxgiIndex) => provider switch
+    {
+        OnnxExecutionProvider.Cuda or OnnxExecutionProvider.TensorRT
+            => PowerAim.AILogic.GpuAdapterEnumerator.DxgiIndexToCudaOrdinal(dxgiIndex),
+        OnnxExecutionProvider.DirectML => dxgiIndex,
+        _ => 0, // CPU has no per-device id
+    };
 
     public static SessionOptions AppendExecutionProvider(this SessionOptions options, OnnxExecutionProvider provider, int deviceId = 0)
     {

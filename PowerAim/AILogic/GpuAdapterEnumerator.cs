@@ -7,18 +7,24 @@ namespace PowerAim.AILogic;
 
 /// <summary>
 ///     Enumerates all DXGI graphics adapters in the system so the user can pick which GPU runs ONNX
-///     inference. DXGI enumeration order is the same order ONNX Runtime uses internally for both
-///     DirectML (<c>AppendExecutionProvider_DML(deviceId)</c>) and CUDA (<c>AppendExecutionProvider_CUDA(deviceId)</c>) —
-///     adapter index 0 is whatever Windows considers the primary, 1 the next, and so on. Indices
-///     returned here therefore map directly to ORT's <c>deviceId</c> parameter.
+///     inference. The DXGI index maps directly to ORT's <c>deviceId</c> for <b>DirectML</b>
+///     (<c>AppendExecutionProvider_DML(deviceId)</c>), but <b>NOT</b> for CUDA: CUDA enumerates NVIDIA
+///     GPUs only, in its own ordinal space, so the DXGI index has to be translated (see
+///     <see cref="DxgiIndexToCudaOrdinal"/>) — otherwise a DXGI index shifted by an iGPU/other adapter
+///     points at the wrong (or a non-existent) CUDA device and inference silently falls back (issue #12).
 /// </summary>
 public static class GpuAdapterEnumerator
 {
+    /// <summary>NVIDIA PCI vendor id — CUDA can only target adapters reporting this.</summary>
+    public const int NvidiaVendorId = 0x10DE;
+
     /// <summary>
-    ///     One physical GPU as reported by DXGI. <see cref="DeviceId"/> is the index that ORT expects;
+    ///     One physical GPU as reported by DXGI. <see cref="DeviceId"/> is the DXGI adapter index (=
+    ///     ORT's DirectML deviceId; for CUDA use <see cref="DxgiIndexToCudaOrdinal"/>).
+    ///     <see cref="VendorId"/> is the PCI vendor id (e.g. <see cref="NvidiaVendorId"/>).
     ///     <see cref="Description"/> is a human-readable vendor + model string for the UI.
     /// </summary>
-    public readonly record struct GpuAdapter(int DeviceId, string Description, long DedicatedVideoMemoryBytes)
+    public readonly record struct GpuAdapter(int DeviceId, int VendorId, string Description, long DedicatedVideoMemoryBytes)
     {
         /// <summary>Compact "NVIDIA RTX 4090 · 24 GB" style label for picker rows.</summary>
         public string DisplayLabel =>
@@ -84,7 +90,7 @@ public static class GpuAdapterEnumerator
                     log.AppendLine($"[GpuEnum]   idx={i} desc=\"{description}\" vendor=0x{desc.VendorId:X4} device=0x{desc.DeviceId:X4} vram={vram} flags={(int)desc.Flags} software={isSoftware}");
 
                     if (!isSoftware)
-                        result.Add(new GpuAdapter(DeviceId: (int)i, Description: description, DedicatedVideoMemoryBytes: vram));
+                        result.Add(new GpuAdapter(DeviceId: (int)i, VendorId: (int)desc.VendorId, Description: description, DedicatedVideoMemoryBytes: vram));
                 }
                 catch (Exception adapterEx)
                 {
@@ -123,4 +129,29 @@ public static class GpuAdapterEnumerator
 
     /// <summary>Forces re-enumeration on the next <see cref="List"/> call. Use after a driver change.</summary>
     public static void Invalidate() => _cached = null;
+
+    /// <summary>
+    ///     Translate a DXGI adapter index (what the picker stores in <c>InferenceGpuDeviceId</c>) into
+    ///     the CUDA device ordinal ORT's CUDA provider expects. CUDA sees NVIDIA GPUs only and numbers
+    ///     them in DXGI order, so the ordinal is the position of the chosen adapter within the
+    ///     NVIDIA-only sublist — e.g. on a laptop enumerated as [0]=NVIDIA, [1]=Intel the NVIDIA card is
+    ///     CUDA ordinal 0 even though its DXGI index is 0; on [0]=Intel, [1]=NVIDIA the NVIDIA card is
+    ///     DXGI index 1 but CUDA ordinal 0. Returns <c>-1</c> when the chosen adapter isn't an NVIDIA GPU
+    ///     (CUDA can't run there → the caller should skip CUDA), or the raw index as a best-effort
+    ///     passthrough if enumeration produced nothing.
+    /// </summary>
+    public static int DxgiIndexToCudaOrdinal(int dxgiIndex)
+    {
+        var adapters = List();
+        if (adapters.Count == 0) return dxgiIndex; // enumeration failed — don't block CUDA outright
+
+        int ordinal = -1;
+        foreach (var a in adapters)
+        {
+            if (a.VendorId != NvidiaVendorId) continue;
+            ordinal++;
+            if (a.DeviceId == dxgiIndex) return ordinal;
+        }
+        return -1; // chosen adapter is not an NVIDIA GPU → not a CUDA target
+    }
 }

@@ -251,7 +251,8 @@ public class AimingAction : BaseAction
         // Proportional move toward the target. Strength = approach fraction per frame; the calibration
         // ratio (if set) converts the pixel error to exact mouse counts → game-independent feel.
         _controller.MoveTo(targetX, targetY, aimArea, dt,
-            AppConfig.Current.SliderSettings.MouseSensitivity, ai.AimDeadzonePx, 150, ai.CalibratedPixelsPerCount);
+            AppConfig.Current.SliderSettings.MouseSensitivity, ai.AimDeadzonePx, 150, ai.CalibratedPixelsPerCount,
+            ai.AimSpeedMultiplier);
     }
 
     /// <summary>

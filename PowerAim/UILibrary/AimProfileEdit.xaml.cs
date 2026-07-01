@@ -161,6 +161,12 @@ namespace PowerAim.UILibrary
             TunePanel.AddSlider(Locale.MouseSensitivity, Locale.Sensitivity, 0.001, 0.001, 0.0001, 1, false, 4, false)
                 .BindTo(() => Profile!.Sensitivity);
 
+            // Extra gain past "full correction per frame" for setups where even max sensitivity is too
+            // slow (high-DPI mouse + low in-game sensitivity — issue #10). 1 = off. Smart-path only.
+            var speedSlider = TunePanel.AddSlider(Locale.AimSpeedMultiplier, "×", 0.5, 0.1, 1, 10, false, 1, false);
+            speedSlider.ToolTip = Locale.AimSpeedMultiplierHint;
+            speedSlider.BindTo(() => Profile!.AimSpeedMultiplier);
+
             // Measure how far the game's view moves per unit of mouse input and apply a matching
             // sensitivity to THIS profile (re-added on request — the closed loop converges without it,
             // but calibration makes the slider game-independent instead of trial-and-error per game).

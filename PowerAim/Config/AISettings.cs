@@ -181,12 +181,26 @@ public class AISettings : BaseSettings
     } = 0.0;
 
     /// <summary>
-    ///     DXGI adapter index the ONNX inference session should run on. Passed straight through to
-    ///     <c>AppendExecutionProvider_CUDA(deviceId)</c> / <c>AppendExecutionProvider_DML(deviceId)</c>,
-    ///     so the meaning matches whatever Windows reports through <see cref="AILogic.GpuAdapterEnumerator"/>.
-    ///     Default <c>0</c> = primary GPU; setting this to a secondary card lets the user keep
-    ///     inference off the GPU the game is running on (reduces input lag on single-GPU systems with
-    ///     an integrated/secondary adapter, or just balances load on dual-GPU rigs).
+    ///     Extra gain on top of the sensitivity approach fraction (issue #10). <c>1.0</c> = normal.
+    ///     Raise it when even max sensitivity is too slow — e.g. a very high-DPI mouse paired with a low
+    ///     in-game sensitivity, where one mouse count barely turns the view so the computed counts fall
+    ///     short. It multiplies the per-frame move (values &gt; 1 intentionally overshoot in raw counts,
+    ///     which such a low effective sensitivity absorbs). Mirrored from the active <see cref="AimProfile"/>.
+    /// </summary>
+    public double AimSpeedMultiplier
+    {
+        get;
+        set => SetField(ref field, Math.Clamp(value, 0.1, 20.0));
+    } = 1.0;
+
+    /// <summary>
+    ///     DXGI adapter index the ONNX inference session should run on, as reported by
+    ///     <see cref="AILogic.GpuAdapterEnumerator"/>. Used directly as ORT's DirectML deviceId; for CUDA
+    ///     it is translated to the NVIDIA-only CUDA ordinal at session-build time
+    ///     (<see cref="AILogic.GpuAdapterEnumerator.DxgiIndexToCudaOrdinal"/>), since CUDA numbers NVIDIA
+    ///     GPUs in their own space (issue #12). Default <c>0</c> = primary GPU; setting this to a
+    ///     secondary card lets the user keep inference off the GPU the game runs on (reduces input lag on
+    ///     single-GPU systems with an integrated/secondary adapter, or balances load on dual-GPU rigs).
     /// </summary>
     public int InferenceGpuDeviceId
     {

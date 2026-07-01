@@ -77,6 +77,13 @@ public class AimProfile : EditableNotificationObject
     /// </summary>
     public double Sensitivity { get; set => SetProperty(ref field, value); } = 0.45;
 
+    /// <summary>
+    ///     Extra gain multiplier on the per-frame move (issue #10). <c>1.0</c> = normal. Raise it when
+    ///     even max <see cref="Sensitivity"/> is too slow (high-DPI mouse + low in-game sensitivity).
+    ///     Mirrors to <see cref="AISettings.AimSpeedMultiplier"/>.
+    /// </summary>
+    public double AimSpeedMultiplier { get; set => SetProperty(ref field, value); } = 1.0;
+
     /// <summary>Aim at a random point inside the region (per engagement) instead of its centre.</summary>
     public bool RandomAimPoint { get; set => SetProperty(ref field, value); }
 
@@ -263,6 +270,7 @@ public class AimProfile : EditableNotificationObject
             ai.SwitchFrames = SwitchFrames;
             ai.SwitchMarginPct = SwitchMarginPct;
             ai.CalibratedPixelsPerCount = CalibratedPixelsPerCount;
+            ai.AimSpeedMultiplier = AimSpeedMultiplier;
         }
     }
 
@@ -297,6 +305,7 @@ public class AimProfile : EditableNotificationObject
             SwitchFrames = ai.SwitchFrames;
             SwitchMarginPct = ai.SwitchMarginPct;
             CalibratedPixelsPerCount = ai.CalibratedPixelsPerCount;
+            AimSpeedMultiplier = ai.AimSpeedMultiplier;
         }
     }
 }

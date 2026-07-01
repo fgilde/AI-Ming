@@ -1098,5 +1098,7 @@
   "ToolGuardHint": "Leave the operator on \"always\" to run this step every time. Otherwise it runs only when the comparison holds. Both values accept {tokens}.",
   "ToolGuardOperator": "Condition",
   "ToolGuardLeft": "Left value",
-  "ToolGuardRight": "Right value"
+  "ToolGuardRight": "Right value",
+  "AimSpeedMultiplier": "Speed multiplier",
+  "AimSpeedMultiplierHint": "Extra aim gain for when even max sensitivity is too slow — e.g. a high-DPI mouse with a low in-game sensitivity. 1 = off (normal). Applies to Smart Aim."
 }

@@ -8,7 +8,7 @@ using PowerAim.Types;
 
 public class AutoTriggerAction : BaseAction
 {
-    private Prediction? _lastPrediction;
+    private Prediction[] _lastPredictions = [];
     private readonly List<CancellationTokenSource> _autoTriggerCtsList = [];
     private readonly Dictionary<ActionTrigger, DateTime> _triggerCooldowns = []; // Track cooldowns for each trigger
     private readonly Dictionary<ActionTrigger, KeyPressState> _triggerKeyStates = []; // Store current key states for each trigger
@@ -41,17 +41,18 @@ public class AutoTriggerAction : BaseAction
 
     public override Task ExecuteAsync(Prediction[] predictions)
     {
-        _lastPrediction = predictions.MinBy(p => p.Confidence);
+
+        _lastPredictions = predictions;
 
         if (AppConfig.Current.ToggleState.AutoTrigger)
         {
             foreach (var trigger in AppConfig.Current.Triggers)
             {
-                if (trigger is { Enabled: true, IsValid: true } && (!trigger.NeedsDetection || _lastPrediction != null))
+                if (trigger is { Enabled: true, IsValid: true } && (!trigger.NeedsDetection || _lastPredictions.Length > 0))
                 {
                     var triggerCts = new CancellationTokenSource();
                     _autoTriggerCtsList.Add(triggerCts);
-                    _ = Task.Run(() => HandleTriggerAsync(trigger, _lastPrediction, triggerCts.Token), triggerCts.Token);
+                    _ = Task.Run(() => HandleTriggerAsync(trigger, triggerCts.Token), triggerCts.Token);
                 }
             }
         }
@@ -59,7 +60,7 @@ public class AutoTriggerAction : BaseAction
         return Task.CompletedTask;
     }
 
-    private async Task HandleTriggerAsync(ActionTrigger trigger, Prediction? prediction, CancellationToken cancellationToken)
+    private async Task HandleTriggerAsync(ActionTrigger trigger, CancellationToken cancellationToken)
     {
         if (TriggerIsOnCooldown(trigger))
         {
@@ -81,7 +82,7 @@ public class AutoTriggerAction : BaseAction
 
             var delay = TimeSpan.FromSeconds(trigger.Delay);
             var breakTime = TimeSpan.FromSeconds(Math.Max(trigger.BreakTime, trigger.ChargeMode ? .2 : 0)); // on chargemode, breaktime should be at least a half second
-            var keyState = DetermineKeyState(trigger, prediction);
+            var keyState = DetermineKeyState(trigger);
 
             if (keyState != null)
             {
@@ -134,22 +135,22 @@ public class AutoTriggerAction : BaseAction
 
 
 
-    private KeyPressState? DetermineKeyState(ActionTrigger trigger, Prediction? prediction)
+    private KeyPressState? DetermineKeyState(ActionTrigger trigger)
     {
         if (!trigger.NeedsDetection)
             return KeyPressState.DownAndUp;
 
         if (trigger.ChargeMode)
         {
-            if (PredictionIsIntersecting(trigger.ExecutionIntersectionCheck, trigger.ExecutionIntersectionArea, prediction))
+            if (PredictionIsIntersecting(trigger.ExecutionIntersectionCheck, trigger.ExecutionIntersectionArea))
                 return KeyPressState.Up;
 
-            if (PredictionIsIntersecting(trigger.BeginIntersectionCheck, trigger.BeginIntersectionArea, prediction))
+            if (PredictionIsIntersecting(trigger.BeginIntersectionCheck, trigger.BeginIntersectionArea))
                 return KeyPressState.Down;
         }
         else
         {
-            if (PredictionIsIntersecting(trigger.ExecutionIntersectionCheck, trigger.ExecutionIntersectionArea, prediction))
+            if (PredictionIsIntersecting(trigger.ExecutionIntersectionCheck, trigger.ExecutionIntersectionArea))
                 return KeyPressState.DownAndUp;
         }
 
@@ -188,16 +189,23 @@ public class AutoTriggerAction : BaseAction
             && (!HasValidKey(trigger.AntiTriggerKeys) || (trigger.AntiTriggerKeysOperator == KeyOperator.And ? AllKeysAreNotHold(trigger.AntiTriggerKeys) : AnyKeysIsNotHold(trigger.AntiTriggerKeys)));
     }
     
-    private bool PredictionIsIntersecting(TriggerCheck check, RelativeRect area, Prediction? prediction = null)
+    // Issue #17: scan ALL current detections — fire when ANY target satisfies the check — rather than
+    // testing one single (least-confident) prediction. This re-couples the trigger to whatever target
+    // is actually under the crosshair, including the one the aim assist just pulled in.
+    private bool PredictionIsIntersecting(TriggerCheck check, RelativeRect area)
     {
-        prediction ??= _lastPrediction;
-        if (prediction == null)
+        if (check == TriggerCheck.None)
+            return true;
+
+        foreach (var prediction in _lastPredictions)
         {
-            return false;
+            if (check == TriggerCheck.HeadIntersectingCenter && prediction.IsIntersectingCenter(area))
+                return true;
+            if (check == TriggerCheck.IntersectingCenter && prediction.IsIntersectingCenter())
+                return true;
         }
-        return check == TriggerCheck.None
-               || (check == TriggerCheck.HeadIntersectingCenter && prediction.IsIntersectingCenter(area))
-               || (check == TriggerCheck.IntersectingCenter && prediction.IsIntersectingCenter());
+
+        return false;
     }
 
     public override Task OnPause()

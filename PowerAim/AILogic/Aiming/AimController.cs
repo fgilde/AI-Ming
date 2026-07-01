@@ -41,8 +41,13 @@ public sealed class AimController
     ///     mouse counts (game-independent). 0 → treat 1 pixel ≈ 1 count (the strength slider then
     ///     absorbs the game's sensitivity).
     /// </param>
+    /// <param name="speedMultiplier">
+    ///     Extra gain on the per-frame move (issue #10). 1 = normal. &gt; 1 pushes past "full correction
+    ///     per frame" for setups where even max strength is too slow (high-DPI mouse + low in-game
+    ///     sensitivity, so a count barely moves the view). Intentionally allows overshoot in raw counts.
+    /// </param>
     public void MoveTo(double targetX, double targetY, Rectangle area, double dt,
-        double strength, double deadzonePx, double maxStepCounts, double pixelsPerCount)
+        double strength, double deadzonePx, double maxStepCounts, double pixelsPerCount, double speedMultiplier = 1.0)
     {
         if (dt <= 0) dt = 1.0 / 60.0;
 
@@ -70,6 +75,9 @@ public sealed class AimController
         // 60 Hz frame. With strength < 1 this never overshoots — the closed loop converges smoothly.
         double s = Math.Clamp(strength, 0.0001, 1.0);
         double gain = 1.0 - Math.Pow(1.0 - s, dt * 60.0);
+
+        // Issue #10: optional extra gain for setups where even gain==1 (full correction) is too slow.
+        if (speedMultiplier > 0 && speedMultiplier != 1.0) gain *= speedMultiplier;
 
         double moveX = cntX * gain + _accumX;
         double moveY = cntY * gain + _accumY;
