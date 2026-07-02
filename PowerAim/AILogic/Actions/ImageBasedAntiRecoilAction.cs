@@ -51,6 +51,10 @@ public class ImageBasedAntiRecoilAction : BaseAction
         }
     }
 
+    // A second screen capture + OpenCV phase-correlate per frame is heavy synchronous work — keep it
+    // off the AI-loop thread so it overlaps the other actions instead of adding to the frame time.
+    public override Task Execute(Prediction[] predictions) => Task.Run(() => ExecuteAsync(predictions.ToArray()));
+
     public override Task ExecuteAsync(Prediction[] predictions)
     {
         if (!Active) { Reset(); return Task.CompletedTask; }

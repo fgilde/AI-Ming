@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using PowerAim.AILogic.Actions;
 using PowerAim.AILogic;
@@ -9,9 +10,15 @@ using PowerAim.Types;
 public class AutoTriggerAction : BaseAction
 {
     private Prediction[] _lastPredictions = [];
-    private readonly List<CancellationTokenSource> _autoTriggerCtsList = [];
-    private readonly Dictionary<ActionTrigger, DateTime> _triggerCooldowns = []; // Track cooldowns for each trigger
-    private readonly Dictionary<ActionTrigger, KeyPressState> _triggerKeyStates = []; // Store current key states for each trigger
+    // One in-flight handler per trigger, all cancellable through a single long-lived CTS. The old
+    // shape spawned a fresh Task + CancellationTokenSource per trigger EVERY FRAME and only cleared
+    // the CTS list on pause/toggle — hundreds of leaked CTS per second, plus concurrent handlers for
+    // the same trigger (double-fires whenever trigger.Delay outlived a frame). The state maps are
+    // concurrent because handlers run on thread-pool threads.
+    private readonly ConcurrentDictionary<ActionTrigger, Task> _runningTriggers = [];
+    private readonly ConcurrentDictionary<ActionTrigger, DateTime> _triggerCooldowns = []; // Track cooldowns for each trigger
+    private readonly ConcurrentDictionary<ActionTrigger, KeyPressState> _triggerKeyStates = []; // Store current key states for each trigger
+    private CancellationTokenSource _cancellation = new();
 
     public AutoTriggerAction()
     {
@@ -28,14 +35,18 @@ public class AutoTriggerAction : BaseAction
 
     private void CancelAllTriggers()
     {
-        foreach (var cts in _autoTriggerCtsList)
+        var old = _cancellation;
+        _cancellation = new CancellationTokenSource();
+        try { old.Cancel(); } finally { old.Dispose(); }
+        _runningTriggers.Clear();
+
+        // Release any charge-mode key still held down. (Previously done via one CTS registration per
+        // handler per frame — same effect, minus the per-frame registration pile-up.)
+        foreach (var kv in _triggerKeyStates)
         {
-            if (!cts.IsCancellationRequested)
-            {
-                cts.Cancel();
-            }
+            if (kv.Value == KeyPressState.Down)
+                _ = SendActionsAsync(kv.Key, KeyPressState.Up, false, TriggerExecutionMode.Simultaneous); // Cancel always simultaneous and as fast as possible
         }
-        _autoTriggerCtsList.Clear();
         _triggerKeyStates.Clear();
     }
 
@@ -46,13 +57,16 @@ public class AutoTriggerAction : BaseAction
 
         if (AppConfig.Current.ToggleState.AutoTrigger)
         {
+            var token = _cancellation.Token;
             foreach (var trigger in AppConfig.Current.Triggers)
             {
                 if (trigger is { Enabled: true, IsValid: true } && (!trigger.NeedsDetection || _lastPredictions.Length > 0))
                 {
-                    var triggerCts = new CancellationTokenSource();
-                    _autoTriggerCtsList.Add(triggerCts);
-                    _ = Task.Run(() => HandleTriggerAsync(trigger, triggerCts.Token), triggerCts.Token);
+                    // At most one running handler per trigger — skip while the previous one (e.g. still
+                    // inside its Delay) hasn't finished; a later frame re-dispatches it fresh.
+                    if (_runningTriggers.TryGetValue(trigger, out var running) && !running.IsCompleted)
+                        continue;
+                    _runningTriggers[trigger] = Task.Run(() => HandleTriggerAsync(trigger, token), token);
                 }
             }
         }
@@ -69,16 +83,8 @@ public class AutoTriggerAction : BaseAction
 
         if (TriggerKeysStateCorrect(trigger) && OcrConditionsMet(trigger) && !AntiOcrConditionBlocks(trigger))
         {
-            if (trigger.ChargeMode)
-            {
-                cancellationToken.Register(() => // On cancel ensure key is released
-                {
-                    if(_triggerKeyStates.TryGetValue(trigger, out var currentState) && currentState == KeyPressState.Down)
-                    {
-                        _= SendActionsAsync(trigger, KeyPressState.Up, false, TriggerExecutionMode.Simultaneous); // Cancel always simultaneous and as fast as possible
-                    }
-                });
-            }
+            // (Charge-mode "release key on cancel" now lives centrally in CancelAllTriggers — a per-call
+            // token.Register here would pile up one registration per dispatch on the long-lived CTS.)
 
             var delay = TimeSpan.FromSeconds(trigger.Delay);
             var breakTime = TimeSpan.FromSeconds(Math.Max(trigger.BreakTime, trigger.ChargeMode ? .2 : 0)); // on chargemode, breaktime should be at least a half second
@@ -98,7 +104,7 @@ public class AutoTriggerAction : BaseAction
                     // If the key was released (Up), remove it from the state tracking
                     if (keyState.Value == KeyPressState.Up)
                     {
-                        _triggerKeyStates.Remove(trigger);
+                        _triggerKeyStates.TryRemove(trigger, out _);
                     }
 
                     SetTriggerCooldown(trigger, breakTime);

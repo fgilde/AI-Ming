@@ -21,6 +21,10 @@ public class OverlayAction : BaseAction
         EnsureFormOverlay();
     }
 
+    // Drawing (GDI / DesktopDC / form invoke) is real synchronous work per frame — keep it off the
+    // AI-loop thread so it runs alongside the other actions instead of adding to the frame time.
+    public override Task Execute(Prediction[] predictions) => Task.Run(() => ExecuteAsync(predictions.ToArray()));
+
     public override Task ExecuteAsync(Prediction[] predictions)
     {
         var formActive = _useForm;

@@ -20,6 +20,10 @@ public class AIManager : IDisposable
     private readonly Thread _aiLoopThread;
     private bool _pausedNotified = false;
     private readonly FpsCapHelper _fpsCap = new();
+    private int _consecutiveLoopErrors;
+    /// <summary>Give up (dispose the AI) only after this many frames failed back-to-back — a single
+    /// transient error (e.g. DXGI device-lost on alt-tab) must not kill the whole session.</summary>
+    private const int MaxConsecutiveLoopErrors = 10;
     public bool IsRunning => _isAiLoopRunning;
     public bool IsModelLoaded { get; private set; }
 
@@ -145,10 +149,28 @@ public class AIManager : IDisposable
                     PowerAim.AILogic.ReplayBuffer.Instance.Push(frame, predictions);
 
                     await Task.WhenAll(_actions.Select(a => a.Execute(predictions)));
+                    _consecutiveLoopErrors = 0;
+
+                    // Spin guard: an ultra-cheap frame (no model loaded → Predict returns instantly,
+                    // or a cached capture) must not busy-loop the thread now that the unconditional
+                    // per-frame delay is gone. Real frames (several ms) skip this entirely.
+                    if (sw.Elapsed.TotalMilliseconds < 1.0) await Task.Delay(1);
                 }
                 catch (Exception e)
                 {
+                    // Transient failures (a dropped capture on alt-tab, a device-lost frame, one bad
+                    // inference) must NOT kill the session — count them and only give up when the loop
+                    // is genuinely broken (many failures back-to-back). Previously ANY exception
+                    // disposed the whole AI silently.
                     Console.WriteLine(e);
+                    if (++_consecutiveLoopErrors < MaxConsecutiveLoopErrors)
+                    {
+                        await Task.Delay(50); // brief back-off so a hard-failing frame can't spin
+                        continue;
+                    }
+
+                    Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+                        new NoticeBar(string.Format(Locale.ErrorFormat, e.Message), 6000).Show()));
                     Instance?.Dispose();
                     FileManager.AIManager = null;
                     MainWindow.Instance?.OnPropertyChanged(nameof(IsModelLoaded));
@@ -160,14 +182,20 @@ public class AIManager : IDisposable
                 // the existing 1ms Task.Delay below still governs idle pacing.
                 await _fpsCap.WaitForNextFrameAsync(AppConfig.Current.SliderSettings.MaxInferenceFPS);
             }
-            else if (!_pausedNotified)
+            else
             {
-                _pausedNotified = true;
-                await SetActionsState(true);
-                await ImageCapture.OnPause();
-                _fpsCap.Reset();
+                if (!_pausedNotified)
+                {
+                    _pausedNotified = true;
+                    await SetActionsState(true);
+                    await ImageCapture.OnPause();
+                    _fpsCap.Reset();
+                }
+                // Idle pacing belongs to the paused branch only. In the active branch the inference
+                // itself (plus the optional FPS cap) paces the loop — the old unconditional
+                // Task.Delay(1) cost 1-15ms EVERY frame and capped the inference FPS.
+                await Task.Delay(15);
             }
-            await Task.Delay(1);
         }
     }
 
@@ -187,7 +215,9 @@ public class AIManager : IDisposable
     {
         IsModelLoaded = false;
         _isAiLoopRunning = false;
-        if (_aiLoopThread is { IsAlive: true })
+        // Never join our own thread: Dispose can be reached from inside the loop (fatal-error path),
+        // and a self-join would just burn a second and then self-interrupt.
+        if (_aiLoopThread is { IsAlive: true } && !ReferenceEquals(Thread.CurrentThread, _aiLoopThread))
         {
             if (!_aiLoopThread.Join(TimeSpan.FromSeconds(1)))
             {

@@ -41,6 +41,7 @@ public partial class CrosshairOverlay : Window
     // resets the timer rather than stacking, so the flash never visibly stutters.
     private bool _flashActive;
     private DispatcherTimer? _flashTimer;
+    private DateTime _lastFlashExtendUtc;
     private readonly Action<Prediction[]> _onDetected;
 
     private System.ComponentModel.PropertyChangedEventHandler? _captureChangedHandler;
@@ -87,7 +88,17 @@ public partial class CrosshairOverlay : Window
         var detectionCount = predictions.Length;
         if (detectionCount <= 0) return;
         var s = AppConfig.Current?.CrosshairSettings;
-        if (s is null || !s.DetectionFlashEnabled || predictions.All( p => !p.IsIntersectingCenter() )) return;
+        if (s is null || !s.DetectionFlashEnabled) return;
+        var anyIntersecting = false;
+        foreach (var p in predictions)
+            if (p.IsIntersectingCenter()) { anyIntersecting = true; break; }
+        if (!anyIntersecting) return;
+
+        // While a target sits on the crosshair this fires every inference frame (up to 60×/s). The
+        // flash is already showing then — restarting the timer just extends it, so throttle the
+        // extension and skip the redundant UI marshal + full re-render (they used to run per frame).
+        if (_flashActive && (DateTime.UtcNow - _lastFlashExtendUtc).TotalMilliseconds < 50) return;
+        _lastFlashExtendUtc = DateTime.UtcNow;
 
         // Marshal to the UI thread; predictions arrive off it.
         Dispatcher.BeginInvoke(new Action(() =>
@@ -97,9 +108,10 @@ public partial class CrosshairOverlay : Window
             _flashTimer.Tick += FlashTimer_Tick;
             _flashTimer.Stop();
             _flashTimer.Interval = TimeSpan.FromMilliseconds(s.DetectionFlashMs);
+            var wasActive = _flashActive;
             _flashActive = true;
             _flashTimer.Start();
-            Render();
+            if (!wasActive) Render();   // visual state only changes on the off→on transition
         }));
     }
 

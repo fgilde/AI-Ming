@@ -1,6 +1,7 @@
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using Newtonsoft.Json.Linq;
+using System.Buffers;
 using System.Drawing;
 using System.IO;
 using System.Windows;
@@ -43,6 +44,10 @@ public class PredictionLogic : IPredictionLogic
 
     private int _imageSize = DefaultImageSize;
     private int _numDetections = MathUtil.CalculateNumDetections(DefaultImageSize);
+
+    // Reused across frames so a FOV ≠ model-input resolution doesn't allocate a fresh Bitmap + Graphics
+    // every frame. Predict runs sequentially (the AI loop awaits it), so a single instance is safe.
+    private Bitmap? _resizeBuffer;
     private int _numClasses = 1;
     private bool _isDynamicModel;
     private readonly Dictionary<int, string> _modelClasses = new() { { 0, "Enemy" } };
@@ -234,25 +239,59 @@ public class PredictionLogic : IPredictionLogic
             // the resize entirely and feed the captured frame as-is, identical to before.
             int captureSize = frame.Width;
             Bitmap modelFrame = frame;
-            bool resizedFrame = false;
             if (frame.Width != _imageSize || frame.Height != _imageSize)
             {
-                modelFrame = new Bitmap(_imageSize, _imageSize, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-                using (var g = Graphics.FromImage(modelFrame))
+                // Reuse a persistent resize buffer instead of allocating a Bitmap + Graphics per frame.
+                if (_resizeBuffer == null || _resizeBuffer.Width != _imageSize || _resizeBuffer.Height != _imageSize)
+                {
+                    _resizeBuffer?.Dispose();
+                    _resizeBuffer = new Bitmap(_imageSize, _imageSize, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                }
+                using (var g = Graphics.FromImage(_resizeBuffer))
                 {
                     g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.Bilinear;
                     g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.Half;
                     g.DrawImage(frame, new Rectangle(0, 0, _imageSize, _imageSize));
                 }
-                resizedFrame = true;
+                modelFrame = _resizeBuffer; // reused → must NOT be disposed
             }
 
-            float[] inputArray = modelFrame.ToFloatArray();
+            // Build the input tensor from a pooled buffer for the square/32bpp fast path so the ~4.9 MB
+            // (640²·3) float array isn't allocated + GC'd every frame. Returned right after Run(), which
+            // is synchronous, so ONNX is done reading it by then. Non-square/legacy pixel formats keep
+            // the plain allocating path.
+            int w = modelFrame.Width, h = modelFrame.Height;
+            int tensorLen = 3 * w * h;
+            float[]? rented = null;
+            IDisposableReadOnlyCollection<DisposableNamedOnnxValue> results;
+            try
+            {
+                Tensor<float> inputTensor;
+                var pf = modelFrame.PixelFormat;
+                if (w == h && pf is System.Drawing.Imaging.PixelFormat.Format32bppArgb
+                        or System.Drawing.Imaging.PixelFormat.Format32bppPArgb
+                        or System.Drawing.Imaging.PixelFormat.Format32bppRgb)
+                {
+                    rented = ArrayPool<float>.Shared.Rent(tensorLen);
+                    modelFrame.ToFloatArrayInto(rented);
+                    inputTensor = new DenseTensor<float>(rented.AsMemory(0, tensorLen), [1, 3, h, w]);
+                }
+                else
+                {
+                    inputTensor = new DenseTensor<float>(modelFrame.ToFloatArray(), [1, 3, h, w]);
+                }
 
-            Tensor<float> inputTensor = new DenseTensor<float>(inputArray, [1, 3, modelFrame.Height, modelFrame.Width]);
-            var inputs = new List<NamedOnnxValue> { NamedOnnxValue.CreateFromTensor("images", inputTensor) };
-            var results = _onnxModel.Run(inputs, _outputNames, _modeloptions);
-            if (resizedFrame) modelFrame.Dispose();
+                var inputs = new List<NamedOnnxValue> { NamedOnnxValue.CreateFromTensor("images", inputTensor) };
+                results = _onnxModel.Run(inputs, _outputNames, _modeloptions);
+            }
+            finally
+            {
+                // Run is fully synchronous, so ORT is done reading the input buffer here.
+                if (rented != null) ArrayPool<float>.Shared.Return(rented);
+            }
+            // Free the native ONNX output buffers deterministically at end-of-frame instead of leaving
+            // them to the finalizer (they were never disposed before).
+            using var onnxResults = results;
 
             var outputTensor = results[0].AsTensor<float>();
 

@@ -8,7 +8,8 @@ namespace PowerAim.AILogic.Actions;
 public abstract class BaseAction : IAction
 {
     public AIManager AIManager { get; set; }
-    public Task Execute(Prediction[] predictions) => Task.Run(() => ExecuteAsync(predictions.ToArray()));
+
+    public virtual Task Execute(Prediction[] predictions) => ExecuteAsync(predictions.ToArray());
     public virtual Task OnPause() => Task.CompletedTask;
 
     public virtual Task OnResume() => Task.CompletedTask;
