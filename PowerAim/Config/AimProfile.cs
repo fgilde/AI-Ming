@@ -102,6 +102,12 @@ public class AimProfile : EditableNotificationObject
     /// <summary>1€ filter speed coefficient — only used in OneEuro smoothing mode.</summary>
     public double OneEuroBeta { get; set => SetProperty(ref field, value); } = 0.7;
 
+    /// <summary>
+    ///     How far (px) the aim keeps following the same enemy before re-acquiring another (issue #19).
+    ///     Larger = stickier lock. Mirrors to <see cref="AISettings.StickyRadiusPx"/>.
+    /// </summary>
+    public double StickyRadiusPx { get; set => SetProperty(ref field, value); } = 160.0;
+
     /// <summary>Track targets across frames (stable identity + switch hysteresis) instead of plain sticky-nearest.</summary>
     public bool UseTargetTracking { get; set => SetProperty(ref field, value); }
 
@@ -271,6 +277,7 @@ public class AimProfile : EditableNotificationObject
             ai.SwitchMarginPct = SwitchMarginPct;
             ai.CalibratedPixelsPerCount = CalibratedPixelsPerCount;
             ai.AimSpeedMultiplier = AimSpeedMultiplier;
+            ai.StickyRadiusPx = StickyRadiusPx;
         }
     }
 
@@ -306,6 +313,7 @@ public class AimProfile : EditableNotificationObject
             SwitchMarginPct = ai.SwitchMarginPct;
             CalibratedPixelsPerCount = ai.CalibratedPixelsPerCount;
             AimSpeedMultiplier = ai.AimSpeedMultiplier;
+            StickyRadiusPx = ai.StickyRadiusPx;
         }
     }
 }

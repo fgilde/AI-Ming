@@ -1100,5 +1100,7 @@
   "ToolGuardLeft": "Linker Wert",
   "ToolGuardRight": "Rechter Wert",
   "AimSpeedMultiplier": "Geschwindigkeits-Multiplikator",
-  "AimSpeedMultiplierHint": "Zusätzliche Aim-Verstärkung, wenn selbst maximale Sensitivity zu langsam ist — z. B. hohe Maus-DPI mit niedriger In-Game-Sensitivity. 1 = aus (normal). Gilt für Smart Aim."
+  "AimSpeedMultiplierHint": "Zusätzliche Aim-Verstärkung, wenn selbst maximale Sensitivity zu langsam ist — z. B. hohe Maus-DPI mit niedriger In-Game-Sensitivity. 1 = aus (normal). Gilt für Smart Aim.",
+  "AimStickyRadius": "Sticky-Radius",
+  "AimStickyRadiusTooltip": "Wie weit (px) das Aim demselben Gegner folgt, bevor es einen anderen erfasst. Größer = klebrigerer Lock — erhöhen, wenn das Aim zwischen Zielen springt. Wirkt mit Target-Tracking (überlebt Re-Identifikation) und ohne (Sticky-Nearest-Radius)."
 }

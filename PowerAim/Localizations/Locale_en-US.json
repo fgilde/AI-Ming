@@ -1100,5 +1100,7 @@
   "ToolGuardLeft": "Left value",
   "ToolGuardRight": "Right value",
   "AimSpeedMultiplier": "Speed multiplier",
-  "AimSpeedMultiplierHint": "Extra aim gain for when even max sensitivity is too slow — e.g. a high-DPI mouse with a low in-game sensitivity. 1 = off (normal). Applies to Smart Aim."
+  "AimSpeedMultiplierHint": "Extra aim gain for when even max sensitivity is too slow — e.g. a high-DPI mouse with a low in-game sensitivity. 1 = off (normal). Applies to Smart Aim.",
+  "AimStickyRadius": "Sticky radius",
+  "AimStickyRadiusTooltip": "How far (px) the aim keeps following the SAME enemy before it re-acquires a different one. Larger = stickier lock — raise this if the aim hops between targets. Works with target tracking on (survives re-identification) and off (sticky-nearest radius)."
 }

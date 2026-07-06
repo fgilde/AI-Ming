@@ -94,8 +94,10 @@ public static class MathUtil
         int height = imageSize;
         int totalPixels = width * height;
 
-        if (result.Length != 3 * totalPixels)
-            throw new ArgumentException($"result must be length {3 * totalPixels}", nameof(result));
+        // At-least, not exact: pooled buffers (ArrayPool.Rent) round the requested size up, and only
+        // the first 3*totalPixels slots are ever written/read here.
+        if (result.Length < 3 * totalPixels)
+            throw new ArgumentException($"result must be at least length {3 * totalPixels}", nameof(result));
 
         var rect = new Rectangle(0, 0, width, height);
         var bmpData = image.LockBits(rect, ImageLockMode.ReadOnly, image.PixelFormat);

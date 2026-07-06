@@ -209,6 +209,12 @@ namespace PowerAim.UILibrary
                         .BindTo(() => Profile!.OneEuroBeta);
                 }
 
+                // How far the lock follows the same enemy before re-acquiring (issue #19). Applies in
+                // both smart modes: sticky-nearest radius AND the tracking re-adopt radius.
+                TunePanel.AddSlider(Locale.AimStickyRadius, Locale.Pixels, 10, 10, 40, 1200, false, 0, false)
+                    .InitWith(s => s.ToolTip = Locale.AimStickyRadiusTooltip)
+                    .BindTo(() => Profile!.StickyRadiusPx);
+
                 TunePanel.AddToggle(Locale.AimTargetTracking, t => t.ToolTip = Locale.AimTargetTrackingTooltip)
                     .BindTo(() => Profile!.UseTargetTracking);
                 if (Profile!.UseTargetTracking)

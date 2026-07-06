@@ -194,6 +194,19 @@ public class AISettings : BaseSettings
     } = 1.0;
 
     /// <summary>
+    ///     How far (FOV/screen pixels) the aim keeps following the SAME enemy before it re-acquires a
+    ///     different one (issue #19). Drives both smart-path selectors: the no-tracking sticky-nearest
+    ///     radius (previously hard-coded to model-size·0.25 = 160 px) and, with tracking on, the
+    ///     re-adopt radius that survives tracker ID churn. Larger = stickier lock. Default preserves
+    ///     the old behaviour. Mirrored from the active <see cref="AimProfile"/>.
+    /// </summary>
+    public double StickyRadiusPx
+    {
+        get;
+        set => SetField(ref field, Math.Clamp(value, 20.0, 4000.0));
+    } = 160.0;
+
+    /// <summary>
     ///     DXGI adapter index the ONNX inference session should run on, as reported by
     ///     <see cref="AILogic.GpuAdapterEnumerator"/>. Used directly as ORT's DirectML deviceId; for CUDA
     ///     it is translated to the NVIDIA-only CUDA ordinal at session-build time

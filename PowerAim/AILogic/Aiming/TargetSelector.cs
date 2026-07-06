@@ -11,6 +11,11 @@ public sealed class TargetSelector
     private int _currentId = -1;
     private int _challengerId = -1;
     private int _challengerFrames;
+    // Last aimed position (model-space) — lets the lock survive tracker re-identification: when the
+    // held ID disappears (fast pans break IoU association and the same enemy comes back under a new
+    // id), we re-adopt whatever track is nearest to where we were aiming instead of hard-switching.
+    private double _lastX, _lastY;
+    private bool _hasLast;
 
     public int CurrentId => _currentId;
 
@@ -19,18 +24,25 @@ public sealed class TargetSelector
         _currentId = -1;
         _challengerId = -1;
         _challengerFrames = 0;
+        _hasLast = false;
     }
 
     /// <summary>
     ///     Choose a track to aim at. <paramref name="centerX"/>/<paramref name="centerY"/> are the
-    ///     crosshair position in the same (model) space as the tracks.
+    ///     crosshair position in the same (model) space as the tracks. <paramref name="adoptRadius"/>
+    ///     (model-space px) is how far the held enemy may reappear from its last position and still be
+    ///     re-adopted after an ID change (issue #19 — without this, every tracker re-identification
+    ///     bypassed the switch hysteresis entirely and the aim flip-flopped between enemies).
     /// </summary>
     public TargetTrack? Select(IReadOnlyList<TargetTrack> tracks, double centerX, double centerY,
-        double switchMarginPct, int switchFrames)
+        double switchMarginPct, int switchFrames, double adoptRadius = 0)
     {
         if (tracks == null || tracks.Count == 0)
         {
-            Reset();
+            // Keep _lastX/_lastY: a 1-2 frame full dropout shouldn't forget where the enemy was.
+            _currentId = -1;
+            _challengerId = -1;
+            _challengerFrames = 0;
             return null;
         }
 
@@ -46,13 +58,29 @@ public sealed class TargetSelector
             if (t.Id == _currentId) { current = t; currentScore = score; }
         }
 
-        // Lost the held target (aged out / not in confirmed set) → take the best immediately.
+        // Lost the held ID (aged out / re-identified). Prefer adopting the track nearest the last
+        // aimed position — that IS the same enemy in almost every case — and only fall back to the
+        // best-scored track when nothing plausible is close enough.
         if (current == null)
         {
-            _currentId = best!.Id;
+            TargetTrack? adopt = null;
+            if (_hasLast && adoptRadius > 0)
+            {
+                double adoptSq = adoptRadius * adoptRadius;
+                double bestSq = double.MaxValue;
+                foreach (var t in tracks)
+                {
+                    double dx = t.X - _lastX, dy = t.Y - _lastY;
+                    double dSq = dx * dx + dy * dy;
+                    if (dSq <= adoptSq && dSq < bestSq) { bestSq = dSq; adopt = t; }
+                }
+            }
+
+            var chosen = adopt ?? best!;
+            _currentId = chosen.Id;
             _challengerId = -1;
             _challengerFrames = 0;
-            return best;
+            return Remember(chosen);
         }
 
         // Best IS the current target → stay, clear any challenger streak.
@@ -60,7 +88,7 @@ public sealed class TargetSelector
         {
             _challengerId = -1;
             _challengerFrames = 0;
-            return current;
+            return Remember(current);
         }
 
         // A different track is better. Only switch if it stays meaningfully better for N frames.
@@ -74,7 +102,7 @@ public sealed class TargetSelector
                 _currentId = best.Id;
                 _challengerId = -1;
                 _challengerFrames = 0;
-                return best;
+                return Remember(best);
             }
         }
         else
@@ -83,7 +111,15 @@ public sealed class TargetSelector
             _challengerFrames = 0;
         }
 
-        return current;
+        return Remember(current);
+    }
+
+    private TargetTrack Remember(TargetTrack t)
+    {
+        _lastX = t.X;
+        _lastY = t.Y;
+        _hasLast = true;
+        return t;
     }
 
     /// <summary>

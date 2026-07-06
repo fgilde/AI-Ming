@@ -25,8 +25,9 @@ public static class ImageExtensions
     }
 
     /// <summary>
-    ///     Zero-allocation variant: writes into <paramref name="buffer"/> which must already be sized
-    ///     <c>3 * image.Width * image.Height</c>. Returns the buffer for convenience.
+    ///     Zero-allocation variant: writes into <paramref name="buffer"/>, which must hold at least
+    ///     <c>3 * image.Width * image.Height</c> floats (pooled buffers may be larger — only that
+    ///     prefix is written). Returns the buffer for convenience.
     /// </summary>
     public static float[] ToFloatArrayInto(this Bitmap image, float[] buffer)
     {

@@ -173,16 +173,23 @@ public class AimingAction : BaseAction
         }
 
         // ---- Choose the box to aim at ----
+        // Sticky radius: configured in FOV/screen pixels, converted to model space for this frame's
+        // selection geometry (detections/tracks live in model space). At FOV == model input it's 1:1.
+        var capArea = ImageCapture.CaptureArea;
+        double capMax = Math.Max(16.0, Math.Min(capArea.Width, capArea.Height));
+        double capSize = Math.Clamp(Math.Round(AppConfig.Current.SliderSettings.ActualFovSize), 16.0, capMax);
+        double stickyModelPx = Math.Max(8.0, ai.StickyRadiusPx * (modelSize / capSize));
+
         RectangleF box;
         if (ai.UseTargetTracking)
         {
-            var track = _selector.Select(tracks!, center, center, ai.SwitchMarginPct, ai.SwitchFrames);
+            var track = _selector.Select(tracks!, center, center, ai.SwitchMarginPct, ai.SwitchFrames, stickyModelPx);
             if (track == null) { Disengage(); return; }
             box = track.LastDetectionBox; // RAW detection — never the extrapolated Box (ego-safe)
         }
         else
         {
-            var target = SelectNearestSticky(predictions, center, center);
+            var target = SelectNearestSticky(predictions, center, center, stickyModelPx);
             if (target == null) { Disengage(); return; }
             box = target.Rectangle;
         }
@@ -258,9 +265,11 @@ public class AimingAction : BaseAction
     /// <summary>
     ///     Pick the detection to aim at: stick to the one nearest last frame's target (so the aim
     ///     stays on the same enemy), otherwise the one nearest the crosshair. If the held target drifts
-    ///     too far (it's gone), fall back to nearest-the-crosshair. No tracker, no extrapolation.
+    ///     beyond <paramref name="stickRadius"/> (model-space px, from the configurable sticky radius —
+    ///     issue #19; used to be hard-coded to model-size·0.25), it's gone — fall back to
+    ///     nearest-the-crosshair. No tracker, no extrapolation.
     /// </summary>
-    private Prediction? SelectNearestSticky(Prediction[] predictions, double centerX, double centerY)
+    private Prediction? SelectNearestSticky(Prediction[] predictions, double centerX, double centerY, double stickRadius)
     {
         if (predictions.Length == 0) return null;
 
@@ -270,15 +279,9 @@ public class AimingAction : BaseAction
 
         // If we were sticking but the closest detection is no longer near the old target, the enemy is
         // gone/occluded — re-acquire whatever is nearest the crosshair instead of chasing a ghost.
-        if (_hasLastTarget)
-        {
-            double stick = modelSize() * 0.25;
-            if (Math.Sqrt(bestSq) > stick)
-                (best, _) = Nearest(predictions, centerX, centerY);
-        }
+        if (_hasLastTarget && Math.Sqrt(bestSq) > stickRadius)
+            (best, _) = Nearest(predictions, centerX, centerY);
         return best;
-
-        static float modelSize() => Math.Max(1, global::PowerAim.AILogic.PredictionLogic.IMAGE_SIZE);
     }
 
     private static (Prediction? Best, double DistSq) Nearest(Prediction[] predictions, double x, double y)

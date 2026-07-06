@@ -70,6 +70,42 @@ public sealed class TargetTracker
             }
         }
 
+        // 2b) Distance fallback for whatever IoU couldn't pair (issue #19): a fast view pan — very
+        //     much including the aim assist's own correction — shifts every box together, so the
+        //     predicted and detected boxes stop overlapping and pure-IoU association tears the
+        //     identity apart (the enemy comes back as a NEW id and the selector's hysteresis is
+        //     bypassed). Re-attach by centre distance, gated relative to the track's own size so a
+        //     track can never grab a detection across the screen.
+        if (detCount > 0 && _tracks.Count > 0)
+        {
+            var fallback = new List<(double DistSq, int TrackIdx, int DetIdx)>();
+            for (int ti = 0; ti < _tracks.Count; ti++)
+            {
+                if (matchedTrack[ti]) continue;
+                var t = _tracks[ti];
+                double diag = System.Math.Sqrt(t.Width * t.Width + t.Height * t.Height);
+                double gate = System.Math.Max(24.0, diag * 1.5);
+                double gateSq = gate * gate;
+                for (int di = 0; di < detCount; di++)
+                {
+                    if (matchedDet[di]) continue;
+                    var r = detections![di].Rectangle;
+                    double dx = (r.X + r.Width / 2.0) - t.X;
+                    double dy = (r.Y + r.Height / 2.0) - t.Y;
+                    double dSq = dx * dx + dy * dy;
+                    if (dSq <= gateSq) fallback.Add((dSq, ti, di));
+                }
+            }
+            fallback.Sort((a, b) => a.DistSq.CompareTo(b.DistSq));
+            foreach (var (_, ti, di) in fallback)
+            {
+                if (matchedTrack[ti] || matchedDet[di]) continue;
+                matchedTrack[ti] = true;
+                matchedDet[di] = true;
+                _tracks[ti].Update(detections![di], dt, Alpha, Beta, MinHits);
+            }
+        }
+
         // 3) Unmatched tracks coast; 4) unmatched detections spawn new tracks.
         for (int ti = 0; ti < _tracks.Count; ti++)
             if (!matchedTrack[ti]) _tracks[ti].MarkMissed();
