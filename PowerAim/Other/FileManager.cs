@@ -103,7 +103,9 @@ namespace PowerAim.Other
 
 
             AIManager?.Dispose();
-            AIManager = new AIManager(modelPath, AppConfig.Current.CaptureSource);
+            // Build off the UI thread — a first-time TensorRT engine build is slow and would otherwise
+            // freeze the window during model load.
+            AIManager = await global::AIManager.CreateAsync(modelPath, AppConfig.Current.CaptureSource);
 
 
             // TODO: Remove reflection

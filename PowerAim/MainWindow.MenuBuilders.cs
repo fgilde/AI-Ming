@@ -118,43 +118,13 @@ public partial class MainWindow
             d => d.ToolTip = Locale.ModelPrecisionHelp);
         _buildingModelDropdowns = false;
 
-        // TensorRT runtime installer — shown ONLY when this build can target TensorRT (CUDA build ships
-        // the provider plugin) AND the runtime (nvinfer) isn't installed yet. So it appears exactly when
-        // installing would actually add something; on the DirectML build or once TensorRT is ready, it's
-        // hidden. Guides to NVIDIA when no hosted redist URL is configured, else downloads + reloads.
-        if (PowerAim.AILogic.TensorRtRuntime.SupportedInThisBuild() && !PowerAim.AILogic.TensorRtRuntime.IsAvailable())
+        // CUDA / TensorRT setup assistant — CUDA build only (the DirectML build can't target TensorRT).
+        // The dialog shows what's active / present / missing and helps enable TensorRT (from a local zip,
+        // download, or NVIDIA's page). LoadModel is passed so it can reload after setup / a provider swap.
+        if (PowerAim.AILogic.TensorRtRuntime.SupportedInThisBuild())
         {
-            ModelSettings.AddButton(Locale.TensorRtInstall).Reader.Click += async (_, _) =>
-            {
-                if (PowerAim.AILogic.TensorRtRuntime.IsAvailable())
-                {
-                    new PowerAim.Visuality.NoticeBar(Locale.TensorRtAlreadyInstalled, 4000).Show();
-                    return;
-                }
-                if (!PowerAim.AILogic.TensorRtInstaller.IsConfigured)
-                {
-                    new PowerAim.Visuality.NoticeBar(
-                        string.Format(Locale.TensorRtManual, PowerAim.AILogic.TensorRtRuntime.LocalRuntimeDir), 9000).Show();
-                    try
-                    {
-                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(
-                            PowerAim.AILogic.TensorRtInstaller.VendorPage) { UseShellExecute = true });
-                    }
-                    catch { /* no browser — the notice already told them the page + folder */ }
-                    return;
-                }
-                try
-                {
-                    new PowerAim.Visuality.NoticeBar(Locale.TensorRtInstalling, 3000).Show();
-                    await PowerAim.AILogic.TensorRtInstaller.InstallAsync();
-                    new PowerAim.Visuality.NoticeBar(Locale.TensorRtInstalled, 4000).Show();
-                    LoadModel();
-                }
-                catch (Exception ex)
-                {
-                    new PowerAim.Visuality.NoticeBar(string.Format(Locale.TensorRtInstallFailed, ex.Message), 6000).Show();
-                }
-            };
+            ModelSettings.AddButton(Locale.CudaSetupOpen).Reader.Click += (_, _) =>
+                new PowerAim.Visuality.CudaSetupDialog(() => LoadModel()) { Owner = this }.ShowDialog();
         }
 
         // Run Performance Benchmark — while it runs (can take a while: it samples several image sizes),

@@ -36,6 +36,18 @@ public class AIManager : IDisposable
     public AIManager(string modelPath, CaptureSource target) : this(CreateScreenCapture(target), new PredictionLogic(modelPath), BaseAction.AllActions())
     { }
 
+    /// <summary>
+    ///     Build an AIManager without freezing the caller's (UI) thread: the potentially slow inference
+    ///     session — a TensorRT engine build can take 30 s–2 min the first time — is created on a
+    ///     background thread. The screen capture and the action list are built back on the caller's
+    ///     thread (they may touch WPF), so only the ONNX session is offloaded.
+    /// </summary>
+    public static async Task<AIManager> CreateAsync(string modelPath, CaptureSource target)
+    {
+        IPredictionLogic predictionLogic = await Task.Run(() => (IPredictionLogic)new PredictionLogic(modelPath));
+        return new AIManager(CreateScreenCapture(target), predictionLogic, BaseAction.AllActions());
+    }
+
     internal static ICapture CreateScreenCapture(CaptureSource target)
     {
         try

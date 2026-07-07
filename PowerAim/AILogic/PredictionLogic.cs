@@ -122,6 +122,10 @@ public class PredictionLogic : IPredictionLogic
         _onnxModel?.Dispose();
         _onnxModel = null;
 
+        // Make a user-installed TensorRT runtime (dropped into LocalRuntimeDir by the setup wizard)
+        // discoverable to ORT's TensorRT provider before we build the session.
+        TensorRtRuntime.EnsureOnPath();
+
         // Read the user-selected GPU adapter (default 0 = primary). Lets users push inference onto
         // a secondary card so the game's GPU isn't bottlenecked by detection workloads.
         int deviceId = AppConfig.Current?.AISettings?.InferenceGpuDeviceId ?? 0;

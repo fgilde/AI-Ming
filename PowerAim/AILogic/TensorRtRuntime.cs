@@ -17,9 +17,39 @@ public static class TensorRtRuntime
 
     private static bool? _cached;
 
-    /// <summary>The directory we drop a downloaded TensorRT redist into (checked first, on PATH too).</summary>
+    /// <summary>
+    ///     Where we drop the TensorRT redist DLLs. Under LocalAppData (writable without admin, unlike an
+    ///     app dir in Program Files) — but the Windows loader doesn't search arbitrary subfolders, so
+    ///     <see cref="EnsureOnPath"/> prepends this to the process PATH before a session is built so ORT
+    ///     can actually resolve nvinfer from here.
+    /// </summary>
     public static string LocalRuntimeDir =>
-        Path.Combine(AppContext.BaseDirectory, "tensorrt");
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PowerAim", "tensorrt");
+
+    private static bool _pathAdded;
+
+    /// <summary>
+    ///     Make <see cref="LocalRuntimeDir"/> discoverable to the native loader by prepending it to the
+    ///     process PATH (idempotent). Call before building an inference session. We deliberately touch
+    ///     only PATH — not SetDefaultDllDirectories — so we don't change the DLL search policy for the
+    ///     app's other native dependencies (OpenCV, ViGEm, …).
+    /// </summary>
+    public static void EnsureOnPath()
+    {
+        if (_pathAdded) return;
+        try
+        {
+            var dir = LocalRuntimeDir;
+            // Don't latch while the dir is still absent — the user may set TensorRT up later; we want
+            // the next call (after a reload) to add it once it exists.
+            if (!Directory.Exists(dir)) return;
+            var path = Environment.GetEnvironmentVariable("PATH") ?? "";
+            if (!path.Split(Path.PathSeparator).Any(p => string.Equals(p.Trim(), dir, StringComparison.OrdinalIgnoreCase)))
+                Environment.SetEnvironmentVariable("PATH", dir + Path.PathSeparator + path);
+            _pathAdded = true; // latch only after the dir exists and we've added it
+        }
+        catch { /* best-effort — detection still probes the dir directly */ }
+    }
 
     /// <summary>True when a TensorRT runtime DLL is resolvable. Cached; call <see cref="Invalidate"/> after an install.</summary>
     public static bool IsAvailable()

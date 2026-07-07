@@ -45,7 +45,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <IsCuda>false</IsCuda>
+    <IsCuda>true</IsCuda>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -83,12 +83,15 @@
     </None>
   </ItemGroup>
 
+  <!-- ORT 1.24.4: highest version where BOTH the Gpu and DirectML packages exist, so the CUDA and
+       DirectML builds stay on the same ONNX Runtime. 1.24.x needs CUDA 12.x + cuDNN 9 + TensorRT 10.x
+       (we ship TRT 10.10; NOT CUDA 13 / TRT 11 — no stable ORT targets those yet). -->
   <ItemGroup Condition="'$(IsCuda)' == 'true'">
-    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu" Version="1.19.2" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu" Version="1.24.4" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(IsCuda)' == 'false'">
-    <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.19.2" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.24.4" />
   </ItemGroup>
 
   <ItemGroup>
