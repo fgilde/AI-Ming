@@ -958,6 +958,10 @@ public partial class MainWindow
         var movementDropdown = new global::PowerAim.UILibrary.ADropdown(Locale.MouseMovementMethod);
         InputSettings.Add(movementDropdown);
 
+        // Built right after the dropdown loop; invoked on every selection change so the gamepad
+        // hint (send mode + shortcut to the Gamepad page) appears/updates when "Gamepad" is picked.
+        Action? refreshGamepadHint = null;
+
         foreach (var v in Enum.GetValues<MouseMovementMethod>())
         {
             // Glyphs match AKeyChanger.SetContent: mouse = U+F8AF, gamepad = U+E7FC.
@@ -1015,12 +1019,41 @@ public partial class MainWindow
                 {
                     AppConfig.Current.DropdownState.MouseMovementMethod = MouseMovementMethod.MouseEvent;
                 }
+
+                refreshGamepadHint?.Invoke();
             };
 
             movementDropdown.DropdownBox.Items.Add(item);
             if (v == AppConfig.Current.DropdownState.MouseMovementMethod)
                 movementDropdown.DropdownBox.SelectedItem = item;
         }
+
+        // Gamepad hint: only shown while Movement Method = Gamepad. Tells the user which send mode
+        // is currently active (ViGEm / DualShock4 / Titan Two / …) and offers a one-click shortcut to
+        // the Gamepad page so they can reconfigure it without hunting through the menu.
+        var gamepadHint = InputSettings.Add<System.Windows.Controls.StackPanel>(p =>
+        {
+            p.Orientation = System.Windows.Controls.Orientation.Vertical;
+            p.Margin = new Thickness(10, 0, 0, 8);
+        });
+        var sendModeLabel = gamepadHint.Add<System.Windows.Controls.TextBlock>(t =>
+        {
+            t.TextWrapping = TextWrapping.Wrap;
+            t.FontSize = 12;
+            t.Margin = new Thickness(2, 0, 0, 4);
+            t.Foreground = PowerAim.Extensions.UIElementExtensions.LookupBrush("FluentTextSecondary", ApplicationConstants.Foreground);
+        });
+        gamepadHint.AddButton(Locale.OpenGamepadSettings, b => b.Reader.Click += (_, _) => _ = NavigateTo(nameof(GamepadSettings)));
+
+        refreshGamepadHint = () =>
+        {
+            bool show = AppConfig.Current.DropdownState.MouseMovementMethod == MouseMovementMethod.Gamepad;
+            gamepadHint.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+            if (show)
+                sendModeLabel.Text = Locale.CurrentGamepadSendMode.FormatWith(
+                    AppConfig.Current.DropdownState.GamepadSendMode.ToDescriptionString());
+        };
+        refreshGamepadHint();
 
         InputSettings.AddSlider(Locale.GamepadMinimumLT, "LT", 0.1, 0.1, 0.1, 1).BindTo(() => AppConfig.Current.SliderSettings.GamepadMinimumLT);
         InputSettings.AddSlider(Locale.GamepadMinimumRT, "RT", 0.1, 0.1, 0.1, 1).BindTo(() => AppConfig.Current.SliderSettings.GamepadMinimumRT);

@@ -247,6 +247,22 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
+  <!-- Titan Two / GCAPI. The gcapi.dll (aka gcdapi.dll) is proprietary and NOT in the repo — the user
+       drops their own 64-bit copy into PowerAim\GCAPI\ (see GCAPI\README.txt). The Exists() guards mean
+       the build stays green when no DLL is present (the normal case), and copies whatever is there next
+       to the exe under GCAPI\ so GamepadSenderTitanTwo's loader finds it. Only README.txt is committed. -->
+  <ItemGroup>
+    <None Include="GCAPI\README.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="GCAPI\gcapi.dll" Condition="Exists('GCAPI\gcapi.dll')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="GCAPI\gcdapi.dll" Condition="Exists('GCAPI\gcdapi.dll')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
     <Folder Include="Types\" />

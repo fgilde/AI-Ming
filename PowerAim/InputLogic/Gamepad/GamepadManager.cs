@@ -79,6 +79,8 @@ public static class GamepadManager
                 GamepadSendMode.VJoy => new GamepadSenderVJoy(),
                 GamepadSendMode.XInputHook => CreateXInputHook(),
                 GamepadSendMode.Internal => new GamepadSenderInternal(),
+                GamepadSendMode.DualShock4 => new GamepadSenderDualShock4(),
+                GamepadSendMode.TitanTwo => new GamepadSenderTitanTwo(),
                 _ => null
             };
         }

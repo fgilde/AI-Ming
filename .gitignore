@@ -364,3 +364,6 @@ FodyWeavers.xsd
 /.claude/settings.local.json
 /.screenshots
 /.claude/launch.json
+
+# Proprietary ConsoleTuner GCAPI DLL — user-supplied, must never be committed (see PowerAim/GCAPI/README.txt)
+PowerAim/GCAPI/*.dll

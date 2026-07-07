@@ -6,5 +6,7 @@ public enum GamepadSendMode
     VJoy,
     XInputHook,
     Internal,
+    DualShock4,
+    TitanTwo,
     None
 }

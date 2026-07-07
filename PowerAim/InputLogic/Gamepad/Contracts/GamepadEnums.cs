@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using Nefarius.ViGEm.Client.Targets.Xbox360;
+using Nefarius.ViGEm.Client.Targets.DualShock4;
 using SharpDX.XInput;
 using static CoreDX.vJoy.Wrapper.VJoyControllerManager;
 
@@ -116,6 +117,63 @@ public static class GamepadEnumExtensions
             _ => throw new ArgumentOutOfRangeException(nameof(axis), axis, null)
         };
     }
+
+    // ---- DualShock 4 (ViGEm) mappings ----
+    // The face/shoulder/thumb/menu buttons map 1:1. The D-pad is NOT individual buttons on a DS4 —
+    // it's a single 8-way direction (DualShock4DPadDirection) — so the D-pad is handled in the sender,
+    // and this helper only covers the real buttons (throws for D-pad, which the sender never routes here).
+
+    /// <summary>True for the four D-pad members, which the DS4 sender maps to a combined direction.</summary>
+    public static bool IsDPad(this GamepadButton button) =>
+        button is GamepadButton.Up or GamepadButton.Down or GamepadButton.Left or GamepadButton.Right;
+
+    public static DualShock4Button ToDualShock4Button(this GamepadButton button) => button switch
+    {
+        GamepadButton.A => DualShock4Button.Cross,
+        GamepadButton.B => DualShock4Button.Circle,
+        GamepadButton.X => DualShock4Button.Square,
+        GamepadButton.Y => DualShock4Button.Triangle,
+        GamepadButton.LeftShoulder => DualShock4Button.ShoulderLeft,
+        GamepadButton.RightShoulder => DualShock4Button.ShoulderRight,
+        GamepadButton.Back => DualShock4Button.Share,
+        GamepadButton.Start => DualShock4Button.Options,
+        GamepadButton.LeftThumb => DualShock4Button.ThumbLeft,
+        GamepadButton.RightThumb => DualShock4Button.ThumbRight,
+        _ => throw new ArgumentOutOfRangeException(nameof(button), button, "D-pad is handled via DualShock4DPadDirection"),
+    };
+
+    public static DualShock4Slider ToDualShock4Slider(this GamepadSlider slider) => slider switch
+    {
+        GamepadSlider.LeftTrigger => DualShock4Slider.LeftTrigger,
+        GamepadSlider.RightTrigger => DualShock4Slider.RightTrigger,
+        _ => throw new ArgumentOutOfRangeException(nameof(slider), slider, null),
+    };
+
+    public static DualShock4Axis ToDualShock4Axis(this GamepadAxis axis) => axis switch
+    {
+        GamepadAxis.LeftThumbX => DualShock4Axis.LeftThumbX,
+        GamepadAxis.LeftThumbY => DualShock4Axis.LeftThumbY,
+        GamepadAxis.RightThumbX => DualShock4Axis.RightThumbX,
+        GamepadAxis.RightThumbY => DualShock4Axis.RightThumbY,
+        _ => throw new ArgumentOutOfRangeException(nameof(axis), axis, null),
+    };
+
+    /// <summary>Combine the four D-pad booleans into a DualShock 4 8-way direction.</summary>
+    public static DualShock4DPadDirection ToDualShock4DPad(bool up, bool down, bool left, bool right)
+    {
+        if (up && right) return DualShock4DPadDirection.Northeast;
+        if (up && left) return DualShock4DPadDirection.Northwest;
+        if (down && right) return DualShock4DPadDirection.Southeast;
+        if (down && left) return DualShock4DPadDirection.Southwest;
+        if (up) return DualShock4DPadDirection.North;
+        if (down) return DualShock4DPadDirection.South;
+        if (left) return DualShock4DPadDirection.West;
+        if (right) return DualShock4DPadDirection.East;
+        return DualShock4DPadDirection.None;
+    }
+
+    /// <summary>Xbox/XInput axis (short, centre 0) → DualShock 4 axis (byte, centre 128).</summary>
+    public static byte ToDualShock4AxisByte(short value) => (byte)Math.Clamp((value + 32768) >> 8, 0, 255);
 
     public static GamepadButtonFlags ToGamepadButtonFlags(this GamepadButton button)
     {
