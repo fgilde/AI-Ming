@@ -76,8 +76,99 @@ public partial class MainWindow
             .InitWith(s => s.ToolTip = Locale.ImageSizeOverrideHelp)
             .BindTo(() => AppConfig.Current.SliderSettings.ImageSize);
 
-        // Run Performance Benchmark
-        ModelSettings.AddButton(Locale.RunBenchmark).Reader.Click += async (_, _) => await RunBenchmarkClick();
+        // Execution provider + precision. Changing either reloads the model so it takes effect. Auto
+        // picks the best available for THIS build/machine (TensorRT → CUDA → DirectML → CPU); the
+        // actually-active provider is appended to the model menu title. FP16 ≈ halves GPU cost
+        // (TensorRT does it natively; CUDA/DirectML need an <model>.fp16.onnx sibling). The build guard
+        // stops the combo's populate-time auto-select from reloading the model at startup.
+        _buildingModelDropdowns = true;
+
+        // Offer ONLY the providers this binary can actually run — probe the native for CUDA/DirectML and
+        // check the TensorRT plugin. A DirectML build shows [Auto, DirectML, CPU]; a CUDA build shows
+        // [Auto, CUDA, TensorRT, CPU]. (Before, all four showed everywhere and picking an absent one just
+        // silently fell back — misleading.) Auto always fits since it self-selects.
+        var eps = new List<ExecutionProviderPreference> { ExecutionProviderPreference.Auto };
+        if (PowerAim.AILogic.Contracts.OnnxHelper.CanWork(PowerAim.AILogic.Contracts.OnnxExecutionProvider.Cuda))
+            eps.Add(ExecutionProviderPreference.Cuda);
+        if (PowerAim.AILogic.TensorRtRuntime.SupportedInThisBuild())
+            eps.Add(ExecutionProviderPreference.Tensorrt);
+        if (PowerAim.AILogic.Contracts.OnnxHelper.CanWork(PowerAim.AILogic.Contracts.OnnxExecutionProvider.DirectML))
+            eps.Add(ExecutionProviderPreference.DirectML);
+        eps.Add(ExecutionProviderPreference.Cpu);
+        // If a saved preference isn't available in this build (e.g. CUDA pref carried onto a DirectML
+        // build), show Auto rather than a blank selection — the chain falls back to the same place anyway.
+        var epShown = eps.Contains(AppConfig.Current.AISettings.PreferredExecutionProvider)
+            ? AppConfig.Current.AISettings.PreferredExecutionProvider
+            : ExecutionProviderPreference.Auto;
+        ModelSettings.AddDropdown(Locale.ExecutionProvider, epShown, eps,
+            v =>
+            {
+                if (_buildingModelDropdowns || AppConfig.Current.AISettings.PreferredExecutionProvider == v) return;
+                AppConfig.Current.AISettings.PreferredExecutionProvider = v;
+                LoadModel();
+            },
+            d => d.ToolTip = Locale.ExecutionProviderHelp);
+        ModelSettings.AddDropdown(Locale.ModelPrecisionLabel, AppConfig.Current.AISettings.Precision,
+            v =>
+            {
+                if (_buildingModelDropdowns || AppConfig.Current.AISettings.Precision == v) return;
+                AppConfig.Current.AISettings.Precision = v;
+                LoadModel();
+            },
+            d => d.ToolTip = Locale.ModelPrecisionHelp);
+        _buildingModelDropdowns = false;
+
+        // TensorRT runtime installer — shown ONLY when this build can target TensorRT (CUDA build ships
+        // the provider plugin) AND the runtime (nvinfer) isn't installed yet. So it appears exactly when
+        // installing would actually add something; on the DirectML build or once TensorRT is ready, it's
+        // hidden. Guides to NVIDIA when no hosted redist URL is configured, else downloads + reloads.
+        if (PowerAim.AILogic.TensorRtRuntime.SupportedInThisBuild() && !PowerAim.AILogic.TensorRtRuntime.IsAvailable())
+        {
+            ModelSettings.AddButton(Locale.TensorRtInstall).Reader.Click += async (_, _) =>
+            {
+                if (PowerAim.AILogic.TensorRtRuntime.IsAvailable())
+                {
+                    new PowerAim.Visuality.NoticeBar(Locale.TensorRtAlreadyInstalled, 4000).Show();
+                    return;
+                }
+                if (!PowerAim.AILogic.TensorRtInstaller.IsConfigured)
+                {
+                    new PowerAim.Visuality.NoticeBar(
+                        string.Format(Locale.TensorRtManual, PowerAim.AILogic.TensorRtRuntime.LocalRuntimeDir), 9000).Show();
+                    try
+                    {
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(
+                            PowerAim.AILogic.TensorRtInstaller.VendorPage) { UseShellExecute = true });
+                    }
+                    catch { /* no browser — the notice already told them the page + folder */ }
+                    return;
+                }
+                try
+                {
+                    new PowerAim.Visuality.NoticeBar(Locale.TensorRtInstalling, 3000).Show();
+                    await PowerAim.AILogic.TensorRtInstaller.InstallAsync();
+                    new PowerAim.Visuality.NoticeBar(Locale.TensorRtInstalled, 4000).Show();
+                    LoadModel();
+                }
+                catch (Exception ex)
+                {
+                    new PowerAim.Visuality.NoticeBar(string.Format(Locale.TensorRtInstallFailed, ex.Message), 6000).Show();
+                }
+            };
+        }
+
+        // Run Performance Benchmark — while it runs (can take a while: it samples several image sizes),
+        // turn the button itself into the progress indicator: disable it + swap its caption to "running",
+        // then restore. (RunBenchmarkClick has no per-step progress to show a determinate bar.)
+        var benchBtn = ModelSettings.AddButton(Locale.RunBenchmark);
+        benchBtn.Reader.Click += async (_, _) =>
+        {
+            var original = benchBtn.Text;
+            benchBtn.Text = Locale.BenchmarkRunning;
+            benchBtn.IsEnabled = false;
+            try { await RunBenchmarkClick(); }
+            finally { benchBtn.Text = original; benchBtn.IsEnabled = true; }
+        };
 
         ModelSettings.AddSeparator();
 

@@ -283,6 +283,10 @@ public partial class MainWindow
 
     private GpuPickerController? _gpuPicker;
 
+    /// <summary>Suppresses the spurious onSelect a combo raises while populating (auto-selects its first
+    /// item) so building the model-settings dropdowns can't trigger a model reload at startup.</summary>
+    private bool _buildingModelDropdowns;
+
 
     #endregion Loading Window
 

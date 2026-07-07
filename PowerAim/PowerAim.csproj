@@ -75,6 +75,12 @@
     <None Include="Resources\default.onnx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <!-- FP16 sibling of the default model (converted with keep_io_types=True so I/O stays FP32 and the
+         existing float preprocessing feeds it unchanged). PredictionLogic loads this instead when
+         Precision = Auto/FP16 on CUDA/DirectML; TensorRT gets FP16 from the FP32 model directly. -->
+    <None Include="Resources\default.fp16.onnx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup Condition="'$(IsCuda)' == 'true'">

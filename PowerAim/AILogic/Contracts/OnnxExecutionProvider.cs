@@ -12,7 +12,8 @@ public enum OnnxExecutionProvider
 
 internal static class OnnxHelper
 {
-    public static OnnxExecutionProvider SetExecutionProvider(this SessionOptions sessionOptions, OnnxExecutionProvider preferredProvider, int deviceId = 0)
+    public static OnnxExecutionProvider SetExecutionProvider(this SessionOptions sessionOptions,
+        OnnxExecutionProvider preferredProvider, int deviceId = 0, bool preferFp16 = false, string? cacheDir = null)
     {
         OnnxExecutionProvider[] fallbackOrder;
 
@@ -44,12 +45,22 @@ internal static class OnnxHelper
                 continue;
             }
 
+            // Gate TensorRT on the runtime actually being installed. The provider registers fine from
+            // the GPU package, but the engine build (at session creation) needs the nvinfer DLLs — so
+            // without them we'd commit to TensorRT and only fail later, bypassing the CUDA fallback.
+            if (provider == OnnxExecutionProvider.TensorRT && !PowerAim.AILogic.TensorRtRuntime.IsAvailable())
+            {
+                Console.WriteLine("Skipping provider TensorRT: runtime (nvinfer) not found.");
+                continue;
+            }
+
             try
             {
                 if (CanWork(provider, providerDeviceId))
                 {
-                    sessionOptions.AppendExecutionProvider(provider, providerDeviceId);
-                    Console.WriteLine($"Initialized with provider {provider} on device {providerDeviceId} (requested DXGI adapter index {deviceId}).");
+                    AppendConfigured(sessionOptions, provider, providerDeviceId, preferFp16, cacheDir);
+                    Console.WriteLine($"Initialized with provider {provider} on device {providerDeviceId} " +
+                                      $"(requested DXGI adapter index {deviceId}, fp16={preferFp16}).");
                     return provider;
                 }
             }
@@ -60,6 +71,50 @@ internal static class OnnxHelper
         }
 
         throw new InvalidOperationException("No suitable execution provider found.");
+    }
+
+    /// <summary>
+    ///     Append the chosen provider with its full runtime options: TensorRT gets FP16 + an on-disk
+    ///     engine/timing cache (the expensive engine build then happens once and is reused — the
+    ///     "build accelerator"). CUDA/DirectML take their FP16 speedup from an FP16 model variant
+    ///     (selected upstream in PredictionLogic), so there's no per-provider precision flag to set here.
+    /// </summary>
+    private static void AppendConfigured(SessionOptions options, OnnxExecutionProvider provider,
+        int deviceId, bool preferFp16, string? cacheDir)
+    {
+        switch (provider)
+        {
+            case OnnxExecutionProvider.Cpu:
+                options.AppendExecutionProvider_CPU();
+                break;
+            case OnnxExecutionProvider.DirectML:
+                options.AppendExecutionProvider_DML(deviceId);
+                break;
+            case OnnxExecutionProvider.Cuda:
+                options.AppendExecutionProvider_CUDA(deviceId);
+                break;
+            case OnnxExecutionProvider.TensorRT:
+                var trt = new Dictionary<string, string>
+                {
+                    ["device_id"] = deviceId.ToString(),
+                    ["trt_fp16_enable"] = preferFp16 ? "1" : "0",
+                };
+                if (!string.IsNullOrWhiteSpace(cacheDir))
+                {
+                    try { System.IO.Directory.CreateDirectory(cacheDir); } catch { /* fall through — cache just won't persist */ }
+                    trt["trt_engine_cache_enable"] = "1";
+                    trt["trt_engine_cache_path"] = cacheDir;
+                    trt["trt_timing_cache_enable"] = "1";
+                }
+                using (var trtOpts = new OrtTensorRTProviderOptions())
+                {
+                    trtOpts.UpdateOptions(trt);
+                    options.AppendExecutionProvider_Tensorrt(trtOpts);
+                }
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(provider));
+        }
     }
 
     /// <summary>

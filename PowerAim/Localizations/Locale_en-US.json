@@ -1102,5 +1102,17 @@
   "AimSpeedMultiplier": "Speed multiplier",
   "AimSpeedMultiplierHint": "Extra aim gain for when even max sensitivity is too slow — e.g. a high-DPI mouse with a low in-game sensitivity. 1 = off (normal). Applies to Smart Aim.",
   "AimStickyRadius": "Sticky radius",
-  "AimStickyRadiusTooltip": "How far (px) the aim keeps following the SAME enemy before it re-acquires a different one. Larger = stickier lock — raise this if the aim hops between targets. Works with target tracking on (survives re-identification) and off (sticky-nearest radius)."
+  "AimStickyRadiusTooltip": "How far (px) the aim keeps following the SAME enemy before it re-acquires a different one. Larger = stickier lock — raise this if the aim hops between targets. Works with target tracking on (survives re-identification) and off (sticky-nearest radius).",
+  "ExecutionProvider": "Execution provider",
+  "ExecutionProviderHelp": "Which accelerator runs inference. Auto = best available for your build/PC (TensorRT → CUDA → DirectML → CPU). DirectML works on ANY GPU (NVIDIA/AMD/Intel) from one build; CUDA/TensorRT need the CUDA build. The active provider is shown in the model menu title. Changing this reloads the model.",
+  "ModelPrecisionLabel": "Precision",
+  "ModelPrecisionHelp": "Auto = safe default: TensorRT runs FP16 (it only uses half precision where it helps), CUDA/DirectML stay full precision. FP16 = force half precision — ~1.5–2× faster and half the VRAM on modern GPUs, but it can be SLOWER on older cards (Pascal/GTX 10xx and pre-RDNA), and needs an <model>.fp16.onnx file next to the model for CUDA/DirectML. FP32 = full precision everywhere. Changing this reloads the model.",
+  "TensorRtMissingTitle": "TensorRT not installed",
+  "TensorRtMissingBody": "TensorRT gives the fastest NVIDIA inference but its runtime isn't bundled (it's large and NVIDIA-gated). Install it once to enable the TensorRT provider — until then, inference falls back to CUDA/DirectML.",
+  "TensorRtInstall": "Install TensorRT",
+  "TensorRtInstalling": "Installing TensorRT runtime…",
+  "TensorRtInstalled": "TensorRT runtime installed — reloading the model.",
+  "TensorRtInstallFailed": "TensorRT install failed: {0}",
+  "TensorRtAlreadyInstalled": "TensorRT runtime is already installed.",
+  "TensorRtManual": "No download source is configured. Opening NVIDIA's TensorRT page — put the nvinfer*.dll files into: {0}"
 }

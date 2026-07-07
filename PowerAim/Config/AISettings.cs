@@ -220,6 +220,53 @@ public class AISettings : BaseSettings
         get;
         set => SetField(ref field, value);
     } = 0;
+
+    /// <summary>
+    ///     Which ONNX execution provider to prefer. <see cref="ExecutionProviderPreference.Auto"/> walks
+    ///     the full chain (TensorRT → CUDA → DirectML → CPU) and takes the first one actually available
+    ///     in this build / on this machine — so the DirectML build lands on DirectML and the CUDA build
+    ///     on CUDA/TensorRT without the user having to know which binary they run. Explicit choices skip
+    ///     straight to that provider (still falling back if it can't init).
+    /// </summary>
+    public ExecutionProviderPreference PreferredExecutionProvider
+    {
+        get;
+        set => SetField(ref field, value);
+    } = ExecutionProviderPreference.Auto;
+
+    /// <summary>
+    ///     Inference precision. <see cref="ModelPrecision.Fp16"/> ≈ halves GPU inference time and VRAM on
+    ///     modern hardware: TensorRT runs the FP32 model in FP16 directly, and for CUDA/DirectML we load
+    ///     an FP16 model variant when one sits next to the model. <see cref="ModelPrecision.Auto"/> uses
+    ///     FP16 when it's available for the active provider, else full precision.
+    /// </summary>
+    public ModelPrecision Precision
+    {
+        get;
+        set => SetField(ref field, value);
+    } = ModelPrecision.Auto;
+}
+
+/// <summary>User-facing execution-provider preference; maps to the ORT fallback chain in the AI layer.</summary>
+public enum ExecutionProviderPreference
+{
+    /// <summary>Best available for this build/machine (TensorRT → CUDA → DirectML → CPU).</summary>
+    Auto = 0,
+    Cuda = 1,
+    Tensorrt = 2,
+    DirectML = 3,
+    Cpu = 4
+}
+
+/// <summary>Inference precision preference (see <see cref="AISettings.Precision"/>).</summary>
+public enum ModelPrecision
+{
+    /// <summary>FP16 where the active provider supports it, otherwise full precision.</summary>
+    Auto = 0,
+    /// <summary>Half precision — fastest on modern GPUs.</summary>
+    Fp16 = 1,
+    /// <summary>Full precision — most compatible.</summary>
+    Fp32 = 2
 }
 
 /// <summary>

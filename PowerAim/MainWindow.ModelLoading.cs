@@ -118,6 +118,18 @@ public partial class MainWindow
             File.Copy(src, dest);
         }
 
+        // Copy the FP16 sibling next to it too so Precision = Auto/FP16 can pick it up (see
+        // PredictionLogic.ResolveModelPath). Done independently of the FP32 copy above so upgrades —
+        // where bin\models\default.onnx already existed before the FP16 model shipped — get it as well.
+        const string fp16Name = "default.fp16.onnx";
+        var fp16Dest = Path.Combine(modelsDir, fp16Name);
+        if (!File.Exists(fp16Dest))
+        {
+            var fp16Src = Path.Combine(baseDir, "Resources", fp16Name);
+            if (File.Exists(fp16Src))
+                try { File.Copy(fp16Src, fp16Dest); } catch { /* fp16 optional — fall back to FP32 */ }
+        }
+
         // Switch the empty-state card to its loading look while the model spins up.
         ModelLoadPending = true;
         await _fileManager.LoadModel(ApplicationConstants.DefaultModel,

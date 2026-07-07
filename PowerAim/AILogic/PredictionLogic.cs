@@ -76,19 +76,22 @@ public class PredictionLogic : IPredictionLogic
 
     private void InitializeModel(SessionOptions? sessionOptions, string modelPath)
     {
-        // Try CUDA first (preferred), then the OnnxHelper fallback chain inside the factory will
-        // walk down to DirectML / CPU. If CUDA negotiation itself throws we retry once with
-        // DirectML as the explicit preference so we don't spuriously fail on AMD machines.
+        // Start from the user's execution-provider preference (Auto = the full TensorRT → CUDA →
+        // DirectML → CPU chain, which self-filters to whatever this build/machine can actually run).
+        // The chain inside the factory already falls back, so the outer retry here is just a safety net
+        // for a hard negotiation failure — retry once from DirectML so an AMD box never dead-ends.
+        var preferred = MapPreference(AppConfig.Current?.AISettings?.PreferredExecutionProvider
+                                      ?? ExecutionProviderPreference.Auto);
         try
         {
-            LoadModel(sessionOptions, modelPath, OnnxExecutionProvider.Cuda);
+            LoadModel(sessionOptions, modelPath, preferred);
         }
-        catch (Exception cudaEx)
+        catch (Exception firstEx)
         {
             try
             {
                 Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
-                    new NoticeBar(string.Format(Locale.CudaLoadFailedFormat, cudaEx.Message), 4000).Show()));
+                    new NoticeBar(string.Format(Locale.CudaLoadFailedFormat, firstEx.Message), 4000).Show()));
                 LoadModel(sessionOptions, modelPath, OnnxExecutionProvider.DirectML);
             }
             catch (Exception dmlEx)
@@ -102,6 +105,17 @@ public class PredictionLogic : IPredictionLogic
         FileManager.CurrentlyLoadingModel = false;
     }
 
+    /// <summary>Map the user preference to the chain entry point. Auto enters at TensorRT so the chain
+    /// tries every accelerator top-down; unavailable ones are skipped (gated / CanWork).</summary>
+    private static OnnxExecutionProvider MapPreference(ExecutionProviderPreference pref) => pref switch
+    {
+        ExecutionProviderPreference.Cuda => OnnxExecutionProvider.Cuda,
+        ExecutionProviderPreference.Tensorrt => OnnxExecutionProvider.TensorRT,
+        ExecutionProviderPreference.DirectML => OnnxExecutionProvider.DirectML,
+        ExecutionProviderPreference.Cpu => OnnxExecutionProvider.Cpu,
+        _ => OnnxExecutionProvider.TensorRT, // Auto → full chain
+    };
+
     private void LoadModel(SessionOptions? sessionOptions, string modelPath, OnnxExecutionProvider provider)
     {
         // Dispose any prior session so model-switching at runtime doesn't leak ORT handles.
@@ -111,7 +125,22 @@ public class PredictionLogic : IPredictionLogic
         // Read the user-selected GPU adapter (default 0 = primary). Lets users push inference onto
         // a secondary card so the game's GPU isn't bottlenecked by detection workloads.
         int deviceId = AppConfig.Current?.AISettings?.InferenceGpuDeviceId ?? 0;
-        var loaded = OnnxModelSessionFactory.Load(modelPath, provider, sessionOptions, deviceId);
+
+        // Precision. Two distinct FP16 paths with deliberately different defaults:
+        //  • TensorRT applies FP16 safely (it profiles kernels and only uses half where it's a win), so
+        //    Auto lets TensorRT run FP16.
+        //  • CUDA/DirectML get FP16 only by loading an actual FP16 model, and that is a REGRESSION on
+        //    older GPUs (Pascal / pre-RDNA) whose FP16 throughput is a fraction of FP32. So we swap to
+        //    the FP16 model file ONLY on an explicit FP16 choice — never in Auto — to avoid making it
+        //    slower on hardware without real FP16 acceleration.
+        var precision = AppConfig.Current?.AISettings?.Precision ?? ModelPrecision.Auto;
+        bool preferFp16Trt = precision != ModelPrecision.Fp32;   // TensorRT fp16 (Auto + Fp16)
+        bool useFp16Model = precision == ModelPrecision.Fp16;     // model swap only when explicitly chosen
+        string effectiveModelPath = ResolveModelPath(modelPath, useFp16Model);
+        string cacheDir = System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PowerAim", "trt-cache");
+
+        var loaded = OnnxModelSessionFactory.Load(effectiveModelPath, provider, sessionOptions, deviceId, preferFp16Trt, cacheDir);
         _onnxModel = loaded.Session;
         _outputNames = loaded.OutputNames;
         ExecutionProvider = loaded.ExecutionProvider;
@@ -138,6 +167,26 @@ public class PredictionLogic : IPredictionLogic
         _numDetections = MathUtil.CalculateNumDetections(_imageSize);
 
         ValidateOnnxShape();
+    }
+
+    /// <summary>
+    ///     Pick a "&lt;name&gt;.fp16.onnx" sibling when FP16 is wanted and one exists. Such a model must be
+    ///     converted with FP32 I/O kept (keep_io_types) so the existing float preprocessing feeds it
+    ///     unchanged — only the internal compute is half precision. Falls back to the original path.
+    /// </summary>
+    private static string ResolveModelPath(string modelPath, bool preferFp16)
+    {
+        if (!preferFp16 || string.IsNullOrWhiteSpace(modelPath)) return modelPath;
+        try
+        {
+            var dir = Path.GetDirectoryName(modelPath) ?? "";
+            var name = Path.GetFileNameWithoutExtension(modelPath);
+            var ext = Path.GetExtension(modelPath);
+            var fp16 = Path.Combine(dir, name + ".fp16" + ext);
+            if (File.Exists(fp16)) return fp16;
+        }
+        catch { /* fall back to the original path */ }
+        return modelPath;
     }
 
     /// <summary>
