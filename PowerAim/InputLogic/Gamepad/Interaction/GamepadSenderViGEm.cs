@@ -9,7 +9,7 @@ using Nefarius.ViGEm.Client;
 
 public class GamepadSenderViGEm : IGamepadSender
 {
-    private Controller? _physicalController;
+    private IGamepadStateSource? _source;
     private IXbox360Controller? _virtualController;
     private bool _isRunning;
     private readonly HashSet<Xbox360Button> _pausedButtons = new();
@@ -89,13 +89,13 @@ public class GamepadSenderViGEm : IGamepadSender
     }
 
 
-    public IGamepadSender SyncWith(Controller? physicalController)
+    public IGamepadSender SyncWith(IGamepadStateSource? source)
     {
         // Physical controller is optional — the sender runs standalone too, accepting direct
         // SetButtonState / SetAxisValue calls from upstream (e.g., aim/trigger pipelines that
         // synthesize input independent of any real pad). Previously the action queue was only
         // drained when a physical pad was connected, so standalone use silently buffered forever.
-        _physicalController = physicalController;
+        _source = source;
         if (_isRunning) return this;
         _isRunning = true;
         var thread = new Thread(SyncLoop) { IsBackground = true, Name = "GamepadSenderViGEm-Loop" };
@@ -203,14 +203,14 @@ public class GamepadSenderViGEm : IGamepadSender
                 catch { /* swallow — ViGEm transient failures shouldn't kill the loop */ }
             }
 
-            if (_physicalController == null || !_physicalController.IsConnected)
+            if (_source == null || !_source.IsConnected)
             {
                 Thread.Sleep(2);
                 continue;
             }
 
             State state;
-            try { state = _physicalController.GetState(); }
+            try { state = _source.GetState(); }
             catch { Thread.Sleep(10); continue; }
 
             if (!_pausedButtons.Contains(Xbox360Button.A)) _virtualController?.SetButtonState(Xbox360Button.A, state.Gamepad.Buttons.HasFlag(GamepadButtonFlags.A));

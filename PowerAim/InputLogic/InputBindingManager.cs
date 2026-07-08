@@ -166,7 +166,9 @@ namespace PowerAim.InputLogic
             if (!_gamepadListen && GamepadManager.CanRead)
             {
                 _gamepadListen = true;
-                GamepadManager.GamepadReader.ButtonEvent += GamepadReader_ButtonEvent;
+                // Subscribe to the manager's facade, not the reader directly, so a reader swap
+                // (XInput ↔ DirectInput, e.g. picking a raw DualSense) keeps events flowing.
+                GamepadManager.ButtonEvent += GamepadReader_ButtonEvent;
             }
         }
 
@@ -269,7 +271,7 @@ namespace PowerAim.InputLogic
         {
             if (_gamepadListen)
             {
-                GamepadManager.GamepadReader.ButtonEvent -= GamepadReader_ButtonEvent;
+                GamepadManager.ButtonEvent -= GamepadReader_ButtonEvent;
                 _gamepadListen = false;
             }
             if (_mEvents != null)

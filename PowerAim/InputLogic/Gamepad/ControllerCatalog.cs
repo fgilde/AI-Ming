@@ -4,6 +4,8 @@ using System.Text.RegularExpressions;
 using SharpDX.XInput;
 using PowerAim.Class.Native;
 using PowerAim.Config;
+using PowerAim.InputLogic.Contracts;
+using PowerAim.InputLogic.Gamepad.Interaction;
 using PowerAim.InputLogic.HidHide;
 
 namespace PowerAim.InputLogic.Gamepad;
@@ -25,12 +27,13 @@ public sealed class ControllerInfo : INotifyPropertyChanged
     public string Name { get => _name; set => Set(ref _name, value); }
     /// <summary>XInput slot 0-3 if the pad is XInput-addressable; null for DirectInput-only or virtual.</summary>
     public int? Slot { get => _slot; set { if (Set(ref _slot, value)) { Raise(nameof(CanBeSyncSource)); Raise(nameof(SlotLabel)); } } }
-    public bool IsConnected { get => _connected; set => Set(ref _connected, value); }
+    public bool IsConnected { get => _connected; set { if (Set(ref _connected, value)) Raise(nameof(CanBeSyncSource)); } }
     public bool IsSyncSource { get => _sync; set => Set(ref _sync, value); }
     public bool IsHidden { get => _hidden; set => Set(ref _hidden, value); }
 
-    /// <summary>Only an XInput-addressable physical pad can feed the sync (SyncWith needs an XInput Controller).</summary>
-    public bool CanBeSyncSource => Kind == ControllerKind.Physical && _slot != null;
+    /// <summary>Any connected physical pad can feed the sync now — an XInput slot OR a DirectInput/HID
+    /// pad (e.g. a raw PS5 DualSense), since the senders take a transport-neutral state source.</summary>
+    public bool CanBeSyncSource => Kind == ControllerKind.Physical && _connected;
     public string SlotLabel => _slot != null ? $"Slot {_slot + 1}" : "";
 
     private string _name = "";
@@ -69,7 +72,7 @@ public static class ControllerCatalog
         var hidden = AppConfig.Current?.ControllerSettings?.HiddenControllerIds;
         var detected = HidGamepadEnumerator.Enumerate(); // friendly names (can be empty even with live XInput slots!)
 
-        int? sourceSlot = GamepadManager.GamepadReader != null ? (int)GamepadManager.GamepadReader.CurrentSlot : null;
+        int? sourceSlot = GamepadManager.GamepadReader is IXInputGamepadReader xr ? (int)xr.CurrentSlot : null;
         bool wantsVirtual = GamepadManager.CanSend;
         bool virtualPlaced = false;
         string virtualName = VirtualName();
@@ -126,6 +129,8 @@ public static class ControllerCatalog
                 Id = d.InstanceId, VidPid = vp, Kind = ControllerKind.Physical,
                 Name = string.IsNullOrWhiteSpace(d.FriendlyName) ? "Unknown controller" : d.FriendlyName,
                 Slot = null, IsConnected = true,
+                // We're reading this class of pad when the active reader is the DirectInput one.
+                IsSyncSource = GamepadManager.GamepadReader is DirectInputGamepadReader,
                 IsHidden = !d.Enabled || (hidden?.Contains(d.InstanceId) ?? false),
             });
         }
@@ -165,8 +170,19 @@ public static class ControllerCatalog
     /// <summary>Make a physical XInput pad the sync source (mirrored into the virtual pad). No-op otherwise.</summary>
     public static void SetSyncSource(ControllerInfo info)
     {
-        if (!info.CanBeSyncSource || info.Slot is not { } slot) return;
-        GamepadManager.SetSyncSource((UserIndex)slot);
+        if (!info.CanBeSyncSource) return;
+        if (info.Slot is { } slot)
+        {
+            GamepadManager.SetSyncSource((UserIndex)slot);
+        }
+        else
+        {
+            // DirectInput-only pad (e.g. a raw DualSense): correlate to its DirectInput device by VID/PID
+            // and switch the reader to it. Correlation is by VID/PID because the ControllerInfo.Id is a
+            // SetupAPI instance path while DirectInput identifies devices by InstanceGuid.
+            var guid = DirectInputGamepadReader.FindDeviceByVidPid(info.VidPid);
+            if (guid is { } g) GamepadManager.UseDirectInputSource(g);
+        }
     }
 
     /// <summary>
@@ -208,8 +224,8 @@ public static class ControllerCatalog
         var reader = GamepadManager.GamepadReader;
         if (reader == null) return false;
 
-        if (HidHideAvailable)
-            reader.Controller.Hide();
+        if (HidHideAvailable && reader is IXInputGamepadReader xir)
+            xir.Controller.Hide();
         else if (DeviceHide.IsElevated())
             DeviceHide.TryDisable(GamepadManager.ReadingControllerId ?? "");
         else
@@ -224,7 +240,7 @@ public static class ControllerCatalog
     {
         var reader = GamepadManager.GamepadReader;
         if (reader == null) return;
-        if (HidHideAvailable) reader.Controller.Show();
+        if (HidHideAvailable && reader is IXInputGamepadReader xir) xir.Controller.Show();
         else if (DeviceHide.IsElevated()) DeviceHide.TryEnable(GamepadManager.ReadingControllerId ?? "");
         GamepadManager.ReconnectVirtual();
     }

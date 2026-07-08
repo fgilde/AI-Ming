@@ -9,7 +9,7 @@ public class GamepadSenderXInputEmu : IGamepadSender
     private UdpClient? _udpClient;
     private readonly string _address;
     private readonly int _port;
-    private Controller _physicalController;
+    private IGamepadStateSource? _source;
     private bool _isRunning;
     private readonly BlockingCollection<Action> _actions = new();
 
@@ -22,9 +22,9 @@ public class GamepadSenderXInputEmu : IGamepadSender
 
     public bool CanWork => true; // Assuming the UDP connection always works for simplicity
 
-    public IGamepadSender SyncWith(Controller? physicalController)
+    public IGamepadSender SyncWith(IGamepadStateSource? source)
     {
-        _physicalController = physicalController;
+        _source = source;
         _isRunning = true;
         var thread = new Thread(SyncLoop);
         thread.Start();
@@ -107,12 +107,20 @@ public class GamepadSenderXInputEmu : IGamepadSender
     {
         while (_isRunning)
         {
-            var state = _physicalController.GetState();
-
             while (_actions.TryTake(out var action, 0))
             {
                 action();
             }
+
+            if (_source == null || !_source.IsConnected)
+            {
+                Thread.Sleep(2);
+                continue;
+            }
+
+            State state;
+            try { state = _source.GetState(); }
+            catch { Thread.Sleep(10); continue; }
 
             // Map and sync buttons
             MapButtonState(state, GamepadButtonFlags.A, GamepadButton.A);

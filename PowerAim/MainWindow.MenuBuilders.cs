@@ -337,6 +337,43 @@ public partial class MainWindow
         GamepadSettingsConfig.RemoveAll();
         GamepadSettingsConfig.AddTitle(Locale.GamepadSettings, false);
 
+        // Status at a glance (same signal as the red menu-button coloring above): green check when the
+        // active send mode can output, red cross when it can't. "None" = output intentionally off → neutral.
+        {
+            var mode = AppConfig.Current.DropdownState.GamepadSendMode;
+            bool disabled = mode == GamepadSendMode.None;
+            bool ok = !disabled && string.IsNullOrWhiteSpace(error) && GamepadManager.CanSend;
+            string glyph = disabled ? "" : ok ? "" : ""; // warning / check / cross
+            System.Windows.Media.Brush brush = disabled
+                ? Brushes.Gray
+                : ok ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x3F, 0xB9, 0x50))
+                     : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xE5, 0x53, 0x4B));
+            string text = disabled ? Locale.GamepadOutputDisabled : ok ? Locale.GamepadReadyToSend : Locale.GamepadNotSending;
+
+            var statusRow = GamepadSettingsConfig.Add<System.Windows.Controls.StackPanel>(p =>
+            {
+                p.Orientation = System.Windows.Controls.Orientation.Horizontal;
+                p.Margin = new Thickness(2, 2, 0, 8);
+            });
+            statusRow.Add<System.Windows.Controls.TextBlock>(t =>
+            {
+                t.Text = glyph;
+                t.FontFamily = new System.Windows.Media.FontFamily("Segoe Fluent Icons,Segoe MDL2 Assets");
+                t.FontSize = 16;
+                t.Foreground = brush;
+                t.VerticalAlignment = VerticalAlignment.Center;
+                t.Margin = new Thickness(0, 0, 8, 0);
+            });
+            statusRow.Add<System.Windows.Controls.TextBlock>(t =>
+            {
+                t.Text = text;
+                t.Foreground = brush;
+                t.FontSize = 13;
+                t.FontWeight = FontWeights.SemiBold;
+                t.VerticalAlignment = VerticalAlignment.Center;
+            });
+        }
+
         GamepadSettingsConfig.AddDropdown(Locale.GamepadSendCommandMode, AppConfig.Current.DropdownState.GamepadSendMode, v =>
         {
             AppConfig.Current.DropdownState.GamepadSendMode = v;
@@ -418,6 +455,43 @@ public partial class MainWindow
                 GamepadSettingsConfig.AddCredit(Locale.Status, Locale.InternalModeInitialized, credit => credit.Description.Foreground = Brushes.Orange);
             }
         }
+        else if (AppConfig.Current.DropdownState.GamepadSendMode == GamepadSendMode.DualShock4)
+        {
+            // DualShock4 rides the same ViGEmBus driver as ViGEm mode, so the diagnostics mirror it.
+            GamepadSettingsConfig.AddCredit("", Locale.DualShock4InfoText);
+            if (!GamepadManager.CanSend)
+            {
+                GamepadSettingsConfig.AddButton(Locale.GotoVigembusdriver, b =>
+                {
+                    b.Reader.Click += (s, e) => Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "https://vigembusdriver.com",
+                        UseShellExecute = true
+                    });
+                });
+            }
+            else
+            {
+                GamepadSettingsConfig.AddCredit(Locale.Status, $"{Locale.Great.ToUpper()}, {Locale.GamepadDriverSuccessMessage}");
+            }
+        }
+        else if (AppConfig.Current.DropdownState.GamepadSendMode == GamepadSendMode.TitanTwo)
+        {
+            GamepadSettingsConfig.AddCredit("", Locale.TitanTwoInfoText);
+            if (GamepadManager.CanSend)
+            {
+                GamepadSettingsConfig.AddCredit(Locale.Status, $"{Locale.Great.ToUpper()}, {Locale.GamepadDriverSuccessMessage}");
+            }
+            else
+            {
+                // Surface the sender's own diagnostic (DLL missing / wrong bitness) from the unwrapped
+                // concrete sender; fall back to the generic info if it hasn't set one.
+                var detail = GamepadManager.RawSender?.LastError;
+                GamepadSettingsConfig.AddCredit(Locale.Status,
+                    string.IsNullOrWhiteSpace(detail) ? Locale.TitanTwoInfoText : detail,
+                    credit => credit.Description.Foreground = Brushes.Orange);
+            }
+        }
 
         // ── Controllers (primary) ─────────────────────────────────────────────────────────────
         // All detected pads + the virtual one in one tidy list, the current sync source tagged, with
@@ -434,7 +508,7 @@ public partial class MainWindow
         // can't reassign slots, so this removes the physical from XInput (HidHide cloak / admin disable)
         // and reconnects the virtual to claim that slot. Undo restores the physical.
         if (AppConfig.Current.DropdownState.GamepadSendMode is GamepadSendMode.ViGEm
-            or GamepadSendMode.VJoy or GamepadSendMode.Internal)
+            or GamepadSendMode.VJoy or GamepadSendMode.Internal or GamepadSendMode.DualShock4)
         {
             GamepadSettingsConfig.AddButton(Locale.ControllerMakeVirtualPrimary, b =>
                 b.Reader.Click += (s, e) => { PowerAim.InputLogic.Gamepad.ControllerCatalog.MakeVirtualPrimary(); Reload(); });
@@ -456,7 +530,8 @@ public partial class MainWindow
 
         if (AppConfig.Current.DropdownState.GamepadSendMode == GamepadSendMode.VJoy ||
             AppConfig.Current.DropdownState.GamepadSendMode == GamepadSendMode.ViGEm ||
-            AppConfig.Current.DropdownState.GamepadSendMode == GamepadSendMode.Internal)
+            AppConfig.Current.DropdownState.GamepadSendMode == GamepadSendMode.Internal ||
+            AppConfig.Current.DropdownState.GamepadSendMode == GamepadSendMode.DualShock4)
         {
             GamepadSettingsConfig.AddCredit(Locale.HIDHideHeader, Locale.HIDHideSubHeader);
 

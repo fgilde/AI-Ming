@@ -9,7 +9,7 @@ public class GamepadSenderInternal : IGamepadSender
     private const int MAX_ACTIONS_PER_ITERATION = 100;
     private const int SYNC_LOOP_DELAY_MS = 1; // ~1000 Hz update rate
     
-    private Controller? _physicalController;
+    private IGamepadStateSource? _source;
     private bool _isRunning;
     private readonly HashSet<GamepadButton> _pausedButtons = new();
     private readonly HashSet<GamepadSlider> _pausedSliders = new();
@@ -47,9 +47,9 @@ public class GamepadSenderInternal : IGamepadSender
 
     public State CurrentVirtualState => _currentVirtualState;
 
-    public IGamepadSender SyncWith(Controller? physicalController)
+    public IGamepadSender SyncWith(IGamepadStateSource? source)
     {
-        _physicalController = physicalController;
+        _source = source;
         _isRunning = true;
         var thread = new Thread(SyncLoop);
         thread.Start();
@@ -152,14 +152,14 @@ public class GamepadSenderInternal : IGamepadSender
     {
         while (_isRunning)
         {
-            var controller = _physicalController; // Cache for thread safety
-            if (controller == null || !controller.IsConnected)
+            var src = _source; // Cache for thread safety
+            if (src == null || !src.IsConnected)
             {
                 Thread.Sleep(100); // Wait longer if disconnected
                 continue;
             }
-            
-            _currentPhysicalState = controller.GetState();
+
+            _currentPhysicalState = src.GetState();
 
             // Process pending actions
             int actionsProcessed = 0;

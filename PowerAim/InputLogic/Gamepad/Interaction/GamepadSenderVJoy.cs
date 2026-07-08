@@ -6,7 +6,7 @@ using static CoreDX.vJoy.Wrapper.VJoyControllerManager;
 
 public class GamepadSenderVJoy : IGamepadSender
 {
-    private Controller _physicalController;
+    private IGamepadStateSource? _source;
     private readonly IVJoyController _vJoyController;
     private readonly BlockingCollection<Action> _actions = new();
     private bool _isRunning;
@@ -25,9 +25,9 @@ public class GamepadSenderVJoy : IGamepadSender
 
     public bool CanWork => _vJoyController != null && !_vJoyController.HasRelinquished;
 
-    public IGamepadSender SyncWith(Controller? physicalController)
+    public IGamepadSender SyncWith(IGamepadStateSource? source)
     {
-        _physicalController = physicalController;
+        _source = source;
         _isRunning = true;
         var thread = new Thread(SyncLoop);
         thread.Start();
@@ -165,12 +165,21 @@ public class GamepadSenderVJoy : IGamepadSender
     {
         while (_isRunning)
         {
-            var state = _physicalController.GetState();
-
+            // Drain direct-call actions unconditionally (standalone use has no physical source).
             while (_actions.TryTake(out var action, 0))
             {
                 action();
             }
+
+            if (_source == null || !_source.IsConnected)
+            {
+                Thread.Sleep(2);
+                continue;
+            }
+
+            State state;
+            try { state = _source.GetState(); }
+            catch { Thread.Sleep(10); continue; }
 
             // Sync buttons
             if (!_pausedButtons.Contains(1)) _vJoyController.PressButton(1); // Button A

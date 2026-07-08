@@ -97,11 +97,12 @@ public partial class GamepadTesterPanel : UserControl
 
     private void InitializeController()
     {
-        if (GamepadManager.GamepadReader != null &&
-            GamepadManager.GamepadReader.IsConnected &&
-            GamepadManager.GamepadReader.Controller != null)
+        // The tester visualizes an XInput Controller. A DirectInput-backed reader (e.g. a raw DualSense)
+        // has no XInput Controller, so fall through to the slot scan (which also only finds XInput pads).
+        if (GamepadManager.GamepadReader is PowerAim.InputLogic.Contracts.IXInputGamepadReader xr &&
+            xr.IsConnected)
         {
-            _controller = GamepadManager.GamepadReader.Controller;
+            _controller = xr.Controller;
             ConnectionStatus.Text = Locale.Connected;
             StatusDot.Fill = _connectedDot;
         }

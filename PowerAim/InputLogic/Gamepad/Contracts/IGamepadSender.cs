@@ -5,7 +5,13 @@ namespace PowerAim.InputLogic.Contracts;
 public interface IGamepadSender: IDisposable
 {
     bool CanWork { get; }
-    IGamepadSender SyncWith(Controller? physicalController);
+    string LastError => "";
+
+    /// <summary>
+    ///     Mirror a physical pad (any transport) into the virtual one. Pass null for standalone use —
+    ///     the sender still drains direct SetButton/SetAxis calls from the aim pipeline.
+    /// </summary>
+    IGamepadSender SyncWith(IGamepadStateSource? source);
     IGamepadSender StopSync();
     IGamepadSender PauseSync(GamepadButton button);
     IGamepadSender PauseSync(GamepadSlider slider);

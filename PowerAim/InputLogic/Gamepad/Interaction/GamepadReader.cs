@@ -6,7 +6,7 @@ namespace PowerAim.InputLogic.Gamepad.Interaction;
 
 
 
-public class GamepadReader : IGamepadReader
+public class GamepadReader : IXInputGamepadReader, IGamepadStateSource
 {
     private UserIndex _userIndex;
     public Controller Controller { get; private set; }
@@ -63,6 +63,11 @@ public class GamepadReader : IGamepadReader
     }
 
     public bool IsConnected => Controller.IsConnected;
+
+    /// <summary><see cref="IGamepadStateSource"/> — a fresh XInput read each call, matching the behaviour
+    /// the sender mirror loops relied on when they polled the Controller directly.</summary>
+    public State GetState() => Controller.IsConnected ? Controller.GetState() : default;
+
     public bool IsAPressed => IsConnected && State.Gamepad.Buttons.HasFlag(GamepadButtonFlags.A);
     public bool IsBPressed => IsConnected && State.Gamepad.Buttons.HasFlag(GamepadButtonFlags.B);
     public bool IsXPressed => IsConnected && State.Gamepad.Buttons.HasFlag(GamepadButtonFlags.X);

@@ -15,7 +15,7 @@ using Nefarius.ViGEm.Client.Targets.DualShock4;
 /// </summary>
 public class GamepadSenderDualShock4 : IGamepadSender
 {
-    private Controller? _physicalController;
+    private IGamepadStateSource? _source;
     private IDualShock4Controller? _virtualController;
     private bool _isRunning;
     private ViGEmClient? _client;
@@ -59,9 +59,9 @@ public class GamepadSenderDualShock4 : IGamepadSender
 
     public bool CanWork => _virtualController != null && _connected;
 
-    public IGamepadSender SyncWith(Controller? physicalController)
+    public IGamepadSender SyncWith(IGamepadStateSource? source)
     {
-        _physicalController = physicalController;
+        _source = source;
         if (_isRunning) return this;
         _isRunning = true;
         new Thread(SyncLoop) { IsBackground = true, Name = "GamepadSenderDualShock4-Loop" }.Start();
@@ -135,10 +135,10 @@ public class GamepadSenderDualShock4 : IGamepadSender
                 try { action(); } catch { /* transient ViGEm failure — keep the loop alive */ }
             }
 
-            if (_physicalController == null || !_physicalController.IsConnected) { Thread.Sleep(2); continue; }
+            if (_source == null || !_source.IsConnected) { Thread.Sleep(2); continue; }
 
             State state;
-            try { state = _physicalController.GetState(); } catch { Thread.Sleep(10); continue; }
+            try { state = _source.GetState(); } catch { Thread.Sleep(10); continue; }
             var b = state.Gamepad.Buttons;
 
             void Mirror(GamepadButton g, GamepadButtonFlags f)

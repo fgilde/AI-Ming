@@ -20,7 +20,7 @@ public sealed class ReportingGamepadSender(IGamepadSender inner) : IGamepadSende
 
     public bool CanWork => inner.CanWork;
 
-    public IGamepadSender SyncWith(Controller? physicalController) { inner.SyncWith(physicalController); return this; }
+    public IGamepadSender SyncWith(IGamepadStateSource? source) { inner.SyncWith(source); return this; }
     public IGamepadSender StopSync() { inner.StopSync(); return this; }
     public IGamepadSender PauseSync(GamepadButton button) { inner.PauseSync(button); return this; }
     public IGamepadSender PauseSync(GamepadSlider slider) { inner.PauseSync(slider); return this; }

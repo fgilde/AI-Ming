@@ -16,7 +16,15 @@ public static class GamepadManager
     public static IGamepadReader? GamepadReader { get; private set; }
 
     public static string? ReadingControllerId { get; private set; }
-    
+
+    /// <summary>
+    ///     Facade for the active reader's button events. Consumers (e.g. InputBindingManager) subscribe
+    ///     HERE, not to the reader directly, so swapping the reader (XInput ↔ DirectInput) stays
+    ///     transparent and never leaves a handler bound to a disposed reader.
+    /// </summary>
+    public static event EventHandler<GamepadEventArgs>? ButtonEvent;
+
+
     /// <summary>
     ///     The sender used for all output. This is a <see cref="ReportingGamepadSender"/> wrapper
     ///     around the concrete sender so the debug input visualizer sees every emitted input
@@ -34,9 +42,16 @@ public static class GamepadManager
         Dispose();
         if (GamepadReader == null)
         {
-            GamepadReader = new GamepadReader();
-            ResolvePreferredSource(); // honour a persisted sync-source choice (re-resolved by device id)
-            ReadingControllerId = GamepadReader.Controller.GetControllerId(); // Needs to be called before virtual one is created
+            SetReader(CreateReader());
+            if (GamepadReader is IXInputGamepadReader xir)
+            {
+                ResolvePreferredSource(); // honour a persisted XInput sync-source choice (by device id)
+                ReadingControllerId = xir.Controller.GetControllerId(); // before the virtual pad is created
+            }
+            else if (GamepadReader is DirectInputGamepadReader dir)
+            {
+                ReadingControllerId = "dinput:" + dir.InstanceGuid;
+            }
         }
 
         try
@@ -47,12 +62,12 @@ public static class GamepadManager
             // Pass the physical controller along, but the sender now tolerates a missing one —
             // it'll still pump direct SetButton/Axis calls so the aim pipeline can drive the
             // virtual pad even when no real controller is plugged in.
-            GamepadSender?.SyncWith(GamepadReader.Controller);
+            GamepadSender?.SyncWith(GamepadReader as IGamepadStateSource);
             _controllerHidden = GamepadSender != null
                                 && (GamepadSender.CanWork)
                                 && AppConfig.Current.ToggleState.AutoHideController;
-            if (_controllerHidden)
-                GamepadReader.Controller.Hide();
+            if (_controllerHidden && GamepadReader is IXInputGamepadReader xh)
+                xh.Controller.Hide();
         }
         catch (Exception e)
         {
@@ -67,6 +82,48 @@ public static class GamepadManager
         {
             CanRead = true;
         }
+    }
+
+    /// <summary>Install a reader, re-pointing the <see cref="ButtonEvent"/> facade at it (detaching the old).</summary>
+    private static void SetReader(IGamepadReader reader)
+    {
+        if (GamepadReader != null) GamepadReader.ButtonEvent -= OnReaderButtonEvent;
+        GamepadReader = reader;
+        GamepadReader.ButtonEvent += OnReaderButtonEvent;
+    }
+
+    private static void OnReaderButtonEvent(object? sender, GamepadEventArgs e) => ButtonEvent?.Invoke(sender, e);
+
+    /// <summary>
+    ///     Pick the reader transport: prefer an XInput pad (Xbox, or a DualSense/DS4 exposed as XInput via
+    ///     Steam Input / DS4Windows). If no XInput slot is occupied, fall back to a raw DirectInput/HID pad
+    ///     (e.g. a PS5 DualSense with no remapper). Defaults to the XInput reader when nothing is attached
+    ///     yet — it re-scans slots as pads appear.
+    /// </summary>
+    private static IGamepadReader CreateReader()
+    {
+        for (var i = UserIndex.One; i <= UserIndex.Four; i++)
+            if (new Controller(i).IsConnected)
+                return new GamepadReader();
+
+        var guid = DirectInputGamepadReader.FindFirstDevice();
+        return guid is { } g ? new DirectInputGamepadReader(g) : new GamepadReader();
+    }
+
+    /// <summary>
+    ///     Switch the read/sync source to a specific DirectInput pad (e.g. a raw DualSense the user picked).
+    ///     Transparent to consumers thanks to the <see cref="ButtonEvent"/> facade; also re-points the sync
+    ///     so the pad can drive the virtual controller.
+    /// </summary>
+    public static void UseDirectInputSource(Guid instanceGuid)
+    {
+        var old = GamepadReader;
+        SetReader(new DirectInputGamepadReader(instanceGuid));
+        if (!ReferenceEquals(old, GamepadReader)) old?.Dispose();
+        ReadingControllerId = "dinput:" + instanceGuid;
+        GamepadSender?.SyncWith(GamepadReader as IGamepadStateSource);
+        if (AppConfig.Current?.ControllerSettings != null)
+            AppConfig.Current.ControllerSettings.PreferredSyncDeviceId = ReadingControllerId;
     }
 
     private static IGamepadSender? CreateSender()
@@ -142,10 +199,17 @@ public static class GamepadManager
     /// </summary>
     public static void SetSyncSource(UserIndex slot)
     {
-        if (GamepadReader == null) return;
-        GamepadReader.UseSlot(slot);
-        ReadingControllerId = GamepadReader.Controller.GetControllerId();
-        GamepadSender?.SyncWith(GamepadReader.Controller);
+        // Picking an XInput slot: if we were on a DirectInput reader, swap back to the XInput reader first.
+        if (GamepadReader is not IXInputGamepadReader)
+        {
+            var old = GamepadReader;
+            SetReader(new GamepadReader());
+            if (!ReferenceEquals(old, GamepadReader)) old?.Dispose();
+        }
+        if (GamepadReader is not IXInputGamepadReader xr) return;
+        xr.UseSlot(slot);
+        ReadingControllerId = xr.Controller.GetControllerId();
+        GamepadSender?.SyncWith(GamepadReader as IGamepadStateSource);
         if (AppConfig.Current?.ControllerSettings != null)
             AppConfig.Current.ControllerSettings.PreferredSyncDeviceId = ReadingControllerId ?? "";
     }
@@ -165,13 +229,13 @@ public static class GamepadManager
     private static void ResolvePreferredSource()
     {
         var pref = AppConfig.Current?.ControllerSettings?.PreferredSyncDeviceId;
-        if (string.IsNullOrEmpty(pref) || GamepadReader == null) return;
+        if (string.IsNullOrEmpty(pref) || GamepadReader is not IXInputGamepadReader xr) return;
         for (var i = UserIndex.One; i <= UserIndex.Four; i++)
         {
             var c = new Controller(i);
             if (c.IsConnected && c.GetControllerId() == pref)
             {
-                GamepadReader.UseSlot(i);
+                xr.UseSlot(i);
                 return;
             }
         }
@@ -179,8 +243,8 @@ public static class GamepadManager
 
     public static void Dispose()
     {
-        if (_controllerHidden)
-            GamepadReader?.Controller.Show();
+        if (_controllerHidden && GamepadReader is IXInputGamepadReader xs)
+            xs.Controller.Show();
         // GamepadReader?.Dispose();
         GamepadSender?.Dispose();
         GamepadSender = null;

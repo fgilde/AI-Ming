@@ -46,7 +46,7 @@ public class GamepadSenderTitanTwo : IGamepadSender
     private readonly HashSet<GamepadButton> _pausedButtons = new();
     private readonly HashSet<GamepadSlider> _pausedSliders = new();
     private readonly HashSet<GamepadAxis> _pausedAxes = new();
-    private Controller? _physicalController;
+    private IGamepadStateSource? _source;
     private bool _isRunning;
     private bool _connected;
 
@@ -115,9 +115,9 @@ public class GamepadSenderTitanTwo : IGamepadSender
 
     public bool CanWork => _connected;
 
-    public IGamepadSender SyncWith(Controller? physicalController)
+    public IGamepadSender SyncWith(IGamepadStateSource? source)
     {
-        _physicalController = physicalController;
+        _source = source;
         if (!_connected || _isRunning) return this;
         _isRunning = true;
         new Thread(SyncLoop) { IsBackground = true, Name = "GamepadSenderTitanTwo-Loop" }.Start();
@@ -200,10 +200,10 @@ public class GamepadSenderTitanTwo : IGamepadSender
     {
         while (_isRunning)
         {
-            if (_physicalController is { IsConnected: true })
+            if (_source is { IsConnected: true })
             {
                 State state;
-                try { state = _physicalController.GetState(); } catch { Thread.Sleep(10); continue; }
+                try { state = _source.GetState(); } catch { Thread.Sleep(10); continue; }
                 var b = state.Gamepad.Buttons;
 
                 void Btn(GamepadButton g, GamepadButtonFlags f) { if (!_pausedButtons.Contains(g)) _output[ButtonIndex(g)] = (sbyte)(b.HasFlag(f) ? 100 : 0); }
