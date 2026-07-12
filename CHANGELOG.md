@@ -5,6 +5,71 @@ All notable changes to PowerAim are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0]
+
+> Headline work: **GPU acceleration** (execution-provider choice, FP16, TensorRT with a
+> guided setup), **more ways in and out of a controller** (DualShock 4 + Titan Two output,
+> and reading a raw DualSense that XInput can't see), plus a batch of aim, stability and
+> performance fixes.
+
+### Added
+
+#### ⚡ GPU acceleration — execution providers, FP16 & TensorRT
+- **Pick your execution provider** — **Auto / CUDA / TensorRT / DirectML / CPU**. The
+  dropdown only offers what the current build actually supports, so there are no
+  silently-failing options, and the **active provider is shown live**.
+- **FP16 precision** — a bundled FP16 sibling of the default model (FP32 I/O preserved, so
+  preprocessing is unchanged) for faster inference on capable GPUs. **Auto stays FP32** to
+  avoid regressions on older cards.
+- **TensorRT** with an on-disk **engine cache** — the first-run engine build is cached and
+  reused, so subsequent starts are instant. A **timing cache** is kept too.
+- **CUDA / TensorRT setup assistant** — a dialog that shows what's actually running and
+  which pieces of the stack are present vs. missing (CUDA 12 runtime, cuDNN 9, TensorRT),
+  and sets TensorRT up in one click: it uses the package if it's already next to the app,
+  otherwise **downloads it with a real progress bar** and installs the runtime locally.
+- **Benchmark shows progress** instead of a dead button while it runs.
+
+#### 🎮 Gamepad output — new virtual controllers
+- **DualShock 4 send mode** — a virtual Sony **PlayStation** pad via ViGEm (games show
+  PlayStation button prompts), alongside the existing Xbox/ViGEm, vJoy, XInput-hook and
+  internal modes.
+- **Titan Two send mode** via ConsoleTuner's GCAPI — drop a **64-bit** `gcapi.dll` /
+  `gcdapi.dll` into the `GCAPI` folder next to the app (the DLL is proprietary and
+  user-supplied). The sender stays completely inert with a **clear diagnostic** when it's
+  absent or the wrong bitness, so it never crashes.
+- **Send status at a glance** on the Gamepad page — a green ✓ when the active send mode can
+  output, a red ✗ when it can't — and the **movement-method** selector now shows the
+  current send mode with a shortcut to the Gamepad page.
+
+#### 🕹️ Gamepad input — read any controller, not just XInput
+- **Read a non-XInput pad** — e.g. a raw PS5 **DualSense** over USB/Bluetooth, which XInput
+  can't see — through DirectInput, so **gamepad keybinds** and **controller-as-aim/trigger-key**
+  work without Steam Input / DS4Windows.
+- **Transport-neutral sync** — a DirectInput pad can also **drive the virtual controller**
+  (mirror), not just XInput slots. Pick any connected pad as the read/sync source in the
+  Controller Overview.
+
+### Fixed
+- **Aim target flip-flop (#19)** — fast pans no longer tear the tracked target's identity
+  and hard-switch to another; a configurable **sticky radius** plus adopt-by-position
+  hysteresis keeps aim locked on the intended target.
+- **High-DPI / low-sensitivity aiming (#10)** — an **aim-speed multiplier** (>1) so a low
+  in-game sensitivity or high mouse DPI can still reach the target.
+- **Auto-trigger targeting (#17)** — the trigger now considers **all** detections rather
+  than only the highest-confidence one, with a robust one-handler-per-trigger design.
+- **CUDA on multi-GPU (#12)** — the CUDA/TensorRT device is mapped correctly from the DXGI
+  adapter index, so the intended **dedicated GPU** is actually used.
+- **Crash when toggling Global Active** — fixed a buffer-length check in the
+  bitmap→tensor conversion that broke with pooled (oversized) buffers.
+
+### Changed
+- **More resilient AI loop** — transient per-frame errors are backed off and skipped
+  (with a notice only after repeated failures) instead of tearing down the whole loop;
+  model and TensorRT-engine builds are offloaded so the **UI no longer freezes** on load.
+- **Lower overhead** — reduced idle CPU in the capture→move loop, **ArrayPool** for the
+  tensor input to cut GC pressure, a higher-quality **Magnifier** zoom on its own thread,
+  and throttled crosshair/overlay redraws.
+
 ## [2.1.0]
 
 ### Added
