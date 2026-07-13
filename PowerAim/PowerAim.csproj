@@ -32,8 +32,8 @@
     </Product>
     <Title>
     </Title>
-    <AssemblyName>Auto-Lock-In</AssemblyName>
-    <Version>2.2.0.0</Version>
+    <AssemblyName>AI-Machine</AssemblyName>
+    <Version>2.2.0.1</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>False</SignAssembly>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
