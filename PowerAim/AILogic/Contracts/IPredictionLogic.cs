@@ -13,6 +13,14 @@ public interface IPredictionLogic
     Task<Prediction[]> Predict(Bitmap frame, Rectangle detectionBox);
     OnnxExecutionProvider ExecutionProvider { get; }
 
+    /// <summary>True when an ONNX session actually loaded. False means every load attempt (incl. the
+    /// DirectML fallback) failed — see <see cref="LoadError"/>. Callers must not treat the pipeline as
+    /// ready when this is false.</summary>
+    bool IsLoaded { get; }
+
+    /// <summary>Human-readable reason the model failed to load, or null when it loaded fine.</summary>
+    string? LoadError { get; }
+
     /// <summary>
     ///     Square input side length the model is currently running with. Reflects the value
     ///     detected from ONNX input metadata, or the configuration override for dynamic models.

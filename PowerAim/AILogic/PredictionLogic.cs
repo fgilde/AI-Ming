@@ -55,6 +55,12 @@ public class PredictionLogic : IPredictionLogic
     public OnnxExecutionProvider ExecutionProvider { get; private set; }
 
     /// <inheritdoc />
+    public bool IsLoaded => _onnxModel != null;
+
+    /// <inheritdoc />
+    public string? LoadError { get; private set; }
+
+    /// <inheritdoc />
     public int ImageSize => _imageSize;
 
     /// <inheritdoc />
@@ -85,24 +91,30 @@ public class PredictionLogic : IPredictionLogic
         try
         {
             LoadModel(sessionOptions, modelPath, preferred);
+            LoadError = null;
         }
         catch (Exception firstEx)
         {
+            // Primary provider failed (e.g. CUDA / TensorRT engine build) — surface it and retry once
+            // from DirectML so an AMD / iGPU box never dead-ends. Never fail silently.
+            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+                new NoticeBar(string.Format(Locale.CudaLoadFailedFormat, firstEx.Message), 4000).Show()));
             try
             {
-                Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
-                    new NoticeBar(string.Format(Locale.CudaLoadFailedFormat, firstEx.Message), 4000).Show()));
                 LoadModel(sessionOptions, modelPath, OnnxExecutionProvider.DirectML);
+                LoadError = null;
             }
             catch (Exception dmlEx)
             {
+                LoadError = dmlEx.Message;
                 Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
-                    new NoticeBar(string.Format(Locale.ErrorStartingModelFormat, dmlEx.Message), 5000).Show()));
+                    new NoticeBar(string.Format(Locale.ErrorStartingModelFormat, dmlEx.Message), 6000).Show()));
                 _onnxModel?.Dispose();
                 _onnxModel = null;
             }
         }
-        FileManager.CurrentlyLoadingModel = false;
+        // NOTE: FileManager.CurrentlyLoadingModel is intentionally NOT reset here — FileManager owns that
+        // flag in a finally block so it is cleared even if construction throws before reaching this point.
     }
 
     /// <summary>Map the user preference to the chain entry point. Auto enters at TensorRT so the chain
@@ -169,8 +181,36 @@ public class PredictionLogic : IPredictionLogic
         LoadClasses();
 
         _numDetections = MathUtil.CalculateNumDetections(_imageSize);
+        // Trust the model's ACTUAL output tensor over counts derived from class metadata / image size,
+        // so multi-class and non-640 models parse correctly instead of only warning.
+        AdaptToOutputShape();
 
         ValidateOnnxShape();
+    }
+
+    /// <summary>
+    ///     For a fixed-shape model, adopt the class count and anchor count straight from the model's
+    ///     output tensor. A YOLOv8 detection head is channels-first <c>[1, 4+numClasses, numDetections]</c>
+    ///     (e.g. <c>[1,5,8400]</c> single-class, <c>[1,6,8400]</c> two-class). Reading them from the model
+    ///     means a multi-class model, or one exported at a non-640 resolution, "just works" without
+    ///     relying on a <c>names</c> table or the configured image size lining up. Layouts we can't parse
+    ///     (transposed <c>[1,N,C]</c> or NMS-fused outputs) are left for <see cref="ValidateOnnxShape"/> to
+    ///     flag clearly.
+    /// </summary>
+    private void AdaptToOutputShape()
+    {
+        if (_onnxModel == null || _isDynamicModel) return;
+        foreach (var meta in _onnxModel.OutputMetadata.Values)
+        {
+            var d = meta.Dimensions;
+            // Channels-first detection head: [1, C, N], small channel count C, larger anchor count N.
+            if (d.Length == 3 && d[0] == 1 && d[1] > 4 && d[2] > d[1])
+            {
+                _numClasses = d[1] - 4;
+                _numDetections = d[2];
+                return;
+            }
+        }
     }
 
     /// <summary>
@@ -244,24 +284,21 @@ public class PredictionLogic : IPredictionLogic
     /// </summary>
     private void ValidateOnnxShape()
     {
-        if (_onnxModel == null) return;
-        if (_isDynamicModel) return;
+        if (_onnxModel == null || _isDynamicModel) return;
 
         int[] expectedShape = [1, 4 + _numClasses, _numDetections];
-        var outputMetadata = _onnxModel.OutputMetadata;
-        bool ok = outputMetadata.Values.All(metadata => metadata.Dimensions.SequenceEqual(expectedShape));
-        if (!ok)
-        {
-            // Permit the legacy single-class shape [1,5,N] as well, even if our derived numClasses
-            // came back as 1 (the formula yields the same expected shape — this branch is for
-            // models whose metadata advertises a different anchor count we didn't predict).
-            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
-                new NoticeBar(
-                        string.Format(Locale.OutputShapeMismatchFormat, string.Join("x", expectedShape)),
-                        15000)
-                    .Show()
-            ));
-        }
+        var outputs = _onnxModel.OutputMetadata.Values;
+        if (outputs.All(m => m.Dimensions.SequenceEqual(expectedShape))) return;
+
+        // AdaptToOutputShape() already adopts any channels-first [1, 4+nc, N] head, so reaching here means
+        // a layout the parser can't read (transposed [1, N, C], NMS-fused, or a mismatched input size).
+        // Report the ACTUAL vs expected shape so the user knows to re-export — instead of silently
+        // producing wrong / empty detections.
+        string actual = string.Join(" ", outputs.Select(m => "[" + string.Join("x", m.Dimensions) + "]"));
+        Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+            new NoticeBar(
+                string.Format(Locale.OutputShapeMismatchFormat, string.Join("x", expectedShape), actual),
+                15000).Show()));
     }
 
 

@@ -98,26 +98,57 @@ namespace PowerAim.Other
                 AppConfig.Current.ToggleState[key] = false;
             }
 
-            // Let the AI finish up
-            await Task.Delay(150);
-
-
-            AIManager?.Dispose();
-            // Build off the UI thread — a first-time TensorRT engine build is slow and would otherwise
-            // freeze the window during model load.
-            AIManager = await global::AIManager.CreateAsync(modelPath, AppConfig.Current.CaptureSource);
-
-
-            // TODO: Remove reflection
-            // Restore original values
-            foreach (var keyValuePair in originalToggleStates)
+            try
             {
-                AppConfig.Current.ToggleState[keyValuePair.Key] = keyValuePair.Value;
-            }
+                // Let the AI finish up
+                await Task.Delay(150);
 
-            string content = Locale.LoadedModel.FormatWith(selectedModel);
-            SelectedModelNotifier.Content = content;
-            new NoticeBar(content, 2000).Show();
+                AIManager?.Dispose();
+                // Build off the UI thread — a first-time TensorRT engine build is slow and would otherwise
+                // freeze the window during model load.
+                AIManager = await global::AIManager.CreateAsync(modelPath, AppConfig.Current.CaptureSource);
+
+                // The session may have failed to load at the ONNX level (all providers fell through) —
+                // CreateAsync still returns an AIManager, but IsModelLoaded is false. Surface the real
+                // reason instead of a fake "loaded" toast.
+                var loadError = AIManager?.PredictionLogic?.LoadError;
+                if (!string.IsNullOrEmpty(loadError))
+                {
+                    SelectedModelNotifier.Content = Locale.ModelLoadFailed;
+                    new NoticeBar(string.Format(Locale.ErrorStartingModelFormat, loadError), 6000).Show();
+                }
+                else
+                {
+                    string content = Locale.LoadedModel.FormatWith(selectedModel);
+                    SelectedModelNotifier.Content = content;
+                    new NoticeBar(content, 2000).Show();
+                }
+            }
+            catch (Exception ex)
+            {
+                // A hard failure (capture source, session construction, etc.) must NOT leave the UI stuck
+                // on "loading" forever — report it and let finally clear the loading state.
+                SelectedModelNotifier.Content = Locale.ModelLoadFailed;
+                new NoticeBar(string.Format(Locale.ErrorStartingModelFormat, ex.Message), 6000).Show();
+            }
+            finally
+            {
+                // Restore original toggle states regardless of outcome.
+                foreach (var keyValuePair in originalToggleStates)
+                {
+                    AppConfig.Current.ToggleState[keyValuePair.Key] = keyValuePair.Value;
+                }
+
+                // Single owner of this flag — cleared on EVERY exit path so a failed/So slow load can't
+                // wedge the app in "currently loading" and block all future model switches.
+                CurrentlyLoadingModel = false;
+
+                // Refresh the loaded-state binding, succeed or fail. Raising IsModelLoaded also resolves
+                // the empty-state card's "loading…" look (OnPropertyChanged clears ModelLoadPending when
+                // IsModelLoaded changes) and refreshes the status-strip model/provider text.
+                if (Application.Current?.MainWindow is MainWindow mw)
+                    mw.CallPropertyChanged(nameof(mw.IsModelLoaded));
+            }
         }
 
         private void ConfigListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)

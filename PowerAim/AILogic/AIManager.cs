@@ -76,7 +76,9 @@ public class AIManager : IDisposable
             a.AIManager = this;
         }).ToList();
 
-        NotifyLoaded(true);
+        // Reflect the ACTUAL load result — false when every provider (incl. the DirectML fallback)
+        // failed, so the UI shows the empty-state / error instead of pretending a model is ready.
+        NotifyLoaded(predictionLogic.IsLoaded);
 
         _isAiLoopRunning = true;
         _ = SetActionsState(false);

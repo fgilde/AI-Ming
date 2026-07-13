@@ -87,13 +87,22 @@ public partial class MainWindow
         // check the TensorRT plugin. A DirectML build shows [Auto, DirectML, CPU]; a CUDA build shows
         // [Auto, CUDA, TensorRT, CPU]. (Before, all four showed everywhere and picking an absent one just
         // silently fell back — misleading.) Auto always fits since it self-selects.
+        // Gate by BUILD first (deterministic), then by whether the provider can actually run on this
+        // machine. The CUDA build ships CUDA+TensorRT (never DirectML); the DirectML build ships only
+        // DirectML — so we never offer a provider the binary can't load. CanWork then hides e.g. CUDA on
+        // a CUDA build running without an NVIDIA GPU. Auto always fits (it self-selects + falls back).
         var eps = new List<ExecutionProviderPreference> { ExecutionProviderPreference.Auto };
-        if (PowerAim.AILogic.Contracts.OnnxHelper.CanWork(PowerAim.AILogic.Contracts.OnnxExecutionProvider.Cuda))
-            eps.Add(ExecutionProviderPreference.Cuda);
-        if (PowerAim.AILogic.TensorRtRuntime.SupportedInThisBuild())
-            eps.Add(ExecutionProviderPreference.Tensorrt);
-        if (PowerAim.AILogic.Contracts.OnnxHelper.CanWork(PowerAim.AILogic.Contracts.OnnxExecutionProvider.DirectML))
+        if (ApplicationConstants.IsCudaBuild)
+        {
+            if (PowerAim.AILogic.Contracts.OnnxHelper.CanWork(PowerAim.AILogic.Contracts.OnnxExecutionProvider.Cuda))
+                eps.Add(ExecutionProviderPreference.Cuda);
+            if (PowerAim.AILogic.TensorRtRuntime.SupportedInThisBuild())
+                eps.Add(ExecutionProviderPreference.Tensorrt);
+        }
+        else if (PowerAim.AILogic.Contracts.OnnxHelper.CanWork(PowerAim.AILogic.Contracts.OnnxExecutionProvider.DirectML))
+        {
             eps.Add(ExecutionProviderPreference.DirectML);
+        }
         eps.Add(ExecutionProviderPreference.Cpu);
         // If a saved preference isn't available in this build (e.g. CUDA pref carried onto a DirectML
         // build), show Auto rather than a blank selection — the chain falls back to the same place anyway.

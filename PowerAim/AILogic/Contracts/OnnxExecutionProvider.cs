@@ -171,13 +171,24 @@ internal static class OnnxHelper
     {
         try
         {
-            CreateDefaultSessionOptions()
-                .AppendExecutionProvider(provider, deviceId);
+            // Probe with options compatible with EVERY provider. DirectML in particular REQUIRES
+            // ExecutionMode.ORT_SEQUENTIAL + EnableMemoryPattern=false — AppendExecutionProvider_DML
+            // THROWS under the parallel / mem-pattern defaults. Probing with the wrong options (as this
+            // did before) silently rejected DirectML: it vanished from the provider picker AND was
+            // skipped in the fallback chain, so a DirectML build fell all the way back to CPU.
+            using var probe = new SessionOptions
+            {
+                EnableCpuMemArena = true,
+                EnableMemoryPattern = false,
+                GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL,
+                ExecutionMode = ExecutionMode.ORT_SEQUENTIAL,
+            };
+            probe.AppendExecutionProvider(provider, deviceId);
             return true;
         }
         catch (Exception e)
         {
-            Console.WriteLine($"Failed to initialize provider {provider} on device {deviceId}. Message {e.Message}");
+            Console.WriteLine($"Provider {provider} not available on device {deviceId}: {e.Message}");
             return false;
         }
     }

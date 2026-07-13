@@ -721,7 +721,7 @@
   "OpenOtherConfig": "Open other config...",
   "OpenQuickConfig": "Open quick config",
   "OperationFailedFormat": "Operation failed: {0}",
-  "OutputShapeMismatchFormat": "Output shape does not match the expected shape of {0}.\n\nPlease use a YOLOv8 model converted to ONNXv8.",
+  "OutputShapeMismatchFormat": "This model's output {1} doesn't match the expected {0} (channels-first [1, 4+classes, anchors]). Detections may be wrong or empty — please re-export it as a standard YOLOv8 ONNX detection model.",
   "Overlays": "Overlays",
   "PatternArmedButNoneSelected": "Pattern playback armed but no pattern selected. Open 'Recoil patterns…' and click one in the list.",
   "PatternDefaultNameFormat": "Pattern {0}",

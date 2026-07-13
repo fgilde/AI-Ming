@@ -64,8 +64,9 @@ public partial class MainWindow
 
     private void UpdateModelText()
     {
-        if (Config is not null)
-            ModelContextMenu.Header = $"{Config.LastLoadedModel} ({AIManager?.PredictionLogic?.ExecutionProvider})";
+        // The status-strip header is bound to ModelStatusText; just nudge it to re-read (model + the
+        // actually-active execution provider). Setting Header directly here fought the binding before.
+        CallPropertyChanged(nameof(ModelStatusText));
     }
 
     private void LoadModel(string? modelName = null)

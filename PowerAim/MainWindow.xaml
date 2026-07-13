@@ -81,6 +81,15 @@
                                    FontWeight="SemiBold"
                                    FontSize="13"
                                    Foreground="{StaticResource FluentTextPrimary}" />
+                        <Label x:Name="Build"
+                               Content="{x:Static poweraim:ApplicationConstants.BuildVariant}"
+                               Padding="0"
+                               Margin="5,0,0,0"
+                               VerticalAlignment="Center"
+                               FontFamily="Segoe UI Variable Small"
+                               FontWeight="SemiBold"
+                               FontSize="13"
+                               Foreground="{StaticResource FluentTextSecondary}" />
                         <Menu Cursor="Hand"
                               Background="Transparent"
                               VerticalAlignment="Center">
@@ -310,6 +319,7 @@
                                        FontWeight="SemiBold"
                                        FontSize="11"
                                        Foreground="{StaticResource FluentTextSecondary}" />
+                                
                             </StackPanel>
                         </Border>
                         <Button x:Name="Minimize"
@@ -1799,7 +1809,7 @@
                               x:Name="ModelContextMenu"
                               FontSize="11"
                               FontFamily="Segoe UI Variable Small"
-                              Header="{Binding Config.LastLoadedModel}"
+                              Header="{Binding ModelStatusText}"
                               Foreground="{StaticResource FluentTextSecondary}"
                               Padding="6,2,6,2"
                               VerticalAlignment="Top"

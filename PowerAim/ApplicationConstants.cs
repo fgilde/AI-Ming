@@ -14,10 +14,16 @@ public class ApplicationConstants : Constants
         {
 #if IsCuda
             return true;
+#else
+            // Runtime fallback: the CUDA/GPU build is the only one that ships the ONNX Runtime TensorRT
+            // provider plugin, so its presence identifies the build even if the compile symbol is unset.
+            return AILogic.TensorRtRuntime.SupportedInThisBuild();
 #endif
-            return false;
         }
     }
+
+    /// <summary>"CUDA" or "DirectML" — the native build variant, for display (e.g. the window title).</summary>
+    public static string BuildVariant => IsCudaBuild ? "CUDA" : "DirectML";
 
     public static Visibility DebugVisibility => IsDebug ? Visibility.Visible : Visibility.Collapsed;
     public static string ApplicationVersionStr => $"v{ApplicationVersion}";

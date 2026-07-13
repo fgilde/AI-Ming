@@ -45,7 +45,11 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <IsCuda>true</IsCuda>
+    <IsCuda>false</IsCuda>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsCuda)' == 'true'">
+    <DefineConstants>$(DefineConstants);IsCuda</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

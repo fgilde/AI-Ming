@@ -66,8 +66,6 @@ public partial class MainWindow
     {
         InitializeComponent();
 
-        // Ctrl+F search is a self-contained controller; the static OpenSearchCommand (referenced by
-        // the XAML KeyBinding) just forwards to it.
         _search = new GlobalSearchController(this, GlobalSearchButton, GlobalSearchPopup, GlobalSearchBox,
             GlobalSearchResults, GlobalSearchHint, () => CurrentMenu, (menu, animate) => NavigateTo(menu, animate));
         CommandBindings.Add(new System.Windows.Input.CommandBinding(OpenSearchCommand, (_, _) => _search.Open()));
@@ -223,6 +221,26 @@ public partial class MainWindow
     public bool IsNotModelLoaded => !IsModelLoaded;
 
     /// <summary>
+    ///     Bottom status-strip text: the loaded model + its ACTIVE execution provider, or a
+    ///     loading / failed / no-model state. Always reflects reality (the provider is the one ORT
+    ///     actually negotiated, so a DirectML build shows "DirectML", a CPU fallback shows "Cpu"), so the
+    ///     user can see at a glance what's really running.
+    /// </summary>
+    public string ModelStatusText
+    {
+        get
+        {
+            var model = Config?.LastLoadedModel;
+            if (string.IsNullOrEmpty(model)) model = "—";
+            if (FileManager.CurrentlyLoadingModel) return $"{model}  ·  …";
+            var pl = FileManager.AIManager?.PredictionLogic;
+            if (pl is { IsLoaded: true }) return $"{model}  ·  {pl.ExecutionProvider}";
+            if (!string.IsNullOrEmpty(pl?.LoadError)) return $"{model}  ·  {Locale.ModelLoadFailed}";
+            return $"{model}  ·  —";
+        }
+    }
+
+    /// <summary>
     ///     True while a model load is in flight (and at startup before the first load attempt
     ///     resolves). Drives <see cref="UILibrary.NoModelCard"/>'s loading spinner so the "no model"
     ///     message doesn't flash during the brief startup load. Set to false once a load resolves
@@ -305,6 +323,7 @@ public partial class MainWindow
         if (propertyName == nameof(IsModelLoaded))
         {
             OnPropertyChanged(nameof(IsNotModelLoaded));
+            OnPropertyChanged(nameof(ModelStatusText)); // refresh the status-strip model/provider text
             ModelLoadPending = false; // the load attempt resolved (loaded or failed)
         }
         base.OnPropertyChanged(propertyName);
@@ -316,4 +335,5 @@ public partial class MainWindow
     }
 
     private MagnifierDialog? _magnifier;
+
 }
