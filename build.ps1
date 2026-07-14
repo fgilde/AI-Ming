@@ -14,45 +14,43 @@ $outputDir = Join-Path $scriptDir "PowerAim/bin/Release"
 # pollutes the build output. Targeting projects explicitly is the supported approach.
 function Build-ProjectWithCuda {
     param(
-        [bool]$isCuda
+        [bool]$isCuda,
+        [string]$publishDir
     )
 
     $isCudaValue = if ($isCuda) { "true" } else { "false" }
 
-    # Common publish args. Self-contained=false keeps the .exe small (relies on the user's
-    # installed .NET runtime). The csproj also has <SelfContained>true</SelfContained> but the
-    # command-line override wins, matching the previous build behaviour.
+    # Common publish args. Self-contained=false keeps the .exe small (relies on the user's installed .NET
+    # runtime). Each variant publishes into its OWN folder ($publishDir via -o), so the CUDA build's
+    # native onnxruntime.dll can NEVER leak into the DirectML build (issue #20 — a shared publish/ folder
+    # made the "DirectML" release ship the CUDA onnxruntime.dll, which has no DirectML entry point, so it
+    # silently ran on CPU). IsCuda is passed as an MSBuild property; the csproj derives the `IsCuda`
+    # compile symbol from it, so no separate -p:DefineConstants override is needed (that one wiped TRACE).
     $commonArgs = @(
         '-c', 'Release',
         '-r', 'win-x64',
         '-p:PublishSingleFile=true',
         '--self-contained', 'false',
         '-p:DebugType=None',
-        "-p:IsCuda=$isCudaValue"
+        "-p:IsCuda=$isCudaValue",
+        '-o', $publishDir
     )
-    if ($isCuda) { $commonArgs += '-p:DefineConstants=IsCuda' }
 
     dotnet clean --configuration Release
 
-    # Purge the framework/publish output between variants. `dotnet clean` does NOT remove the `publish/`
-    # folder, so without this the second variant (DirectML) is layered on top of the first variant's
-    # (CUDA) leftover native DLLs — most importantly a stale CUDA `onnxruntime.dll` that has NO DirectML
-    # entry point. The result was a "DirectML" release that silently ran on CPU (issue #20), because
-    # AppendExecutionProvider_DML can't be found in the wrong onnxruntime.dll. The release .zips live
-    # directly in $outputDir (bin/Release), NOT under net10.0-windows/, so they survive this cleanup.
-    $frameworkOutput = Join-Path $outputDir "net10.0-windows"
-    if (Test-Path $frameworkOutput) {
-        Remove-Item -Recurse -Force $frameworkOutput
-        Write-Host "Cleared previous publish output at $frameworkOutput"
+    # Fresh, empty per-variant output folder every run.
+    if (Test-Path $publishDir) {
+        Remove-Item -Recurse -Force $publishDir
+        Write-Host "Cleared previous output at $publishDir"
     }
 
     Write-Host ""
-    Write-Host "Publishing PowerAim (IsCuda=$isCudaValue) ..."
+    Write-Host "Publishing PowerAim (IsCuda=$isCudaValue) -> $publishDir ..."
     dotnet publish PowerAim/PowerAim.csproj @commonArgs
     if ($LASTEXITCODE -ne 0) { throw "PowerAim publish failed with exit code $LASTEXITCODE" }
 
     Write-Host ""
-    Write-Host "Publishing Launcher (IsCuda=$isCudaValue) ..."
+    Write-Host "Publishing Launcher (IsCuda=$isCudaValue) -> $publishDir ..."
     dotnet publish Launcher/Launcher.csproj @commonArgs
     if ($LASTEXITCODE -ne 0) { throw "Launcher publish failed with exit code $LASTEXITCODE" }
 }
@@ -186,60 +184,53 @@ Write-Host ""
 Write-Host "Picked random AssemblyName for this build: $pickedAssemblyName"
 Replace-AssemblyName -newName $pickedAssemblyName -filePath $csprojPath
 
-# Normal Build
+# Each variant lands in its OWN dedicated folder under bin/Release so the two builds can never mix
+# native DLLs. The release .zips are written next to them in $outputDir.
+$cudaDir = Join-Path $outputDir "cuda"
+$dmlDir  = Join-Path $outputDir "directml"
+
+# ---- CUDA variant ----
 $buildSucceeded = $true
 try {
-    Write-Host "Building the project with CUDA..."
-    Build-ProjectWithCuda -isCuda:$true
+    Write-Host "Building the CUDA variant -> $cudaDir ..."
+    Build-ProjectWithCuda -isCuda:$true -publishDir $cudaDir
 } catch {
     $buildSucceeded = $false
-    Write-Host "Build failed. Reverting .csproj file to the old version."
+    Write-Host "CUDA build failed: $_. Reverting .csproj file to the old version."
     Replace-Version -oldVersion $currentVersion -newVersion $oldversion -filePath $csprojPath
 }
 
 if ($buildSucceeded) {
-    $paths = @("net10.0-windows", "win-x64", "publish")
-    $zipContent = $outputDir
-    foreach ($path in $paths) {
-        $zipContent = Join-Path $zipContent $path
-    }
+    # ZIP the CUDA build (Release_<v>_cuda.zip) from the cuda\ folder.
+    $zipFileName = ("Release_${currentVersion}_cuda.zip" -replace '(^\s+|\s+$)','' -replace '\s+',' ')
+    Compress-Archive -Path "$cudaDir\*" -DestinationPath (Join-Path $outputDir $zipFileName) -Force
+    Write-Host "CUDA build compressed into $zipFileName."
 
-    # Define the zip file name and path    
-    $zipFileName = "Release_${currentVersion}_cuda.zip"
-    $zipFileName  = $zipFileName -replace '(^\s+|\s+$)','' -replace '\s+',' '
-
-    $zipFilePath = Join-Path $outputDir $zipFileName
-
-    # Compress the output directory into a zip file
-    Compress-Archive -Path $zipContent\* -DestinationPath $zipFilePath
-
-    Write-Host "Output directory compressed into $zipFileName in the Release folder."
-
-    # Rename and copy Launcher.exe to Installer.exe
-    $launcherPath = Join-Path $zipContent "Launcher.exe"
+    # Rename and copy Launcher.exe to Installer.exe (from the CUDA folder).
+    $launcherPath = Join-Path $cudaDir "Launcher.exe"
     $installerPath = Join-Path $outputDir "Installer.exe"
-
     if (Test-Path $launcherPath) {
-        Copy-Item -Path $launcherPath -Destination $installerPath
+        Copy-Item -Path $launcherPath -Destination $installerPath -Force
         Write-Host "Launcher.exe copied and renamed to Installer.exe in the Release folder."
     } else {
         Write-Host "Launcher.exe not found, skipping the copy operation."
     }
 
-    # CUDA Build
-    Write-Host "Building the project without CUDA..."
-    Build-ProjectWithCuda -isCuda:$false
+    # ---- DirectML variant ----
+    try {
+        Write-Host "Building the DirectML variant -> $dmlDir ..."
+        Build-ProjectWithCuda -isCuda:$false -publishDir $dmlDir
+    } catch {
+        $buildSucceeded = $false
+        Write-Host "DirectML build failed: $_"
+    }
+}
 
-    # ZIP CUDA build
-    $zipFileName = "Release_${currentVersion}.zip"
-    $zipFileName  = $zipFileName -replace '(^\s+|\s+$)','' -replace '\s+',' '
-
-    $cudaZipFilePath = Join-Path $outputDir $zipFileName
-
-    # Compress the output directory into a CUDA zip file
-    Compress-Archive -Path $zipContent\* -DestinationPath $cudaZipFilePath
-
-    Write-Host "Output directory compressed into $zipFileName in the Release folder."
+if ($buildSucceeded) {
+    # ZIP the DirectML build (plain Release_<v>.zip — the "normal" download) from the directml\ folder.
+    $zipFileName = ("Release_${currentVersion}.zip" -replace '(^\s+|\s+$)','' -replace '\s+',' ')
+    Compress-Archive -Path "$dmlDir\*" -DestinationPath (Join-Path $outputDir $zipFileName) -Force
+    Write-Host "DirectML build compressed into $zipFileName."
 
     if ($versionUpdated) {
         # Checkout to master branch

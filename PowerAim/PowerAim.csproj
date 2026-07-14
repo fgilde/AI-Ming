@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup Label="Globals" Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <Microsoft_AI_DirectML_SkipDebugLayerCopy>True</Microsoft_AI_DirectML_SkipDebugLayerCopy>
     <Microsoft_AI_DirectML_SkipLibraryCopy>False</Microsoft_AI_DirectML_SkipLibraryCopy>
@@ -32,7 +32,7 @@
     </Product>
     <Title>
     </Title>
-    <AssemblyName>Auto-Lock-In</AssemblyName>
+    <AssemblyName>SmartReticle</AssemblyName>
     <Version>2.2.0.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>False</SignAssembly>

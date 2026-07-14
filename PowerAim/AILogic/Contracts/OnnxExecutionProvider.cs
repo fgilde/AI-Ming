@@ -111,6 +111,9 @@ internal static class OnnxHelper
                 {
                     ["device_id"] = deviceId.ToString(),
                     ["trt_fp16_enable"] = preferFp16 ? "1" : "0",
+                    // Emit ORT's detailed engine-build log so a slow/failing TensorRT build shows WHAT it's
+                    // doing instead of silence (issue: "can't load a model with TensorRT, nothing logged").
+                    ["trt_detailed_build_log"] = "1",
                 };
                 if (!string.IsNullOrWhiteSpace(cacheDir))
                 {

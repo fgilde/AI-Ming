@@ -50,7 +50,22 @@ internal static class OnnxModelSessionFactory
         try
         {
             OnnxExecutionProvider actual = options.SetExecutionProvider(preferredProvider, deviceId, preferFp16, cacheDir, out var diagnostic);
-            session = new InferenceSession(modelPath, options);
+
+            // Creating the session is where TensorRT builds (or loads) its engine. The FIRST build for a
+            // given model/shape can take 30s–2min with ZERO output — which looks exactly like a hang
+            // ("Initialized with provider TensorRT" is logged, then silence). Emit a start line, a
+            // heartbeat every 15s with elapsed time, and a done line, so the log clearly shows whether
+            // it's still progressing, genuinely stuck (heartbeats stop), or finished.
+            Console.WriteLine($"Building inference session with {actual} — this is where TensorRT builds/loads its engine (first time can be slow) ...");
+            var buildSw = System.Diagnostics.Stopwatch.StartNew();
+            using (new System.Threading.Timer(_ =>
+                       Console.WriteLine($"  ... still building with {actual} — {buildSw.Elapsed.TotalSeconds:F0}s elapsed"),
+                       null, TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(15)))
+            {
+                session = new InferenceSession(modelPath, options);
+            }
+            buildSw.Stop();
+            Console.WriteLine($"Inference session ready with {actual} in {buildSw.Elapsed.TotalSeconds:F1}s.");
 
             var (imageSize, isDynamic) = DetectInputImageSize(session);
             var outputNames = new List<string>(session.OutputMetadata.Keys);

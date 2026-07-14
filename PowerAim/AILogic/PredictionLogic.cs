@@ -157,6 +157,15 @@ public class PredictionLogic : IPredictionLogic
         string cacheDir = System.IO.Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PowerAim", "trt-cache");
 
+        // Heads-up before the (potentially long, silent) TensorRT engine build, so the user doesn't
+        // think the app froze — the first build for a given model can take a couple of minutes; it's
+        // cached afterwards. Only when TensorRT is actually being attempted and its runtime is present.
+        if (provider == OnnxExecutionProvider.TensorRT && TensorRtRuntime.IsAvailable())
+        {
+            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+                new NoticeBar(Locale.TensorRtBuilding, 8000).Show()));
+        }
+
         var loaded = OnnxModelSessionFactory.Load(effectiveModelPath, provider, sessionOptions, deviceId, preferFp16Trt, cacheDir);
         _onnxModel = loaded.Session;
         _outputNames = loaded.OutputNames;
