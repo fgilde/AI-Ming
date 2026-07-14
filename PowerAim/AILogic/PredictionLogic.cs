@@ -40,6 +40,7 @@ public class PredictionLogic : IPredictionLogic
     private DateTime lastSavedTime = DateTime.MinValue;
     private InferenceSession? _onnxModel;
     private List<string> _outputNames = new();
+    private string _inputName = "images"; // the model's real input name, read at load (not all are "images")
     private readonly RunOptions? _modeloptions = new();
 
     private int _imageSize = DefaultImageSize;
@@ -159,8 +160,26 @@ public class PredictionLogic : IPredictionLogic
         var loaded = OnnxModelSessionFactory.Load(effectiveModelPath, provider, sessionOptions, deviceId, preferFp16Trt, cacheDir);
         _onnxModel = loaded.Session;
         _outputNames = loaded.OutputNames;
+        _inputName = loaded.InputName;
         ExecutionProvider = loaded.ExecutionProvider;
         _isDynamicModel = loaded.IsDynamicInput;
+
+        // Transparency: if we didn't get the requested provider (e.g. TensorRT silently fell back to
+        // CUDA because nvinfer isn't installed, or DirectML dropped to CPU), say so — but stay quiet for
+        // an expected Auto fallback that still landed on a GPU.
+        if (!string.IsNullOrEmpty(loaded.Diagnostic))
+        {
+            var pref = AppConfig.Current?.AISettings?.PreferredExecutionProvider ?? ExecutionProviderPreference.Auto;
+            if (pref != ExecutionProviderPreference.Auto || ExecutionProvider == OnnxExecutionProvider.Cpu)
+            {
+                // A drop to CPU almost always means a native DLL isn't next to the exe (common with a
+                // self-contained single-file publish). Append a presence probe so the notice self-diagnoses
+                // instead of just saying "failed".
+                var extra = ExecutionProvider == OnnxExecutionProvider.Cpu ? "  " + NativePresenceHint() : "";
+                var msg = string.Format(Locale.ProviderFallbackFormat, loaded.Diagnostic + extra);
+                Application.Current?.Dispatcher.BeginInvoke(new Action(() => new NoticeBar(msg, 12000).Show()));
+            }
+        }
 
         // Determine the runtime image size: prefer model metadata for fixed models; use the
         // configured override (SliderSettings.ImageSize) for dynamic-axis ONNX models.
@@ -231,6 +250,22 @@ public class PredictionLogic : IPredictionLogic
         }
         catch { /* fall back to the original path */ }
         return modelPath;
+    }
+
+    /// <summary>
+    ///     Presence probe for the native runtime DLLs next to the exe, appended to the provider-fallback
+    ///     notice so a "dropped to CPU" is instantly diagnosable: a missing native (typical of a
+    ///     self-contained single-file publish that didn't lay the DLL down) vs. a runtime/config failure.
+    /// </summary>
+    private static string NativePresenceHint()
+    {
+        try
+        {
+            string dir = AppContext.BaseDirectory;
+            string Mark(string n) => File.Exists(Path.Combine(dir, n)) ? "✓" : "✗";
+            return $"[DirectML.dll {Mark("DirectML.dll")}, onnxruntime.dll {Mark("onnxruntime.dll")}, providers_shared {Mark("onnxruntime_providers_shared.dll")}]";
+        }
+        catch { return ""; }
     }
 
     /// <summary>
@@ -371,7 +406,7 @@ public class PredictionLogic : IPredictionLogic
                     inputTensor = new DenseTensor<float>(modelFrame.ToFloatArray(), [1, 3, h, w]);
                 }
 
-                var inputs = new List<NamedOnnxValue> { NamedOnnxValue.CreateFromTensor("images", inputTensor) };
+                var inputs = new List<NamedOnnxValue> { NamedOnnxValue.CreateFromTensor(_inputName, inputTensor) };
                 results = _onnxModel.Run(inputs, _outputNames, _modeloptions);
             }
             finally

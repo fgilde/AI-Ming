@@ -13,8 +13,10 @@ public enum OnnxExecutionProvider
 internal static class OnnxHelper
 {
     public static OnnxExecutionProvider SetExecutionProvider(this SessionOptions sessionOptions,
-        OnnxExecutionProvider preferredProvider, int deviceId = 0, bool preferFp16 = false, string? cacheDir = null)
+        OnnxExecutionProvider preferredProvider, int deviceId, bool preferFp16, string? cacheDir,
+        out string? diagnostic)
     {
+        diagnostic = null;
         OnnxExecutionProvider[] fallbackOrder;
 
         switch (preferredProvider)
@@ -33,6 +35,11 @@ internal static class OnnxHelper
                 break;
         }
 
+        // Collect WHY each provider ahead of the winner was skipped, so the caller can surface it
+        // (previously these reasons only went to Console — the user saw "nothing happened" when e.g.
+        // TensorRT silently fell back to CUDA, or DirectML fell all the way to CPU).
+        var skipped = new List<string>();
+
         foreach (var provider in fallbackOrder)
         {
             // The picker stores a DXGI adapter index; CUDA/TensorRT need the NVIDIA-only CUDA ordinal
@@ -41,7 +48,7 @@ internal static class OnnxHelper
             int providerDeviceId = ResolveDeviceId(provider, deviceId);
             if (providerDeviceId < 0)
             {
-                Console.WriteLine($"Skipping provider {provider}: selected adapter (DXGI index {deviceId}) is not a valid {provider} device.");
+                skipped.Add($"{provider}: selected GPU (DXGI #{deviceId}) is not a valid {provider} device");
                 continue;
             }
 
@@ -50,7 +57,7 @@ internal static class OnnxHelper
             // without them we'd commit to TensorRT and only fail later, bypassing the CUDA fallback.
             if (provider == OnnxExecutionProvider.TensorRT && !PowerAim.AILogic.TensorRtRuntime.IsAvailable())
             {
-                Console.WriteLine("Skipping provider TensorRT: runtime (nvinfer) not found.");
+                skipped.Add($"{provider}: runtime (nvinfer) not installed — run the CUDA / TensorRT setup");
                 continue;
             }
 
@@ -61,16 +68,22 @@ internal static class OnnxHelper
                     AppendConfigured(sessionOptions, provider, providerDeviceId, preferFp16, cacheDir);
                     Console.WriteLine($"Initialized with provider {provider} on device {providerDeviceId} " +
                                       $"(requested DXGI adapter index {deviceId}, fp16={preferFp16}).");
+                    // If we didn't get the requested provider, tell the caller what happened + why.
+                    if (provider != preferredProvider && skipped.Count > 0)
+                        diagnostic = $"'{preferredProvider}' → '{provider}': {string.Join("; ", skipped)}";
                     return provider;
                 }
+                skipped.Add($"{provider}: not available in this build");
             }
-            catch(Exception e)
+            catch (Exception e)
             {
+                skipped.Add($"{provider}: {e.Message}");
                 Console.WriteLine($"Failed to initialize provider {provider}. Message {e.Message}");
             }
         }
 
-        throw new InvalidOperationException("No suitable execution provider found.");
+        throw new InvalidOperationException(
+            $"No suitable execution provider found. {string.Join("; ", skipped)}");
     }
 
     /// <summary>

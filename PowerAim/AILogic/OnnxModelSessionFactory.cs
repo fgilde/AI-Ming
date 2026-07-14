@@ -49,13 +49,16 @@ internal static class OnnxModelSessionFactory
         InferenceSession? session = null;
         try
         {
-            OnnxExecutionProvider actual = options.SetExecutionProvider(preferredProvider, deviceId, preferFp16, cacheDir);
+            OnnxExecutionProvider actual = options.SetExecutionProvider(preferredProvider, deviceId, preferFp16, cacheDir, out var diagnostic);
             session = new InferenceSession(modelPath, options);
 
             var (imageSize, isDynamic) = DetectInputImageSize(session);
             var outputNames = new List<string>(session.OutputMetadata.Keys);
+            // Feed the model by its ACTUAL input name — not every YOLO export calls it "images"
+            // (some use "input", "input.1", …). Hard-coding "images" threw at Run() for those.
+            var inputName = session.InputMetadata.Keys.FirstOrDefault() ?? "images";
 
-            var result = new OnnxModelLoadResult(session, outputNames, actual, imageSize, isDynamic);
+            var result = new OnnxModelLoadResult(session, outputNames, inputName, actual, imageSize, isDynamic, diagnostic);
             session = null; // ownership transferred to result
             return result;
         }
@@ -111,6 +114,8 @@ internal static class OnnxModelSessionFactory
 internal sealed record OnnxModelLoadResult(
     InferenceSession Session,
     List<string> OutputNames,
+    string InputName,
     OnnxExecutionProvider ExecutionProvider,
     int InputImageSize,
-    bool IsDynamicInput);
+    bool IsDynamicInput,
+    string? Diagnostic = null);

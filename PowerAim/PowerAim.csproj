@@ -45,7 +45,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <IsCuda>false</IsCuda>
+    <IsCuda>true</IsCuda>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(IsCuda)' == 'true'">

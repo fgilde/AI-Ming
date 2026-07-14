@@ -99,8 +99,12 @@ public partial class MainWindow
             if (PowerAim.AILogic.TensorRtRuntime.SupportedInThisBuild())
                 eps.Add(ExecutionProviderPreference.Tensorrt);
         }
-        else if (PowerAim.AILogic.Contracts.OnnxHelper.CanWork(PowerAim.AILogic.Contracts.OnnxExecutionProvider.DirectML))
+        else
         {
+            // DirectML build: always offer DirectML — it IS the runtime shipped in this binary. Don't hide
+            // it behind a CanWork probe (which can reject it for subtle option/registration reasons even
+            // when it works at session time); if DML genuinely can't init, the load falls back to CPU and
+            // the diagnostic explains why — better than silently omitting the only GPU option.
             eps.Add(ExecutionProviderPreference.DirectML);
         }
         eps.Add(ExecutionProviderPreference.Cpu);
