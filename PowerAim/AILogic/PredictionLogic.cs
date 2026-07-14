@@ -172,10 +172,15 @@ public class PredictionLogic : IPredictionLogic
             var pref = AppConfig.Current?.AISettings?.PreferredExecutionProvider ?? ExecutionProviderPreference.Auto;
             if (pref != ExecutionProviderPreference.Auto || ExecutionProvider == OnnxExecutionProvider.Cpu)
             {
-                // A drop to CPU almost always means a native DLL isn't next to the exe (common with a
-                // self-contained single-file publish). Append a presence probe so the notice self-diagnoses
-                // instead of just saying "failed".
-                var extra = ExecutionProvider == OnnxExecutionProvider.Cpu ? "  " + NativePresenceHint() : "";
+                var extra = "";
+                if (ExecutionProvider == OnnxExecutionProvider.Cpu)
+                {
+                    // A CPU fallback is the slow / jittery case (issues #12 & #20). Append a native-DLL
+                    // presence probe (so a missing native self-diagnoses) plus the concrete remedy for
+                    // THIS build variant.
+                    extra = "  " + NativePresenceHint() + "  → "
+                          + (ApplicationConstants.IsCudaBuild ? Locale.CpuFallbackHintCuda : Locale.CpuFallbackHintDirectMl);
+                }
                 var msg = string.Format(Locale.ProviderFallbackFormat, loaded.Diagnostic + extra);
                 Application.Current?.Dispatcher.BeginInvoke(new Action(() => new NoticeBar(msg, 12000).Show()));
             }

@@ -723,6 +723,8 @@
   "OperationFailedFormat": "Operation fehlgeschlagen: {0}",
   "OutputShapeMismatchFormat": "Die Ausgabe-Shape {1} dieses Modells entspricht nicht der erwarteten {0} (channels-first [1, 4+Klassen, Anker]). Erkennungen könnten falsch oder leer sein — bitte exportiere es als normales YOLOv8-ONNX-Erkennungsmodell.",
   "ProviderFallbackFormat": "Execution-Provider gewechselt — {0}",
+  "CpuFallbackHintCuda": "Installiere CUDA 12 + cuDNN 9 (siehe CUDA/TensorRT-Setup) oder nutze den DirectML-Build.",
+  "CpuFallbackHintDirectMl": "GPU (DirectML) konnte nicht geladen werden — der Download ist evtl. unvollständig; lade den DirectML-Build neu.",
   "Overlays": "Overlays",
   "PatternArmedButNoneSelected": "Muster-Playback scharf, aber kein Muster ausgewählt. Öffne 'Recoil-Muster…' und klicke eines in der Liste an.",
   "PatternDefaultNameFormat": "Muster {0}",

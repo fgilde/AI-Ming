@@ -723,6 +723,8 @@
   "OperationFailedFormat": "Operation failed: {0}",
   "OutputShapeMismatchFormat": "This model's output {1} doesn't match the expected {0} (channels-first [1, 4+classes, anchors]). Detections may be wrong or empty — please re-export it as a standard YOLOv8 ONNX detection model.",
   "ProviderFallbackFormat": "Execution provider changed — {0}",
+  "CpuFallbackHintCuda": "Install CUDA 12 + cuDNN 9 (see CUDA / TensorRT setup), or use the DirectML build.",
+  "CpuFallbackHintDirectMl": "GPU (DirectML) couldn't load — the download may be incomplete; re-download the DirectML build.",
   "Overlays": "Overlays",
   "PatternArmedButNoneSelected": "Pattern playback armed but no pattern selected. Open 'Recoil patterns…' and click one in the list.",
   "PatternDefaultNameFormat": "Pattern {0}",

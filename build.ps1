@@ -34,6 +34,18 @@ function Build-ProjectWithCuda {
 
     dotnet clean --configuration Release
 
+    # Purge the framework/publish output between variants. `dotnet clean` does NOT remove the `publish/`
+    # folder, so without this the second variant (DirectML) is layered on top of the first variant's
+    # (CUDA) leftover native DLLs — most importantly a stale CUDA `onnxruntime.dll` that has NO DirectML
+    # entry point. The result was a "DirectML" release that silently ran on CPU (issue #20), because
+    # AppendExecutionProvider_DML can't be found in the wrong onnxruntime.dll. The release .zips live
+    # directly in $outputDir (bin/Release), NOT under net10.0-windows/, so they survive this cleanup.
+    $frameworkOutput = Join-Path $outputDir "net10.0-windows"
+    if (Test-Path $frameworkOutput) {
+        Remove-Item -Recurse -Force $frameworkOutput
+        Write-Host "Cleared previous publish output at $frameworkOutput"
+    }
+
     Write-Host ""
     Write-Host "Publishing PowerAim (IsCuda=$isCudaValue) ..."
     dotnet publish PowerAim/PowerAim.csproj @commonArgs

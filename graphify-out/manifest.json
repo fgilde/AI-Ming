@@ -1,0 +1,2447 @@
+{
+  "Core/CachingHttpClient.cs": {
+    "mtime": 1782743402.2259421,
+    "ast_hash": "9197094bd01a0304c678f24a24b0976e",
+    "semantic_hash": "9197094bd01a0304c678f24a24b0976e"
+  },
+  "Core/Constants.cs": {
+    "mtime": 1783970265.6108985,
+    "ast_hash": "5150f52f7ab69cac569b597100f96363",
+    "semantic_hash": "5150f52f7ab69cac569b597100f96363"
+  },
+  "Core/Core.csproj": {
+    "mtime": 1779806763.3341465,
+    "ast_hash": "771d3b31259e63cdf22dfa690d2762be",
+    "semantic_hash": "771d3b31259e63cdf22dfa690d2762be"
+  },
+  "Core/GitHubRelease.cs": {
+    "mtime": 1724159255.9854136,
+    "ast_hash": "fdac9ecb0bc0559c31154c971dae72be",
+    "semantic_hash": "fdac9ecb0bc0559c31154c971dae72be"
+  },
+  "Core/GithubManager.cs": {
+    "mtime": 1782743402.228942,
+    "ast_hash": "4ba9cdfd325ef78386d24d76cee641ce",
+    "semantic_hash": "4ba9cdfd325ef78386d24d76cee641ce"
+  },
+  "Core/UpdateManager.cs": {
+    "mtime": 1780224490.4727018,
+    "ast_hash": "0658914a4b67d9b0296d923977853c22",
+    "semantic_hash": "0658914a4b67d9b0296d923977853c22"
+  },
+  "Launcher/App.xaml": {
+    "mtime": 1779806763.3361447,
+    "ast_hash": "5e46df0610b196ca601cc5237d3107b9",
+    "semantic_hash": "5e46df0610b196ca601cc5237d3107b9"
+  },
+  "Launcher/App.xaml.cs": {
+    "mtime": 1724067009.685085,
+    "ast_hash": "1c6edf6f7846642fbfe6ee396d865c11",
+    "semantic_hash": "1c6edf6f7846642fbfe6ee396d865c11"
+  },
+  "Launcher/AssemblyInfo.cs": {
+    "mtime": 1723799544.873917,
+    "ast_hash": "ab620c0dcb1ef4bc35ed75d4e2bfef89",
+    "semantic_hash": "ab620c0dcb1ef4bc35ed75d4e2bfef89"
+  },
+  "Launcher/BaseDialog.cs": {
+    "mtime": 1779806763.3366458,
+    "ast_hash": "ba8a183a22db381e3cc56b00c15f5ee1",
+    "semantic_hash": "ba8a183a22db381e3cc56b00c15f5ee1"
+  },
+  "Launcher/ExecutableManager.cs": {
+    "mtime": 1779806763.3371446,
+    "ast_hash": "054193b1923ecd548f43c5a65502a40c",
+    "semantic_hash": "054193b1923ecd548f43c5a65502a40c"
+  },
+  "Launcher/Launcher.csproj": {
+    "mtime": 1779806763.3381479,
+    "ast_hash": "1d60f132adaa1fb2304969ae9de10718",
+    "semantic_hash": "1d60f132adaa1fb2304969ae9de10718"
+  },
+  "Launcher/MainWindow.xaml": {
+    "mtime": 1779806763.339147,
+    "ast_hash": "95fbc4362aca4ff6ec91ceb970b79053",
+    "semantic_hash": "95fbc4362aca4ff6ec91ceb970b79053"
+  },
+  "Launcher/MainWindow.xaml.cs": {
+    "mtime": 1779993881.5904555,
+    "ast_hash": "0fab28de9b87321a7fc669f7db8de84f",
+    "semantic_hash": "0fab28de9b87321a7fc669f7db8de84f"
+  },
+  "Launcher/ReleaseManager.cs": {
+    "mtime": 1780224547.1110134,
+    "ast_hash": "7793a99feec6ced9d28e03abcab6674d",
+    "semantic_hash": "7793a99feec6ced9d28e03abcab6674d"
+  },
+  "Launcher/WindowSettingsManager.cs": {
+    "mtime": 1779806763.347152,
+    "ast_hash": "0a842a059699e8cf67dc7beb80d32ae5",
+    "semantic_hash": "0a842a059699e8cf67dc7beb80d32ae5"
+  },
+  "PowerAim.sln": {
+    "mtime": 1780230885.0782943,
+    "ast_hash": "f59a44e8900502c53b7abc2d25eb84ac",
+    "semantic_hash": "f59a44e8900502c53b7abc2d25eb84ac"
+  },
+  "PowerAim/AILogic/AIManager.cs": {
+    "mtime": 1783969163.882326,
+    "ast_hash": "09875f96dbc6536944699216a93f1051",
+    "semantic_hash": "09875f96dbc6536944699216a93f1051"
+  },
+  "PowerAim/AILogic/Actions/AimingAction.cs": {
+    "mtime": 1783888051.5178828,
+    "ast_hash": "c0d1600506fa04b47848386be9bd127e",
+    "semantic_hash": "c0d1600506fa04b47848386be9bd127e"
+  },
+  "PowerAim/AILogic/Actions/AntiRecoilAction.cs": {
+    "mtime": 1782743402.2349544,
+    "ast_hash": "38c73ac412b087873b3f063cda0a1027",
+    "semantic_hash": "38c73ac412b087873b3f063cda0a1027"
+  },
+  "PowerAim/AILogic/Actions/AutoPlayGameAction.cs": {
+    "mtime": 1782743402.2359567,
+    "ast_hash": "3e067ddb317475d5227b78f84f99d3ba",
+    "semantic_hash": "3e067ddb317475d5227b78f84f99d3ba"
+  },
+  "PowerAim/AILogic/Actions/AutoPlayLearningAction.cs": {
+    "mtime": 1782743402.2369547,
+    "ast_hash": "b7740663f44f6c451cc1417cb8ffb042",
+    "semantic_hash": "b7740663f44f6c451cc1417cb8ffb042"
+  },
+  "PowerAim/AILogic/Actions/AutoTriggerAction.cs": {
+    "mtime": 1783888051.5199513,
+    "ast_hash": "7ae10de9ad23730f456af2e9e11c196b",
+    "semantic_hash": "7ae10de9ad23730f456af2e9e11c196b"
+  },
+  "PowerAim/AILogic/Actions/BaseAction.cs": {
+    "mtime": 1783888051.521591,
+    "ast_hash": "fcc5870691707185196b4148bfa6d31e",
+    "semantic_hash": "fcc5870691707185196b4148bfa6d31e"
+  },
+  "PowerAim/AILogic/Actions/ImageBasedAntiRecoilAction.cs": {
+    "mtime": 1783888051.5226374,
+    "ast_hash": "af96249e4045b88e15b732679f9e0b6e",
+    "semantic_hash": "af96249e4045b88e15b732679f9e0b6e"
+  },
+  "PowerAim/AILogic/Actions/OverlayAction.cs": {
+    "mtime": 1783888051.5236814,
+    "ast_hash": "6a965edbacaf1cbd91d5ebff7c676d84",
+    "semantic_hash": "6a965edbacaf1cbd91d5ebff7c676d84"
+  },
+  "PowerAim/AILogic/Actions/RecoilPatternPlaybackAction.cs": {
+    "mtime": 1782743402.2439735,
+    "ast_hash": "76e20c513656bb5ca86451051dba17f6",
+    "semantic_hash": "76e20c513656bb5ca86451051dba17f6"
+  },
+  "PowerAim/AILogic/AimProfileManager.cs": {
+    "mtime": 1782743402.2449768,
+    "ast_hash": "1fbe95c770823801c31a53a3ae27082d",
+    "semantic_hash": "1fbe95c770823801c31a53a3ae27082d"
+  },
+  "PowerAim/AILogic/Aiming/AimController.cs": {
+    "mtime": 1782891043.1852114,
+    "ast_hash": "586fd882e2e67c094ee828cbad122cba",
+    "semantic_hash": "586fd882e2e67c094ee828cbad122cba"
+  },
+  "PowerAim/AILogic/Aiming/OneEuroFilter.cs": {
+    "mtime": 1782743402.2484825,
+    "ast_hash": "a18b42384a6a7cc1b74d877dfe7136fc",
+    "semantic_hash": "a18b42384a6a7cc1b74d877dfe7136fc"
+  },
+  "PowerAim/AILogic/Aiming/TargetSelector.cs": {
+    "mtime": 1783888051.5263603,
+    "ast_hash": "886681163c7955779c5993fb6fccedba",
+    "semantic_hash": "886681163c7955779c5993fb6fccedba"
+  },
+  "PowerAim/AILogic/Aiming/TargetTrack.cs": {
+    "mtime": 1782743402.249992,
+    "ast_hash": "bf6970e100f302cfbea998a9b1d841eb",
+    "semantic_hash": "bf6970e100f302cfbea998a9b1d841eb"
+  },
+  "PowerAim/AILogic/Aiming/TargetTracker.cs": {
+    "mtime": 1783888051.5274107,
+    "ast_hash": "6e3c2827430e0208f85885aed269c1c5",
+    "semantic_hash": "6e3c2827430e0208f85885aed269c1c5"
+  },
+  "PowerAim/AILogic/AntiRecoilProfileManager.cs": {
+    "mtime": 1780329490.9051242,
+    "ast_hash": "a419372a0f506bb63192d604cd7bba3b",
+    "semantic_hash": "a419372a0f506bb63192d604cd7bba3b"
+  },
+  "PowerAim/AILogic/AutoPlayLearningModel.cs": {
+    "mtime": 1779806763.3581588,
+    "ast_hash": "15d32e118888ab1fdd84c38832faead6",
+    "semantic_hash": "15d32e118888ab1fdd84c38832faead6"
+  },
+  "PowerAim/AILogic/CaptureSource.cs": {
+    "mtime": 1782743402.25351,
+    "ast_hash": "303970b5a0701aa2672aef95c164003d",
+    "semantic_hash": "303970b5a0701aa2672aef95c164003d"
+  },
+  "PowerAim/AILogic/Contracts/IAction.cs": {
+    "mtime": 1779806763.3591602,
+    "ast_hash": "c2bceb1d43155f20c955331d24949f17",
+    "semantic_hash": "c2bceb1d43155f20c955331d24949f17"
+  },
+  "PowerAim/AILogic/Contracts/ICapture.cs": {
+    "mtime": 1779806763.3596604,
+    "ast_hash": "bb02440d63e003f994fc3bcf11f07df4",
+    "semantic_hash": "bb02440d63e003f994fc3bcf11f07df4"
+  },
+  "PowerAim/AILogic/Contracts/IOllamaClient.cs": {
+    "mtime": 1779806763.3606606,
+    "ast_hash": "6c5de936c2fc4ff0e3b0a38c63318ff1",
+    "semantic_hash": "6c5de936c2fc4ff0e3b0a38c63318ff1"
+  },
+  "PowerAim/AILogic/Contracts/IPredictionLogic.cs": {
+    "mtime": 1783969123.8180833,
+    "ast_hash": "a48c5f8bf4bf0d45aa713992b5b97e29",
+    "semantic_hash": "a48c5f8bf4bf0d45aa713992b5b97e29"
+  },
+  "PowerAim/AILogic/Contracts/OnnxExecutionProvider.cs": {
+    "mtime": 1783972548.890027,
+    "ast_hash": "68ef60479d8397173ce9299cfc754d7f",
+    "semantic_hash": "68ef60479d8397173ce9299cfc754d7f"
+  },
+  "PowerAim/AILogic/CudaDiagnostics.cs": {
+    "mtime": 1783888051.5303113,
+    "ast_hash": "f5b45de2c2fcb5f146daf58076acd6eb",
+    "semantic_hash": "f5b45de2c2fcb5f146daf58076acd6eb"
+  },
+  "PowerAim/AILogic/DetectionEventBus.cs": {
+    "mtime": 1780329598.2118263,
+    "ast_hash": "bf9015ad125cdd128cb411e8871cb538",
+    "semantic_hash": "bf9015ad125cdd128cb411e8871cb538"
+  },
+  "PowerAim/AILogic/DetectionState.cs": {
+    "mtime": 1782753356.2172031,
+    "ast_hash": "8b6bfd28e865650d8863b0ea5c7ec8a6",
+    "semantic_hash": "8b6bfd28e865650d8863b0ea5c7ec8a6"
+  },
+  "PowerAim/AILogic/DxgiScreenCapture.cs": {
+    "mtime": 1780224574.9803555,
+    "ast_hash": "e619bc84b3c53578e65bf9d2bb8f5af3",
+    "semantic_hash": "e619bc84b3c53578e65bf9d2bb8f5af3"
+  },
+  "PowerAim/AILogic/FpsCapHelper.cs": {
+    "mtime": 1780224820.192871,
+    "ast_hash": "c9edca3ffdbb6b04f42d89a9f65d15af",
+    "semantic_hash": "c9edca3ffdbb6b04f42d89a9f65d15af"
+  },
+  "PowerAim/AILogic/GdiScreenCapture.cs": {
+    "mtime": 1779806763.3631587,
+    "ast_hash": "815a9159d0949428d5a1255ecb81502f",
+    "semantic_hash": "815a9159d0949428d5a1255ecb81502f"
+  },
+  "PowerAim/AILogic/GpuAdapterEnumerator.cs": {
+    "mtime": 1782891220.4889157,
+    "ast_hash": "620180c003772270f56d877d00c7145d",
+    "semantic_hash": "620180c003772270f56d877d00c7145d"
+  },
+  "PowerAim/AILogic/GpuName.cs": {
+    "mtime": 1782743402.2565136,
+    "ast_hash": "6b713f0d34e2199a490bba4c9c69cf65",
+    "semantic_hash": "6b713f0d34e2199a490bba4c9c69cf65"
+  },
+  "PowerAim/AILogic/MathUtil.cs": {
+    "mtime": 1783888051.5313144,
+    "ast_hash": "06f7ca318812bf8951244e4d7014261b",
+    "semantic_hash": "06f7ca318812bf8951244e4d7014261b"
+  },
+  "PowerAim/AILogic/Normalizer.cs": {
+    "mtime": 1779806763.364669,
+    "ast_hash": "85eaae811ffb042264eddde64cb2a06c",
+    "semantic_hash": "85eaae811ffb042264eddde64cb2a06c"
+  },
+  "PowerAim/AILogic/OcrConditionEvaluator.cs": {
+    "mtime": 1782743402.2590184,
+    "ast_hash": "c2639b5e4d15c3f6282e4848ff531268",
+    "semantic_hash": "c2639b5e4d15c3f6282e4848ff531268"
+  },
+  "PowerAim/AILogic/OcrService.cs": {
+    "mtime": 1780381917.0781107,
+    "ast_hash": "52718ac7aea378a9517e618b5ac98193",
+    "semantic_hash": "52718ac7aea378a9517e618b5ac98193"
+  },
+  "PowerAim/AILogic/OllamaClient.cs": {
+    "mtime": 1782743402.2595217,
+    "ast_hash": "bdff02ae4ba91a066251ccc8b842a77a",
+    "semantic_hash": "bdff02ae4ba91a066251ccc8b842a77a"
+  },
+  "PowerAim/AILogic/OnnxModelSessionFactory.cs": {
+    "mtime": 1783972571.2004201,
+    "ast_hash": "6d1268055052362e1e5b97e79e262644",
+    "semantic_hash": "6d1268055052362e1e5b97e79e262644"
+  },
+  "PowerAim/AILogic/PerformanceBenchmark.cs": {
+    "mtime": 1780224671.1594086,
+    "ast_hash": "04a54360c2063d55933911b8938ca6cb",
+    "semantic_hash": "04a54360c2063d55933911b8938ca6cb"
+  },
+  "PowerAim/AILogic/Prediction.cs": {
+    "mtime": 1779806763.367669,
+    "ast_hash": "3fb27760dd729a97963602ffd73a80d6",
+    "semantic_hash": "3fb27760dd729a97963602ffd73a80d6"
+  },
+  "PowerAim/AILogic/PredictionFilter.cs": {
+    "mtime": 1780225128.601812,
+    "ast_hash": "f705fb4ac306f42f1bee208d39bad6c6",
+    "semantic_hash": "f705fb4ac306f42f1bee208d39bad6c6"
+  },
+  "PowerAim/AILogic/PredictionLogic.cs": {
+    "mtime": 1784057182.7363105,
+    "ast_hash": "11d12cac659b7130d4cc7aeeca1ebfd0",
+    "semantic_hash": "11d12cac659b7130d4cc7aeeca1ebfd0"
+  },
+  "PowerAim/AILogic/PredictionManager.cs": {
+    "mtime": 1780224712.435419,
+    "ast_hash": "65770aa8bc1950c8958f88ce0beebe92",
+    "semantic_hash": "65770aa8bc1950c8958f88ce0beebe92"
+  },
+  "PowerAim/AILogic/ProcessCapture.cs": {
+    "mtime": 1782743402.263148,
+    "ast_hash": "ab5ff04476635c1ccb32e13fe8cb7144",
+    "semantic_hash": "ab5ff04476635c1ccb32e13fe8cb7144"
+  },
+  "PowerAim/AILogic/RecoilPatternRecorder.cs": {
+    "mtime": 1779806763.371667,
+    "ast_hash": "803eda5c990ad51422fb00108847f9c9",
+    "semantic_hash": "803eda5c990ad51422fb00108847f9c9"
+  },
+  "PowerAim/AILogic/ReplayBuffer.cs": {
+    "mtime": 1779806763.3721685,
+    "ast_hash": "2488c5458140ece02bb107c8801b7608",
+    "semantic_hash": "2488c5458140ece02bb107c8801b7608"
+  },
+  "PowerAim/AILogic/ScreenCapture.cs": {
+    "mtime": 1779806763.372667,
+    "ast_hash": "e84e133cd5666d0ea7234e45b62fae47",
+    "semantic_hash": "e84e133cd5666d0ea7234e45b62fae47"
+  },
+  "PowerAim/AILogic/SensitivityCalibrator.cs": {
+    "mtime": 1782743402.2641475,
+    "ast_hash": "be4bc629d8ca458cdb6c3af357cf2b0b",
+    "semantic_hash": "be4bc629d8ca458cdb6c3af357cf2b0b"
+  },
+  "PowerAim/AILogic/StickyAimSelector.cs": {
+    "mtime": 1780224736.5725572,
+    "ast_hash": "1e912d219548233631de48244520661b",
+    "semantic_hash": "1e912d219548233631de48244520661b"
+  },
+  "PowerAim/AILogic/TensorRtInstaller.cs": {
+    "mtime": 1783888051.5348225,
+    "ast_hash": "6a7d4285ce672cb05791b0db1a1d330f",
+    "semantic_hash": "6a7d4285ce672cb05791b0db1a1d330f"
+  },
+  "PowerAim/AILogic/TensorRtRuntime.cs": {
+    "mtime": 1783888051.5358224,
+    "ast_hash": "57286760f165c5ac177d9de1a265860d",
+    "semantic_hash": "57286760f165c5ac177d9de1a265860d"
+  },
+  "PowerAim/App.xaml": {
+    "mtime": 1780222039.9499066,
+    "ast_hash": "caa9ce571b71bd557bb96f1b47675e3b",
+    "semantic_hash": "caa9ce571b71bd557bb96f1b47675e3b"
+  },
+  "PowerAim/App.xaml.cs": {
+    "mtime": 1782743402.2661474,
+    "ast_hash": "dd735908ee11c4fa742a4f66a011ecdf",
+    "semantic_hash": "dd735908ee11c4fa742a4f66a011ecdf"
+  },
+  "PowerAim/ApplicationConstants.cs": {
+    "mtime": 1783969343.665874,
+    "ast_hash": "95cc1405466d6635f7ae9b3ddb4cbb1a",
+    "semantic_hash": "95cc1405466d6635f7ae9b3ddb4cbb1a"
+  },
+  "PowerAim/AssemblyInfo.cs": {
+    "mtime": 1779806763.3776855,
+    "ast_hash": "e6dbd390048098ddc53bf054030f22ba",
+    "semantic_hash": "e6dbd390048098ddc53bf054030f22ba"
+  },
+  "PowerAim/Class/Animator.cs": {
+    "mtime": 1782743402.2696557,
+    "ast_hash": "72f358f06ede4b05afdb3f37d6d49e71",
+    "semantic_hash": "72f358f06ede4b05afdb3f37d6d49e71"
+  },
+  "PowerAim/Class/AutoPauseManager.cs": {
+    "mtime": 1782743402.2708495,
+    "ast_hash": "636ab26a5cfb5951712a1a93ce69b319",
+    "semantic_hash": "636ab26a5cfb5951712a1a93ce69b319"
+  },
+  "PowerAim/Class/GlobalSearch.cs": {
+    "mtime": 1782743402.2718468,
+    "ast_hash": "87542a9487f412826a4cfbad9882e1ff",
+    "semantic_hash": "87542a9487f412826a4cfbad9882e1ff"
+  },
+  "PowerAim/Class/KeybindToggleGuard.cs": {
+    "mtime": 1779875063.676927,
+    "ast_hash": "51e7e01574cf172015b7ea80dfe1fd5f",
+    "semantic_hash": "51e7e01574cf172015b7ea80dfe1fd5f"
+  },
+  "PowerAim/Class/Native/DeviceHide.cs": {
+    "mtime": 1779806763.3816853,
+    "ast_hash": "6617c57d0396cb064f9ca98e1c1a8822",
+    "semantic_hash": "6617c57d0396cb064f9ca98e1c1a8822"
+  },
+  "PowerAim/Class/Native/HidGamepadEnumerator.cs": {
+    "mtime": 1779806763.3831854,
+    "ast_hash": "5bb7c047478a139227334f251597a7b4",
+    "semantic_hash": "5bb7c047478a139227334f251597a7b4"
+  },
+  "PowerAim/Class/Native/NativeAPIMethods.cs": {
+    "mtime": 1782745334.4076579,
+    "ast_hash": "f3a652f16a180969bd114689c1cc22e2",
+    "semantic_hash": "f3a652f16a180969bd114689c1cc22e2"
+  },
+  "PowerAim/Class/Native/NativeTypes.cs": {
+    "mtime": 1779806763.3841848,
+    "ast_hash": "deb2dfe3b9e807337ce2edbcd233e42f",
+    "semantic_hash": "deb2dfe3b9e807337ce2edbcd233e42f"
+  },
+  "PowerAim/Class/Notifier.cs": {
+    "mtime": 1782743402.2743566,
+    "ast_hash": "b1bdd18c845b585379097e5ab85021f8",
+    "semantic_hash": "b1bdd18c845b585379097e5ab85021f8"
+  },
+  "PowerAim/Class/ProcessMatcher.cs": {
+    "mtime": 1779806763.3851912,
+    "ast_hash": "95faf2140010894de2e6642dbb2cf11c",
+    "semantic_hash": "95faf2140010894de2e6642dbb2cf11c"
+  },
+  "PowerAim/Class/SessionStats.cs": {
+    "mtime": 1779806763.3856962,
+    "ast_hash": "0e8950ad6655bf56910eb216a5c14b7c",
+    "semantic_hash": "0e8950ad6655bf56910eb216a5c14b7c"
+  },
+  "PowerAim/Class/WindowFocusWatcher.cs": {
+    "mtime": 1779806763.3866963,
+    "ast_hash": "bc161b4dc9fba5b711788d07b25963c9",
+    "semantic_hash": "bc161b4dc9fba5b711788d07b25963c9"
+  },
+  "PowerAim/Config/AISettings.cs": {
+    "mtime": 1783888051.5373316,
+    "ast_hash": "59283825552d7d3c50ca57e042938aad",
+    "semantic_hash": "59283825552d7d3c50ca57e042938aad"
+  },
+  "PowerAim/Config/ActionTrigger.cs": {
+    "mtime": 1780339550.6531048,
+    "ast_hash": "6d297e025d6635880a9467f84b87b335",
+    "semantic_hash": "6d297e025d6635880a9467f84b87b335"
+  },
+  "PowerAim/Config/ActiveProcessSettings.cs": {
+    "mtime": 1779806763.3886974,
+    "ast_hash": "2cb9411e51db0e8d543077dd42b8c0de",
+    "semantic_hash": "2cb9411e51db0e8d543077dd42b8c0de"
+  },
+  "PowerAim/Config/AimDisengageRule.cs": {
+    "mtime": 1780340557.1427355,
+    "ast_hash": "fa89ba2c0cb55e7b3dae1a1aebe390bb",
+    "semantic_hash": "fa89ba2c0cb55e7b3dae1a1aebe390bb"
+  },
+  "PowerAim/Config/AimPresets.cs": {
+    "mtime": 1782743402.2773585,
+    "ast_hash": "fb213a25525be47a3d44da64cb601948",
+    "semantic_hash": "fb213a25525be47a3d44da64cb601948"
+  },
+  "PowerAim/Config/AimProfile.cs": {
+    "mtime": 1783888051.5388348,
+    "ast_hash": "ca41bde87be2af3b7a95b5a4086c205c",
+    "semantic_hash": "ca41bde87be2af3b7a95b5a4086c205c"
+  },
+  "PowerAim/Config/AimSettings.cs": {
+    "mtime": 1782743402.2788622,
+    "ast_hash": "f982b4e4eb15d70482ef8f084b01943a",
+    "semantic_hash": "f982b4e4eb15d70482ef8f084b01943a"
+  },
+  "PowerAim/Config/AntiRecoilProfile.cs": {
+    "mtime": 1780383686.7056415,
+    "ast_hash": "a1ebeb35078a5b41d0c2264bebc2d83b",
+    "semantic_hash": "a1ebeb35078a5b41d0c2264bebc2d83b"
+  },
+  "PowerAim/Config/AntiRecoilSettings.cs": {
+    "mtime": 1780382406.2799995,
+    "ast_hash": "d69eb65f68cf8dc67e889a2b3c5b5777",
+    "semantic_hash": "d69eb65f68cf8dc67e889a2b3c5b5777"
+  },
+  "PowerAim/Config/AppConfig.cs": {
+    "mtime": 1782743402.2803724,
+    "ast_hash": "f1200b60822342b0d70cff7b073c2176",
+    "semantic_hash": "f1200b60822342b0d70cff7b073c2176"
+  },
+  "PowerAim/Config/AutoPlayAction.cs": {
+    "mtime": 1779806763.3916962,
+    "ast_hash": "e151c52e7cf69f3d754950673dc7794a",
+    "semantic_hash": "e151c52e7cf69f3d754950673dc7794a"
+  },
+  "PowerAim/Config/AutoPlayLearningSettings.cs": {
+    "mtime": 1779806763.3926988,
+    "ast_hash": "0b428bb8208af81572e6c8d55e8cda20",
+    "semantic_hash": "0b428bb8208af81572e6c8d55e8cda20"
+  },
+  "PowerAim/Config/AutoPlayProfile.cs": {
+    "mtime": 1780326523.7102196,
+    "ast_hash": "7acf37c5acfe7e27435722c6d01af191",
+    "semantic_hash": "7acf37c5acfe7e27435722c6d01af191"
+  },
+  "PowerAim/Config/BaseSettings.cs": {
+    "mtime": 1782743402.2818763,
+    "ast_hash": "1b7c21e957de455cc9fa5609b622a299",
+    "semantic_hash": "1b7c21e957de455cc9fa5609b622a299"
+  },
+  "PowerAim/Config/BindingSettings.cs": {
+    "mtime": 1779806763.3941965,
+    "ast_hash": "089c03db2d1413e7497dae498f8b848a",
+    "semantic_hash": "089c03db2d1413e7497dae498f8b848a"
+  },
+  "PowerAim/Config/ColorState.cs": {
+    "mtime": 1779872098.3411634,
+    "ast_hash": "fbf16b7f9c1f24b9302735ddc1c41283",
+    "semantic_hash": "fbf16b7f9c1f24b9302735ddc1c41283"
+  },
+  "PowerAim/Config/ControllerMappingProfile.cs": {
+    "mtime": 1779806763.394697,
+    "ast_hash": "82013332cb0e1c0e0fbc3ebe2ff7604f",
+    "semantic_hash": "82013332cb0e1c0e0fbc3ebe2ff7604f"
+  },
+  "PowerAim/Config/ControllerSettings.cs": {
+    "mtime": 1782743402.2838824,
+    "ast_hash": "ca2c6ee34565baa1617cab2487746427",
+    "semantic_hash": "ca2c6ee34565baa1617cab2487746427"
+  },
+  "PowerAim/Config/CrosshairSettings.cs": {
+    "mtime": 1780326539.4035735,
+    "ast_hash": "fa1f18ea38683e951ac8aaf821bd1182",
+    "semantic_hash": "fa1f18ea38683e951ac8aaf821bd1182"
+  },
+  "PowerAim/Config/DetectionAreaType.cs": {
+    "mtime": 1779806763.3967066,
+    "ast_hash": "df30e98ad059ab0399efb2d791232c32",
+    "semantic_hash": "df30e98ad059ab0399efb2d791232c32"
+  },
+  "PowerAim/Config/DetectionMaskRegion.cs": {
+    "mtime": 1779806763.3972085,
+    "ast_hash": "cb97f4692ca7b9d29e5ac1727d03ee99",
+    "semantic_hash": "cb97f4692ca7b9d29e5ac1727d03ee99"
+  },
+  "PowerAim/Config/DropdownState.cs": {
+    "mtime": 1780662512.432768,
+    "ast_hash": "c2d8cdcbad205dc215619ee4d3943ac4",
+    "semantic_hash": "c2d8cdcbad205dc215619ee4d3943ac4"
+  },
+  "PowerAim/Config/FileLocationState.cs": {
+    "mtime": 1779806763.3982062,
+    "ast_hash": "89b4c9f13ec9d9963068cd85ed8958e3",
+    "semantic_hash": "89b4c9f13ec9d9963068cd85ed8958e3"
+  },
+  "PowerAim/Config/GamepadSendMode.cs": {
+    "mtime": 1783888051.5388348,
+    "ast_hash": "30e7dbee1ad2640b335898ad37b50b8e",
+    "semantic_hash": "30e7dbee1ad2640b335898ad37b50b8e"
+  },
+  "PowerAim/Config/InputMapping.cs": {
+    "mtime": 1779806763.399207,
+    "ast_hash": "09c8724ae8affaf0098a48df038fc53b",
+    "semantic_hash": "09c8724ae8affaf0098a48df038fc53b"
+  },
+  "PowerAim/Config/LayoutConfiguration.cs": {
+    "mtime": 1782743402.2848818,
+    "ast_hash": "d685b17ca27836984654231143867dc7",
+    "semantic_hash": "d685b17ca27836984654231143867dc7"
+  },
+  "PowerAim/Config/MinimizeState.cs": {
+    "mtime": 1779806763.4007077,
+    "ast_hash": "cd2814b3782ea74e1b570c6db8175b64",
+    "semantic_hash": "cd2814b3782ea74e1b570c6db8175b64"
+  },
+  "PowerAim/Config/MouseMovementMethod.cs": {
+    "mtime": 1780330746.286901,
+    "ast_hash": "748388850f8f5ebfe67d40233a77144a",
+    "semantic_hash": "748388850f8f5ebfe67d40233a77144a"
+  },
+  "PowerAim/Config/MovementPathType.cs": {
+    "mtime": 1780224781.7409797,
+    "ast_hash": "83aeac552116ea94db70d4678c6421ba",
+    "semantic_hash": "83aeac552116ea94db70d4678c6421ba"
+  },
+  "PowerAim/Config/OcrConditionNode.cs": {
+    "mtime": 1780341043.5968504,
+    "ast_hash": "30ee4c49850472b06e016b6f20b4d4ba",
+    "semantic_hash": "30ee4c49850472b06e016b6f20b4d4ba"
+  },
+  "PowerAim/Config/OcrRegion.cs": {
+    "mtime": 1779806763.402208,
+    "ast_hash": "39dedd4be3e4605ab07d3126a2bafe61",
+    "semantic_hash": "39dedd4be3e4605ab07d3126a2bafe61"
+  },
+  "PowerAim/Config/OcrSettings.cs": {
+    "mtime": 1780381794.6842985,
+    "ast_hash": "1ff169e5af1367f1818270af0f7e5c0d",
+    "semantic_hash": "1ff169e5af1367f1818270af0f7e5c0d"
+  },
+  "PowerAim/Config/OcrTriggerCondition.cs": {
+    "mtime": 1779867096.1033218,
+    "ast_hash": "e7f3b9518c4f7b8e6e73db026e46ebd1",
+    "semantic_hash": "e7f3b9518c4f7b8e6e73db026e46ebd1"
+  },
+  "PowerAim/Config/OllamaSettings.cs": {
+    "mtime": 1779806763.4032085,
+    "ast_hash": "e46e5d9c09d2ea845e6a266078f915f5",
+    "semantic_hash": "e46e5d9c09d2ea845e6a266078f915f5"
+  },
+  "PowerAim/Config/OverlayDrawingMethod.cs": {
+    "mtime": 1779806763.403706,
+    "ast_hash": "6e7d7545cbbf39caa46d0120e6015ab6",
+    "semantic_hash": "6e7d7545cbbf39caa46d0120e6015ab6"
+  },
+  "PowerAim/Config/PredictionMethod.cs": {
+    "mtime": 1779806763.4042063,
+    "ast_hash": "6761a2d2761bcfd550ecc6422a7bc52c",
+    "semantic_hash": "6761a2d2761bcfd550ecc6422a7bc52c"
+  },
+  "PowerAim/Config/RecoilPattern.cs": {
+    "mtime": 1779806763.4052072,
+    "ast_hash": "9b84e2bbef7a182a6a909fbde3c0641c",
+    "semantic_hash": "9b84e2bbef7a182a6a909fbde3c0641c"
+  },
+  "PowerAim/Config/ReplaySettings.cs": {
+    "mtime": 1779806763.4052072,
+    "ast_hash": "c2ee6e9c7c4ab51a5274f24537e58226",
+    "semantic_hash": "c2ee6e9c7c4ab51a5274f24537e58226"
+  },
+  "PowerAim/Config/SliderSettings.cs": {
+    "mtime": 1782751862.9414492,
+    "ast_hash": "3151d6845c1720e92cf7682ff09e158a",
+    "semantic_hash": "3151d6845c1720e92cf7682ff09e158a"
+  },
+  "PowerAim/Config/ToggleState.cs": {
+    "mtime": 1780662500.4407523,
+    "ast_hash": "be36e46590c9019e28bababcbe18fb82",
+    "semantic_hash": "be36e46590c9019e28bababcbe18fb82"
+  },
+  "PowerAim/Config/ToolAction.cs": {
+    "mtime": 1782753308.2576478,
+    "ast_hash": "fb791d98a5f05c38a2cfe7fccc3537a6",
+    "semantic_hash": "fb791d98a5f05c38a2cfe7fccc3537a6"
+  },
+  "PowerAim/Config/ToolDefinition.cs": {
+    "mtime": 1782743402.2888823,
+    "ast_hash": "2194e3ddf8d8396952b9411821046ebf",
+    "semantic_hash": "2194e3ddf8d8396952b9411821046ebf"
+  },
+  "PowerAim/Config/ToolOption.cs": {
+    "mtime": 1782743402.2904088,
+    "ast_hash": "2c8206bb0429e81ce10add7a28b17b09",
+    "semantic_hash": "2c8206bb0429e81ce10add7a28b17b09"
+  },
+  "PowerAim/Config/TriggerCheck.cs": {
+    "mtime": 1779806763.4072192,
+    "ast_hash": "1b644551c01e3376d17d12ff88583c6d",
+    "semantic_hash": "1b644551c01e3376d17d12ff88583c6d"
+  },
+  "PowerAim/Config/TriggerExecutionMode.cs": {
+    "mtime": 1779806763.4082193,
+    "ast_hash": "7d55cdd6822829ce4869d6441d2b7e94",
+    "semantic_hash": "7d55cdd6822829ce4869d6441d2b7e94"
+  },
+  "PowerAim/Config/WindowSettingsManager.cs": {
+    "mtime": 1779806763.4092195,
+    "ast_hash": "b4cc7f6d9c2e78dc109fa2ae0d52c66e",
+    "semantic_hash": "b4cc7f6d9c2e78dc109fa2ae0d52c66e"
+  },
+  "PowerAim/Converter/AddConverter.cs": {
+    "mtime": 1779806763.41022,
+    "ast_hash": "e86b7c6fed48f7803df8127c024561c4",
+    "semantic_hash": "e86b7c6fed48f7803df8127c024561c4"
+  },
+  "PowerAim/Converter/AppendTextConverter.cs": {
+    "mtime": 1779806763.41122,
+    "ast_hash": "92c04ae79e33a3494a90638bb2624eff",
+    "semantic_hash": "92c04ae79e33a3494a90638bb2624eff"
+  },
+  "PowerAim/Converter/BoolToColorConverter.cs": {
+    "mtime": 1779806763.4117186,
+    "ast_hash": "1e5e07cb819f4f73758ff7169b7faf96",
+    "semantic_hash": "1e5e07cb819f4f73758ff7169b7faf96"
+  },
+  "PowerAim/Converter/BoolToOpacity.cs": {
+    "mtime": 1779806763.41222,
+    "ast_hash": "d13e049dfb7c457f835771996b5342e3",
+    "semantic_hash": "d13e049dfb7c457f835771996b5342e3"
+  },
+  "PowerAim/Converter/BoolToVis.cs": {
+    "mtime": 1779806763.412718,
+    "ast_hash": "ccfa3adf2eadd72f3c943da377f322a3",
+    "semantic_hash": "ccfa3adf2eadd72f3c943da377f322a3"
+  },
+  "PowerAim/Converter/DoubleToCornerRadiusConverter.cs": {
+    "mtime": 1779806763.413218,
+    "ast_hash": "55550e188195934adaacf7d2e8e46c1a",
+    "semantic_hash": "55550e188195934adaacf7d2e8e46c1a"
+  },
+  "PowerAim/Converter/DoubleToThicknessConverter.cs": {
+    "mtime": 1779806763.4142187,
+    "ast_hash": "385f2b609fb38a26c1a719b80aabc6db",
+    "semantic_hash": "385f2b609fb38a26c1a719b80aabc6db"
+  },
+  "PowerAim/Converter/LocaleConverter.cs": {
+    "mtime": 1779806763.4147182,
+    "ast_hash": "9ee3b34a42a5f565bf8d895d2327ca1a",
+    "semantic_hash": "9ee3b34a42a5f565bf8d895d2327ca1a"
+  },
+  "PowerAim/Converter/ShowHelpTextsVisConverter.cs": {
+    "mtime": 1779806763.415218,
+    "ast_hash": "cde55f38caa50b5ef04388fb7bdead94",
+    "semantic_hash": "cde55f38caa50b5ef04388fb7bdead94"
+  },
+  "PowerAim/Converter/TimeSpanToDouble.cs": {
+    "mtime": 1779806763.415718,
+    "ast_hash": "54d946516ad6f4dfcae1d1a9e3f06fe3",
+    "semantic_hash": "54d946516ad6f4dfcae1d1a9e3f06fe3"
+  },
+  "PowerAim/Extensions/ExpressionExtensions.cs": {
+    "mtime": 1782743402.2904088,
+    "ast_hash": "5c1eecb69b8369d32293619de1008213",
+    "semantic_hash": "5c1eecb69b8369d32293619de1008213"
+  },
+  "PowerAim/Extensions/ImageExtensions.cs": {
+    "mtime": 1783888051.5403662,
+    "ast_hash": "edc21411b3b8bfa804b41009dcc9d1d2",
+    "semantic_hash": "edc21411b3b8bfa804b41009dcc9d1d2"
+  },
+  "PowerAim/Extensions/RectangleExtensions.cs": {
+    "mtime": 1779806763.4752812,
+    "ast_hash": "d2cd11574dd35621550df3350af6d4ac",
+    "semantic_hash": "d2cd11574dd35621550df3350af6d4ac"
+  },
+  "PowerAim/Extensions/ScreenExtensions.cs": {
+    "mtime": 1782743402.2939303,
+    "ast_hash": "f9c214552554570e38695d88522d11df",
+    "semantic_hash": "f9c214552554570e38695d88522d11df"
+  },
+  "PowerAim/Extensions/StringExtensions.cs": {
+    "mtime": 1779806763.476783,
+    "ast_hash": "9869ff51f642cf3241422e414e1992ad",
+    "semantic_hash": "9869ff51f642cf3241422e414e1992ad"
+  },
+  "PowerAim/Extensions/UIElementExtensions.cs": {
+    "mtime": 1782743402.29493,
+    "ast_hash": "a9696209ab48e3d79e06eca0669822c8",
+    "semantic_hash": "a9696209ab48e3d79e06eca0669822c8"
+  },
+  "PowerAim/InputLogic/Gamepad/Contracts/GamepadEnums.cs": {
+    "mtime": 1783888051.5446007,
+    "ast_hash": "a85005bcb2540338b9d3e67065d9468e",
+    "semantic_hash": "a85005bcb2540338b9d3e67065d9468e"
+  },
+  "PowerAim/InputLogic/Gamepad/Contracts/GamepadEventArgs.cs": {
+    "mtime": 1782743402.2969296,
+    "ast_hash": "85434662bf96fd6ad8233f62a42965d6",
+    "semantic_hash": "85434662bf96fd6ad8233f62a42965d6"
+  },
+  "PowerAim/InputLogic/Gamepad/Contracts/GamepadSyncState.cs": {
+    "mtime": 1779806763.4972982,
+    "ast_hash": "276a5785aea24521ce06456042fe9192",
+    "semantic_hash": "276a5785aea24521ce06456042fe9192"
+  },
+  "PowerAim/InputLogic/Gamepad/Contracts/IGamepadReader.cs": {
+    "mtime": 1783888051.5446007,
+    "ast_hash": "57f784baa0c1fd3a908060b4fa4d7c69",
+    "semantic_hash": "57f784baa0c1fd3a908060b4fa4d7c69"
+  },
+  "PowerAim/InputLogic/Gamepad/Contracts/IGamepadSender.cs": {
+    "mtime": 1783888051.5471659,
+    "ast_hash": "648ee66f3679d3f1b3db907629c13ecd",
+    "semantic_hash": "648ee66f3679d3f1b3db907629c13ecd"
+  },
+  "PowerAim/InputLogic/Gamepad/Contracts/IGamepadStateSource.cs": {
+    "mtime": 1783888051.5481658,
+    "ast_hash": "7b62527ba28d9ed636db822c2940add2",
+    "semantic_hash": "7b62527ba28d9ed636db822c2940add2"
+  },
+  "PowerAim/InputLogic/Gamepad/ControllerCatalog.cs": {
+    "mtime": 1783888051.5481658,
+    "ast_hash": "bbeddb37bedc90f2edc3920f10d791ec",
+    "semantic_hash": "bbeddb37bedc90f2edc3920f10d791ec"
+  },
+  "PowerAim/InputLogic/Gamepad/GamepadExtensions.cs": {
+    "mtime": 1782743402.2999358,
+    "ast_hash": "585e57410f4c4e82731af1fe96f319b4",
+    "semantic_hash": "585e57410f4c4e82731af1fe96f319b4"
+  },
+  "PowerAim/InputLogic/Gamepad/GamepadManager.cs": {
+    "mtime": 1783888051.5506766,
+    "ast_hash": "b0178bbe00085792f0e40ff7fef71e2d",
+    "semantic_hash": "b0178bbe00085792f0e40ff7fef71e2d"
+  },
+  "PowerAim/InputLogic/Gamepad/Interaction/DirectInputGamepadReader.cs": {
+    "mtime": 1783888051.5516756,
+    "ast_hash": "b328590491689a91317a70f88d349736",
+    "semantic_hash": "b328590491689a91317a70f88d349736"
+  },
+  "PowerAim/InputLogic/Gamepad/Interaction/GamepadReader.cs": {
+    "mtime": 1783888051.5531797,
+    "ast_hash": "99461f3ad601a5e71f2d9c6ef8085a2b",
+    "semantic_hash": "99461f3ad601a5e71f2d9c6ef8085a2b"
+  },
+  "PowerAim/InputLogic/Gamepad/Interaction/GamepadSenderDualShock4.cs": {
+    "mtime": 1783888051.5546978,
+    "ast_hash": "8cb8b794440ea9e7d826a6cfdc7ee8c9",
+    "semantic_hash": "8cb8b794440ea9e7d826a6cfdc7ee8c9"
+  },
+  "PowerAim/InputLogic/Gamepad/Interaction/GamepadSenderInternal.cs": {
+    "mtime": 1783888051.5557027,
+    "ast_hash": "cf4a76e33df03ffeb6f12b4f2ee775fd",
+    "semantic_hash": "cf4a76e33df03ffeb6f12b4f2ee775fd"
+  },
+  "PowerAim/InputLogic/Gamepad/Interaction/GamepadSenderTitanTwo.cs": {
+    "mtime": 1783888051.556823,
+    "ast_hash": "a50796f4979e15a851856f795d071f9e",
+    "semantic_hash": "a50796f4979e15a851856f795d071f9e"
+  },
+  "PowerAim/InputLogic/Gamepad/Interaction/GamepadSenderVJoy.cs": {
+    "mtime": 1783888051.5583549,
+    "ast_hash": "bd9b8caf22035c980bd99b2e36e64d23",
+    "semantic_hash": "bd9b8caf22035c980bd99b2e36e64d23"
+  },
+  "PowerAim/InputLogic/Gamepad/Interaction/GamepadSenderViGEm.cs": {
+    "mtime": 1783888051.5599,
+    "ast_hash": "174bfa5906f1dcc061dd6df1c84ddf16",
+    "semantic_hash": "174bfa5906f1dcc061dd6df1c84ddf16"
+  },
+  "PowerAim/InputLogic/Gamepad/Interaction/GamepadSenderXInputEmu.cs": {
+    "mtime": 1783888051.5609028,
+    "ast_hash": "f4d26aef1eff991243cf1b067c23d968",
+    "semantic_hash": "f4d26aef1eff991243cf1b067c23d968"
+  },
+  "PowerAim/InputLogic/Gamepad/Interaction/ReportingGamepadSender.cs": {
+    "mtime": 1783888051.5619037,
+    "ast_hash": "df63c41e96eec922022605edb6e9808c",
+    "semantic_hash": "df63c41e96eec922022605edb6e9808c"
+  },
+  "PowerAim/InputLogic/HidHide/HidHideClasses.cs": {
+    "mtime": 1779806763.50382,
+    "ast_hash": "fa9e04c61424d6b89643e2067ec2f49f",
+    "semantic_hash": "fa9e04c61424d6b89643e2067ec2f49f"
+  },
+  "PowerAim/InputLogic/HidHide/HidHideHelper.cs": {
+    "mtime": 1782743402.307454,
+    "ast_hash": "1278ed21543b63f03f9090b4c3f698c7",
+    "semantic_hash": "1278ed21543b63f03f9090b4c3f698c7"
+  },
+  "PowerAim/InputLogic/InputBindingManager.cs": {
+    "mtime": 1783888051.5629034,
+    "ast_hash": "eb4286ef53082878a5dc41321c8ecd39",
+    "semantic_hash": "eb4286ef53082878a5dc41321c8ecd39"
+  },
+  "PowerAim/InputLogic/InputEventBus.cs": {
+    "mtime": 1779868122.4695807,
+    "ast_hash": "d641feba69580fc3e34fa2bc84ad8445",
+    "semantic_hash": "d641feba69580fc3e34fa2bc84ad8445"
+  },
+  "PowerAim/InputLogic/InputSender.cs": {
+    "mtime": 1782743402.310526,
+    "ast_hash": "59f5a2ac57d61c11719ab30ea63df612",
+    "semantic_hash": "59f5a2ac57d61c11719ab30ea63df612"
+  },
+  "PowerAim/InputLogic/Mapping/GamepadStickDirection.cs": {
+    "mtime": 1779806763.5073216,
+    "ast_hash": "055f0e1a1ffbee8ad5718e7064e3a7f1",
+    "semantic_hash": "055f0e1a1ffbee8ad5718e7064e3a7f1"
+  },
+  "PowerAim/InputLogic/Mapping/MappingBindingConverter.cs": {
+    "mtime": 1779806763.507821,
+    "ast_hash": "bc01dc62084796acdfbe9ee315ed5c92",
+    "semantic_hash": "bc01dc62084796acdfbe9ee315ed5c92"
+  },
+  "PowerAim/InputLogic/Mapping/MappingEngine.cs": {
+    "mtime": 1782743402.3130345,
+    "ast_hash": "c32b9163f4d6ace93386199289a207fe",
+    "semantic_hash": "c32b9163f4d6ace93386199289a207fe"
+  },
+  "PowerAim/InputLogic/Mapping/MappingPresets.cs": {
+    "mtime": 1779806763.5093198,
+    "ast_hash": "ad7c7c335a5efb15d517a699d5d7f6e8",
+    "semantic_hash": "ad7c7c335a5efb15d517a699d5d7f6e8"
+  },
+  "PowerAim/InputLogic/MouseManager.cs": {
+    "mtime": 1782743402.3140366,
+    "ast_hash": "2c5f58a5f53336717921104f55fbd58d",
+    "semantic_hash": "2c5f58a5f53336717921104f55fbd58d"
+  },
+  "PowerAim/InputLogic/MovementPaths.cs": {
+    "mtime": 1780224803.4677882,
+    "ast_hash": "6670acf7e85de496c073e4422885aea0",
+    "semantic_hash": "6670acf7e85de496c073e4422885aea0"
+  },
+  "PowerAim/InputLogic/StoredInputBinding.cs": {
+    "mtime": 1782743402.3160348,
+    "ast_hash": "ca3b8924a4cdae258dc5a6c9a489c923",
+    "semantic_hash": "ca3b8924a4cdae258dc5a6c9a489c923"
+  },
+  "PowerAim/InputLogic/Tools/AntiAfkService.cs": {
+    "mtime": 1782751876.3609324,
+    "ast_hash": "3794689ccdf642d2604de365e7f2d581",
+    "semantic_hash": "3794689ccdf642d2604de365e7f2d581"
+  },
+  "PowerAim/InputLogic/Tools/ToolLauncher.cs": {
+    "mtime": 1782743402.3180356,
+    "ast_hash": "53336316f59c72d5363325fe2c011ab9",
+    "semantic_hash": "53336316f59c72d5363325fe2c011ab9"
+  },
+  "PowerAim/InputLogic/Tools/ToolRunner.cs": {
+    "mtime": 1782755177.3938775,
+    "ast_hash": "eb7981389bf595e6485c94489cb65956",
+    "semantic_hash": "eb7981389bf595e6485c94489cb65956"
+  },
+  "PowerAim/Localizations/Cultures.cs": {
+    "mtime": 1779806763.5133314,
+    "ast_hash": "0790ce471c2e9ae76cec255a71ea9fd2",
+    "semantic_hash": "0790ce471c2e9ae76cec255a71ea9fd2"
+  },
+  "PowerAim/Localizations/Locale.json": {
+    "mtime": 1782743402.3205504,
+    "ast_hash": "c77fe07ecae2efa0c8fd8d1597626e35",
+    "semantic_hash": "c77fe07ecae2efa0c8fd8d1597626e35"
+  },
+  "PowerAim/Localizations/Locale_de-DE.json": {
+    "mtime": 1784057194.4963799,
+    "ast_hash": "4b73199f58530d98e7c54007d0357598",
+    "semantic_hash": "4b73199f58530d98e7c54007d0357598"
+  },
+  "PowerAim/Localizations/Locale_en-US.json": {
+    "mtime": 1784057188.8798158,
+    "ast_hash": "32acc24df4a0b317e8bbdef97f907e12",
+    "semantic_hash": "32acc24df4a0b317e8bbdef97f907e12"
+  },
+  "PowerAim/Localizations/Locale_es-ES.json": {
+    "mtime": 1780340676.8463998,
+    "ast_hash": "dee17896534e833a499581f6425ac9f0",
+    "semantic_hash": "dee17896534e833a499581f6425ac9f0"
+  },
+  "PowerAim/Localizations/Locale_fr-FR.json": {
+    "mtime": 1780340676.866599,
+    "ast_hash": "b1a0647941202ad13551aea213e28660",
+    "semantic_hash": "b1a0647941202ad13551aea213e28660"
+  },
+  "PowerAim/Localizations/Locale_it-IT.json": {
+    "mtime": 1780340676.8791003,
+    "ast_hash": "196916c286fd7a94d53c90ed826073c8",
+    "semantic_hash": "196916c286fd7a94d53c90ed826073c8"
+  },
+  "PowerAim/Localizations/Locale_ru-RU.json": {
+    "mtime": 1780340676.8881514,
+    "ast_hash": "de1f463326a9ef2c35dde8f48d218fb4",
+    "semantic_hash": "de1f463326a9ef2c35dde8f48d218fb4"
+  },
+  "PowerAim/Localizations/Locale_tr-TR.json": {
+    "mtime": 1780340676.9006083,
+    "ast_hash": "fc1a548fce6c56f701d224ea89be0838",
+    "semantic_hash": "fc1a548fce6c56f701d224ea89be0838"
+  },
+  "PowerAim/Localizations/Locale_uk-UA.json": {
+    "mtime": 1780340676.9116077,
+    "ast_hash": "4bd151744f677610ad7d8f606a45fd9e",
+    "semantic_hash": "4bd151744f677610ad7d8f606a45fd9e"
+  },
+  "PowerAim/Localizations/Locale_zh-CN.json": {
+    "mtime": 1780340676.920606,
+    "ast_hash": "7ba9826e4132238b2651115ffe7cde24",
+    "semantic_hash": "7ba9826e4132238b2651115ffe7cde24"
+  },
+  "PowerAim/MainWindow.ConfigLoading.cs": {
+    "mtime": 1782743402.3261068,
+    "ast_hash": "168a3de1b34e967fa22dae102f48b74d",
+    "semantic_hash": "168a3de1b34e967fa22dae102f48b74d"
+  },
+  "PowerAim/MainWindow.LayoutSearch.cs": {
+    "mtime": 1782743402.3271077,
+    "ast_hash": "2e6b52b0345868f1b717525631000d62",
+    "semantic_hash": "2e6b52b0345868f1b717525631000d62"
+  },
+  "PowerAim/MainWindow.MenuBuilders.cs": {
+    "mtime": 1783972631.8146372,
+    "ast_hash": "dab3dba0bc45ca3897d574392061b5c0",
+    "semantic_hash": "dab3dba0bc45ca3897d574392061b5c0"
+  },
+  "PowerAim/MainWindow.MenuLogic.cs": {
+    "mtime": 1782743402.329619,
+    "ast_hash": "544759c7078f413da3d64a6fcf2726b9",
+    "semantic_hash": "544759c7078f413da3d64a6fcf2726b9"
+  },
+  "PowerAim/MainWindow.Misc.cs": {
+    "mtime": 1782743402.330773,
+    "ast_hash": "51659b74d921ab2cb455e258b8de7075",
+    "semantic_hash": "51659b74d921ab2cb455e258b8de7075"
+  },
+  "PowerAim/MainWindow.ModelLoading.cs": {
+    "mtime": 1783969461.552927,
+    "ast_hash": "5db8f888a888f3a03c8d278f60bd9ca0",
+    "semantic_hash": "5db8f888a888f3a03c8d278f60bd9ca0"
+  },
+  "PowerAim/MainWindow.SystemInfo.cs": {
+    "mtime": 1782743402.3322775,
+    "ast_hash": "f79063b3390a375f2d3dc359528abc59",
+    "semantic_hash": "f79063b3390a375f2d3dc359528abc59"
+  },
+  "PowerAim/MainWindow.Updates.cs": {
+    "mtime": 1782743402.3332832,
+    "ast_hash": "b372c0428f74ada078b15d96ea20e131",
+    "semantic_hash": "b372c0428f74ada078b15d96ea20e131"
+  },
+  "PowerAim/MainWindow.WindowChrome.cs": {
+    "mtime": 1782743402.334287,
+    "ast_hash": "c9c27f9eeafdab251b191b5e39efe4ad",
+    "semantic_hash": "c9c27f9eeafdab251b191b5e39efe4ad"
+  },
+  "PowerAim/MainWindow.xaml": {
+    "mtime": 1783970526.6154442,
+    "ast_hash": "f0b7c25e42a19856c559f3c39ed915f5",
+    "semantic_hash": "f0b7c25e42a19856c559f3c39ed915f5"
+  },
+  "PowerAim/MainWindow.xaml.cs": {
+    "mtime": 1783970167.4415941,
+    "ast_hash": "422594ae1e60138158e5a36d9ec1e481",
+    "semantic_hash": "422594ae1e60138158e5a36d9ec1e481"
+  },
+  "PowerAim/Models/ProcessModel.cs": {
+    "mtime": 1782743402.3372867,
+    "ast_hash": "7f27fde7a934bd16eb9ea5d46da9d530",
+    "semantic_hash": "7f27fde7a934bd16eb9ea5d46da9d530"
+  },
+  "PowerAim/Models/RelativeRectModel.cs": {
+    "mtime": 1779806763.5293303,
+    "ast_hash": "ed79c886f5ed2906dc973a90da94cd57",
+    "semantic_hash": "ed79c886f5ed2906dc973a90da94cd57"
+  },
+  "PowerAim/MouseMovementLibraries/GHubSupport/LGDownloader.xaml": {
+    "mtime": 1782743402.3402965,
+    "ast_hash": "b1b74ad559ef40cbb35c8c53dbdcf20b",
+    "semantic_hash": "b1b74ad559ef40cbb35c8c53dbdcf20b"
+  },
+  "PowerAim/MouseMovementLibraries/GHubSupport/LGDownloader.xaml.cs": {
+    "mtime": 1782743402.341803,
+    "ast_hash": "c7f998eaff619a9c21a812b60e791a7b",
+    "semantic_hash": "c7f998eaff619a9c21a812b60e791a7b"
+  },
+  "PowerAim/MouseMovementLibraries/GHubSupport/LGHubMain.cs": {
+    "mtime": 1782743402.3423061,
+    "ast_hash": "d57e91ce31ea2d1081fc4a1be969ab24",
+    "semantic_hash": "d57e91ce31ea2d1081fc4a1be969ab24"
+  },
+  "PowerAim/MouseMovementLibraries/GHubSupport/LGMouse.cs": {
+    "mtime": 1779806763.5323305,
+    "ast_hash": "878a7df6a4cbfcb7d4010bbc6240376f",
+    "semantic_hash": "878a7df6a4cbfcb7d4010bbc6240376f"
+  },
+  "PowerAim/MouseMovementLibraries/RazerSupport/RZMouse.cs": {
+    "mtime": 1782743402.3443117,
+    "ast_hash": "da3bd087ce011e6d99eb4862fd5cc961",
+    "semantic_hash": "da3bd087ce011e6d99eb4862fd5cc961"
+  },
+  "PowerAim/MouseMovementLibraries/SendInputSupport/SendInputMouse.cs": {
+    "mtime": 1782743402.346312,
+    "ast_hash": "e6fb91b5764603c685e762e60118d303",
+    "semantic_hash": "e6fb91b5764603c685e762e60118d303"
+  },
+  "PowerAim/MouseMovementLibraries/ddxoftSupport/ddxoftMain.cs": {
+    "mtime": 1782743402.347312,
+    "ast_hash": "421c551b7eec9fa696387728c7a22ab6",
+    "semantic_hash": "421c551b7eec9fa696387728c7a22ab6"
+  },
+  "PowerAim/MouseMovementLibraries/ddxoftSupport/ddxoftMouse.cs": {
+    "mtime": 1782743402.3488154,
+    "ast_hash": "dc266b4a96bac66620b3486acbb23d12",
+    "semantic_hash": "dc266b4a96bac66620b3486acbb23d12"
+  },
+  "PowerAim/Other/EnhancedMagnifier.cs": {
+    "mtime": 1783888051.5721884,
+    "ast_hash": "3c16490e3bf374bff6706fd49ce099bb",
+    "semantic_hash": "3c16490e3bf374bff6706fd49ce099bb"
+  },
+  "PowerAim/Other/FileManager.cs": {
+    "mtime": 1783969372.4306936,
+    "ast_hash": "adb18bf1b2cdaec329b8c68bf5442830",
+    "semantic_hash": "adb18bf1b2cdaec329b8c68bf5442830"
+  },
+  "PowerAim/Other/GetSpecs.cs": {
+    "mtime": 1782743402.3518286,
+    "ast_hash": "5ce495e8b09874ff7138194f4249e42b",
+    "semantic_hash": "5ce495e8b09874ff7138194f4249e42b"
+  },
+  "PowerAim/Other/KeybindNameManager.cs": {
+    "mtime": 1782743402.3523333,
+    "ast_hash": "dc9fde9ccc65c1527e33b9ddf16d6914",
+    "semantic_hash": "dc9fde9ccc65c1527e33b9ddf16d6914"
+  },
+  "PowerAim/Other/Localization.cs": {
+    "mtime": 1779806763.5403306,
+    "ast_hash": "c8d5f48ada1b23b0ea87e8e2a875c6db",
+    "semantic_hash": "c8d5f48ada1b23b0ea87e8e2a875c6db"
+  },
+  "PowerAim/Other/Magnifier.cs": {
+    "mtime": 1782746459.4023297,
+    "ast_hash": "6c73405db58eec081e7fff26b4ca4cde",
+    "semantic_hash": "6c73405db58eec081e7fff26b4ca4cde"
+  },
+  "PowerAim/Other/PredictionDrawer.cs": {
+    "mtime": 1779882996.3301122,
+    "ast_hash": "ea3999fde64b6a5100c318ca0e637e03",
+    "semantic_hash": "ea3999fde64b6a5100c318ca0e637e03"
+  },
+  "PowerAim/Other/PredictionDrawerDrawingContext.cs": {
+    "mtime": 1779882887.7026012,
+    "ast_hash": "71605306982e580d918fca925820a813",
+    "semantic_hash": "71605306982e580d918fca925820a813"
+  },
+  "PowerAim/Other/RequirementsManager.cs": {
+    "mtime": 1782743402.354342,
+    "ast_hash": "26ce93830db7ee16a1e2c2ab6cf613f7",
+    "semantic_hash": "26ce93830db7ee16a1e2c2ab6cf613f7"
+  },
+  "PowerAim/Other/WindowsHelper.cs": {
+    "mtime": 1779806763.5443413,
+    "ast_hash": "ead6190ba418a69b4ccc3894f0ea7685",
+    "semantic_hash": "ead6190ba418a69b4ccc3894f0ea7685"
+  },
+  "PowerAim/PowerAim.csproj": {
+    "mtime": 1783972181.7715669,
+    "ast_hash": "c7a46c3df3e7cc3b948b5883ed8b2e14",
+    "semantic_hash": "c7a46c3df3e7cc3b948b5883ed8b2e14"
+  },
+  "PowerAim/TextBoxStreamWriter.cs": {
+    "mtime": 1779806763.736869,
+    "ast_hash": "7e3b39f230b77c5883d8df8401cada05",
+    "semantic_hash": "7e3b39f230b77c5883d8df8401cada05"
+  },
+  "PowerAim/Theme.xaml": {
+    "mtime": 1782743402.3553429,
+    "ast_hash": "9112ac1c1fcad0ab6b70b403643d1554",
+    "semantic_hash": "9112ac1c1fcad0ab6b70b403643d1554"
+  },
+  "PowerAim/Theme/ThemeManager.cs": {
+    "mtime": 1779866711.2199917,
+    "ast_hash": "3e55a25e17e22b346dd39d65efa5af83",
+    "semantic_hash": "3e55a25e17e22b346dd39d65efa5af83"
+  },
+  "PowerAim/Types/EventArgs.cs": {
+    "mtime": 1779806763.775379,
+    "ast_hash": "43ae66fe23a16cc0a5ff668d9cb73366",
+    "semantic_hash": "43ae66fe23a16cc0a5ff668d9cb73366"
+  },
+  "PowerAim/Types/RelativeRect.cs": {
+    "mtime": 1779806763.7773836,
+    "ast_hash": "436b49f0f050bce885d711d25b82cb9b",
+    "semantic_hash": "436b49f0f050bce885d711d25b82cb9b"
+  },
+  "PowerAim/Types/ThemeMode.cs": {
+    "mtime": 1779806763.7783887,
+    "ast_hash": "b1b1597e567dc6712e9803a58da69e06",
+    "semantic_hash": "b1b1597e567dc6712e9803a58da69e06"
+  },
+  "PowerAim/Types/ThemePalette.cs": {
+    "mtime": 1782743402.357344,
+    "ast_hash": "bdfcec62872798cb621e61ab1c8cae49",
+    "semantic_hash": "bdfcec62872798cb621e61ab1c8cae49"
+  },
+  "PowerAim/UILibrary/AColorChanger.xaml": {
+    "mtime": 1779872104.2975867,
+    "ast_hash": "19c1febac246266474ae1218467a7f76",
+    "semantic_hash": "19c1febac246266474ae1218467a7f76"
+  },
+  "PowerAim/UILibrary/AColorChanger.xaml.cs": {
+    "mtime": 1779866746.6121686,
+    "ast_hash": "c34e6ccf50609e7e888f19e696f79bff",
+    "semantic_hash": "c34e6ccf50609e7e888f19e696f79bff"
+  },
+  "PowerAim/UILibrary/ACredit.xaml": {
+    "mtime": 1782743402.3588495,
+    "ast_hash": "983b2250583af85dc0b6a8670e6e7df0",
+    "semantic_hash": "983b2250583af85dc0b6a8670e6e7df0"
+  },
+  "PowerAim/UILibrary/ACredit.xaml.cs": {
+    "mtime": 1779806763.7969222,
+    "ast_hash": "37d3e417f29b42e501253264c343ba26",
+    "semantic_hash": "37d3e417f29b42e501253264c343ba26"
+  },
+  "PowerAim/UILibrary/ADownloadGateway.xaml": {
+    "mtime": 1779806763.7974215,
+    "ast_hash": "74b29755e903c8b702218473e76b95ae",
+    "semantic_hash": "74b29755e903c8b702218473e76b95ae"
+  },
+  "PowerAim/UILibrary/ADownloadGateway.xaml.cs": {
+    "mtime": 1782743402.359855,
+    "ast_hash": "5aa349db4a5e9801ebc462ad1943e3a4",
+    "semantic_hash": "5aa349db4a5e9801ebc462ad1943e3a4"
+  },
+  "PowerAim/UILibrary/ADropdown.xaml": {
+    "mtime": 1782743402.360862,
+    "ast_hash": "83e55c7757c60d8a3a0c377e73a8ee28",
+    "semantic_hash": "83e55c7757c60d8a3a0c377e73a8ee28"
+  },
+  "PowerAim/UILibrary/ADropdown.xaml.cs": {
+    "mtime": 1782743402.361867,
+    "ast_hash": "966b6b2b9eddc02c91f8b6c8457ba75e",
+    "semantic_hash": "966b6b2b9eddc02c91f8b6c8457ba75e"
+  },
+  "PowerAim/UILibrary/AFileLocator.xaml": {
+    "mtime": 1782743402.3631358,
+    "ast_hash": "60bfb23869a6b567ff538e58ee9b69a6",
+    "semantic_hash": "60bfb23869a6b567ff538e58ee9b69a6"
+  },
+  "PowerAim/UILibrary/AFileLocator.xaml.cs": {
+    "mtime": 1782743402.3641355,
+    "ast_hash": "8559447bc1fae178f57a5c2aebf52ed8",
+    "semantic_hash": "8559447bc1fae178f57a5c2aebf52ed8"
+  },
+  "PowerAim/UILibrary/AKeyChanger.xaml": {
+    "mtime": 1779885604.2079208,
+    "ast_hash": "b9f0ce9216e60b6a44461adcecdb80ce",
+    "semantic_hash": "b9f0ce9216e60b6a44461adcecdb80ce"
+  },
+  "PowerAim/UILibrary/AKeyChanger.xaml.cs": {
+    "mtime": 1782743402.3661354,
+    "ast_hash": "16ae334e3d16d2ccb92cf73cd07813f1",
+    "semantic_hash": "16ae334e3d16d2ccb92cf73cd07813f1"
+  },
+  "PowerAim/UILibrary/APButton.xaml": {
+    "mtime": 1779806763.8044162,
+    "ast_hash": "9f9c0c239daa6d7361ed4b1743cf8047",
+    "semantic_hash": "9f9c0c239daa6d7361ed4b1743cf8047"
+  },
+  "PowerAim/UILibrary/APButton.xaml.cs": {
+    "mtime": 1783888051.6183488,
+    "ast_hash": "377b22c8a20053042259226c93f21a2b",
+    "semantic_hash": "377b22c8a20053042259226c93f21a2b"
+  },
+  "PowerAim/UILibrary/AProcessPicker.xaml": {
+    "mtime": 1779806763.806416,
+    "ast_hash": "e7edcb44786ca4e4040e9da85d2b0f30",
+    "semantic_hash": "e7edcb44786ca4e4040e9da85d2b0f30"
+  },
+  "PowerAim/UILibrary/AProcessPicker.xaml.cs": {
+    "mtime": 1782743402.3671367,
+    "ast_hash": "9cce00d80a345027cd16ea10b158bbe2",
+    "semantic_hash": "9cce00d80a345027cd16ea10b158bbe2"
+  },
+  "PowerAim/UILibrary/ARectangleBottom.xaml": {
+    "mtime": 1779806763.8089209,
+    "ast_hash": "4b0565370ddfd05729afbccc7357344a",
+    "semantic_hash": "4b0565370ddfd05729afbccc7357344a"
+  },
+  "PowerAim/UILibrary/ARectangleBottom.xaml.cs": {
+    "mtime": 1779806763.8099258,
+    "ast_hash": "0f07d1d9549a8ec8e134b12884b76e10",
+    "semantic_hash": "0f07d1d9549a8ec8e134b12884b76e10"
+  },
+  "PowerAim/UILibrary/ASlider.xaml": {
+    "mtime": 1779806763.8114264,
+    "ast_hash": "32065ec8851e2cd5d3587a5fc4e83284",
+    "semantic_hash": "32065ec8851e2cd5d3587a5fc4e83284"
+  },
+  "PowerAim/UILibrary/ASlider.xaml.cs": {
+    "mtime": 1782743402.3671367,
+    "ast_hash": "187f68661758308e0dd8d6d27e734a3d",
+    "semantic_hash": "187f68661758308e0dd8d6d27e734a3d"
+  },
+  "PowerAim/UILibrary/ASpacer.xaml": {
+    "mtime": 1779806763.813426,
+    "ast_hash": "f7bd55d02141f79c2395241d3b019534",
+    "semantic_hash": "f7bd55d02141f79c2395241d3b019534"
+  },
+  "PowerAim/UILibrary/ASpacer.xaml.cs": {
+    "mtime": 1779806763.814429,
+    "ast_hash": "d7f87eaa5e7abf997d58b64f39c66d61",
+    "semantic_hash": "d7f87eaa5e7abf997d58b64f39c66d61"
+  },
+  "PowerAim/UILibrary/ATitle.xaml": {
+    "mtime": 1779806763.8149285,
+    "ast_hash": "3b22bab645109481ba9bbe50b4b30d23",
+    "semantic_hash": "3b22bab645109481ba9bbe50b4b30d23"
+  },
+  "PowerAim/UILibrary/ATitle.xaml.cs": {
+    "mtime": 1779806763.8159282,
+    "ast_hash": "a8004579c8d171e5098f8b35e3d79685",
+    "semantic_hash": "a8004579c8d171e5098f8b35e3d79685"
+  },
+  "PowerAim/UILibrary/AToggle.xaml": {
+    "mtime": 1779806763.8164728,
+    "ast_hash": "7861866869966d89af6cd79e4ba4276e",
+    "semantic_hash": "7861866869966d89af6cd79e4ba4276e"
+  },
+  "PowerAim/UILibrary/AToggle.xaml.cs": {
+    "mtime": 1780224763.3473866,
+    "ast_hash": "0d2abf9911173b22ff57c04d44b44b96",
+    "semantic_hash": "0d2abf9911173b22ff57c04d44b44b96"
+  },
+  "PowerAim/UILibrary/AimProfileEdit.xaml": {
+    "mtime": 1782743402.3686402,
+    "ast_hash": "4dbb926d9eedfbccaaabb467836321e8",
+    "semantic_hash": "4dbb926d9eedfbccaaabb467836321e8"
+  },
+  "PowerAim/UILibrary/AimProfileEdit.xaml.cs": {
+    "mtime": 1783888051.6193533,
+    "ast_hash": "2fcd44a38ca439304f42e1407098e471",
+    "semantic_hash": "2fcd44a38ca439304f42e1407098e471"
+  },
+  "PowerAim/UILibrary/AimProfileList.xaml": {
+    "mtime": 1782743402.3706472,
+    "ast_hash": "5ec44a6a33c9fb239f58a985666f7c11",
+    "semantic_hash": "5ec44a6a33c9fb239f58a985666f7c11"
+  },
+  "PowerAim/UILibrary/AimProfileList.xaml.cs": {
+    "mtime": 1782743402.3721616,
+    "ast_hash": "59a6e25a954bf1def626ca5e28a968d0",
+    "semantic_hash": "59a6e25a954bf1def626ca5e28a968d0"
+  },
+  "PowerAim/UILibrary/AntiRecoilProfileEdit.xaml": {
+    "mtime": 1782743402.3741658,
+    "ast_hash": "533ec2a570798b622d04dc6490ba227c",
+    "semantic_hash": "533ec2a570798b622d04dc6490ba227c"
+  },
+  "PowerAim/UILibrary/AntiRecoilProfileEdit.xaml.cs": {
+    "mtime": 1782743402.3751655,
+    "ast_hash": "ab55a7f22b338c2bd059730641225390",
+    "semantic_hash": "ab55a7f22b338c2bd059730641225390"
+  },
+  "PowerAim/UILibrary/AntiRecoilProfileList.xaml": {
+    "mtime": 1782743402.3761659,
+    "ast_hash": "05b69b032ff99ee9ac5349c7beacf178",
+    "semantic_hash": "05b69b032ff99ee9ac5349c7beacf178"
+  },
+  "PowerAim/UILibrary/AntiRecoilProfileList.xaml.cs": {
+    "mtime": 1782743402.3771658,
+    "ast_hash": "a391f9592ea2a94e699841967738b6be",
+    "semantic_hash": "a391f9592ea2a94e699841967738b6be"
+  },
+  "PowerAim/UILibrary/AutoPlayActionList.xaml": {
+    "mtime": 1782743402.3796744,
+    "ast_hash": "dfaff6d0ec0c0c1e0e8bd5750faa51f8",
+    "semantic_hash": "dfaff6d0ec0c0c1e0e8bd5750faa51f8"
+  },
+  "PowerAim/UILibrary/AutoPlayActionList.xaml.cs": {
+    "mtime": 1782743402.3810196,
+    "ast_hash": "a569475880c8de66365877634060a794",
+    "semantic_hash": "a569475880c8de66365877634060a794"
+  },
+  "PowerAim/UILibrary/AutoPlayProfileEdit.xaml": {
+    "mtime": 1782743402.3820243,
+    "ast_hash": "ff07bcc2785dbb3f1744091b360e84ce",
+    "semantic_hash": "ff07bcc2785dbb3f1744091b360e84ce"
+  },
+  "PowerAim/UILibrary/AutoPlayProfileEdit.xaml.cs": {
+    "mtime": 1782743402.3833306,
+    "ast_hash": "856d5c8ca746c3f3a456fbdee1b63233",
+    "semantic_hash": "856d5c8ca746c3f3a456fbdee1b63233"
+  },
+  "PowerAim/UILibrary/AutoPlayProfileList.xaml": {
+    "mtime": 1782743402.3853302,
+    "ast_hash": "15be0798e95a209a9ab00a62e643b4ca",
+    "semantic_hash": "15be0798e95a209a9ab00a62e643b4ca"
+  },
+  "PowerAim/UILibrary/AutoPlayProfileList.xaml.cs": {
+    "mtime": 1782743402.3863308,
+    "ast_hash": "ec160dcf307d35fab8156550e9019d31",
+    "semantic_hash": "ec160dcf307d35fab8156550e9019d31"
+  },
+  "PowerAim/UILibrary/BuiltInTools.cs": {
+    "mtime": 1782751898.5103414,
+    "ast_hash": "478baf45b3fea0112582cca2ae9e1b37",
+    "semantic_hash": "478baf45b3fea0112582cca2ae9e1b37"
+  },
+  "PowerAim/UILibrary/CaptureSourceSelect.xaml": {
+    "mtime": 1779808647.9147372,
+    "ast_hash": "379a8b05a43d503ca475419f503c03af",
+    "semantic_hash": "379a8b05a43d503ca475419f503c03af"
+  },
+  "PowerAim/UILibrary/CaptureSourceSelect.xaml.cs": {
+    "mtime": 1782743402.3888352,
+    "ast_hash": "2af5706ba662ffa346ad453b15b7ac39",
+    "semantic_hash": "2af5706ba662ffa346ad453b15b7ac39"
+  },
+  "PowerAim/UILibrary/ColorPickerControl.xaml": {
+    "mtime": 1779870571.8909998,
+    "ast_hash": "3b52d82261eec70902af937b3ca6345e",
+    "semantic_hash": "3b52d82261eec70902af937b3ca6345e"
+  },
+  "PowerAim/UILibrary/ColorPickerControl.xaml.cs": {
+    "mtime": 1779870591.5918295,
+    "ast_hash": "46e7825fcc10f1048aef09b0723f1eb1",
+    "semantic_hash": "46e7825fcc10f1048aef09b0723f1eb1"
+  },
+  "PowerAim/UILibrary/ControllerManageControl.xaml": {
+    "mtime": 1782743402.3898394,
+    "ast_hash": "ca5cd6b5bc258a5c9f8359a844ca4743",
+    "semantic_hash": "ca5cd6b5bc258a5c9f8359a844ca4743"
+  },
+  "PowerAim/UILibrary/ControllerManageControl.xaml.cs": {
+    "mtime": 1782743402.3908465,
+    "ast_hash": "675f0eed59fd84d273524c33189e69aa",
+    "semantic_hash": "675f0eed59fd84d273524c33189e69aa"
+  },
+  "PowerAim/UILibrary/GamepadDiagnosticsPanel.xaml": {
+    "mtime": 1779808647.9232495,
+    "ast_hash": "33e4a62070c733d2c302a7327a75ec74",
+    "semantic_hash": "33e4a62070c733d2c302a7327a75ec74"
+  },
+  "PowerAim/UILibrary/GamepadDiagnosticsPanel.xaml.cs": {
+    "mtime": 1779806763.8284378,
+    "ast_hash": "5c01ec53a053ed777876d9ed6c78b539",
+    "semantic_hash": "5c01ec53a053ed777876d9ed6c78b539"
+  },
+  "PowerAim/UILibrary/GamepadTesterPanel.xaml": {
+    "mtime": 1782743402.3931253,
+    "ast_hash": "f872d259da4f21fc807d6b6474b7388a",
+    "semantic_hash": "f872d259da4f21fc807d6b6474b7388a"
+  },
+  "PowerAim/UILibrary/GamepadTesterPanel.xaml.cs": {
+    "mtime": 1783888051.6216693,
+    "ast_hash": "a7d55afb55546b61f6d7a305ddb235ba",
+    "semantic_hash": "a7d55afb55546b61f6d7a305ddb235ba"
+  },
+  "PowerAim/UILibrary/GlobalSearchController.cs": {
+    "mtime": 1782743402.3961246,
+    "ast_hash": "6b0f797eda42ad76041d01d4c900e53a",
+    "semantic_hash": "6b0f797eda42ad76041d01d4c900e53a"
+  },
+  "PowerAim/UILibrary/GpuPickerController.cs": {
+    "mtime": 1782743402.3961246,
+    "ast_hash": "d56044ec63fc72e40cedf640af524885",
+    "semantic_hash": "d56044ec63fc72e40cedf640af524885"
+  },
+  "PowerAim/UILibrary/HelpPanel.xaml": {
+    "mtime": 1779808647.9412634,
+    "ast_hash": "ebf16a7456ae3427045a1e128198dea0",
+    "semantic_hash": "ebf16a7456ae3427045a1e128198dea0"
+  },
+  "PowerAim/UILibrary/HelpPanel.xaml.cs": {
+    "mtime": 1779807916.3760364,
+    "ast_hash": "62141a5b00183ad2b9d68a18a7e5a159",
+    "semantic_hash": "62141a5b00183ad2b9d68a18a7e5a159"
+  },
+  "PowerAim/UILibrary/HiddenControllersPanel.xaml": {
+    "mtime": 1779808647.9497645,
+    "ast_hash": "8ea3446122a65f33b3a7d9d8939abea5",
+    "semantic_hash": "8ea3446122a65f33b3a7d9d8939abea5"
+  },
+  "PowerAim/UILibrary/HiddenControllersPanel.xaml.cs": {
+    "mtime": 1779806763.8364549,
+    "ast_hash": "7d3a6b7adadbb0a579ef92bd1d1dbce7",
+    "semantic_hash": "7d3a6b7adadbb0a579ef92bd1d1dbce7"
+  },
+  "PowerAim/UILibrary/InputVisualizerPanel.xaml": {
+    "mtime": 1779868274.2605827,
+    "ast_hash": "6cd810d5409c2502f6bea05d26570e44",
+    "semantic_hash": "6cd810d5409c2502f6bea05d26570e44"
+  },
+  "PowerAim/UILibrary/InputVisualizerPanel.xaml.cs": {
+    "mtime": 1779868433.1750565,
+    "ast_hash": "d7fdc5eb6438eebf5577be9e9d8a46ee",
+    "semantic_hash": "d7fdc5eb6438eebf5577be9e9d8a46ee"
+  },
+  "PowerAim/UILibrary/Line.xaml": {
+    "mtime": 1779806763.8369553,
+    "ast_hash": "e77db0d57963b2c9cc145eb48bafdf14",
+    "semantic_hash": "e77db0d57963b2c9cc145eb48bafdf14"
+  },
+  "PowerAim/UILibrary/Line.xaml.cs": {
+    "mtime": 1779806763.837956,
+    "ast_hash": "ba2adbaa3aa3ee89b13061784054ae2b",
+    "semantic_hash": "ba2adbaa3aa3ee89b13061784054ae2b"
+  },
+  "PowerAim/UILibrary/MappingEdit.xaml": {
+    "mtime": 1779808647.9587722,
+    "ast_hash": "bd37aef07fb6bbe4b6ea8f79124ecde4",
+    "semantic_hash": "bd37aef07fb6bbe4b6ea8f79124ecde4"
+  },
+  "PowerAim/UILibrary/MappingEdit.xaml.cs": {
+    "mtime": 1779806763.839455,
+    "ast_hash": "72560b71b1b93951c88651630f1ee0a8",
+    "semantic_hash": "72560b71b1b93951c88651630f1ee0a8"
+  },
+  "PowerAim/UILibrary/MappingProfileList.xaml": {
+    "mtime": 1779808647.9677866,
+    "ast_hash": "d9bcefffb6befd866025ff2789c4c55f",
+    "semantic_hash": "d9bcefffb6befd866025ff2789c4c55f"
+  },
+  "PowerAim/UILibrary/MappingProfileList.xaml.cs": {
+    "mtime": 1782743402.3971245,
+    "ast_hash": "ca4b9bfd2f2c25f3a72dac566008be96",
+    "semantic_hash": "ca4b9bfd2f2c25f3a72dac566008be96"
+  },
+  "PowerAim/UILibrary/MultiKeyChanger.xaml": {
+    "mtime": 1782544743.7847202,
+    "ast_hash": "00122e2ccd670d921f057215608dc548",
+    "semantic_hash": "00122e2ccd670d921f057215608dc548"
+  },
+  "PowerAim/UILibrary/MultiKeyChanger.xaml.cs": {
+    "mtime": 1782743402.3986273,
+    "ast_hash": "aba48abad94075dacc1ea61938474b53",
+    "semantic_hash": "aba48abad94075dacc1ea61938474b53"
+  },
+  "PowerAim/UILibrary/NoModelCard.xaml": {
+    "mtime": 1779910739.3574479,
+    "ast_hash": "c0061c94469ecf51ccaec8a01f5d1c07",
+    "semantic_hash": "c0061c94469ecf51ccaec8a01f5d1c07"
+  },
+  "PowerAim/UILibrary/NoModelCard.xaml.cs": {
+    "mtime": 1779910750.415876,
+    "ast_hash": "d67978f7f75141473e2595b06b7c4abd",
+    "semantic_hash": "d67978f7f75141473e2595b06b7c4abd"
+  },
+  "PowerAim/UILibrary/OcrConditionBuilder.xaml": {
+    "mtime": 1780339793.3140552,
+    "ast_hash": "9b8b954d8132c9c93ce29c35591e2325",
+    "semantic_hash": "9b8b954d8132c9c93ce29c35591e2325"
+  },
+  "PowerAim/UILibrary/OcrConditionBuilder.xaml.cs": {
+    "mtime": 1780341464.167511,
+    "ast_hash": "09e20e5debe22b9d2bbb208587a92682",
+    "semantic_hash": "09e20e5debe22b9d2bbb208587a92682"
+  },
+  "PowerAim/UILibrary/OllamaStatusIndicator.xaml": {
+    "mtime": 1780230793.9864705,
+    "ast_hash": "70579112f7cc433cbdedfe6566064172",
+    "semantic_hash": "70579112f7cc433cbdedfe6566064172"
+  },
+  "PowerAim/UILibrary/OllamaStatusIndicator.xaml.cs": {
+    "mtime": 1780231831.8416767,
+    "ast_hash": "84e6b8b3b53be0c28e6f589952dbd038",
+    "semantic_hash": "84e6b8b3b53be0c28e6f589952dbd038"
+  },
+  "PowerAim/UILibrary/ToolEdit.xaml": {
+    "mtime": 1782743402.3996322,
+    "ast_hash": "40b58d2fbd1d5d787512917618fe7ded",
+    "semantic_hash": "40b58d2fbd1d5d787512917618fe7ded"
+  },
+  "PowerAim/UILibrary/ToolEdit.xaml.cs": {
+    "mtime": 1782743402.4006672,
+    "ast_hash": "9f891d4b6a1e4648c67f38cd4480c932",
+    "semantic_hash": "9f891d4b6a1e4648c67f38cd4480c932"
+  },
+  "PowerAim/UILibrary/ToolsList.xaml": {
+    "mtime": 1782749030.5097234,
+    "ast_hash": "caffa5db91372d9211f30c6065074171",
+    "semantic_hash": "caffa5db91372d9211f30c6065074171"
+  },
+  "PowerAim/UILibrary/ToolsList.xaml.cs": {
+    "mtime": 1782751923.6696906,
+    "ast_hash": "ef39f06975b6abbccf4395a30d4efc21",
+    "semantic_hash": "ef39f06975b6abbccf4395a30d4efc21"
+  },
+  "PowerAim/UILibrary/TriggerEdit.xaml": {
+    "mtime": 1782743402.4041808,
+    "ast_hash": "288532fd546af0bc7136bae756d00a75",
+    "semantic_hash": "288532fd546af0bc7136bae756d00a75"
+  },
+  "PowerAim/UILibrary/TriggerEdit.xaml.cs": {
+    "mtime": 1782743402.4051802,
+    "ast_hash": "afff98e7b6c52f27d67816bec964888d",
+    "semantic_hash": "afff98e7b6c52f27d67816bec964888d"
+  },
+  "PowerAim/UILibrary/TriggerList.xaml": {
+    "mtime": 1782743402.4071805,
+    "ast_hash": "f92ca1886790f46989e5405e04d315b3",
+    "semantic_hash": "f92ca1886790f46989e5405e04d315b3"
+  },
+  "PowerAim/UILibrary/TriggerList.xaml.cs": {
+    "mtime": 1782743402.4071805,
+    "ast_hash": "43ceaecf8af274eff082d6e867c2ff95",
+    "semantic_hash": "43ceaecf8af274eff082d6e867c2ff95"
+  },
+  "PowerAim/UILibrary/Xbox360ControllerCanvas.xaml": {
+    "mtime": 1779806763.850968,
+    "ast_hash": "716c1c80785168b36ebf913aa5768fe9",
+    "semantic_hash": "716c1c80785168b36ebf913aa5768fe9"
+  },
+  "PowerAim/UILibrary/Xbox360ControllerCanvas.xaml.cs": {
+    "mtime": 1779806763.8564718,
+    "ast_hash": "e47935040e11f77ccd4f41badd5b010a",
+    "semantic_hash": "e47935040e11f77ccd4f41badd5b010a"
+  },
+  "PowerAim/Visuality/AimDisengageDialog.xaml": {
+    "mtime": 1780224475.9076147,
+    "ast_hash": "08fa3bbf38fe7686d11140a15d328353",
+    "semantic_hash": "08fa3bbf38fe7686d11140a15d328353"
+  },
+  "PowerAim/Visuality/AimDisengageDialog.xaml.cs": {
+    "mtime": 1782743402.408684,
+    "ast_hash": "0a471d6853de863a3145ed75eb09d1c8",
+    "semantic_hash": "0a471d6853de863a3145ed75eb09d1c8"
+  },
+  "PowerAim/Visuality/AutoPlayActionEditDialog.xaml": {
+    "mtime": 1782743402.4106946,
+    "ast_hash": "538251ab81adfd038dc7819fdbc133c1",
+    "semantic_hash": "538251ab81adfd038dc7819fdbc133c1"
+  },
+  "PowerAim/Visuality/AutoPlayActionEditDialog.xaml.cs": {
+    "mtime": 1782743402.4106946,
+    "ast_hash": "0cc0c16815c8898e1c9a14d3c20746ac",
+    "semantic_hash": "0cc0c16815c8898e1c9a14d3c20746ac"
+  },
+  "PowerAim/Visuality/AutoPlayProfileEditDialog.xaml": {
+    "mtime": 1782743402.4132135,
+    "ast_hash": "6f9b096ef65014fb7fe7e5a280bdc84b",
+    "semantic_hash": "6f9b096ef65014fb7fe7e5a280bdc84b"
+  },
+  "PowerAim/Visuality/AutoPlayProfileEditDialog.xaml.cs": {
+    "mtime": 1782743402.4132135,
+    "ast_hash": "aa10407528c0c9a71a64f1d79fd098fe",
+    "semantic_hash": "aa10407528c0c9a71a64f1d79fd098fe"
+  },
+  "PowerAim/Visuality/BaseDialog.cs": {
+    "mtime": 1779806763.8655672,
+    "ast_hash": "bdb4eb44b0b7fa0c8eb427c76e397694",
+    "semantic_hash": "bdb4eb44b0b7fa0c8eb427c76e397694"
+  },
+  "PowerAim/Visuality/CalibrationWizardDialog.xaml": {
+    "mtime": 1782743402.4152179,
+    "ast_hash": "2c628c06e409e366aa44dcf968c99f75",
+    "semantic_hash": "2c628c06e409e366aa44dcf968c99f75"
+  },
+  "PowerAim/Visuality/CalibrationWizardDialog.xaml.cs": {
+    "mtime": 1782743402.4162166,
+    "ast_hash": "2bd82c2045c274dd0ef51f4158924ee3",
+    "semantic_hash": "2bd82c2045c274dd0ef51f4158924ee3"
+  },
+  "PowerAim/Visuality/CaptureHighlightOverlay.cs": {
+    "mtime": 1779806763.8695657,
+    "ast_hash": "d66f208f204661da5963b848aad2adc6",
+    "semantic_hash": "d66f208f204661da5963b848aad2adc6"
+  },
+  "PowerAim/Visuality/ConfigLabelOverlay.xaml": {
+    "mtime": 1782743402.4172184,
+    "ast_hash": "b4f60ca9aef3c08d53b2fc861a001b9e",
+    "semantic_hash": "b4f60ca9aef3c08d53b2fc861a001b9e"
+  },
+  "PowerAim/Visuality/ConfigLabelOverlay.xaml.cs": {
+    "mtime": 1782743402.4182174,
+    "ast_hash": "21ccc2112ce07dbcf79df2b241f6834c",
+    "semantic_hash": "21ccc2112ce07dbcf79df2b241f6834c"
+  },
+  "PowerAim/Visuality/ConfigSaver.xaml": {
+    "mtime": 1782743402.4187217,
+    "ast_hash": "23280f641630e407a5d0562819d0278b",
+    "semantic_hash": "23280f641630e407a5d0562819d0278b"
+  },
+  "PowerAim/Visuality/ConfigSaver.xaml.cs": {
+    "mtime": 1782743402.4207337,
+    "ast_hash": "c2b0b31237f0e96aac45cff3061bc702",
+    "semantic_hash": "c2b0b31237f0e96aac45cff3061bc702"
+  },
+  "PowerAim/Visuality/CrosshairOverlay.xaml": {
+    "mtime": 1779806763.8730721,
+    "ast_hash": "ebdb442244fa21d2c1a8458c51b296e0",
+    "semantic_hash": "ebdb442244fa21d2c1a8458c51b296e0"
+  },
+  "PowerAim/Visuality/CrosshairOverlay.xaml.cs": {
+    "mtime": 1783888051.6227343,
+    "ast_hash": "ffea71081e84b01d564a724efb35bf62",
+    "semantic_hash": "ffea71081e84b01d564a724efb35bf62"
+  },
+  "PowerAim/Visuality/CudaSetupDialog.xaml": {
+    "mtime": 1783888051.623741,
+    "ast_hash": "165ed6fe16232df1c3dddbf9b9cd6832",
+    "semantic_hash": "165ed6fe16232df1c3dddbf9b9cd6832"
+  },
+  "PowerAim/Visuality/CudaSetupDialog.xaml.cs": {
+    "mtime": 1783888051.6247396,
+    "ast_hash": "480e121b676e63acd752cc2bcbf9b53e",
+    "semantic_hash": "480e121b676e63acd752cc2bcbf9b53e"
+  },
+  "PowerAim/Visuality/DebugOverlay.xaml": {
+    "mtime": 1780330171.8484445,
+    "ast_hash": "293ca3080a79e4af385c574aa8812857",
+    "semantic_hash": "293ca3080a79e4af385c574aa8812857"
+  },
+  "PowerAim/Visuality/DebugOverlay.xaml.cs": {
+    "mtime": 1780330198.543565,
+    "ast_hash": "7f3a7171a401b51678c0f73f1db10d39",
+    "semantic_hash": "7f3a7171a401b51678c0f73f1db10d39"
+  },
+  "PowerAim/Visuality/DetectedPlayerWindow.xaml": {
+    "mtime": 1782743402.4207337,
+    "ast_hash": "9699dec881241d03cbd8b0c98e6642e4",
+    "semantic_hash": "9699dec881241d03cbd8b0c98e6642e4"
+  },
+  "PowerAim/Visuality/DetectedPlayerWindow.xaml.cs": {
+    "mtime": 1782743402.422253,
+    "ast_hash": "d536a1e22804e076b3a1fcf9cf5fc8da",
+    "semantic_hash": "d536a1e22804e076b3a1fcf9cf5fc8da"
+  },
+  "PowerAim/Visuality/DetectionMasksDialog.xaml": {
+    "mtime": 1779808648.0293198,
+    "ast_hash": "eb7446ce06e8dd1b6eca767693a6f69d",
+    "semantic_hash": "eb7446ce06e8dd1b6eca767693a6f69d"
+  },
+  "PowerAim/Visuality/DetectionMasksDialog.xaml.cs": {
+    "mtime": 1779806763.8805714,
+    "ast_hash": "7d65207a62aef83050e01859e85d0a15",
+    "semantic_hash": "7d65207a62aef83050e01859e85d0a15"
+  },
+  "PowerAim/Visuality/EditHeadArea.xaml": {
+    "mtime": 1782743402.4242623,
+    "ast_hash": "33b78f311a53f36a5f39148c03223c40",
+    "semantic_hash": "33b78f311a53f36a5f39148c03223c40"
+  },
+  "PowerAim/Visuality/EditHeadArea.xaml.cs": {
+    "mtime": 1782743402.4252622,
+    "ast_hash": "79f63c45407be1e654c433d420152c7c",
+    "semantic_hash": "79f63c45407be1e654c433d420152c7c"
+  },
+  "PowerAim/Visuality/FOV.xaml": {
+    "mtime": 1782743402.4262624,
+    "ast_hash": "edc9d6678b15e4cf87b7b39b82e26185",
+    "semantic_hash": "edc9d6678b15e4cf87b7b39b82e26185"
+  },
+  "PowerAim/Visuality/FOV.xaml.cs": {
+    "mtime": 1782743402.4272616,
+    "ast_hash": "8bca4b6b650c55b0808afafa06391116",
+    "semantic_hash": "8bca4b6b650c55b0808afafa06391116"
+  },
+  "PowerAim/Visuality/GamepadDiagnosticsDialog.xaml": {
+    "mtime": 1779806763.884085,
+    "ast_hash": "ad7d27c952ec15415fb99c80df54d6e0",
+    "semantic_hash": "ad7d27c952ec15415fb99c80df54d6e0"
+  },
+  "PowerAim/Visuality/GamepadDiagnosticsDialog.xaml.cs": {
+    "mtime": 1780330842.8817697,
+    "ast_hash": "a4b056b86d293e4dc69f3e2d336716c6",
+    "semantic_hash": "a4b056b86d293e4dc69f3e2d336716c6"
+  },
+  "PowerAim/Visuality/GamepadTesterWindow.xaml": {
+    "mtime": 1779808648.0468333,
+    "ast_hash": "d4f8b49ea29ca2d9457a0a9929f12396",
+    "semantic_hash": "d4f8b49ea29ca2d9457a0a9929f12396"
+  },
+  "PowerAim/Visuality/GamepadTesterWindow.xaml.cs": {
+    "mtime": 1779806763.8880842,
+    "ast_hash": "ea52e19bd11b1994c1072ad56398439a",
+    "semantic_hash": "ea52e19bd11b1994c1072ad56398439a"
+  },
+  "PowerAim/Visuality/HelpWindow.xaml": {
+    "mtime": 1779808648.0543349,
+    "ast_hash": "b36250b1e913473d485be57f98a34401",
+    "semantic_hash": "b36250b1e913473d485be57f98a34401"
+  },
+  "PowerAim/Visuality/HelpWindow.xaml.cs": {
+    "mtime": 1779807933.5074525,
+    "ast_hash": "396a468be69d086a81b600d55877158e",
+    "semantic_hash": "396a468be69d086a81b600d55877158e"
+  },
+  "PowerAim/Visuality/HiddenBoxesPill.cs": {
+    "mtime": 1779806763.8885858,
+    "ast_hash": "cfc5d193b08eb835cd1a277b3a8d63e8",
+    "semantic_hash": "cfc5d193b08eb835cd1a277b3a8d63e8"
+  },
+  "PowerAim/Visuality/KnownIssuesDialog.xaml": {
+    "mtime": 1782743402.4287663,
+    "ast_hash": "3eee1c5f5e6ae8a6d63f60b76e17b667",
+    "semantic_hash": "3eee1c5f5e6ae8a6d63f60b76e17b667"
+  },
+  "PowerAim/Visuality/KnownIssuesDialog.xaml.cs": {
+    "mtime": 1782743402.4302764,
+    "ast_hash": "19e4a58db06a997f85acfc5e40a305bc",
+    "semantic_hash": "19e4a58db06a997f85acfc5e40a305bc"
+  },
+  "PowerAim/Visuality/MagnifierDialog.xaml": {
+    "mtime": 1782746562.852944,
+    "ast_hash": "80de3255addddc8a0ed7ba2438658a58",
+    "semantic_hash": "80de3255addddc8a0ed7ba2438658a58"
+  },
+  "PowerAim/Visuality/MagnifierDialog.xaml.cs": {
+    "mtime": 1782746645.1698217,
+    "ast_hash": "180cfbbbb444eb93d3bc41c507c017c5",
+    "semantic_hash": "180cfbbbb444eb93d3bc41c507c017c5"
+  },
+  "PowerAim/Visuality/MappingPage.xaml": {
+    "mtime": 1779808648.0718608,
+    "ast_hash": "8e5b80308bee6df91caded5f2ae629d0",
+    "semantic_hash": "8e5b80308bee6df91caded5f2ae629d0"
+  },
+  "PowerAim/Visuality/MappingPage.xaml.cs": {
+    "mtime": 1779806763.8920846,
+    "ast_hash": "345e34a53b1b73c98ae3ec0ad83a3b51",
+    "semantic_hash": "345e34a53b1b73c98ae3ec0ad83a3b51"
+  },
+  "PowerAim/Visuality/MessageDialog.xaml": {
+    "mtime": 1779806763.8930883,
+    "ast_hash": "f91716b2cff87d82e4852ddc0844af9c",
+    "semantic_hash": "f91716b2cff87d82e4852ddc0844af9c"
+  },
+  "PowerAim/Visuality/MessageDialog.xaml.cs": {
+    "mtime": 1779806763.8940933,
+    "ast_hash": "328b1590c1d0e1e1c1202c2c04fc9cac",
+    "semantic_hash": "328b1590c1d0e1e1c1202c2c04fc9cac"
+  },
+  "PowerAim/Visuality/NoticeBar.xaml": {
+    "mtime": 1782743402.4337873,
+    "ast_hash": "6217138647757931f2746fff1a55ae10",
+    "semantic_hash": "6217138647757931f2746fff1a55ae10"
+  },
+  "PowerAim/Visuality/NoticeBar.xaml.cs": {
+    "mtime": 1782743402.4347885,
+    "ast_hash": "17e2acd4f3e1e21bc5f25fd2d5c410f2",
+    "semantic_hash": "17e2acd4f3e1e21bc5f25fd2d5c410f2"
+  },
+  "PowerAim/Visuality/OcrRegionsDialog.xaml": {
+    "mtime": 1780382181.5320787,
+    "ast_hash": "1e07be329771e814389f8580d2d49b28",
+    "semantic_hash": "1e07be329771e814389f8580d2d49b28"
+  },
+  "PowerAim/Visuality/OcrRegionsDialog.xaml.cs": {
+    "mtime": 1780382216.140336,
+    "ast_hash": "a13d07c1eb12bcf01e93a478e3474723",
+    "semantic_hash": "a13d07c1eb12bcf01e93a478e3474723"
+  },
+  "PowerAim/Visuality/OcrRegionsOverlay.xaml": {
+    "mtime": 1780224393.4104552,
+    "ast_hash": "1fb56ccd614b6a6dae5e5e7dbf191ceb",
+    "semantic_hash": "1fb56ccd614b6a6dae5e5e7dbf191ceb"
+  },
+  "PowerAim/Visuality/OcrRegionsOverlay.xaml.cs": {
+    "mtime": 1782743402.4367883,
+    "ast_hash": "e92b9b80c7bdd1bd42113325efd15cee",
+    "semantic_hash": "e92b9b80c7bdd1bd42113325efd15cee"
+  },
+  "PowerAim/Visuality/PageLayoutManager.cs": {
+    "mtime": 1782743402.437788,
+    "ast_hash": "7860d29146eb2300d64161c69a3b2c87",
+    "semantic_hash": "7860d29146eb2300d64161c69a3b2c87"
+  },
+  "PowerAim/Visuality/PredictionVisualHost.cs": {
+    "mtime": 1782743402.4387877,
+    "ast_hash": "b9618979a2f2a541b0cbd16431e2243b",
+    "semantic_hash": "b9618979a2f2a541b0cbd16431e2243b"
+  },
+  "PowerAim/Visuality/ProcessPickerDialog.xaml": {
+    "mtime": 1782743402.4402497,
+    "ast_hash": "3c2ce09c61ca8a0c63fff0a4f2a614df",
+    "semantic_hash": "3c2ce09c61ca8a0c63fff0a4f2a614df"
+  },
+  "PowerAim/Visuality/ProcessPickerDialog.xaml.cs": {
+    "mtime": 1782743402.4422548,
+    "ast_hash": "33e568cf25be4961a350ffa0e8468128",
+    "semantic_hash": "33e568cf25be4961a350ffa0e8468128"
+  },
+  "PowerAim/Visuality/QuickConfigWindow.xaml": {
+    "mtime": 1782743402.4422548,
+    "ast_hash": "fd7c26ad3a48547815e46ed04a8f147e",
+    "semantic_hash": "fd7c26ad3a48547815e46ed04a8f147e"
+  },
+  "PowerAim/Visuality/QuickConfigWindow.xaml.cs": {
+    "mtime": 1782743402.4433434,
+    "ast_hash": "2914d40f6941b4aaac76976c78306a87",
+    "semantic_hash": "2914d40f6941b4aaac76976c78306a87"
+  },
+  "PowerAim/Visuality/RecoilPatternsDialog.xaml": {
+    "mtime": 1779808648.098379,
+    "ast_hash": "8cc9deb480b022f7709a7f3a826b3054",
+    "semantic_hash": "8cc9deb480b022f7709a7f3a826b3054"
+  },
+  "PowerAim/Visuality/RecoilPatternsDialog.xaml.cs": {
+    "mtime": 1779883713.026789,
+    "ast_hash": "8cc306cfda4b23e8959e1f4c13dcdce0",
+    "semantic_hash": "8cc306cfda4b23e8959e1f4c13dcdce0"
+  },
+  "PowerAim/Visuality/ScreenRegionPicker.xaml": {
+    "mtime": 1779806763.901608,
+    "ast_hash": "af74478aff6bc1b728f696b8f28dc3c4",
+    "semantic_hash": "af74478aff6bc1b728f696b8f28dc3c4"
+  },
+  "PowerAim/Visuality/ScreenRegionPicker.xaml.cs": {
+    "mtime": 1779806763.9026084,
+    "ast_hash": "84d2cb322be06abe1afa082f9fc3253b",
+    "semantic_hash": "84d2cb322be06abe1afa082f9fc3253b"
+  },
+  "PowerAim/Visuality/SetAntiRecoil.xaml": {
+    "mtime": 1782743402.4453435,
+    "ast_hash": "27988614b9cefa6374598a63036b1238",
+    "semantic_hash": "27988614b9cefa6374598a63036b1238"
+  },
+  "PowerAim/Visuality/SetAntiRecoil.xaml.cs": {
+    "mtime": 1782743402.4463441,
+    "ast_hash": "e73f6f617eda68f236b6809a95c2bd5a",
+    "semantic_hash": "e73f6f617eda68f236b6809a95c2bd5a"
+  },
+  "PowerAim/Visuality/SetupWizard.xaml": {
+    "mtime": 1782743402.4473438,
+    "ast_hash": "792aef93f365eae8465a4630295960e4",
+    "semantic_hash": "792aef93f365eae8465a4630295960e4"
+  },
+  "PowerAim/Visuality/SetupWizard.xaml.cs": {
+    "mtime": 1782743402.4473438,
+    "ast_hash": "0db19fb4473d234c5fbd166ac18bd1b8",
+    "semantic_hash": "0db19fb4473d234c5fbd166ac18bd1b8"
+  },
+  "PowerAim/Visuality/TargetClassDialog.xaml": {
+    "mtime": 1779806763.9046206,
+    "ast_hash": "277b64377208f9a1b31bbfa10afe8258",
+    "semantic_hash": "277b64377208f9a1b31bbfa10afe8258"
+  },
+  "PowerAim/Visuality/TargetClassDialog.xaml.cs": {
+    "mtime": 1782743402.4488492,
+    "ast_hash": "e0ba0ccc431a13045d985b4ab5dfe142",
+    "semantic_hash": "e0ba0ccc431a13045d985b4ab5dfe142"
+  },
+  "PowerAim/Visuality/ToolActionEditDialog.xaml": {
+    "mtime": 1782743402.4498541,
+    "ast_hash": "d1210d01e134a3d378b679f22c18940b",
+    "semantic_hash": "d1210d01e134a3d378b679f22c18940b"
+  },
+  "PowerAim/Visuality/ToolActionEditDialog.xaml.cs": {
+    "mtime": 1782753786.3566859,
+    "ast_hash": "9dbffee8fb764a148fc66418d0d9096f",
+    "semantic_hash": "9dbffee8fb764a148fc66418d0d9096f"
+  },
+  "PowerAim/Visuality/TriggerEditDialog.xaml": {
+    "mtime": 1782743402.4521518,
+    "ast_hash": "82d8c8764253403d236aa326e96ec392",
+    "semantic_hash": "82d8c8764253403d236aa326e96ec392"
+  },
+  "PowerAim/Visuality/TriggerEditDialog.xaml.cs": {
+    "mtime": 1782743402.453229,
+    "ast_hash": "83cf58bf786078960c552dac3960a3b8",
+    "semantic_hash": "83cf58bf786078960c552dac3960a3b8"
+  },
+  "PowerAim/Visuality/UpdateDialog.xaml": {
+    "mtime": 1782743402.454232,
+    "ast_hash": "1d87cb64a38bb267617c6e6555ae88b7",
+    "semantic_hash": "1d87cb64a38bb267617c6e6555ae88b7"
+  },
+  "PowerAim/Visuality/UpdateDialog.xaml.cs": {
+    "mtime": 1782743402.455233,
+    "ast_hash": "a8729a4b263bd2005e4c92ef7178490a",
+    "semantic_hash": "a8729a4b263bd2005e4c92ef7178490a"
+  },
+  "Universalv3_web_model/model.json": {
+    "mtime": 1719953960.0822139,
+    "ast_hash": "1984c3257924cd7ad82c8584fb93eec8",
+    "semantic_hash": "1984c3257924cd7ad82c8584fb93eec8"
+  },
+  "build.ps1": {
+    "mtime": 1784057138.3256245,
+    "ast_hash": "a24eecff44acd825581edef0b21d3a2b",
+    "semantic_hash": "a24eecff44acd825581edef0b21d3a2b"
+  },
+  "check_cuda.ps1": {
+    "mtime": 1727952799.0196092,
+    "ast_hash": "5b5f7efd33d7e94fb6d3dc324b5e837f",
+    "semantic_hash": "5b5f7efd33d7e94fb6d3dc324b5e837f"
+  },
+  "generate_icon.ps1": {
+    "mtime": 1779806763.943655,
+    "ast_hash": "20d6552ecd10be9d5b9fbae8a9ee4fb3",
+    "semantic_hash": "20d6552ecd10be9d5b9fbae8a9ee4fb3"
+  },
+  ".github/FUNDING.yml": {
+    "mtime": 1733089611.2324967,
+    "ast_hash": "986ecb0dabfcb8d5c594eca1c8ec403b",
+    "semantic_hash": "986ecb0dabfcb8d5c594eca1c8ec403b"
+  },
+  ".github/workflows/release.yml": {
+    "mtime": 1779806763.3311367,
+    "ast_hash": "ca3476c7cb02ab470b5a95eac2b3c9bd",
+    "semantic_hash": "ca3476c7cb02ab470b5a95eac2b3c9bd"
+  },
+  "CHANGELOG.md": {
+    "mtime": 1783888563.0414455,
+    "ast_hash": "afcd7920e352d121c0cab40e95b1b917",
+    "semantic_hash": "afcd7920e352d121c0cab40e95b1b917"
+  },
+  "LicenseInfo.md": {
+    "mtime": 1782743402.2294438,
+    "ast_hash": "9974bfa610ef903f57212ddaf3cc6af2",
+    "semantic_hash": "9974bfa610ef903f57212ddaf3cc6af2"
+  },
+  "MODELS.md": {
+    "mtime": 1782743402.2309482,
+    "ast_hash": "e09613826addda275ce446aa710c8c26",
+    "semantic_hash": "e09613826addda275ce446aa710c8c26"
+  },
+  "PowerAim/GCAPI/README.txt": {
+    "mtime": 1783888051.5425167,
+    "ast_hash": "b34e33bad36d9e5a16f5e4c402c408e0",
+    "semantic_hash": "b34e33bad36d9e5a16f5e4c402c408e0"
+  },
+  "PowerAim/KnownIssues.md": {
+    "mtime": 1779886473.3609,
+    "ast_hash": "70a105e7e660c82bac30a7826e1a09bb",
+    "semantic_hash": "70a105e7e660c82bac30a7826e1a09bb"
+  },
+  "PowerAim/MouseMovementLibraries/GHubSupport/Credits.txt": {
+    "mtime": 1779806763.5303307,
+    "ast_hash": "222f052e824783914973e9c2c9b09ee5",
+    "semantic_hash": "222f052e824783914973e9c2c9b09ee5"
+  },
+  "README.md": {
+    "mtime": 1782743402.4572327,
+    "ast_hash": "640cf4fd887b03b37ca79f03d33181f7",
+    "semantic_hash": "640cf4fd887b03b37ca79f03d33181f7"
+  },
+  "RELEASE_NOTES.md": {
+    "mtime": 1782743402.4572327,
+    "ast_hash": "4ccad69cd2e67c9860add17b81a69214",
+    "semantic_hash": "4ccad69cd2e67c9860add17b81a69214"
+  },
+  "Universalv3_web_model/labels.txt": {
+    "mtime": 1719953960.0807087,
+    "ast_hash": "8c6d21187fb58b7a079d70030686b33e",
+    "semantic_hash": "8c6d21187fb58b7a079d70030686b33e"
+  },
+  "docs/_config.yml": {
+    "mtime": 1783888051.626739,
+    "ast_hash": "b7d21ea2c3118d90da670e5919161fb3",
+    "semantic_hash": "b7d21ea2c3118d90da670e5919161fb3"
+  },
+  "docs/advanced/architecture.md": {
+    "mtime": 1782743402.4587364,
+    "ast_hash": "4ae8fbcc05b2431e04b8269fc5be6d83",
+    "semantic_hash": "4ae8fbcc05b2431e04b8269fc5be6d83"
+  },
+  "docs/advanced/index.md": {
+    "mtime": 1782743402.4597416,
+    "ast_hash": "7ccfd5b98071fe59b41466edd51dcd4c",
+    "semantic_hash": "7ccfd5b98071fe59b41466edd51dcd4c"
+  },
+  "docs/advanced/localization.md": {
+    "mtime": 1779806763.9131198,
+    "ast_hash": "42c70054ab6f0eca60eac50c05e1cf23",
+    "semantic_hash": "42c70054ab6f0eca60eac50c05e1cf23"
+  },
+  "docs/configuration/config-file.md": {
+    "mtime": 1780337129.4796228,
+    "ast_hash": "27de1c1b0d5c17ff5621e5296a85e0da",
+    "semantic_hash": "27de1c1b0d5c17ff5621e5296a85e0da"
+  },
+  "docs/configuration/index.md": {
+    "mtime": 1782743402.4607866,
+    "ast_hash": "e8586e6c340cdabef3f107ae0d82dfce",
+    "semantic_hash": "e8586e6c340cdabef3f107ae0d82dfce"
+  },
+  "docs/configuration/keybinds-hotkeys.md": {
+    "mtime": 1782744236.8840277,
+    "ast_hash": "6a64a93202c2ddd626cfac1fe416e1bb",
+    "semantic_hash": "6a64a93202c2ddd626cfac1fe416e1bb"
+  },
+  "docs/configuration/per-game-profiles.md": {
+    "mtime": 1779806763.9176326,
+    "ast_hash": "ba4b55237f82ff66b7b692df64d7155f",
+    "semantic_hash": "ba4b55237f82ff66b7b692df64d7155f"
+  },
+  "docs/configuration/quick-config.md": {
+    "mtime": 1782743402.4628785,
+    "ast_hash": "ea3e73f66693a1378cb59ecbb0558190",
+    "semantic_hash": "ea3e73f66693a1378cb59ecbb0558190"
+  },
+  "docs/configuration/settings-overview.md": {
+    "mtime": 1782743402.4638774,
+    "ast_hash": "e1f46495f613b887e5ea35bbc869007b",
+    "semantic_hash": "e1f46495f613b887e5ea35bbc869007b"
+  },
+  "docs/documentation.md": {
+    "mtime": 1782744274.0787704,
+    "ast_hash": "9ad53f226fe0b596264a49a5c6dfcf52",
+    "semantic_hash": "9ad53f226fe0b596264a49a5c6dfcf52"
+  },
+  "docs/features.html": {
+    "mtime": 1782744456.8165588,
+    "ast_hash": "7b767c13f944ac211c84086d8423f211",
+    "semantic_hash": "7b767c13f944ac211c84086d8423f211"
+  },
+  "docs/features/aim-assist.md": {
+    "mtime": 1782743402.467878,
+    "ast_hash": "525cf8fa145d89e8db6b7ade8d222116",
+    "semantic_hash": "525cf8fa145d89e8db6b7ade8d222116"
+  },
+  "docs/features/anti-recoil.md": {
+    "mtime": 1782743402.4688773,
+    "ast_hash": "a584b54214b8acb82945de56baea5bed",
+    "semantic_hash": "a584b54214b8acb82945de56baea5bed"
+  },
+  "docs/features/autoplay.md": {
+    "mtime": 1780337129.382508,
+    "ast_hash": "5daa8ceff3c1d265b222892cca045ca9",
+    "semantic_hash": "5daa8ceff3c1d265b222892cca045ca9"
+  },
+  "docs/features/calibration-wizard.md": {
+    "mtime": 1782743402.4698832,
+    "ast_hash": "4d470fd308a3d0c672cacc75cf5075fb",
+    "semantic_hash": "4d470fd308a3d0c672cacc75cf5075fb"
+  },
+  "docs/features/controller-mapping.md": {
+    "mtime": 1782743402.470888,
+    "ast_hash": "84508dd5e9c7e8aafdce780acfd184db",
+    "semantic_hash": "84508dd5e9c7e8aafdce780acfd184db"
+  },
+  "docs/features/controller-overview.md": {
+    "mtime": 1782743402.4718895,
+    "ast_hash": "fa092cce4418197c2ea7ab6236ac0264",
+    "semantic_hash": "fa092cce4418197c2ea7ab6236ac0264"
+  },
+  "docs/features/crosshair-overlay.md": {
+    "mtime": 1782743402.4723935,
+    "ast_hash": "1237688ad64062b10f2dfeb7934f3fd2",
+    "semantic_hash": "1237688ad64062b10f2dfeb7934f3fd2"
+  },
+  "docs/features/debug-overlay.md": {
+    "mtime": 1782743402.4744015,
+    "ast_hash": "465ca82bf0907aa7abbb79cd13f02e35",
+    "semantic_hash": "465ca82bf0907aa7abbb79cd13f02e35"
+  },
+  "docs/features/detection-masks.md": {
+    "mtime": 1779876385.9688091,
+    "ast_hash": "929ba814a5e94f8971834b4abfec7db6",
+    "semantic_hash": "929ba814a5e94f8971834b4abfec7db6"
+  },
+  "docs/features/dynamic-tools.md": {
+    "mtime": 1782755572.0589857,
+    "ast_hash": "a86eb90f45a9d6714aa67adf5b726da2",
+    "semantic_hash": "a86eb90f45a9d6714aa67adf5b726da2"
+  },
+  "docs/features/fov-overlay.md": {
+    "mtime": 1779820246.749283,
+    "ast_hash": "3aae9cdcb31832fbe9f44e171b8d92d6",
+    "semantic_hash": "3aae9cdcb31832fbe9f44e171b8d92d6"
+  },
+  "docs/features/gamepad-aim.md": {
+    "mtime": 1782743402.4764018,
+    "ast_hash": "b82ae75c43122e7edbf95651dcb425a1",
+    "semantic_hash": "b82ae75c43122e7edbf95651dcb425a1"
+  },
+  "docs/features/hidden-controllers.md": {
+    "mtime": 1779820259.1005754,
+    "ast_hash": "781cb1e6bb42939a7eddd4cf97225cff",
+    "semantic_hash": "781cb1e6bb42939a7eddd4cf97225cff"
+  },
+  "docs/features/index.md": {
+    "mtime": 1782743402.4789069,
+    "ast_hash": "bd5033dacd02b08d3a1050d72c78636a",
+    "semantic_hash": "bd5033dacd02b08d3a1050d72c78636a"
+  },
+  "docs/features/mouse-input-methods.md": {
+    "mtime": 1782743402.4804378,
+    "ast_hash": "48551179562e843b1afe03651d199033",
+    "semantic_hash": "48551179562e843b1afe03651d199033"
+  },
+  "docs/features/ocr.md": {
+    "mtime": 1782743402.4809415,
+    "ast_hash": "76a3009d566754870c2a1500c50fd3bc",
+    "semantic_hash": "76a3009d566754870c2a1500c50fd3bc"
+  },
+  "docs/features/recoil-patterns.md": {
+    "mtime": 1780337129.2922325,
+    "ast_hash": "9ee356961e628fc77d76cbb318d7a90a",
+    "semantic_hash": "9ee356961e628fc77d76cbb318d7a90a"
+  },
+  "docs/features/replay-buffer.md": {
+    "mtime": 1779876388.9895182,
+    "ast_hash": "bd8c7dc6fe35fa799bbf3b59d0fa5762",
+    "semantic_hash": "bd8c7dc6fe35fa799bbf3b59d0fa5762"
+  },
+  "docs/features/session-stats.md": {
+    "mtime": 1779876387.4016006,
+    "ast_hash": "1c822ec57b4e8da9961e50e0bb26ef3c",
+    "semantic_hash": "1c822ec57b4e8da9961e50e0bb26ef3c"
+  },
+  "docs/features/triggers.md": {
+    "mtime": 1782743402.4819448,
+    "ast_hash": "b49dafffc300b514933f5b3cac7a9d0b",
+    "semantic_hash": "b49dafffc300b514933f5b3cac7a9d0b"
+  },
+  "docs/getting-started/first-aim.md": {
+    "mtime": 1779876382.1852238,
+    "ast_hash": "cc7e45080a2394bee525503a781b4563",
+    "semantic_hash": "cc7e45080a2394bee525503a781b4563"
+  },
+  "docs/getting-started/index.md": {
+    "mtime": 1780337129.1625714,
+    "ast_hash": "8e7ee7befdb23fec019372a0f89464dc",
+    "semantic_hash": "8e7ee7befdb23fec019372a0f89464dc"
+  },
+  "docs/getting-started/installation.md": {
+    "mtime": 1782743402.4829485,
+    "ast_hash": "f7d4a8057efdb60d581bd71c11f49fce",
+    "semantic_hash": "f7d4a8057efdb60d581bd71c11f49fce"
+  },
+  "docs/getting-started/setup-best-practices.md": {
+    "mtime": 1780337129.193758,
+    "ast_hash": "ac3c1367cca5688323b608fa59435459",
+    "semantic_hash": "ac3c1367cca5688323b608fa59435459"
+  },
+  "docs/getting-started/system-requirements.md": {
+    "mtime": 1779806763.933142,
+    "ast_hash": "f19d8028b87251f1f2f9e2019b4e66ff",
+    "semantic_hash": "f19d8028b87251f1f2f9e2019b4e66ff"
+  },
+  "docs/images/README.md": {
+    "mtime": 1779876517.3592315,
+    "ast_hash": "f999353841694c741f3b4923dd084ab8",
+    "semantic_hash": "f999353841694c741f3b4923dd084ab8"
+  },
+  "docs/index.html": {
+    "mtime": 1782905370.3478181,
+    "ast_hash": "c7f44e5e32a1495c072fdedfd437fd4c",
+    "semantic_hash": "c7f44e5e32a1495c072fdedfd437fd4c"
+  },
+  "docs/models/contributing.md": {
+    "mtime": 1782743402.486949,
+    "ast_hash": "958c44f9e690c2ef746b276847030513",
+    "semantic_hash": "958c44f9e690c2ef746b276847030513"
+  },
+  "docs/models/index.md": {
+    "mtime": 1782743402.487949,
+    "ast_hash": "03361070dad32bcd6ae5ff36ecf12612",
+    "semantic_hash": "03361070dad32bcd6ae5ff36ecf12612"
+  },
+  "docs/models/training-your-own.md": {
+    "mtime": 1782743402.4889495,
+    "ast_hash": "f373131efeab80782555c699d88461cc",
+    "semantic_hash": "f373131efeab80782555c699d88461cc"
+  },
+  "docs/models/using-models.md": {
+    "mtime": 1782743402.4894521,
+    "ast_hash": "e0b806021caebf3da228edaf27d512fa",
+    "semantic_hash": "e0b806021caebf3da228edaf27d512fa"
+  },
+  "docs/troubleshooting/controller-aim-no-effect.md": {
+    "mtime": 1779806763.939655,
+    "ast_hash": "2e005c2423b0064b29b25d3b58d6f36d",
+    "semantic_hash": "2e005c2423b0064b29b25d3b58d6f36d"
+  },
+  "docs/troubleshooting/gamepad-not-detected.md": {
+    "mtime": 1779806763.9401565,
+    "ast_hash": "9dea0e00a17e6ec05c51bbb81c32cfa9",
+    "semantic_hash": "9dea0e00a17e6ec05c51bbb81c32cfa9"
+  },
+  "docs/troubleshooting/index.md": {
+    "mtime": 1779806763.940655,
+    "ast_hash": "bce6e0aef667dc5489ebe09aefb3ee92",
+    "semantic_hash": "bce6e0aef667dc5489ebe09aefb3ee92"
+  },
+  "docs/troubleshooting/low-fps.md": {
+    "mtime": 1779806763.9416537,
+    "ast_hash": "31025b850102468698cc92f20820fb46",
+    "semantic_hash": "31025b850102468698cc92f20820fb46"
+  },
+  "docs/troubleshooting/model-wont-load.md": {
+    "mtime": 1779806763.942155,
+    "ast_hash": "2a2be2f1e0425f17d1d71001fb1a1103",
+    "semantic_hash": "2a2be2f1e0425f17d1d71001fb1a1103"
+  },
+  "docs/troubleshooting/ocr-not-working.md": {
+    "mtime": 1779806763.943154,
+    "ast_hash": "0acf8c6f9c3ffbbe84b3e04c480e9dc5",
+    "semantic_hash": "0acf8c6f9c3ffbbe84b3e04c480e9dc5"
+  },
+  "Launcher/PowerAim.png": {
+    "mtime": 1779806763.3451529,
+    "ast_hash": "3042f77cfd6ab02e26355eebf5606040",
+    "semantic_hash": "3042f77cfd6ab02e26355eebf5606040"
+  },
+  "PowerAim/PowerAim.png": {
+    "mtime": 1779806763.551341,
+    "ast_hash": "3042f77cfd6ab02e26355eebf5606040",
+    "semantic_hash": "3042f77cfd6ab02e26355eebf5606040"
+  },
+  "docs/images/PowerAim-icon-256.png": {
+    "mtime": 1782743402.48495,
+    "ast_hash": "2a51c8933fb2ffa4868636d4f69ead54",
+    "semantic_hash": "2a51c8933fb2ffa4868636d4f69ead54"
+  },
+  "docs/images/aim-tools-page.png": {
+    "mtime": 1779818795.2784367,
+    "ast_hash": "d6ec18892570fbabd037f4a6f5677108",
+    "semantic_hash": "d6ec18892570fbabd037f4a6f5677108"
+  },
+  "docs/images/autoplay-edit-action.png": {
+    "mtime": 1779818795.1993198,
+    "ast_hash": "e1a7751df5d6570ecc769eb5be5de514",
+    "semantic_hash": "e1a7751df5d6570ecc769eb5be5de514"
+  },
+  "docs/images/autoplay-edit-profile.png": {
+    "mtime": 1779818795.2088654,
+    "ast_hash": "bd2c8e85fbee303e02bfd310889cfc5d",
+    "semantic_hash": "bd2c8e85fbee303e02bfd310889cfc5d"
+  },
+  "docs/images/autoplay-page.png": {
+    "mtime": 1779818795.2178655,
+    "ast_hash": "a4684a842d83869f6f7f54b5bdbe4185",
+    "semantic_hash": "a4684a842d83869f6f7f54b5bdbe4185"
+  },
+  "docs/images/benchmark-results.png": {
+    "mtime": 1779876361.0746334,
+    "ast_hash": "9db730c7f89349d3eaaf457f623f5814",
+    "semantic_hash": "9db730c7f89349d3eaaf457f623f5814"
+  },
+  "docs/images/calibration-wizard.png": {
+    "mtime": 1779818795.226367,
+    "ast_hash": "a0e4f48b9b629616fd8a57d97c6bb5a9",
+    "semantic_hash": "a0e4f48b9b629616fd8a57d97c6bb5a9"
+  },
+  "docs/images/capture-source-selector.png": {
+    "mtime": 1779876361.039011,
+    "ast_hash": "819ad4cca241b2b754cf87401ce0df01",
+    "semantic_hash": "819ad4cca241b2b754cf87401ce0df01"
+  },
+  "docs/images/configs-tab.png": {
+    "mtime": 1779876361.2451682,
+    "ast_hash": "64ee18e721dd9ed6b60b7d63f6b246ce",
+    "semantic_hash": "64ee18e721dd9ed6b60b7d63f6b246ce"
+  },
+  "docs/images/crosshair-overlay.png": {
+    "mtime": 1779876361.2125967,
+    "ast_hash": "ff320cdf5f6c70474886cc1503b36c67",
+    "semantic_hash": "ff320cdf5f6c70474886cc1503b36c67"
+  },
+  "docs/images/detection-masks-dialog.png": {
+    "mtime": 1779876361.1096883,
+    "ast_hash": "411f30766c07ef3d5b3320bdfb5bfbcb",
+    "semantic_hash": "411f30766c07ef3d5b3320bdfb5bfbcb"
+  },
+  "docs/images/gamepad-settings-vigem-ok.png": {
+    "mtime": 1779818795.2574198,
+    "ast_hash": "a226998d547944e6acadc2445e9e6b22",
+    "semantic_hash": "a226998d547944e6acadc2445e9e6b22"
+  },
+  "docs/images/gamepad-tester.png": {
+    "mtime": 1779818795.2679377,
+    "ast_hash": "fd22dafecc3e08cc270f7e7bedf8f123",
+    "semantic_hash": "fd22dafecc3e08cc270f7e7bedf8f123"
+  },
+  "docs/images/main.png": {
+    "mtime": 1779876361.309881,
+    "ast_hash": "d6ec18892570fbabd037f4a6f5677108",
+    "semantic_hash": "d6ec18892570fbabd037f4a6f5677108"
+  },
+  "docs/images/mapping-editor.png": {
+    "mtime": 1779818795.2879488,
+    "ast_hash": "a9d4c815ae41abcf8cdf0db003a624a2",
+    "semantic_hash": "a9d4c815ae41abcf8cdf0db003a624a2"
+  },
+  "docs/images/mapping-page.png": {
+    "mtime": 1779818795.2994506,
+    "ast_hash": "fbce4a1299613c05656bc746b9783ed6",
+    "semantic_hash": "fbce4a1299613c05656bc746b9783ed6"
+  },
+  "docs/images/models-tab.png": {
+    "mtime": 1779876361.0043821,
+    "ast_hash": "e91a677100b910f457ec965599ae4eaf",
+    "semantic_hash": "e91a677100b910f457ec965599ae4eaf"
+  },
+  "docs/images/ocr-regions-dialog.png": {
+    "mtime": 1779818795.235406,
+    "ast_hash": "dd209b3b6f6cf7ad57d0765510d846d9",
+    "semantic_hash": "dd209b3b6f6cf7ad57d0765510d846d9"
+  },
+  "docs/images/recoil-patterns-dialog.png": {
+    "mtime": 1779818795.310452,
+    "ast_hash": "4cea6a7ce8cc322611769609e220fd66",
+    "semantic_hash": "4cea6a7ce8cc322611769609e220fd66"
+  },
+  "docs/images/replay-card.png": {
+    "mtime": 1779876361.1790054,
+    "ast_hash": "4f66063ff156edf41859fbf1dc1c76f9",
+    "semantic_hash": "4f66063ff156edf41859fbf1dc1c76f9"
+  },
+  "docs/images/session-stats-card.png": {
+    "mtime": 1779876361.1438825,
+    "ast_hash": "ba549368428f2924c0139336582f88a4",
+    "semantic_hash": "ba549368428f2924c0139336582f88a4"
+  },
+  "docs/images/settings-page.png": {
+    "mtime": 1779818795.321466,
+    "ast_hash": "2c7e23b73853a25951d46acbd973520b",
+    "semantic_hash": "2c7e23b73853a25951d46acbd973520b"
+  },
+  "docs/images/target-classes-dialog.png": {
+    "mtime": 1779876361.2777295,
+    "ast_hash": "5fdd1090186354720026ac5260f1b3e7",
+    "semantic_hash": "5fdd1090186354720026ac5260f1b3e7"
+  },
+  "docs/images/tools-page.png": {
+    "mtime": 1779818795.3309796,
+    "ast_hash": "ce4f989cc8327db28b3caca326b67638",
+    "semantic_hash": "ce4f989cc8327db28b3caca326b67638"
+  },
+  "docs/images/trigger-editor.png": {
+    "mtime": 1779818795.246406,
+    "ast_hash": "abfff560de38de8c5e2544a69a34185a",
+    "semantic_hash": "abfff560de38de8c5e2544a69a34185a"
+  },
+  "readme_assets/AimmyBanner.png": {
+    "mtime": 1719953969.8700123,
+    "ast_hash": "a152cfdd28a40796b4c8f67bb11348c6",
+    "semantic_hash": "a152cfdd28a40796b4c8f67bb11348c6"
+  },
+  "readme_assets/AimmyV2Banner.png": {
+    "mtime": 1719953969.8745124,
+    "ast_hash": "a152cfdd28a40796b4c8f67bb11348c6",
+    "semantic_hash": "a152cfdd28a40796b4c8f67bb11348c6"
+  },
+  "readme_assets/DT1.png": {
+    "mtime": 1719953969.877111,
+    "ast_hash": "dc12366c46c8f49d2760cb1e3861a5a3",
+    "semantic_hash": "dc12366c46c8f49d2760cb1e3861a5a3"
+  },
+  "readme_assets/DT10.png": {
+    "mtime": 1719953969.8781176,
+    "ast_hash": "546a9e1bb2a0366cae9d4ef7b77e6107",
+    "semantic_hash": "546a9e1bb2a0366cae9d4ef7b77e6107"
+  },
+  "readme_assets/DT2.png": {
+    "mtime": 1719953969.879617,
+    "ast_hash": "4476b672ca7e793fa144958e02521225",
+    "semantic_hash": "4476b672ca7e793fa144958e02521225"
+  },
+  "readme_assets/DT3.png": {
+    "mtime": 1719953969.8806188,
+    "ast_hash": "1e9fa55506ff91c97d2a78baa30a19b5",
+    "semantic_hash": "1e9fa55506ff91c97d2a78baa30a19b5"
+  },
+  "readme_assets/DT4.png": {
+    "mtime": 1719953969.882118,
+    "ast_hash": "5ae545b5795f08c642d6893f54b39cf0",
+    "semantic_hash": "5ae545b5795f08c642d6893f54b39cf0"
+  },
+  "readme_assets/DT5.png": {
+    "mtime": 1719953969.883616,
+    "ast_hash": "574a271c785a692650a7bd7f2dcf0545",
+    "semantic_hash": "574a271c785a692650a7bd7f2dcf0545"
+  },
+  "readme_assets/DT6.png": {
+    "mtime": 1719953969.884616,
+    "ast_hash": "8ce577b277211e28a0412b32805e32ed",
+    "semantic_hash": "8ce577b277211e28a0412b32805e32ed"
+  },
+  "readme_assets/DT7.png": {
+    "mtime": 1719953969.8861222,
+    "ast_hash": "e28570f70b9040bdc996bdc3d5d9343f",
+    "semantic_hash": "e28570f70b9040bdc996bdc3d5d9343f"
+  },
+  "readme_assets/DT8.png": {
+    "mtime": 1719953969.8871562,
+    "ast_hash": "d282fb2da0e0663b38a3f059ffa0572a",
+    "semantic_hash": "d282fb2da0e0663b38a3f059ffa0572a"
+  },
+  "readme_assets/DT9.png": {
+    "mtime": 1719953969.8886611,
+    "ast_hash": "6a1732318dfad90f0d585eea509f0a58",
+    "semantic_hash": "6a1732318dfad90f0d585eea509f0a58"
+  },
+  "readme_assets/DownloadableModels.png": {
+    "mtime": 1719953969.8891609,
+    "ast_hash": "0c97aa62aa2167e387d26ece119ff192",
+    "semantic_hash": "0c97aa62aa2167e387d26ece119ff192"
+  },
+  "readme_assets/PowerAim-icon-256.png": {
+    "mtime": 1779806763.9446542,
+    "ast_hash": "2a51c8933fb2ffa4868636d4f69ead54",
+    "semantic_hash": "2a51c8933fb2ffa4868636d4f69ead54"
+  },
+  "readme_assets/UI.gif": {
+    "mtime": 1719953969.9051974,
+    "ast_hash": "432384e2801bdd390257f20a4664f1d6",
+    "semantic_hash": "432384e2801bdd390257f20a4664f1d6"
+  }
+}
