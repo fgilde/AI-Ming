@@ -70,6 +70,16 @@ namespace PowerAim.Other
 
         public static bool CurrentlyLoadingModel = false;
 
+        // Load "generation": each LoadModel call bumps it; a load only applies its result if it's still the
+        // latest — so a slower, superseded load (e.g. a still-building TensorRT engine after the user hit
+        // "use CUDA") discards its result instead of clobbering the newer one.
+        private static int _loadGeneration;
+        private static readonly string[] LoadToggleKeys =
+            { "Aim Assist", "Constant AI Tracking", "Auto Trigger", "Show Detected Player", "Show AI Confidence", "Show Tracers" };
+        // Captured by the FIRST load of a burst, restored by the LAST (winning) one — so concurrent loads
+        // don't capture each other's already-disabled toggles and then restore the wrong values.
+        private static Dictionary<string, object>? _savedToggleStates;
+
         private async void ModelListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (ModelListBox.SelectedItem == null) return;
@@ -81,19 +91,21 @@ namespace PowerAim.Other
             await LoadModel(selectedModel, modelPath);
         }
 
-        public async Task LoadModel(string selectedModel, string modelPath)
+        public async Task LoadModel(string selectedModel, string modelPath, bool force = false)
         {
-            // Check if the model is already selected or currently loading
-            if (CurrentlyLoadingModel) return;
+            // Normal re-entrancy guard. `force` (the "skip TensorRT, use CUDA" button) bypasses it to run a
+            // concurrent load; the generation counter below then makes the NEWEST load win.
+            if (CurrentlyLoadingModel && !force) return;
+            int gen = System.Threading.Interlocked.Increment(ref _loadGeneration);
 
             CurrentlyLoadingModel = true;
             AppConfig.Current.LastLoadedModel = selectedModel;
             AppConfig.Current.OnPropertyChanged(nameof(AppConfig.Current.LastLoadedModel));
 
-            // Store original values and disable them temporarily
-            var toggleKeys = new[] { "Aim Assist", "Constant AI Tracking", "Auto Trigger", "Show Detected Player", "Show AI Confidence", "Show Tracers" };
-            var originalToggleStates = toggleKeys.ToDictionary(key => key, key => AppConfig.Current.ToggleState[key]);
-            foreach (var key in toggleKeys)
+            // Capture the user's toggle states once per burst, then disable them during the load so nothing
+            // fires while the model swaps. The winning (latest-generation) load restores them.
+            _savedToggleStates ??= LoadToggleKeys.ToDictionary(key => key, key => AppConfig.Current.ToggleState[key]);
+            foreach (var key in LoadToggleKeys)
             {
                 AppConfig.Current.ToggleState[key] = false;
             }
@@ -103,10 +115,20 @@ namespace PowerAim.Other
                 // Let the AI finish up
                 await Task.Delay(150);
 
-                AIManager?.Dispose();
                 // Build off the UI thread — a first-time TensorRT engine build is slow and would otherwise
                 // freeze the window during model load.
-                AIManager = await global::AIManager.CreateAsync(modelPath, AppConfig.Current.CaptureSource);
+                var mgr = await global::AIManager.CreateAsync(modelPath, AppConfig.Current.CaptureSource);
+
+                if (gen != _loadGeneration)
+                {
+                    // A newer load superseded us (e.g. the user hit "use CUDA" while our TensorRT engine was
+                    // still building). Discard our result rather than clobbering the newer one.
+                    mgr?.Dispose();
+                    return;
+                }
+
+                AIManager?.Dispose();   // drop the previously-active manager now that the new one is ready
+                AIManager = mgr;
 
                 // The session may have failed to load at the ONNX level (all providers fell through) —
                 // CreateAsync still returns an AIManager, but IsModelLoaded is false. Surface the real
@@ -127,27 +149,34 @@ namespace PowerAim.Other
             catch (Exception ex)
             {
                 // A hard failure (capture source, session construction, etc.) must NOT leave the UI stuck
-                // on "loading" forever — report it and let finally clear the loading state.
-                SelectedModelNotifier.Content = Locale.ModelLoadFailed;
-                new NoticeBar(string.Format(Locale.ErrorStartingModelFormat, ex.Message), 6000).Show();
+                // on "loading" forever — report it (only if we're still the latest load) and let finally
+                // clear the loading state.
+                if (gen == _loadGeneration)
+                {
+                    SelectedModelNotifier.Content = Locale.ModelLoadFailed;
+                    new NoticeBar(string.Format(Locale.ErrorStartingModelFormat, ex.Message), 6000).Show();
+                }
             }
             finally
             {
-                // Restore original toggle states regardless of outcome.
-                foreach (var keyValuePair in originalToggleStates)
+                // Only the latest generation finalizes — restore toggles, clear the loading flag, refresh
+                // the UI. Superseded loads leave all of that to the winner (their finally is a no-op).
+                if (gen == _loadGeneration)
                 {
-                    AppConfig.Current.ToggleState[keyValuePair.Key] = keyValuePair.Value;
+                    if (_savedToggleStates != null)
+                    {
+                        foreach (var kv in _savedToggleStates)
+                            AppConfig.Current.ToggleState[kv.Key] = kv.Value;
+                        _savedToggleStates = null;
+                    }
+
+                    CurrentlyLoadingModel = false;
+
+                    // Raising IsModelLoaded also resolves the empty-state card's "loading…" look
+                    // (OnPropertyChanged clears ModelLoadPending) and refreshes the status-strip text.
+                    if (Application.Current?.MainWindow is MainWindow mw)
+                        mw.CallPropertyChanged(nameof(mw.IsModelLoaded));
                 }
-
-                // Single owner of this flag — cleared on EVERY exit path so a failed/So slow load can't
-                // wedge the app in "currently loading" and block all future model switches.
-                CurrentlyLoadingModel = false;
-
-                // Refresh the loaded-state binding, succeed or fail. Raising IsModelLoaded also resolves
-                // the empty-state card's "loading…" look (OnPropertyChanged clears ModelLoadPending when
-                // IsModelLoaded changes) and refreshes the status-strip model/provider text.
-                if (Application.Current?.MainWindow is MainWindow mw)
-                    mw.CallPropertyChanged(nameof(mw.IsModelLoaded));
             }
         }
 

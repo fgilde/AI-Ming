@@ -32,7 +32,7 @@
     </Product>
     <Title>
     </Title>
-    <AssemblyName>SmartReticle</AssemblyName>
+    <AssemblyName>AI-Machine</AssemblyName>
     <Version>2.2.0.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>False</SignAssembly>

@@ -58,11 +58,23 @@ internal static class OnnxModelSessionFactory
             // it's still progressing, genuinely stuck (heartbeats stop), or finished.
             Console.WriteLine($"Building inference session with {actual} — this is where TensorRT builds/loads its engine (first time can be slow) ...");
             var buildSw = System.Diagnostics.Stopwatch.StartNew();
-            using (new System.Threading.Timer(_ =>
-                       Console.WriteLine($"  ... still building with {actual} — {buildSw.Elapsed.TotalSeconds:F0}s elapsed"),
-                       null, TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(15)))
+            // Only a TensorRT build is slow enough to warrant the progress dialog; notify the UI so it can
+            // show it. Fires on this background thread — the UI marshals. finally so a failed build also
+            // closes the dialog.
+            bool isTrtBuild = actual == OnnxExecutionProvider.TensorRT;
+            if (isTrtBuild) TensorRtBuildCoordinator.NotifyStarted(System.IO.Path.GetFileName(modelPath));
+            try
             {
-                session = new InferenceSession(modelPath, options);
+                using (new System.Threading.Timer(_ =>
+                           Console.WriteLine($"  ... still building with {actual} — {buildSw.Elapsed.TotalSeconds:F0}s elapsed"),
+                           null, TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(15)))
+                {
+                    session = new InferenceSession(modelPath, options);
+                }
+            }
+            finally
+            {
+                if (isTrtBuild) TensorRtBuildCoordinator.NotifyFinished();
             }
             buildSw.Stop();
             Console.WriteLine($"Inference session ready with {actual} in {buildSw.Elapsed.TotalSeconds:F1}s.");

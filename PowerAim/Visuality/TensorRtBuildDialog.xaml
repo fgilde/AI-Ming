@@ -1,0 +1,83 @@
+<visuality:BaseDialog x:Class="PowerAim.Visuality.TensorRtBuildDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:visuality="clr-namespace:PowerAim.Visuality"
+        mc:Ignorable="d"
+        Title="{Binding Converter={StaticResource localeConverter}, ConverterParameter='TrtBuildTitle'}"
+        Height="300"
+        Width="520"
+        WindowStyle="None"
+        Topmost="False"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        AllowsTransparency="False"
+        Background="{StaticResource FluentSurface1}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="44" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Title bar (no close X on purpose — the two footer buttons are the exits) -->
+        <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                <TextBlock Text="&#xE950;"
+                           FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                           Foreground="{DynamicResource FluentAccent}"
+                           FontSize="14" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='TrtBuildTitle'}"
+                           Margin="10,0,0,0" VerticalAlignment="Center"
+                           Foreground="{DynamicResource FluentTextPrimary}"
+                           FontFamily="Segoe UI Variable Display" FontWeight="SemiBold" FontSize="13" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Content -->
+        <Border Grid.Row="1" Style="{StaticResource FluentCard}" Margin="20,12,20,8" Padding="22,18">
+            <StackPanel>
+                <TextBlock FontSize="18" FontWeight="SemiBold"
+                           Foreground="{DynamicResource FluentTextPrimary}"
+                           FontFamily="Segoe UI Variable Display"
+                           Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='TrtBuildHeading'}" />
+                <TextBlock Margin="0,8,0,0" TextWrapping="Wrap"
+                           Foreground="{DynamicResource FluentTextSecondary}"
+                           FontFamily="Segoe UI Variable Text" FontSize="13" LineHeight="19"
+                           Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='TrtBuildBody'}" />
+
+                <ProgressBar Height="6" Margin="0,16,0,0" IsIndeterminate="True" />
+
+                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                    <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='TrtBuildElapsedLabel'}"
+                               Foreground="{DynamicResource FluentTextSecondary}" FontSize="12" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding ElapsedText}" Margin="6,0,16,0"
+                               Foreground="{DynamicResource FluentTextPrimary}" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding ModelName}"
+                               Foreground="{DynamicResource FluentTextSecondary}"
+                               FontSize="11.5" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Footer -->
+        <Grid Grid.Row="2" Margin="20,6,20,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="1"
+                    Style="{DynamicResource FluentStandardButton}"
+                    MinWidth="170" Margin="0,0,8,0"
+                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='TrtBuildBackground'}"
+                    Click="Background_Click" />
+            <Button Grid.Column="2"
+                    Style="{DynamicResource FluentAccentButton}"
+                    MinWidth="150"
+                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='TrtBuildUseCuda'}"
+                    Click="SwitchCuda_Click" />
+        </Grid>
+    </Grid>
+</visuality:BaseDialog>

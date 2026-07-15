@@ -66,6 +66,9 @@ public partial class MainWindow
     {
         InitializeComponent();
 
+        // Show a progress dialog while a (slow, silent) TensorRT engine build runs.
+        HookTensorRtBuildUi();
+
         _search = new GlobalSearchController(this, GlobalSearchButton, GlobalSearchPopup, GlobalSearchBox,
             GlobalSearchResults, GlobalSearchHint, () => CurrentMenu, (menu, animate) => NavigateTo(menu, animate));
         CommandBindings.Add(new System.Windows.Input.CommandBinding(OpenSearchCommand, (_, _) => _search.Open()));
@@ -333,6 +336,58 @@ public partial class MainWindow
     {
         OnPropertyChanged(name);
     }
+
+    // --- TensorRT engine-build progress dialog ------------------------------------------------------
+    private PowerAim.Visuality.TensorRtBuildDialog? _trtDialog;
+    private System.Windows.Threading.DispatcherTimer? _trtShowDelay;
+
+    /// <summary>
+    ///     Subscribe to the session factory's TensorRT build notifications so we can show a progress
+    ///     dialog while the (slow, silent) engine build runs. The show is delayed ~1.5s so a fast/cached
+    ///     build doesn't flash a dialog.
+    /// </summary>
+    private void HookTensorRtBuildUi()
+    {
+        PowerAim.AILogic.TensorRtBuildCoordinator.BuildStarted += OnTensorRtBuildStarted;
+        PowerAim.AILogic.TensorRtBuildCoordinator.BuildFinished += OnTensorRtBuildFinished;
+    }
+
+    private void OnTensorRtBuildStarted(string modelName) => Dispatcher.BeginInvoke(new Action(() =>
+    {
+        if (_trtDialog != null) return; // one at a time
+        _trtShowDelay?.Stop();
+        _trtShowDelay = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1500) };
+        _trtShowDelay.Tick += (_, _) =>
+        {
+            _trtShowDelay?.Stop();
+            _trtShowDelay = null;
+            if (_trtDialog != null) return;
+
+            _trtDialog = new PowerAim.Visuality.TensorRtBuildDialog(modelName) { Owner = this };
+            PowerAim.Visuality.TensorRtBuildDialog.BuildOutcome outcome;
+            try { _trtDialog.ShowDialog(); outcome = _trtDialog.Outcome; }
+            finally { _trtDialog = null; }
+
+            if (outcome == PowerAim.Visuality.TensorRtBuildDialog.BuildOutcome.SwitchToCuda)
+            {
+                // The native build can't be aborted — force a CONCURRENT CUDA load (no engine build). The
+                // orphaned TensorRT load discards its result via FileManager's generation guard. Persisting
+                // the pref means it won't try TensorRT again until the user re-selects it.
+                AppConfig.Current.AISettings.PreferredExecutionProvider = PowerAim.Config.ExecutionProviderPreference.Cuda;
+                var model = Config?.LastLoadedModel;
+                if (!string.IsNullOrEmpty(model))
+                    _ = _fileManager.LoadModel(model, System.IO.Path.Combine(ApplicationConstants.ModelsBasePath, model), force: true);
+            }
+        };
+        _trtShowDelay.Start();
+    }));
+
+    private void OnTensorRtBuildFinished() => Dispatcher.BeginInvoke(new Action(() =>
+    {
+        _trtShowDelay?.Stop();
+        _trtShowDelay = null;
+        _trtDialog?.Close(); // closes if shown; Outcome stays None (the build finished on its own)
+    }));
 
     private MagnifierDialog? _magnifier;
 
