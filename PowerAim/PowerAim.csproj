@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup Label="Globals" Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <Microsoft_AI_DirectML_SkipDebugLayerCopy>True</Microsoft_AI_DirectML_SkipDebugLayerCopy>
     <Microsoft_AI_DirectML_SkipLibraryCopy>False</Microsoft_AI_DirectML_SkipLibraryCopy>
@@ -32,8 +32,8 @@
     </Product>
     <Title>
     </Title>
-    <AssemblyName>AI-Machine</AssemblyName>
-    <Version>2.2.0.1</Version>
+    <AssemblyName>PowerAim</AssemblyName>
+    <Version>2.2.0.2</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>False</SignAssembly>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
@@ -89,7 +89,7 @@
 
   <!-- ORT 1.24.4: highest version where BOTH the Gpu and DirectML packages exist, so the CUDA and
        DirectML builds stay on the same ONNX Runtime. 1.24.x needs CUDA 12.x + cuDNN 9 + TensorRT 10.x
-       (we ship TRT 10.10; NOT CUDA 13 / TRT 11 — no stable ORT targets those yet). -->
+       (we ship TRT 10.10; NOT CUDA 13 / TRT 11 â€” no stable ORT targets those yet). -->
   <ItemGroup Condition="'$(IsCuda)' == 'true'">
     <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu" Version="1.24.4" />
   </ItemGroup>
@@ -252,7 +252,7 @@
     </None>
   </ItemGroup>
 
-  <!-- Titan Two / GCAPI. The gcapi.dll (aka gcdapi.dll) is proprietary and NOT in the repo — the user
+  <!-- Titan Two / GCAPI. The gcapi.dll (aka gcdapi.dll) is proprietary and NOT in the repo â€” the user
        drops their own 64-bit copy into PowerAim\GCAPI\ (see GCAPI\README.txt). The Exists() guards mean
        the build stays green when no DLL is present (the normal case), and copies whatever is there next
        to the exe under GCAPI\ so GamepadSenderTitanTwo's loader finds it. Only README.txt is committed. -->
