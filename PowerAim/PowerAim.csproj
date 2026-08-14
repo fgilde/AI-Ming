@@ -32,8 +32,8 @@
     </Product>
     <Title>
     </Title>
-    <AssemblyName>PowerAim</AssemblyName>
-    <Version>2.2.0.2</Version>
+    <AssemblyName>AI-MMEWinehouse</AssemblyName>
+    <Version>2.2.0.3</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>False</SignAssembly>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
