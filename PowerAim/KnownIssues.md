@@ -9,7 +9,7 @@ I'd like to ask for one small favor:
 
 Building and maintaining open-source software takes a *lot* of time—often evenings, weekends, and countless hours that nobody sees. Bug fixes, new features, documentation, answering questions... it all adds up.
 
-The only thing I ask in return is a single click.
+The only thing I ask in return is a single click. 
 
 A GitHub ⭐ is free, takes about two seconds, and genuinely helps:
 - It motivates me to keep improving the project.
