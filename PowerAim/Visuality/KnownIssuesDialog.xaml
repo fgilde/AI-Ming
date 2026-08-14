@@ -84,6 +84,7 @@
         <Border Grid.Row="1" Style="{StaticResource FluentCard}" Margin="14,4,14,8" Padding="14">
             <mdXaml:MarkdownScrollViewer MarkdownStyle="{StaticResource MdStyle}"
                                          Markdown="{Binding Markdown}"
+                                         ClickAction="OpenBrowser"
                                          Foreground="{StaticResource FluentTextPrimary}"
                                          xml:space="preserve" />
         </Border>

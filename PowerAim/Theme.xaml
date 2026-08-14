@@ -1031,6 +1031,11 @@
         <!-- MdStyle preserved from legacy theme for docs viewer -->
         <Style x:Key="MdStyle" TargetType="FlowDocument">
             <Style.Resources>
+                <Style TargetType="Hyperlink">
+                    <Setter Property="Foreground" Value="{StaticResource FluentAccent}" />
+                    <Setter Property="TextDecorations" Value="Underline" />
+                    <Setter Property="Cursor" Value="Hand" />
+                </Style>
                 <Style TargetType="Paragraph">
                     <Setter Property="FontFamily" Value="Segoe UI Variable Text" />
                     <Setter Property="FontSize" Value="13" />
@@ -1043,6 +1048,16 @@
                         <Trigger Property="Tag" Value="Heading2">
                             <Setter Property="FontSize" Value="16" />
                             <Setter Property="Foreground" Value="{StaticResource FluentTextPrimary}" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                        </Trigger>
+                        <Trigger Property="Tag" Value="Heading3">
+                            <Setter Property="FontSize" Value="14" />
+                            <Setter Property="Foreground" Value="{StaticResource FluentTextPrimary}" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                        </Trigger>
+                        <Trigger Property="Tag" Value="Heading4">
+                            <Setter Property="FontSize" Value="13" />
+                            <Setter Property="Foreground" Value="{StaticResource FluentTextSecondary}" />
                             <Setter Property="FontWeight" Value="SemiBold" />
                         </Trigger>
                     </Style.Triggers>

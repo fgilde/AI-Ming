@@ -127,6 +127,7 @@
                                              Margin="0,8,0,0"
                                              MarkdownStyle="{StaticResource MdStyle}"
                                              Markdown="{Binding Description}"
+                                             ClickAction="OpenBrowser"
                                              Foreground="{StaticResource FluentTextPrimary}"
                                              xml:space="preserve" />
             </Grid>
