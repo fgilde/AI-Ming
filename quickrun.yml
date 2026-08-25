@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://fgilde.github.io/QuickRun/quickrun.schema.json
+name: AI-Ming
+description: "The WPF launcher. Windows only, because it uses WPF and Windows input APIs."
+
+requires:
+  - tool: dotnet
+    version: ">=10.0"
+    install: https://dotnet.microsoft.com/download
+
+setup:
+  - run: dotnet restore
+    when: windows
+
+tasks:
+  - name: app
+    run:
+      windows: dotnet run --project Launcher
+      linux: echo "AI-Ming is a WPF application and runs on Windows only."
+      macos: echo "AI-Ming is a WPF application and runs on Windows only."
