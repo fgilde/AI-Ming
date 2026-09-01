@@ -169,6 +169,7 @@ The repo contains a TFJS export under `Universalv3_web_model/`. It is intended t
 
 A short walkthrough video for training your own model:
 [![Watch on YouTube](https://img.youtube.com/vi/i98wF4218-Q/maxresdefault.jpg)](https://youtu.be/i98wF4218-Q)
+[![QuickRun](https://quickrun.org/badge.svg)](https://quickrun.org/run?repo=fgilde/AI-Ming)
 
 ## Want to contribute a model?
 See **[MODELS.md](MODELS.md)** for the full step-by-step guide. PowerAim's in-app downloader merges models from PowerAim's repo **and** from a configured upstream community model repo — newer commit wins on a name conflict, PowerAim's repo wins on a tie.
