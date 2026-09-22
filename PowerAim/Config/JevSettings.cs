@@ -30,6 +30,13 @@ public class JevSettings : BaseSettings
         set => SetField(ref field, value);
     } = "Qwen/Qwen3.5-0.8B";
 
+    /// <summary>Torch device the locally managed server runs on — "cuda" or "cpu". Ignored for the hosted API.</summary>
+    public string Device
+    {
+        get;
+        set => SetField(ref field, value);
+    } = "cuda";
+
     /// <summary>Per-decision request timeout. Decisions are ~0.1–0.5 s; anything slower is skipped.</summary>
     public int TimeoutSeconds
     {

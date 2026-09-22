@@ -1,0 +1,111 @@
+<UserControl x:Class="PowerAim.UILibrary.JevStatusIndicator"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="160" d:DesignWidth="300">
+    <Border Background="{DynamicResource FluentSurface2}"
+            BorderThickness="1"
+            BorderBrush="{DynamicResource FluentStroke}"
+            CornerRadius="6"
+            Margin="0,0,0,6"
+            Padding="12,10,12,10">
+        <StackPanel>
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Ellipse x:Name="StatusIndicator"
+                         Width="10" Height="10"
+                         Fill="#E81123"
+                         VerticalAlignment="Center"
+                         Margin="0,0,8,0" />
+
+                <TextBlock x:Name="StatusText"
+                           Grid.Column="1"
+                           Foreground="{DynamicResource FluentTextPrimary}"
+                           VerticalAlignment="Center"
+                           TextWrapping="Wrap"
+                           FontFamily="Segoe UI Variable Text"
+                           FontSize="13" />
+
+                <Button Style="{StaticResource FluentIconButton}" x:Name="RefreshButton"
+                        Grid.Column="2"
+                        Content="&#xE72C;"
+                        ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='RefreshStatus'}"
+                        FontSize="13"
+                        BorderBrush="Transparent"
+                        Foreground="{DynamicResource FluentTextPrimary}"
+                        Padding="6"
+                        Click="Refresh_Click" />
+            </Grid>
+
+            <TextBlock x:Name="DetailText"
+                       Foreground="{DynamicResource FluentTextSecondary}"
+                       FontSize="11"
+                       TextWrapping="Wrap"
+                       Margin="0,0,0,4"
+                       FontFamily="Segoe UI Variable Small" />
+
+            <ProgressBar x:Name="SetupProgress"
+                         Height="4"
+                         Minimum="0" Maximum="1"
+                         Visibility="Collapsed"
+                         Margin="0,2,0,4" />
+
+            <TextBlock x:Name="ErrorText"
+                       Foreground="#E81123"
+                       FontSize="11"
+                       TextWrapping="Wrap"
+                       Visibility="Collapsed"
+                       Margin="0,0,0,4"
+                       FontFamily="Segoe UI Variable Small" />
+
+            <StackPanel x:Name="ActionRow" Orientation="Horizontal" Margin="0,6,0,0">
+                <Button x:Name="SetupButton"
+                        Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='JevSetup'}"
+                        Style="{DynamicResource FluentAccentButton}"
+                        Padding="10,4,12,4"
+                        MinHeight="28"
+                        Margin="0,0,6,0"
+                        Visibility="Collapsed"
+                        Click="Setup_Click" />
+                <Button x:Name="StartButton"
+                        Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='JevStartServer'}"
+                        Style="{DynamicResource FluentAccentButton}"
+                        Padding="10,4,12,4"
+                        MinHeight="28"
+                        Margin="0,0,6,0"
+                        Visibility="Collapsed"
+                        Click="Start_Click" />
+                <Button x:Name="StopButton"
+                        Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='JevStopServer'}"
+                        Style="{DynamicResource FluentStandardButton}"
+                        Padding="10,4,12,4"
+                        MinHeight="28"
+                        Margin="0,0,6,0"
+                        Visibility="Collapsed"
+                        Click="Stop_Click" />
+                <Button x:Name="InstallPythonButton"
+                        Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='JevInstallPython'}"
+                        Style="{DynamicResource FluentStandardButton}"
+                        Padding="10,4,12,4"
+                        MinHeight="28"
+                        Visibility="Collapsed"
+                        Click="InstallPython_Click" />
+            </StackPanel>
+
+            <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='JevSetupHint'}"
+                       Foreground="{DynamicResource FluentTextTertiary}"
+                       FontSize="10"
+                       Margin="0,4,0,0"
+                       TextWrapping="Wrap"
+                       Visibility="{Binding Converter={StaticResource helpVis}}"
+                       FontFamily="Segoe UI Variable Small" />
+        </StackPanel>
+    </Border>
+</UserControl>

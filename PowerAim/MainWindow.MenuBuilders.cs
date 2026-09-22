@@ -869,9 +869,12 @@ public partial class MainWindow
         AutoPlayConfig.RemoveAll();
         AutoPlayProfiles.RemoveAll();
 
-        // Ollama Status Section
+        // Status + live decision transparency: who is steering the bot right now (heuristic / Ollama / Jev),
+        // what it chose and how sure it was — so a silent fallback is visible instead of just "feeling off".
         AutoPlayConfig.AddTitle(Locale.AutoPlayMenuTitle, true);
+        AutoPlayConfig.Add<AutoPlayDecisionPanel>();
         AutoPlayConfig.Add<OllamaStatusIndicator>();
+        AutoPlayConfig.Add<JevStatusIndicator>();
 
         // AutoPlay Toggle
         AutoPlayConfig.AddToggleWithKeyBind(Locale.AutoPlay, nameof(Locale.AutoPlay), BindingManager, toggle =>

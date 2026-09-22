@@ -1,0 +1,112 @@
+<UserControl x:Class="PowerAim.UILibrary.AutoPlayDecisionPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="220" d:DesignWidth="320">
+    <Border Background="{DynamicResource FluentSurface2}"
+            BorderThickness="1"
+            BorderBrush="{DynamicResource FluentStroke}"
+            CornerRadius="6"
+            Margin="0,0,0,6"
+            Padding="12,10,12,10">
+        <StackPanel>
+            <!-- Who is deciding right now -->
+            <Grid Margin="0,0,0,6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Border x:Name="SourceBadge"
+                        Grid.Column="0"
+                        CornerRadius="4"
+                        Padding="7,2,7,2"
+                        Margin="0,0,8,0"
+                        Background="{DynamicResource FluentAccent}">
+                    <TextBlock x:Name="SourceText"
+                               Text="—"
+                               Foreground="White"
+                               FontFamily="Segoe UI Variable Small"
+                               FontWeight="SemiBold"
+                               FontSize="11" />
+                </Border>
+
+                <TextBlock x:Name="ModeText"
+                           Grid.Column="1"
+                           Text="—"
+                           Foreground="{DynamicResource FluentTextPrimary}"
+                           VerticalAlignment="Center"
+                           FontFamily="Segoe UI Variable Text"
+                           FontWeight="SemiBold"
+                           FontSize="13" />
+
+                <TextBlock x:Name="LatencyText"
+                           Grid.Column="2"
+                           Foreground="{DynamicResource FluentTextTertiary}"
+                           VerticalAlignment="Center"
+                           FontFamily="Segoe UI Variable Small"
+                           FontSize="10" />
+            </Grid>
+
+            <TextBlock x:Name="DetailText"
+                       Foreground="{DynamicResource FluentTextSecondary}"
+                       FontSize="11"
+                       TextWrapping="Wrap"
+                       Margin="0,0,0,6"
+                       FontFamily="Segoe UI Variable Small" />
+
+            <!-- Per-mode probability bars (Jev only) -->
+            <ItemsControl x:Name="ProbabilityList" Margin="0,0,0,2">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="0,1,0,1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="64" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="38" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       Text="{Binding Mode}"
+                                       Foreground="{Binding LabelBrush}"
+                                       FontFamily="Segoe UI Variable Small"
+                                       FontSize="11"
+                                       VerticalAlignment="Center" />
+                            <ProgressBar Grid.Column="1"
+                                         Height="6"
+                                         Minimum="0" Maximum="1"
+                                         Value="{Binding Probability, Mode=OneWay}"
+                                         Foreground="{Binding BarBrush}"
+                                         VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2"
+                                       Text="{Binding Percent}"
+                                       Foreground="{DynamicResource FluentTextTertiary}"
+                                       FontFamily="Segoe UI Variable Small"
+                                       FontSize="10"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock x:Name="ErrorText"
+                       Foreground="#E8A317"
+                       FontSize="11"
+                       TextWrapping="Wrap"
+                       Visibility="Collapsed"
+                       Margin="0,4,0,0"
+                       FontFamily="Segoe UI Variable Small" />
+
+            <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AutoPlayDecisionHelp'}"
+                       Foreground="{DynamicResource FluentTextTertiary}"
+                       FontSize="10"
+                       Margin="0,6,0,0"
+                       TextWrapping="Wrap"
+                       Visibility="{Binding Converter={StaticResource helpVis}}"
+                       FontFamily="Segoe UI Variable Small" />
+        </StackPanel>
+    </Border>
+</UserControl>

@@ -8,6 +8,7 @@ using PowerAim.InputLogic;
 using PowerAim.InputLogic.Contracts;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
+using Core.Jev;
 
 namespace PowerAim.AILogic.Actions;
 
@@ -16,6 +17,24 @@ namespace PowerAim.AILogic.Actions;
 ///     <see cref="Category"/> is one of "Intent", "Tactical", "OCR", "Combat".
 /// </summary>
 public sealed record AutoPlayLogEntry(DateTime At, string Category, string Detail);
+
+/// <summary>
+///     What is steering the bot right now, for the AutoPlay decision panel. <see cref="Source"/> is
+///     "Heuristic" / "Ollama" / "Jev"; the probability, confidence, danger and latency fields are only
+///     populated by Jev (the others don't produce them). <see cref="Error"/> carries the last strategic
+///     failure so a silent fallback to the heuristic is visible instead of looking like a deliberate choice.
+/// </summary>
+public sealed record AutoPlayDecisionSnapshot(
+    string Source,
+    string Mode,
+    string? Direction,
+    string? Action,
+    double? Confidence,
+    IReadOnlyDictionary<string, double>? ModeProbabilities,
+    double? Danger,
+    double? LatencyMs,
+    DateTime At,
+    string? Error);
 
 /// <summary>
 ///     Heuristic AutoPlay driver with an optional Ollama "strategic layer" running in parallel.
@@ -40,12 +59,20 @@ public class AutoPlayGameAction : BaseAction
 
     private readonly record struct ScheduledRelease(AutoPlayAction Action, DateTime At);
 
-    /// <summary>High-level intent produced by the Ollama strategic layer.</summary>
+    /// <summary>
+    ///     High-level intent produced by the strategic layer. <see cref="Source"/> says WHICH layer decided
+    ///     ("Ollama" / "Jev" / "Heuristic"), <see cref="Confidence"/> + <see cref="ModeProbabilities"/> are
+    ///     only filled by Jev — surfaced in the AutoPlay decision panel so the user can see what's driving the bot.
+    /// </summary>
     private sealed record StrategicIntent(
         string Mode,            // "explore" | "retreat" | "engage" | "tactical" | "hold" | "default"
         string? Direction,      // "left" | "right" | "forward" | "backward" | null
         string? ActionHint,     // free-text name hint matching a profile action (e.g. "throw_grenade")
-        DateTime At);
+        DateTime At,
+        string Source = "Heuristic",
+        double? Confidence = null,
+        IReadOnlyDictionary<string, double>? ModeProbabilities = null,
+        double? Danger = null);
 
     private static StrategicIntent Default => new("default", null, null, DateTime.MinValue);
 
@@ -58,6 +85,15 @@ public class AutoPlayGameAction : BaseAction
     private AutoPlayAction? _aMoveFwd, _aMoveBack, _aMoveLeft, _aMoveRight;
     private AutoPlayAction? _aSprint, _aJump, _aShoot, _aAim, _aCrouch, _aReload;
     private readonly List<AutoPlayAction> _tacticalActions = new();
+    /// <summary>
+    ///     Everything the strategic layer may trigger: the free-form tactical actions PLUS role-mapped
+    ///     ones the heuristic does NOT drive every tick (jump, crouch, reload). Excluded are only the
+    ///     continuously-owned reflex slots — movement, sprint, aim, shoot — because those are decided per
+    ///     frame from the detections, not per second by a model.
+    /// </summary>
+    private readonly List<AutoPlayAction> _strategicActions = new();
+    /// <summary>Semantic slot an action was matched to ("shoot", "reload", …), for the ability labels.</summary>
+    private readonly Dictionary<AutoPlayAction, string> _actionRoles = new();
     private bool _mapDirty = true;
 
     // ------ Combat / aim state ----
@@ -129,6 +165,25 @@ public class AutoPlayGameAction : BaseAction
 
     /// <summary>Snapshot of the most recent decisions/actions, oldest first. Thread-safe.</summary>
     public static IReadOnlyList<AutoPlayLogEntry> RecentEntries => _activityLog.ToArray();
+
+    /// <summary>
+    ///     What is steering the bot right now. Null until AutoPlay has run once. Written by the strategic
+    ///     loop, read by the UI — reference assignment, so readers always see a complete snapshot.
+    /// </summary>
+    public static AutoPlayDecisionSnapshot? CurrentDecision { get; private set; }
+
+    /// <summary>Record the active decision for the UI. <paramref name="error"/> marks a failed strategic step.</summary>
+    private static void PublishDecision(StrategicIntent intent, double? latencyMs, string? error)
+        => CurrentDecision = new AutoPlayDecisionSnapshot(intent.Source, intent.Mode, intent.Direction,
+            intent.ActionHint, intent.Confidence, intent.ModeProbabilities, intent.Danger, latencyMs, intent.At, error);
+
+    /// <summary>Report a strategic failure without changing the intent — the heuristic stays in charge.</summary>
+    private static void PublishStrategicError(string source, string error)
+    {
+        var prev = CurrentDecision;
+        CurrentDecision = new AutoPlayDecisionSnapshot(source, prev?.Mode ?? "default", prev?.Direction, prev?.Action,
+            null, null, null, null, DateTime.Now, error);
+    }
 
     /// <summary>
     ///     Append <paramref name="detail"/> to both the static ring buffer (Debug Overlay) and the
@@ -563,13 +618,17 @@ public class AutoPlayGameAction : BaseAction
 
         // If the strategic layer asked for a specific action by name, prefer that — provided it
         // actually exists in the profile and isn't currently held.
+        // Search the full strategic set, not just the free-form tactical ones: Jev picks from the profile's
+        // real actions, which include role-mapped-but-not-reflex ones (jump, crouch, reload). Exact name
+        // first — Jev returns the profile's own name verbatim — then substring for Ollama's fuzzier hints.
         AutoPlayAction? action = null;
         if (!string.IsNullOrEmpty(intent.ActionHint))
         {
-            action = _tacticalActions.FirstOrDefault(a =>
-                !_heldActions.Contains(a) &&
-                a.Name != null &&
-                a.Name.Contains(intent.ActionHint, StringComparison.OrdinalIgnoreCase));
+            var pool = _strategicActions.Count > 0 ? _strategicActions : _tacticalActions;
+            action = pool.FirstOrDefault(a => !_heldActions.Contains(a) && a.Name != null &&
+                         string.Equals(a.Name, intent.ActionHint, StringComparison.OrdinalIgnoreCase))
+                  ?? pool.FirstOrDefault(a => !_heldActions.Contains(a) && a.Name != null &&
+                         a.Name.Contains(intent.ActionHint, StringComparison.OrdinalIgnoreCase));
         }
 
         // Learning model bias: if the recorder has been used and ApplyModel is on, ask the model
@@ -724,6 +783,9 @@ public class AutoPlayGameAction : BaseAction
         try { _strategicCts?.Cancel(); } catch { /* ignored */ }
         _strategicTask = null;
         lock (_intentLock) _intent = Default;
+        // No strategic layer running → the heuristic alone decides. Say so instead of leaving the panel
+        // showing a stale "Jev / engage" from before the toggle.
+        CurrentDecision = new AutoPlayDecisionSnapshot("Heuristic", "default", null, null, null, null, null, null, DateTime.Now, null);
     }
 
     /// <summary>
@@ -790,6 +852,7 @@ public class AutoPlayGameAction : BaseAction
                         {
                             lock (_intentLock) _intent = intent;
                             RememberIntent(intent);
+                            PublishDecision(intent, null, null);
                             Log($"Intent: {intent.Mode} dir={intent.Direction} action={intent.ActionHint}");
                         }
                         bmp.Dispose();
@@ -798,6 +861,7 @@ public class AutoPlayGameAction : BaseAction
                 catch (Exception ex)
                 {
                     Log($"Strategic query failed: {ex.Message}");
+                    PublishStrategicError("Ollama", ex.Message);
                 }
 
                 var waitSec = Math.Max(0.5, profile.DecisionInterval);
@@ -811,17 +875,11 @@ public class AutoPlayGameAction : BaseAction
 
     // ============================================================================ STRATEGIC (Jev) ====
 
-    // Mode / direction option keys. Single digits on purpose: simple-jev requires every answer label to
-    // be exactly one token, and digits are one token in every tokenizer. The legend lives in the
-    // instructions + criteria descriptions, and we map back below.
-    private static readonly string[] JevModes = ["explore", "engage", "retreat", "hold", "tactical"];
-    private static readonly string[] JevDirections = ["forward", "backward", "left", "right"];
-    private const int JevMaxTactical = 9; // ponytail: keep tactical keys single-digit; raise if a profile really has >9 abilities
-
     /// <summary>
     ///     One strategic step against the Jev endpoint: reachability, decide, map to
-    ///     <see cref="StrategicIntent"/>, sleep the profile's DecisionInterval. Failures are logged and
-    ///     tolerated — the heuristic keeps playing on the previous intent.
+    ///     <see cref="StrategicIntent"/>, sleep the profile's DecisionInterval. Question building and
+    ///     answer mapping live in <c>Core.Jev</c> (unit-tested); this method only wires state + timing.
+    ///     Failures are logged and tolerated — the heuristic keeps playing on the previous intent.
     /// </summary>
     private async Task JevStepAsync(AutoPlayProfile profile, CancellationToken ct)
     {
@@ -831,38 +889,67 @@ public class AutoPlayGameAction : BaseAction
         {
             lock (_intentLock) _intent = Default;
             Log($"Jev unreachable: {_jev.LastError}");
+            PublishStrategicError("Jev", _jev.LastError ?? "server unreachable");
             await SafeDelay(5000, ct);
             return;
         }
 
         try
         {
-            var decision = await _jev.DecideAsync(BuildJevState(profile), BuildJevQuestions(), ct);
+            var abilities = BuildJevAbilities();
+            var decision = await _jev.DecideAsync(BuildJevState(profile, abilities), JevQuestionBuilder.Build(abilities), ct);
             if (decision == null)
             {
                 Log($"Jev query failed: {_jev.LastError}");
+                PublishStrategicError("Jev", _jev.LastError ?? "no answer");
             }
             else
             {
-                var intent = MapJevDecision(decision);
-                if (intent != null)
+                double minConf = AppConfig.Current?.JevSettings?.MinConfidence ?? 0.35;
+                var mapped = JevIntentMapper.Map(decision, abilities, minConf);
+                if (mapped == null)
                 {
+                    Log("Jev: no usable mode answer or confidence below threshold — keeping current intent");
+                    PublishStrategicError("Jev", $"confidence below {minConf:0.00} — keeping previous intent");
+                }
+                else
+                {
+                    var intent = new StrategicIntent(mapped.Mode, mapped.Direction, mapped.Action, DateTime.Now,
+                        Source: "Jev", Confidence: mapped.Confidence, ModeProbabilities: mapped.ModeProbabilities,
+                        Danger: mapped.Danger);
                     lock (_intentLock) _intent = intent;
                     RememberIntent(intent);
-                    Log($"Jev intent: {intent.Mode} dir={intent.Direction} action={intent.ActionHint}");
+                    PublishDecision(intent, _jev.LastLatencyMs, null);
+                    Log($"Jev intent: {intent.Mode} dir={intent.Direction} action={intent.ActionHint} conf={mapped.Confidence:0.00} danger={mapped.Danger:0.00} ({_jev.LastLatencyMs:0} ms)");
                 }
             }
         }
         catch (Exception ex)
         {
             Log($"Jev step failed: {ex.Message}");
+            PublishStrategicError("Jev", ex.Message);
         }
 
         await SafeDelay(TimeSpan.FromSeconds(Math.Max(0.3, profile.DecisionInterval)), ct);
     }
 
+    /// <summary>
+    ///     The abilities the model may pick from, carrying the profile's own name, description and action
+    ///     type — the profile already declares what the bot can do and what each action means, so that's
+    ///     what gets handed over rather than a bare name list.
+    /// </summary>
+    private List<JevAbility> BuildJevAbilities()
+        => _strategicActions
+            .Where(a => a.IsValid && !string.IsNullOrWhiteSpace(a.Name))
+            .Select(a => new JevAbility(
+                a.Name!,
+                a.Description,
+                a.ActionType.ToString(),
+                _actionRoles.TryGetValue(a, out var role) ? role : null))
+            .ToList();
+
     /// <summary>The structured "what the bot sees" — everything the VLM used to guess from a downscaled frame, as numbers.</summary>
-    private object BuildJevState(AutoPlayProfile profile)
+    private object BuildJevState(AutoPlayProfile profile, IReadOnlyList<JevAbility> abilities)
     {
         double? ammo = null, health = null;
         if (AppConfig.Current?.OcrSettings?.Enabled == true)
@@ -893,88 +980,16 @@ public class AutoPlayGameAction : BaseAction
             health,
             recent_decisions = recent,
             seconds_since_last_enemy = Math.Round((DateTime.Now - _lastSeenEnemy).TotalSeconds, 1),
-            available_abilities = _tacticalActions.Take(JevMaxTactical).Select(a => a.Name).ToArray(),
+
+            // What the bot can do, straight from the profile. "abilities" are the ones the model may pick
+            // in the ability question; "reflex_controls" are driven per frame by the aim/combat loop — listed
+            // so the model knows the bot already handles them and shouldn't plan around doing them itself.
+            abilities = JevQuestionBuilder.Offerable(abilities)
+                .Select(a => new { name = a.Name, does = a.Description, type = a.Type, role = a.Role }).ToArray(),
+            reflex_controls = _actionRoles
+                .Where(kv => !_strategicActions.Contains(kv.Key))
+                .Select(kv => kv.Value).ToArray(),
         };
-    }
-
-    private Dictionary<string, object> BuildJevQuestions()
-    {
-        var modes = new Dictionary<string, string>
-        {
-            ["1"] = "explore: move around the map looking for enemies",
-            ["2"] = "engage: push toward the visible enemies and fight",
-            ["3"] = "retreat: back off and break line of sight",
-            ["4"] = "hold: stay put and cover the current position",
-        };
-        var tactical = _tacticalActions.Take(JevMaxTactical).ToList();
-        if (tactical.Count > 0)
-            modes["5"] = "tactical: use one of the available abilities right now";
-
-        var q = new Dictionary<string, object>
-        {
-            ["mode"] = new
-            {
-                type = "choice",
-                instructions = "You guide a bot in the game described by the state. Pick its tactical mode for the next second. " +
-                               string.Join(" ", modes.Select(kv => $"{kv.Key} = {kv.Value}.")),
-                criteria = modes,
-            },
-            ["direction"] = new
-            {
-                type = "choice",
-                instructions = "If the bot moves, which way? 1 = forward, 2 = backward, 3 = left, 4 = right.",
-                criteria = JevDirections.Select((d, i) => (k: (i + 1).ToString(), d)).ToDictionary(x => x.k, x => x.d),
-            },
-            ["danger"] = new
-            {
-                type = "noul",
-                instructions = "Is the bot in immediate danger (low health, outnumbered, enemy very close) and should retreat right now?",
-            },
-        };
-
-        if (tactical.Count > 0)
-        {
-            q["ability"] = new
-            {
-                type = "choice",
-                instructions = "If an ability should be used now, which one? " +
-                               string.Join(" ", tactical.Select((a, i) => $"{i + 1} = {a.Name}.")),
-                criteria = tactical.Select((a, i) => (k: (i + 1).ToString(), n: a.Name ?? "")).ToDictionary(x => x.k, x => x.n),
-            };
-        }
-        return q;
-    }
-
-    private StrategicIntent? MapJevDecision(JevDecision d)
-    {
-        if (!d.Choices.TryGetValue("mode", out var mode)) return null;
-
-        double minConf = AppConfig.Current?.JevSettings?.MinConfidence ?? 0.35;
-        if (mode.Confidence < minConf)
-        {
-            Log($"Jev mode confidence {mode.Confidence:0.00} < {minConf:0.00} — keeping current intent");
-            return null;
-        }
-
-        string modeName = int.TryParse(mode.Choice, out var mi) && mi >= 1 && mi <= JevModes.Length
-            ? JevModes[mi - 1] : "default";
-
-        // A strong danger signal overrides whatever mode was picked.
-        if (d.Nouls.TryGetValue("danger", out var danger) && danger >= 0.7)
-            modeName = "retreat";
-
-        string? direction = null;
-        if (d.Choices.TryGetValue("direction", out var dir) && int.TryParse(dir.Choice, out var di) && di >= 1 && di <= JevDirections.Length)
-            direction = JevDirections[di - 1];
-
-        string? action = null;
-        if (modeName == "tactical" && d.Choices.TryGetValue("ability", out var ab) && int.TryParse(ab.Choice, out var ai))
-        {
-            var tactical = _tacticalActions.Take(JevMaxTactical).ToList();
-            if (ai >= 1 && ai <= tactical.Count) action = tactical[ai - 1].Name;
-        }
-
-        return new StrategicIntent(modeName, direction, action, DateTime.Now);
     }
 
     private Bitmap? CaptureFrameSafely()
@@ -1055,7 +1070,7 @@ public class AutoPlayGameAction : BaseAction
         var mode = m.Groups["mode"].Value.ToLowerInvariant();
         var dir = m.Groups["dir"].Success ? m.Groups["dir"].Value.ToLowerInvariant() : null;
         var act = m.Groups["act"].Success ? m.Groups["act"].Value : null;
-        return new StrategicIntent(mode, dir, act, DateTime.Now);
+        return new StrategicIntent(mode, dir, act, DateTime.Now, Source: "Ollama");
     }
 
     /// <summary>Keep a short rolling history of strategic modes so the next prompt can ask for variety.</summary>
@@ -1147,8 +1162,27 @@ public class AutoPlayGameAction : BaseAction
         foreach (var a in profile.Actions)
             if (a.IsValid && !mapped.Contains(a)) _tacticalActions.Add(a);
 
+        // Record which slot each action filled so the strategic layer can label it, and build the set the
+        // model may pick from: everything except the reflex slots the hot path owns per frame.
+        _actionRoles.Clear();
+        void Role(AutoPlayAction? a, string role) { if (a != null) _actionRoles[a] = role; }
+        Role(_aMoveFwd, "move_forward"); Role(_aMoveBack, "move_backward");
+        Role(_aMoveLeft, "move_left");   Role(_aMoveRight, "move_right");
+        Role(_aSprint, "sprint");        Role(_aJump, "jump");
+        Role(_aShoot, "shoot");          Role(_aAim, "aim");
+        Role(_aCrouch, "crouch");        Role(_aReload, "reload");
+
+        var reflexOwned = new HashSet<AutoPlayAction?>
+        {
+            _aMoveFwd, _aMoveBack, _aMoveLeft, _aMoveRight, _aSprint, _aAim, _aShoot
+        };
+        _strategicActions.Clear();
+        foreach (var a in profile.Actions)
+            if (a.IsValid && !reflexOwned.Contains(a)) _strategicActions.Add(a);
+
         Log($"Profile '{profile.Name}': fwd={(_aMoveFwd != null)} L={(_aMoveLeft != null)} R={(_aMoveRight != null)} " +
-            $"shoot={(_aShoot != null)} aim={(_aAim != null)} jump={(_aJump != null)} tactical={_tacticalActions.Count}");
+            $"shoot={(_aShoot != null)} aim={(_aAim != null)} jump={(_aJump != null)} tactical={_tacticalActions.Count} " +
+            $"strategic={_strategicActions.Count}");
     }
 
     private static AutoPlayAction? FindAction(AutoPlayProfile profile, params string[] candidates)

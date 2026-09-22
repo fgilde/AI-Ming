@@ -2,25 +2,17 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using Core.Jev;
 using PowerAim.Config;
 
 namespace PowerAim.AILogic;
-
-/// <summary>One answered <c>choice</c> question: the picked option key, how concentrated the distribution was, and the full distribution.</summary>
-public sealed record JevChoice(string Choice, double Confidence, IReadOnlyDictionary<string, double> Probabilities);
-
-/// <summary>Parsed <c>/v1/systemone</c> response — choice answers by question id, noul (yes-probability) answers by question id.</summary>
-public sealed class JevDecision
-{
-    public Dictionary<string, JevChoice> Choices { get; } = new();
-    public Dictionary<string, double> Nouls { get; } = new();
-}
 
 /// <summary>
 ///     Minimal client for the Jev decision contract (<c>POST {BaseUrl}/v1/systemone</c>): a <c>state</c>
 ///     (any JSON) plus named questions of type <c>choice</c> / <c>noul</c>, answered with probabilities in a
 ///     single forward pass. Works against the local simple-jev hf-server and the hosted TypeSafe API
-///     (same path; the latter needs the bearer key). No streaming, no text generation.
+///     (same path; the latter needs the bearer key). Parsing lives in <see cref="JevResponseParser"/> (Core)
+///     so it's unit-testable without WPF.
 /// </summary>
 public sealed class JevDecisionClient
 {
@@ -28,6 +20,9 @@ public sealed class JevDecisionClient
     private static readonly HttpClient Http = new();
 
     public string? LastError { get; private set; }
+
+    /// <summary>Wall-clock time of the last successful decision, for the transparency panel.</summary>
+    public double LastLatencyMs { get; private set; }
 
     private static JevSettings Settings => AppConfig.Current?.JevSettings ?? new JevSettings();
 
@@ -54,14 +49,11 @@ public sealed class JevDecisionClient
         }
     }
 
-    /// <summary>
-    ///     Ask the model. <paramref name="questions"/> is the raw questions map (built by the caller with
-    ///     anonymous objects: <c>new { type = "choice", instructions = "...", criteria = ... }</c>).
-    ///     Returns null on any failure — the caller keeps its previous intent.
-    /// </summary>
+    /// <summary>Ask the model. Returns null on any failure (see <see cref="LastError"/>) — the caller keeps its previous intent.</summary>
     public async Task<JevDecision?> DecideAsync(object state, Dictionary<string, object> questions, CancellationToken ct = default)
     {
         var s = Settings;
+        var sw = System.Diagnostics.Stopwatch.StartNew();
         try
         {
             var body = JsonSerializer.Serialize(new { model = s.Model, state, questions });
@@ -78,13 +70,17 @@ public sealed class JevDecisionClient
             var json = await resp.Content.ReadAsStringAsync(cts.Token);
             if (!resp.IsSuccessStatusCode)
             {
-                // Keep the server's validation text — a 422 tells us exactly which question shape it disliked.
+                // Keep the server's validation text — a 422 says exactly which question shape it disliked.
                 LastError = $"HTTP {(int)resp.StatusCode}: {Truncate(json, 300)}";
                 return null;
             }
 
+            var decision = JevResponseParser.Parse(json);
+            if (decision == null) { LastError = "Unparseable response: " + Truncate(json, 200); return null; }
+
             LastError = null;
-            return Parse(json);
+            LastLatencyMs = sw.Elapsed.TotalMilliseconds;
+            return decision;
         }
         catch (OperationCanceledException) when (!ct.IsCancellationRequested)
         {
@@ -96,32 +92,6 @@ public sealed class JevDecisionClient
             LastError = e.Message;
             return null;
         }
-    }
-
-    private static JevDecision? Parse(string json)
-    {
-        using var doc = JsonDocument.Parse(json);
-        if (!doc.RootElement.TryGetProperty("answers", out var answers)) return null;
-
-        var d = new JevDecision();
-        foreach (var q in answers.EnumerateObject())
-        {
-            var a = q.Value;
-            var type = a.TryGetProperty("type", out var t) ? t.GetString() : null;
-            if (type == "choice" && a.TryGetProperty("choice", out var c))
-            {
-                var probs = new Dictionary<string, double>();
-                if (a.TryGetProperty("probabilities", out var p))
-                    foreach (var kv in p.EnumerateObject()) probs[kv.Name] = kv.Value.GetDouble();
-                double conf = a.TryGetProperty("confidence", out var cf) ? cf.GetDouble() : 0;
-                d.Choices[q.Name] = new JevChoice(c.GetString() ?? "", conf, probs);
-            }
-            else if (type == "noul" && a.TryGetProperty("noul", out var n))
-            {
-                d.Nouls[q.Name] = n.GetDouble();
-            }
-        }
-        return d;
     }
 
     private static string Truncate(string s, int max) => s.Length <= max ? s : s[..max] + "…";
