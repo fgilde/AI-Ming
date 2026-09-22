@@ -142,6 +142,7 @@ public class AppConfig : BaseSettings
     public AntiRecoilSettings AntiRecoilSettings { get; set; } = new();
     public FileLocationState FileLocationState { get; set; } = new();
     public OllamaSettings OllamaSettings { get; set; } = new();
+    public JevSettings JevSettings { get; set; } = new();
     public AISettings AISettings { get; set; } = new();
     public AimSettings AimSettings { get; set; } = new();
     public ControllerSettings ControllerSettings { get; set; } = new();

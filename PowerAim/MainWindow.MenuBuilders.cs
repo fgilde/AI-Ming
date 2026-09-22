@@ -886,6 +886,13 @@ public partial class MainWindow
         AutoPlayConfig.AddSlider(Locale.ImageMaxSize, Locale.Pixels, 64, 128, 256, 1024).BindTo(() => AppConfig.Current.OllamaSettings.ImageMaxSize);
         AutoPlayConfig.AddSlider(Locale.ImageQuality, Locale.PercentSign, 5, 10, 30, 100).BindTo(() => AppConfig.Current.OllamaSettings.ImageQuality);
 
+        // Jev decision-model settings. URL / model / API key live in the config file (JevSettings) — the
+        // defaults point at a local simple-jev server on :8000, no key needed.
+        AutoPlayConfig.AddTitle(Locale.JevSettings);
+        AutoPlayConfig.AddCredit("", Locale.JevSettingsHelp);
+        AutoPlayConfig.AddSlider(Locale.RequestTimeout, Locale.Seconds, 1, 1, 1, 30).BindTo(() => AppConfig.Current.JevSettings.TimeoutSeconds);
+        AutoPlayConfig.AddSlider(Locale.JevMinConfidence, "", 0.05, 0.05, 0.0, 1.0).BindTo(() => AppConfig.Current.JevSettings.MinConfidence);
+
         AutoPlayConfig.AddSeparator();
 
         // Profiles Section

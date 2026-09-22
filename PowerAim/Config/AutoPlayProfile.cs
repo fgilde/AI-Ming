@@ -118,6 +118,23 @@ public class AutoPlayProfile : EditableNotificationObject
     } = true;
 
     /// <summary>
+    ///     Use a Jev decision model (local simple-jev server or TypeSafe hosted API) as the strategic
+    ///     layer instead of the Ollama vision model. Jev has no eyes — it decides from the structured
+    ///     state PowerAim already has (YOLO detections, OCR HP/ammo, recent intents) and answers in
+    ///     ~0.1–0.5 s with calibrated probabilities, so it can run at the DecisionInterval floor without
+    ///     screenshots or regex parsing. Takes precedence over <see cref="UseOllama"/> when both are on.
+    /// </summary>
+    public bool UseJev
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value))
+                RaisePropertyChanged(nameof(Description));
+        }
+    }
+
+    /// <summary>
     /// Ollama model to use for vision analysis.
     /// Recommended: "moondream" (fast), "llava:7b" (balanced), "qwen2.5-vl:7b" (quality)
     /// </summary>
@@ -235,5 +252,5 @@ public class AutoPlayProfile : EditableNotificationObject
     /// <summary>
     /// Display description for UI
     /// </summary>
-    public string Description => $"{Name ?? "New Profile"} ({Actions.Count(a => a.IsValid)} actions, {(UseOllama ? OllamaModel : "heuristic only")})";
+    public string Description => $"{Name ?? "New Profile"} ({Actions.Count(a => a.IsValid)} actions, {(UseJev ? "Jev" : UseOllama ? OllamaModel : "heuristic only")})";
 }

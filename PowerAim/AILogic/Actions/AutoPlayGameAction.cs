@@ -98,6 +98,10 @@ public class AutoPlayGameAction : BaseAction
 
     // ------ Live context fed into the strategic prompt ----
     private volatile int _lastEnemyCount;                 // detections on the most recent frame
+    // Nearest enemy relative to screen centre (px); dist < 0 = none. Written on the tick thread, read
+    // by the strategic loop — a torn read is harmless for a once-a-second decision.
+    private double _lastNearestDx, _lastNearestDy, _lastNearestDist = -1;
+    private JevDecisionClient? _jev;
     private readonly Queue<string> _recentIntents = new(); // last few strategic modes (for variety)
     private readonly object _recentIntentsLock = new();
 
@@ -194,9 +198,10 @@ public class AutoPlayGameAction : BaseAction
         // Live-respect the per-profile UseOllama flag. The "already running" guard inside makes
         // this cheap to call every tick, and it covers the toggle-on-during-run case (toggle-off
         // is handled inside the running loop itself).
-        if (profile.UseOllama) StartStrategicLayer();
+        if (profile.UseOllama || profile.UseJev) StartStrategicLayer();
 
         _lastEnemyCount = predictions.Length; // surfaced to the strategic prompt
+        if (predictions.Length == 0) _lastNearestDist = -1;
 
         ProcessScheduledReleases();
 
@@ -256,6 +261,7 @@ public class AutoPlayGameAction : BaseAction
         var dx = closest.CenterXTranslated - centerX;
         var dy = closest.CenterYTranslated - centerY;
         var dist = Math.Sqrt(bestDistSq);
+        _lastNearestDx = dx; _lastNearestDy = dy; _lastNearestDist = dist;
 
         ActivateHold(_aAim);
 
@@ -702,9 +708,9 @@ public class AutoPlayGameAction : BaseAction
         // screenshot capture) when the active profile has UseOllama disabled. The loop's inner
         // check picks up the toggle if it's flipped on later while AutoPlay is already running.
         var profile = GetActiveProfile();
-        if (profile != null && !profile.UseOllama)
+        if (profile != null && !profile.UseOllama && !profile.UseJev)
         {
-            Log("Strategic layer skipped — active profile has UseOllama=false");
+            Log("Strategic layer skipped — active profile has neither Ollama nor Jev enabled");
             return;
         }
         _strategicCts?.Dispose();
@@ -733,7 +739,20 @@ public class AutoPlayGameAction : BaseAction
             while (!ct.IsCancellationRequested)
             {
                 var profile = GetActiveProfile();
-                if (profile == null || string.IsNullOrWhiteSpace(profile.OllamaModel))
+                if (profile == null)
+                {
+                    await SafeDelay(3000, ct);
+                    continue;
+                }
+
+                // Jev takes precedence: text-only decision model, no screenshot, no regex.
+                if (profile.UseJev)
+                {
+                    await JevStepAsync(profile, ct);
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(profile.OllamaModel))
                 {
                     await SafeDelay(3000, ct);
                     continue;
@@ -788,6 +807,174 @@ public class AutoPlayGameAction : BaseAction
         catch (OperationCanceledException) { /* expected */ }
         catch (Exception ex) { Log($"Strategic loop crashed: {ex.Message}"); }
         finally { Log("Strategic layer stopped"); }
+    }
+
+    // ============================================================================ STRATEGIC (Jev) ====
+
+    // Mode / direction option keys. Single digits on purpose: simple-jev requires every answer label to
+    // be exactly one token, and digits are one token in every tokenizer. The legend lives in the
+    // instructions + criteria descriptions, and we map back below.
+    private static readonly string[] JevModes = ["explore", "engage", "retreat", "hold", "tactical"];
+    private static readonly string[] JevDirections = ["forward", "backward", "left", "right"];
+    private const int JevMaxTactical = 9; // ponytail: keep tactical keys single-digit; raise if a profile really has >9 abilities
+
+    /// <summary>
+    ///     One strategic step against the Jev endpoint: reachability, decide, map to
+    ///     <see cref="StrategicIntent"/>, sleep the profile's DecisionInterval. Failures are logged and
+    ///     tolerated — the heuristic keeps playing on the previous intent.
+    /// </summary>
+    private async Task JevStepAsync(AutoPlayProfile profile, CancellationToken ct)
+    {
+        _jev ??= new JevDecisionClient();
+
+        if (!await _jev.IsAvailableAsync(ct))
+        {
+            lock (_intentLock) _intent = Default;
+            Log($"Jev unreachable: {_jev.LastError}");
+            await SafeDelay(5000, ct);
+            return;
+        }
+
+        try
+        {
+            var decision = await _jev.DecideAsync(BuildJevState(profile), BuildJevQuestions(), ct);
+            if (decision == null)
+            {
+                Log($"Jev query failed: {_jev.LastError}");
+            }
+            else
+            {
+                var intent = MapJevDecision(decision);
+                if (intent != null)
+                {
+                    lock (_intentLock) _intent = intent;
+                    RememberIntent(intent);
+                    Log($"Jev intent: {intent.Mode} dir={intent.Direction} action={intent.ActionHint}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Log($"Jev step failed: {ex.Message}");
+        }
+
+        await SafeDelay(TimeSpan.FromSeconds(Math.Max(0.3, profile.DecisionInterval)), ct);
+    }
+
+    /// <summary>The structured "what the bot sees" — everything the VLM used to guess from a downscaled frame, as numbers.</summary>
+    private object BuildJevState(AutoPlayProfile profile)
+    {
+        double? ammo = null, health = null;
+        if (AppConfig.Current?.OcrSettings?.Enabled == true)
+        {
+            var ocr = OcrService.Instance.Latest;
+            if (ocr.Count > 0)
+            {
+                ammo = TryReadOcrNumber(ocr, _ammoAliases);
+                health = TryReadOcrNumber(ocr, _healthAliases);
+            }
+        }
+
+        string[] recent;
+        lock (_recentIntentsLock) recent = _recentIntents.ToArray();
+
+        double dist = _lastNearestDist;
+        return new
+        {
+            game = string.IsNullOrWhiteSpace(profile.GameContext) ? "first-person shooter" : profile.GameContext,
+            enemies_visible = _lastEnemyCount,
+            nearest_enemy = dist < 0 ? null : new
+            {
+                horizontal_offset_px = (int)_lastNearestDx,   // negative = left of crosshair
+                vertical_offset_px = (int)_lastNearestDy,     // negative = above crosshair
+                distance_px = (int)dist,
+            },
+            ammo,
+            health,
+            recent_decisions = recent,
+            seconds_since_last_enemy = Math.Round((DateTime.Now - _lastSeenEnemy).TotalSeconds, 1),
+            available_abilities = _tacticalActions.Take(JevMaxTactical).Select(a => a.Name).ToArray(),
+        };
+    }
+
+    private Dictionary<string, object> BuildJevQuestions()
+    {
+        var modes = new Dictionary<string, string>
+        {
+            ["1"] = "explore: move around the map looking for enemies",
+            ["2"] = "engage: push toward the visible enemies and fight",
+            ["3"] = "retreat: back off and break line of sight",
+            ["4"] = "hold: stay put and cover the current position",
+        };
+        var tactical = _tacticalActions.Take(JevMaxTactical).ToList();
+        if (tactical.Count > 0)
+            modes["5"] = "tactical: use one of the available abilities right now";
+
+        var q = new Dictionary<string, object>
+        {
+            ["mode"] = new
+            {
+                type = "choice",
+                instructions = "You guide a bot in the game described by the state. Pick its tactical mode for the next second. " +
+                               string.Join(" ", modes.Select(kv => $"{kv.Key} = {kv.Value}.")),
+                criteria = modes,
+            },
+            ["direction"] = new
+            {
+                type = "choice",
+                instructions = "If the bot moves, which way? 1 = forward, 2 = backward, 3 = left, 4 = right.",
+                criteria = JevDirections.Select((d, i) => (k: (i + 1).ToString(), d)).ToDictionary(x => x.k, x => x.d),
+            },
+            ["danger"] = new
+            {
+                type = "noul",
+                instructions = "Is the bot in immediate danger (low health, outnumbered, enemy very close) and should retreat right now?",
+            },
+        };
+
+        if (tactical.Count > 0)
+        {
+            q["ability"] = new
+            {
+                type = "choice",
+                instructions = "If an ability should be used now, which one? " +
+                               string.Join(" ", tactical.Select((a, i) => $"{i + 1} = {a.Name}.")),
+                criteria = tactical.Select((a, i) => (k: (i + 1).ToString(), n: a.Name ?? "")).ToDictionary(x => x.k, x => x.n),
+            };
+        }
+        return q;
+    }
+
+    private StrategicIntent? MapJevDecision(JevDecision d)
+    {
+        if (!d.Choices.TryGetValue("mode", out var mode)) return null;
+
+        double minConf = AppConfig.Current?.JevSettings?.MinConfidence ?? 0.35;
+        if (mode.Confidence < minConf)
+        {
+            Log($"Jev mode confidence {mode.Confidence:0.00} < {minConf:0.00} — keeping current intent");
+            return null;
+        }
+
+        string modeName = int.TryParse(mode.Choice, out var mi) && mi >= 1 && mi <= JevModes.Length
+            ? JevModes[mi - 1] : "default";
+
+        // A strong danger signal overrides whatever mode was picked.
+        if (d.Nouls.TryGetValue("danger", out var danger) && danger >= 0.7)
+            modeName = "retreat";
+
+        string? direction = null;
+        if (d.Choices.TryGetValue("direction", out var dir) && int.TryParse(dir.Choice, out var di) && di >= 1 && di <= JevDirections.Length)
+            direction = JevDirections[di - 1];
+
+        string? action = null;
+        if (modeName == "tactical" && d.Choices.TryGetValue("ability", out var ab) && int.TryParse(ab.Choice, out var ai))
+        {
+            var tactical = _tacticalActions.Take(JevMaxTactical).ToList();
+            if (ai >= 1 && ai <= tactical.Count) action = tactical[ai - 1].Name;
+        }
+
+        return new StrategicIntent(modeName, direction, action, DateTime.Now);
     }
 
     private Bitmap? CaptureFrameSafely()

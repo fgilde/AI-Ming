@@ -116,7 +116,12 @@ namespace Launcher
             InitializeComponent();
             
             DataContext = this;
-            Task.Delay(400).ContinueWith(_ => Execute());
+            // Never let a startup failure vanish into a fire-and-forget task — surface it in the status line.
+            Task.Delay(400).ContinueWith(async _ =>
+            {
+                try { await Execute(); }
+                catch (Exception e) { Status = $"Error: {e.Message}"; SubTitle = "Start failed"; }
+            });
         }
         private void CheckCudaAvailability()
         {
@@ -156,10 +161,18 @@ namespace Launcher
 
         private async Task RenameExe(string exe)
         {
-            await ExecutableManager.RenameExecutable(exe, newName =>
+            var error = await ExecutableManager.RenameExecutable(exe, newName =>
             {
                 Status = $"Shuffle name to {newName}";
             });
+
+            if (error != null)
+            {
+                // Stay open so the user can actually read why nothing happened.
+                Status = error;
+                SubTitle = "Start failed";
+                return;
+            }
 
             await Dispatcher.Invoke(() =>
             {

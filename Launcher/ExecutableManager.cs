@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using Vestris.ResourceLib;
 
 public class ExecutableManager
@@ -25,45 +24,10 @@ public class ExecutableManager
         }
     }
 
-    private void ChangeResourceTable(VersionResource versionResource, string exe)
-    {
-        string newName = GenerateRandomString(15).ToUpper();
-        var resource = versionResource["StringFileInfo"];
-        var fi = resource as StringFileInfo;
-
-        foreach (var table in fi.Strings.Select(pair => pair.Value))
-        {
-            table["CompanyName"] = newName;
-            table["FileDescription"] = newName;
-            table["InternalName"] = $"{newName}.dll";
-            table["OriginalFilename"] = $"{newName}.dll";
-            table["ProductName"] = newName;
-        }
-
-
-        versionResource.SaveTo(exe);
-    }
-
-    public static Assembly LoadAssemblyViaStream(string assemblyLocation)
-    {
-        byte[] file = null;
-        int bufferSize = 1024;
-        using (FileStream fileStream = File.Open(assemblyLocation, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-        {
-            using (MemoryStream memoryStream = new MemoryStream())
-            {
-                byte[] buffer = new byte[bufferSize];
-                int readBytesCount = 0;
-                while ((readBytesCount = fileStream.Read(buffer, 0, bufferSize)) > 0)
-                    memoryStream.Write(buffer, 0, readBytesCount);
-                file = memoryStream.ToArray();
-            }
-        }
-
-        return Assembly.Load(file);
-    }
-
-
+    // NOTE: the old ChangeResourceTable (rewrite version resources to random strings) and
+    // LoadAssemblyViaStream (Assembly.Load from an in-memory byte[]) were removed: both were dead code,
+    // and both are textbook dropper/packer heuristics that antivirus engines flag statically — their mere
+    // presence in the binary contributed to false-positive detections.
 
     public static string FindExecutable()
     {
@@ -81,22 +45,45 @@ public class ExecutableManager
         return exeList.FirstOrDefault(n => Path.GetFileNameWithoutExtension(n).Length == 8);
     }
 
-    public static async Task RenameExecutable(string exe, Action<string> beforeRename = null)
+    /// <summary>
+    ///     Rename + start the app. Returns <c>null</c> on success, otherwise a user-facing error. Every
+    ///     step here can fail when an antivirus quarantines the exe or blocks its start — previously
+    ///     those exceptions were swallowed by the fire-and-forget caller and the launcher just sat there
+    ///     on "Shuffle name to …" forever with no message.
+    /// </summary>
+    public static async Task<string?> RenameExecutable(string exe, Action<string> beforeRename = null)
     {
+        const string avHint = "If your antivirus flagged the app, add an exclusion for this folder and reinstall.";
+
+        if (!File.Exists(exe))
+            return "The app executable is gone — most likely quarantined by your antivirus. " + avHint;
+
         var workingDirectory = Path.GetDirectoryName(exe);
         string newName = $"{GenerateRandomString()}.exe";
-        System.Windows.Application.Current.Dispatcher.Invoke(() => beforeRename?.Invoke(newName));
-        var newExe = Path.Combine(Path.GetDirectoryName(exe), newName);
-        File.Move(exe, newExe);
-
-        var process = new Process
+        var newExe = Path.Combine(workingDirectory, newName);
+        try
         {
-            StartInfo = new ProcessStartInfo(newExe) { UseShellExecute = true, WorkingDirectory = workingDirectory}
-        };
+            System.Windows.Application.Current.Dispatcher.Invoke(() => beforeRename?.Invoke(newName));
+            File.Move(exe, newExe);
 
-        process.Start();
-        process.WaitForInputIdle();
-        await Task.Delay(3000);
+            var process = Process.Start(new ProcessStartInfo(newExe) { UseShellExecute = true, WorkingDirectory = workingDirectory });
+            if (process == null)
+                return "Windows refused to start the app. " + avHint;
+
+            // ponytail: 10s cap — a process the AV kills on launch never reaches input-idle and would hang here.
+            try { process.WaitForInputIdle(10000); }
+            catch (InvalidOperationException) { /* already exited or no message loop — handled below */ }
+
+            if (process.HasExited)
+                return $"The app exited right after starting (exit code {process.ExitCode}) — an antivirus probably blocked it. " + avHint;
+
+            await Task.Delay(3000);
+            return null;
+        }
+        catch (Exception e)
+        {
+            return $"Could not start the app: {e.Message}\n" + avHint;
+        }
     }
 
     private static string GenerateRandomString(int length = 8)
