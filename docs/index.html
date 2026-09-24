@@ -826,7 +826,7 @@
 })();
 </script>
 <!-- GildeConnect web components used by the contact + support section above. -->
-<script type="module" src="https://connect.gilde.org/widgets/v1.js?v=2"></script>
+<script type="module">import('https://connect.gilde.org/widgets/v1.js?load=' + Date.now());</script>
 <script type="module">
 (async function () {
   // The trigger button lives in the widget's shadow DOM, which exposes neither ::part nor custom
