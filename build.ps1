@@ -14,7 +14,7 @@ $outputDir = Join-Path $scriptDir "PowerAim/bin/Release"
 # Safe Browsing both score an unknown, unsigned .exe as "no reputation", and because every build
 # ships under a freshly rotated AssemblyName (see Get-RandomAssemblyName below), that score never
 # accumulates. A signature moves the reputation onto the CERTIFICATE, which does carry across
-# builds and across renames — including the random rename the launcher does at startup.
+# builds and across renames - including the random rename the launcher does at startup.
 #
 # Configured entirely through environment variables, so no secret ever lives in this file:
 #
@@ -30,7 +30,7 @@ $outputDir = Join-Path $scriptDir "PowerAim/bin/Release"
 #   SIGN_REQUIRED         1/true/yes: a build that cannot sign FAILS instead of quietly shipping
 #                         unsigned binaries. Set this in CI for releases.
 #
-# With nothing configured the build still runs and only warns — local development needs no cert.
+# With nothing configured the build still runs and only warns - local development needs no cert.
 
 function Get-SigningCertificate {
     if ($env:SIGN_CERT_THUMBPRINT) {
@@ -69,7 +69,7 @@ function Invoke-CodeSigning {
     if (-not $env:SIGN_COMMAND) {
         $cert = Get-SigningCertificate
         if (-not $cert) {
-            $msg = "No code signing certificate configured (SIGN_CERT_THUMBPRINT / SIGN_CERT_PFX / SIGN_COMMAND) — the output stays UNSIGNED."
+            $msg = "No code signing certificate configured (SIGN_CERT_THUMBPRINT / SIGN_CERT_PFX / SIGN_COMMAND) - the output stays UNSIGNED."
             if ($required) { throw "$msg SIGN_REQUIRED is set, so this build fails." }
             Write-Warning $msg
             return
@@ -77,7 +77,7 @@ function Invoke-CodeSigning {
     }
 
     # Only the executables this build produced, which are the ones at the top of $publishDir.
-    # Everything under Resources\ is a third-party installer that ships with its own signature —
+    # Everything under Resources\ is a third-party installer that ships with its own signature -
     # signing those with our certificate would mean vouching for someone else's binary. The
     # already-signed filter is a second safety net for the same reason.
     $targets = @(Get-ChildItem -Path $publishDir -Filter *.exe -File |
@@ -168,7 +168,7 @@ function Build-ProjectWithCuda {
     if ($LASTEXITCODE -ne 0) { throw "Launcher publish failed with exit code $LASTEXITCODE" }
 
     # Sign before anything is zipped or copied: Installer.exe is a byte copy of Launcher.exe, and
-    # Authenticode covers the file content, not its name — so the copy inherits a valid signature.
+    # Authenticode covers the file content, not its name - so the copy inherits a valid signature.
     Invoke-CodeSigning -publishDir $publishDir
 }
 

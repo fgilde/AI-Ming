@@ -34,7 +34,13 @@ public class ApplicationConstants : Constants
     public const bool EasyMode = false;
 
     /// <summary>Marketing / download landing page (the GitHub Pages site root).</summary>
-    public const string WebsiteUrl = "https://fgilde.github.io/AI-Ming/";
+    /// <summary>
+    ///     The project's own site. Canonical host is the custom domain; the github.io address still
+    ///     serves the same pages and stays valid as a fallback.
+    /// </summary>
+    public const string WebsiteUrl = "https://poweraim.de/";
+
+    public static Uri WebsiteUri = new Uri(WebsiteUrl);
 
     /// <summary>
     ///     URL the in-app Help button opens. Points to the GitHub Pages-hosted <b>documentation</b>

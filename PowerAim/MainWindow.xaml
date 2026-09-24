@@ -1089,6 +1089,13 @@
                                                     MinWidth="140"
                                                     Margin="8,0,0,0"
                                                     Click="ShowKnownIssues_Click" />
+                                            <Button x:Name="OpenWebsite"
+                                                    Content="poweraim.de"
+                                                    Style="{StaticResource FluentStandardButton}"
+                                                    MinWidth="140"
+                                                    Margin="8,0,0,0"
+                                                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AboutWebsite'}"
+                                                    Click="OpenWebsite_Click" />
                                         </StackPanel>
                                         <Label HorizontalAlignment="Center"
                                                Foreground="{StaticResource FluentTextSecondary}"
@@ -1187,6 +1194,28 @@
                                                        Foreground="{StaticResource FluentTextPrimary}"
                                                        FontFamily="Segoe UI Variable Text"
                                                        FontSize="12" />
+                                        </Grid>
+
+                                        <Grid Margin="0,4,0,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="140" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AboutWebsite'}"
+                                                       Foreground="{StaticResource FluentTextSecondary}"
+                                                       FontFamily="Segoe UI Variable Text"
+                                                       FontSize="12"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" VerticalAlignment="Center"
+                                                       FontFamily="Segoe UI Variable Text"
+                                                       FontSize="12">
+                                                <Hyperlink NavigateUri="{x:Static poweraim:ApplicationConstants.WebsiteUri}"
+                                                           Foreground="{StaticResource FluentAccent}"
+                                                           RequestNavigate="AboutLink_RequestNavigate">
+                                                    <Run Text="poweraim.de" />
+                                                </Hyperlink>
+                                            </TextBlock>
                                         </Grid>
 
                                         <Grid Margin="0,4,0,4">

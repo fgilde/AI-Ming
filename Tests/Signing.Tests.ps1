@@ -1,7 +1,7 @@
 # Checks the code-signing step in build.ps1 without running a build and without a real certificate.
 # Run:  pwsh -File Tests/Signing.Tests.ps1
 #
-# A throwaway self-signed certificate can prove everything except chain trust — its root is not
+# A throwaway self-signed certificate can prove everything except chain trust - its root is not
 # trusted, so a signature made with it never reaches status 'Valid'. That is used on purpose here:
 # it exercises both halves of the guard, the "signature applied" path and the "signature does not
 # validate, so fail the build" path.
@@ -15,7 +15,7 @@ function Check($name, [scriptblock]$body) {
     catch { $script:failed++; Write-Host "  FAIL  $name : $_" -ForegroundColor Red }
 }
 
-# Load just the signing functions out of build.ps1 — dot-sourcing the file would start a build.
+# Load just the signing functions out of build.ps1 - dot-sourcing the file would start a build.
 $ast = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $root 'build.ps1'), [ref]$null, [ref]$null)
 $wanted = 'Get-SigningCertificate', 'Invoke-CodeSigning'
 $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $wanted -contains $n.Name }, $true) |
@@ -27,7 +27,7 @@ $work = Join-Path ([IO.Path]::GetTempPath()) ("signtest_" + [guid]::NewGuid().To
 New-Item -ItemType Directory -Force -Path (Join-Path $work 'Resources') | Out-Null
 $sample = Get-ChildItem -Path (Join-Path $root 'PowerAim/bin/Release') -Filter *.exe -Recurse -File -ErrorAction SilentlyContinue |
           Sort-Object Length | Select-Object -First 1
-if (-not $sample) { Write-Host "No sample .exe under PowerAim/bin/Release — build once, then re-run."; exit 2 }
+if (-not $sample) { Write-Host "No sample .exe under PowerAim/bin/Release - build once, then re-run."; exit 2 }
 Copy-Item $sample.FullName (Join-Path $work 'App.exe')
 Copy-Item $sample.FullName (Join-Path $work 'Launcher.exe')
 Copy-Item $sample.FullName (Join-Path $work 'Resources\ThirdParty.exe')
@@ -76,7 +76,7 @@ try {
     }
 
     Check 'a signature that does not validate fails the build when SIGN_REQUIRED is set' {
-        # The self-signed root is untrusted, so verification must reject it — this is the guard that
+        # The self-signed root is untrusted, so verification must reject it - this is the guard that
         # stops an unsigned or broken release from being zipped and uploaded.
         Copy-Item $sample.FullName (Join-Path $work 'App.exe') -Force
         $env:SIGN_REQUIRED = '1'

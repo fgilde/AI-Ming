@@ -1344,6 +1344,9 @@ public partial class MainWindow
         e.Handled = true;
     }
 
+    private void OpenWebsite_Click(object sender, RoutedEventArgs e)
+        => OpenUrl(ApplicationConstants.WebsiteUrl);
+
     private void OpenContactWidget_Click(object sender, RoutedEventArgs e)
         => Visuality.ConnectWindow.Show("contact", Locale.AboutContact, this);
 
