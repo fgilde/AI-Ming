@@ -15,7 +15,7 @@ something to you, there is a way to say so.
 
 ---
 
-<script type="module" src="https://connect.gilde.org/widgets/v1.js"></script>
+<script type="module" src="https://connect.gilde.org/widgets/v1.js?v=2"></script>
 
 ## Get in touch
 
