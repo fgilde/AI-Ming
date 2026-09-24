@@ -8,6 +8,13 @@ jobs:
   build:
     runs-on: windows-latest
 
+    # Secrets are lifted into the job environment because a step-level `if:` cannot read the
+    # `secrets` context - referencing it there makes GitHub reject the whole workflow file and the
+    # release then builds nothing, silently. `env` is readable from `if:`, so the conditions below
+    # test these instead.
+    env:
+      HAS_SIGNING_CERT: ${{ secrets.SIGN_CERT_PFX_BASE64 != '' }}
+
     steps:
     - name: Configure Git
       run: |
@@ -25,12 +32,12 @@ jobs:
         dotnet-version: '10.0.x'
 
     # Materialize the signing certificate from the repository secret. Without the secret (forks,
-    # test runs) this step is skipped and the build below signs nothing — it only warns, because
+    # test runs) this step is skipped and the build below signs nothing - it only warns, because
     # SIGN_REQUIRED stays empty. For a cloud signing service (Azure Trusted Signing, DigiCert
     # KeyLocker, SSL.com eSigner) drop this step and set SIGN_COMMAND on the build step instead.
     - name: Prepare signing certificate
       id: cert
-      if: ${{ secrets.SIGN_CERT_PFX_BASE64 != '' }}
+      if: env.HAS_SIGNING_CERT == 'true'
       shell: pwsh
       env:
         PFX_BASE64: ${{ secrets.SIGN_CERT_PFX_BASE64 }}
@@ -45,7 +52,7 @@ jobs:
         SIGN_CERT_PASSWORD: ${{ secrets.SIGN_CERT_PASSWORD }}
         # With a certificate present, a build that cannot sign must fail rather than upload
         # unsigned binaries to the release.
-        SIGN_REQUIRED: ${{ secrets.SIGN_CERT_PFX_BASE64 != '' && '1' || '' }}
+        SIGN_REQUIRED: ${{ env.HAS_SIGNING_CERT == 'true' && '1' || '' }}
       run: powershell -ExecutionPolicy Bypass -File ./build.ps1 -version ${{ github.event.release.tag_name }}
 
     # Never leave the private key on the runner, not even on a failed build.
