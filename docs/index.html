@@ -161,9 +161,14 @@
   .ms-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
   @media(max-width:640px){.ms-grid{grid-template-columns:1fr}}
 
-  /* connect widgets in button mode: the page only shows two triggers, each widget brings its own
-     modal. The buttons themselves are styled inside the shadow root (see the loader near </body>). */
-  .connect-cta{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;align-items:center}
+  /* support widget, embedded: the providers are the point of the section, so they are on the page
+     rather than behind a click. The component brings its own width; it is capped here so a narrow
+     screen never scrolls sideways. */
+  .connect-inline{display:flex;justify-content:center}
+  .connect-inline gilde-support{display:block;width:100%;max-width:560px}
+  /* contact lives in the footer as a trigger; its button is styled inside the shadow root
+     (see the loader near </body>) so it matches the page's own buttons. */
+  .foot-contact{margin-top:16px}
   .ms-card{display:block;text-decoration:none;color:var(--ink)}
   .ms-card .ms-name{font-size:18px;font-weight:700;color:var(--ink);margin:2px 0 9px;display:flex;align-items:center;gap:10px}
   .ms-card .ms-name .dot{width:9px;height:9px;border-radius:50%;flex:none}
@@ -522,17 +527,16 @@
 
 <div class="wrap"><div class="divider"></div></div>
 
-<!-- ===================== CONTACT + SUPPORT ===================== -->
+<!-- ===================== SUPPORT ===================== -->
 <section id="connect">
   <div class="wrap">
     <div class="sec-head reveal">
-      <div class="sec-kicker mono">// Say hello &#183; Keep it going</div>
-      <h2 class="sec-title">Contact &amp; <span class="accent-text">support</span></h2>
-      <p class="sec-sub">Anything reproducible is best filed as a <a href="https://github.com/fgilde/AI-Ming/issues" target="_blank" rel="noopener" style="color:var(--cyan)">GitHub issue</a> &mdash; everything else reaches the developer right here. Supporting the project is optional and pays for what it cannot do for free.</p>
+      <div class="sec-kicker mono">// Keep it going</div>
+      <h2 class="sec-title">Support the <span class="accent-text">project</span></h2>
+      <p class="sec-sub">PowerAim is free, source-available, and has no key system, no paywall and no ads &mdash; and it stays that way. Supporting it is entirely optional; it pays for the things the project cannot do for free.</p>
     </div>
-    <div class="connect-cta reveal">
-      <gilde-support project="fgilde/AI-Ming" widget="support" data-btn="primary" theme="dark" accent="#8e5ae0" language="auto" title="Support PowerAim" width="560" radius="18" padding="28" show-logo="true" show-description="true" show-homepage="true" show-preview-notice="false" show-footer="false" show-support-hint="true" support-hint-text="You are handed over to the respective provider. GildeConnect processes no payments." support-layout="rows" show-support-icons="true" show-support-qr="true">Support PowerAim</gilde-support>
-      <gilde-contact project="fgilde/AI-Ming" widget="contact" data-btn="ghost" theme="dark" accent="#8e5ae0" language="auto" title="Contact PowerAim" width="560" radius="18" padding="28" show-logo="true" show-description="false" show-homepage="true" show-preview-notice="false" show-footer="false">Contact PowerAim</gilde-contact>
+    <div class="connect-inline reveal">
+      <gilde-support project="fgilde/AI-Ming" widget="support" inline theme="dark" accent="#8e5ae0" language="auto" title="Support PowerAim" width="560" radius="18" padding="28" show-logo="true" show-description="false" show-homepage="false" show-preview-notice="false" show-footer="false" show-support-hint="true" support-hint-text="You are handed over to the respective provider. GildeConnect processes no payments." support-layout="rows" show-support-icons="true" show-support-qr="true">Support PowerAim</gilde-support>
     </div>
   </div>
 </section>
@@ -564,6 +568,9 @@
       <div class="foot-brand">
         <a class="brand" href="#top"><img src="images/PowerAim-icon-256.png" alt="" /><span>Power<b class="accent-text">Aim</b></span></a>
         <p>AI-powered aim alignment for accessibility, training and fun — a decoupled architecture, Fluent UI, gamepad, OCR, AutoPlay and a fast capture &amp; inference pipeline.</p>
+        <div class="foot-contact">
+          <gilde-contact project="fgilde/AI-Ming" widget="contact" data-btn="ghost" theme="dark" accent="#8e5ae0" language="auto" title="Contact PowerAim" width="560" radius="18" padding="28" show-logo="true" show-description="true" show-homepage="false" show-preview-notice="false" show-footer="true">Contact PowerAim</gilde-contact>
+        </div>
       </div>
       <div class="foot-links">
         <div class="foot-col">
@@ -822,6 +829,11 @@
 <script type="module" src="https://connect.gilde.org/widgets/v1.js"></script>
 <script type="module">
 (async function () {
+  // The trigger button lives in the widget's shadow DOM, which exposes neither ::part nor custom
+  // properties. The page's own button styling is therefore ADOPTED into the shadow root: an adopted
+  // stylesheet belongs to the ShadowRoot itself instead of being a child node, so it survives the
+  // widget re-rendering its content. Only elements carrying data-btn are touched, so an embedded
+  // widget's own buttons keep the component's styling.
   var base =
     "button.primary{display:inline-flex;align-items:center;gap:9px;font-family:var(--display,'Space Grotesk',system-ui,sans-serif);" +
     "font-weight:600;font-size:15px;padding:11px 20px;border-radius:11px;cursor:pointer;" +
@@ -839,7 +851,7 @@
   };
   for (var tag of ['gilde-contact', 'gilde-support']) {
     await customElements.whenDefined(tag);
-    document.querySelectorAll(tag).forEach(function (el) {
+    document.querySelectorAll(tag + '[data-btn]').forEach(function (el) {
       var root = el.shadowRoot;
       if (!root || !('adoptedStyleSheets' in root)) return;   // styling is cosmetic, never fatal
       var sheet = new CSSStyleSheet();
@@ -848,17 +860,30 @@
     });
   }
 
-  // The support dialog is min(560px, 100vw - 28px) wide, and its rows layout puts a QR code beside
-  // every provider. Below roughly 480px of dialog width that squeezes each label to one character
-  // per line, so the codes are dropped on narrow screens — where they are useless anyway, the
-  // reader is already holding the device they would scan with.
-  var wide = matchMedia('(min-width: 540px)');
+  // The rows layout puts a QR code beside every provider. Below roughly 480px that squeezes each
+  // label to one character per line, so the codes are dropped on narrow screens - where they are
+  // useless anyway, the reader is already holding the device they would scan with. An embedded
+  // widget is measured directly; a trigger's modal is min(560px, 100vw - 28px) wide.
+  var last = new WeakMap();
   var applyQr = function () {
     document.querySelectorAll('gilde-support').forEach(function (el) {
-      el.setAttribute('show-support-qr', wide.matches ? 'true' : 'false');
+      var width = el.hasAttribute('inline')
+        ? el.getBoundingClientRect().width
+        : Math.min(560, innerWidth - 28);
+      if (!width) return;                        // not upgraded yet
+      var value = width >= 480 ? 'true' : 'false';
+      if (last.get(el) === value) return;        // setting the attribute re-renders, which would loop
+      last.set(el, value);
+      el.setAttribute('show-support-qr', value);
     });
   };
-  wide.addEventListener('change', applyQr);
+  addEventListener('load', applyQr);
+  addEventListener('resize', applyQr);
+  if (window.ResizeObserver) {
+    document.querySelectorAll('gilde-support[inline]').forEach(function (el) {
+      new ResizeObserver(applyQr).observe(el);
+    });
+  }
   applyQr();
 })();
 </script>

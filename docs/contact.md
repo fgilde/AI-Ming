@@ -23,7 +23,7 @@ For anything reproducible — a crash, a detection that misbehaves, a game that 
 an [issue on GitHub](https://github.com/fgilde/AI-Ming/issues) is the better place: it is public,
 searchable, and other users benefit from the answer. Everything else fits here.
 
-<gilde-contact project="fgilde/AI-Ming" widget="contact" data-btn="primary" theme="dark" accent="#8e5ae0" language="auto" title="Contact PowerAim" width="560" radius="18" padding="28" show-logo="true" show-description="false" show-homepage="true" show-preview-notice="false" show-footer="false">Contact PowerAim</gilde-contact>
+<gilde-contact project="fgilde/AI-Ming" widget="contact" data-btn="primary" theme="dark" accent="#8e5ae0" language="auto" title="Contact PowerAim" width="560" radius="18" padding="28" show-logo="true" show-description="false" show-homepage="false" show-preview-notice="false" show-footer="false">Contact PowerAim</gilde-contact>
 
 ## Support the project
 
@@ -31,7 +31,7 @@ PowerAim is free, source-available and has no key system, no paywall and no ads 
 that way. Supporting it is entirely optional; it pays for the things the project cannot do for
 free, such as a code signing certificate.
 
-<gilde-support project="fgilde/AI-Ming" widget="support" data-btn="primary" theme="dark" accent="#60cdff" language="auto" title="Support PowerAim" width="560" radius="18" padding="28" show-logo="true" show-description="true" show-homepage="true" show-preview-notice="false" show-footer="false" show-support-hint="true" support-hint-text="You are handed over to the respective provider. GildeConnect processes no payments." support-layout="rows" show-support-icons="true" show-support-qr="true">Support PowerAim</gilde-support>
+<gilde-support project="fgilde/AI-Ming" widget="support" data-btn="primary" theme="dark" accent="#60cdff" language="auto" title="Support PowerAim" width="560" radius="18" padding="28" show-logo="true" show-description="true" show-homepage="false" show-preview-notice="false" show-footer="false" show-support-hint="true" support-hint-text="You are handed over to the respective provider. GildeConnect processes no payments." support-layout="rows" show-support-icons="true" show-support-qr="true">Support PowerAim</gilde-support>
 
 <script type="module">
 (async function () {
