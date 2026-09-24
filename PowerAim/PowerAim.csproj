@@ -32,8 +32,8 @@
     </Product>
     <Title>
     </Title>
-    <AssemblyName>AI-MMEWinehouse</AssemblyName>
-    <Version>2.2.0.3</Version>
+    <AssemblyName>Targetron</AssemblyName>
+    <Version>2.2.0.4</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>False</SignAssembly>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
