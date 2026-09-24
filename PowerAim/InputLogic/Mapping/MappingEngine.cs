@@ -275,7 +275,12 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
             ResolveActiveProfile();
             if (_activeProfile == null)
             {
-                IdleVirtual();
+                // Deliberately NOT calling IdleVirtual() here. It is a one-shot reset, and
+                // ResolveActiveProfile already fires it on the transition to "no profile". Repeating it
+                // every tick wrote all buttons/axes into the SHARED virtual pad forever — fighting the
+                // sender's own mirror loop, which produced a constant press/release oscillation on the
+                // D-pad and sticks. Windows read that as endless "navigate up" in menus even with
+                // mapping switched off entirely.
                 try { await Task.Delay(80, ct); } catch { break; }
                 continue;
             }
@@ -318,6 +323,7 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
         // until the user flips it back on (or hits the hotkey).
         if (AppConfig.Current == null)
         {
+            if (_activeProfile != null) { IdleVirtual(); _heldSources.Clear(); }
             Status = Locale.MappingStatusWaitingForConfig;
             SetActiveProfile(null);
             return;

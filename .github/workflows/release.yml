@@ -24,8 +24,35 @@ jobs:
       with:
         dotnet-version: '10.0.x'
 
+    # Materialize the signing certificate from the repository secret. Without the secret (forks,
+    # test runs) this step is skipped and the build below signs nothing — it only warns, because
+    # SIGN_REQUIRED stays empty. For a cloud signing service (Azure Trusted Signing, DigiCert
+    # KeyLocker, SSL.com eSigner) drop this step and set SIGN_COMMAND on the build step instead.
+    - name: Prepare signing certificate
+      id: cert
+      if: ${{ secrets.SIGN_CERT_PFX_BASE64 != '' }}
+      shell: pwsh
+      env:
+        PFX_BASE64: ${{ secrets.SIGN_CERT_PFX_BASE64 }}
+      run: |
+        $path = Join-Path $env:RUNNER_TEMP 'codesign.pfx'
+        [IO.File]::WriteAllBytes($path, [Convert]::FromBase64String($env:PFX_BASE64))
+        "path=$path" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
     - name: Run build script
+      env:
+        SIGN_CERT_PFX: ${{ steps.cert.outputs.path }}
+        SIGN_CERT_PASSWORD: ${{ secrets.SIGN_CERT_PASSWORD }}
+        # With a certificate present, a build that cannot sign must fail rather than upload
+        # unsigned binaries to the release.
+        SIGN_REQUIRED: ${{ secrets.SIGN_CERT_PFX_BASE64 != '' && '1' || '' }}
       run: powershell -ExecutionPolicy Bypass -File ./build.ps1 -version ${{ github.event.release.tag_name }}
+
+    # Never leave the private key on the runner, not even on a failed build.
+    - name: Remove signing certificate
+      if: ${{ always() }}
+      shell: pwsh
+      run: Remove-Item (Join-Path $env:RUNNER_TEMP 'codesign.pfx') -Force -ErrorAction SilentlyContinue
 
     - name: Upload release ZIP asset
       uses: actions/upload-release-asset@v1

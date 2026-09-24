@@ -62,13 +62,35 @@ public static class JevServerSetup
     /// </summary>
     public static (string Exe, string[] Args, Version Version)? FindPython()
     {
-        foreach (var (exe, args) in new[] { ("py", new[] { "-3" }), ("python", Array.Empty<string>()) })
+        // Ask the launcher for specific new versions FIRST: "py -3" resolves to the user's default,
+        // which is often an older 3.11 that pip then rejects (simple-jev needs >= 3.12). Probing
+        // 3.14/3.13/3.12 explicitly finds a usable interpreter even when it isn't the default.
+        (string Exe, string[] Args)[] candidates =
+        [
+            ("py", ["-3.14"]), ("py", ["-3.13"]), ("py", ["-3.12"]),
+            ("py", ["-3"]), ("python", []),
+        ];
+        foreach (var (exe, args) in candidates)
         {
             var output = RunQuick(exe, [.. args, "--version"]);
             var version = PythonVersion.Parse(output);
             if (PythonVersion.IsSupported(version)) return (exe, args, version!);
         }
         return null;
+    }
+
+    /// <summary>
+    ///     Explains WHY no interpreter qualified: naming the version that was found ("you have 3.11.9,
+    ///     3.12+ is required") is far more actionable than a bare "no Python found" on a machine that
+    ///     clearly has one.
+    /// </summary>
+    private static string BuildPythonMissingMessage()
+    {
+        var found = PythonVersion.Parse(RunQuick("py", ["-3", "--version"]))
+                    ?? PythonVersion.Parse(RunQuick("python", ["--version"]));
+        return found != null
+            ? $"Python {found} is installed, but simple-jev requires {PythonVersion.Minimum} or newer. Install a newer Python, then run the setup again."
+            : $"No Python {PythonVersion.Minimum} or newer found. Install Python, then run the setup again.";
     }
 
     private static string? RunQuick(string exe, string[] args)
@@ -102,9 +124,7 @@ public static class JevServerSetup
     public static async Task SetUpAsync(bool useCuda, IProgress<JevSetupProgress>? progress, CancellationToken ct = default)
     {
         progress?.Report(new(JevSetupPhase.CheckingPython, -1, null));
-        var python = FindPython()
-            ?? throw new InvalidOperationException(
-                $"No Python {PythonVersion.Minimum} or newer found. Install Python and re-run the setup.");
+        var python = FindPython() ?? throw new InvalidOperationException(BuildPythonMissingMessage());
         progress?.Report(new(JevSetupPhase.CheckingPython, 1, $"Python {python.Version}"));
 
         Directory.CreateDirectory(InstallDir);

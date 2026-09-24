@@ -1098,6 +1098,70 @@
                                 </Border>
                                 <StackPanel x:Name="CreditsPanel" Margin="0,10,0,0" />
 
+                                <!-- Contact + support. The widgets themselves are tall (a full form, a
+                                     provider list), so About only carries the entry points and the
+                                     GildeConnect widget opens in its own window. -->
+                                <Border Style="{StaticResource FluentCard}" Margin="0,10,0,0" Padding="20">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AboutContactSupport'}"
+                                                   FontFamily="Segoe UI Variable Display"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="14"
+                                                   Foreground="{StaticResource FluentTextPrimary}"
+                                                   Margin="0,0,0,12" />
+
+                                        <Grid Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Margin="0,0,16,0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AboutContact'}"
+                                                           FontFamily="Segoe UI Variable Text"
+                                                           FontSize="12"
+                                                           Foreground="{StaticResource FluentTextPrimary}" />
+                                                <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AboutContactHint'}"
+                                                           FontFamily="Segoe UI Variable Small"
+                                                           FontSize="11"
+                                                           TextWrapping="Wrap"
+                                                           Foreground="{StaticResource FluentTextSecondary}" />
+                                            </StackPanel>
+                                            <Button Grid.Column="1"
+                                                    x:Name="OpenContactWidget"
+                                                    Style="{StaticResource FluentStandardButton}"
+                                                    MinWidth="150"
+                                                    VerticalAlignment="Center"
+                                                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AboutContactAction'}"
+                                                    Click="OpenContactWidget_Click" />
+                                        </Grid>
+
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Margin="0,0,16,0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AboutSupport'}"
+                                                           FontFamily="Segoe UI Variable Text"
+                                                           FontSize="12"
+                                                           Foreground="{StaticResource FluentTextPrimary}" />
+                                                <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AboutSupportHint'}"
+                                                           FontFamily="Segoe UI Variable Small"
+                                                           FontSize="11"
+                                                           TextWrapping="Wrap"
+                                                           Foreground="{StaticResource FluentTextSecondary}" />
+                                            </StackPanel>
+                                            <Button Grid.Column="1"
+                                                    x:Name="OpenSupportWidget"
+                                                    Style="{StaticResource FluentAccentButton}"
+                                                    MinWidth="150"
+                                                    VerticalAlignment="Center"
+                                                    Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AboutSupportAction'}"
+                                                    Click="OpenSupportWidget_Click" />
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
                                 <!-- Project + author links -->
                                 <Border Style="{StaticResource FluentCard}" Margin="0,10,0,0" Padding="20">
                                     <StackPanel>

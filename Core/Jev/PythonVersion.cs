@@ -6,8 +6,8 @@ namespace Core.Jev;
 /// </summary>
 public static class PythonVersion
 {
-    /// <summary>Lowest interpreter the hf-server dependency set installs cleanly on.</summary>
-    public static readonly Version Minimum = new(3, 10);
+    /// <summary>simple-jev's hf-server declares <c>requires-python = "&gt;=3.12"</c>; pip hard-refuses anything older.</summary>
+    public static readonly Version Minimum = new(3, 12);
 
     /// <summary>"Python 3.11.9" → 3.11.9. Returns null when the line isn't a python version banner.</summary>
     public static Version? Parse(string? output)

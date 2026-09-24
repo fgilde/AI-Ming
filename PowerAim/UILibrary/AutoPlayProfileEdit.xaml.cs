@@ -28,14 +28,48 @@ namespace PowerAim.UILibrary
             ((AutoPlayProfileEdit)d).ProfileChanged();
         }
 
+        /// <summary>One dropdown entry: the enum value plus the text the user reads.</summary>
+        private sealed record BackendChoice(AutoPlayDecisionBackend Value, string Label);
+
         private void ProfileChanged()
         {
             UpdateDynamicUi();
+            UpdateBackendCombo();
             // Ensure the ActionsList binding is updated when Profile changes
             if (ActionsList != null && Profile != null)
             {
                 ActionsList.Actions = Profile.Actions;
             }
+        }
+
+        /// <summary>
+        ///     Fills the strategic-layer dropdown and selects what the profile currently uses. The
+        ///     Ollama model picker below only makes sense for the Ollama entry, so it follows along.
+        /// </summary>
+        private void UpdateBackendCombo()
+        {
+            if (BackendCombo == null) return;
+            BackendCombo.ItemsSource = new[]
+            {
+                new BackendChoice(AutoPlayDecisionBackend.Heuristic, Locale.AutoPlayBackendHeuristic),
+                new BackendChoice(AutoPlayDecisionBackend.Ollama, Locale.AutoPlayBackendOllama),
+                new BackendChoice(AutoPlayDecisionBackend.Jev, Locale.AutoPlayBackendJev),
+            };
+            BackendCombo.SelectedValue = Profile?.Backend ?? AutoPlayDecisionBackend.Heuristic;
+            SyncBackendDependentUi();
+        }
+
+        private void SyncBackendDependentUi()
+        {
+            if (OllamaModelPanel != null)
+                OllamaModelPanel.IsEnabled = Profile?.Backend == AutoPlayDecisionBackend.Ollama;
+        }
+
+        private void BackendCombo_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (Profile == null || BackendCombo.SelectedValue is not AutoPlayDecisionBackend picked) return;
+            if (Profile.Backend != picked) Profile.Backend = picked;
+            SyncBackendDependentUi();
         }
 
         private void UpdateDynamicUi()

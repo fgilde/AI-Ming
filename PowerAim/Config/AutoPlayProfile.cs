@@ -7,6 +7,22 @@ using Nextended.Core.Extensions;
 namespace PowerAim.Config;
 
 /// <summary>
+///     Which strategic layer biases AutoPlay's heuristic. Exactly one — the reflex layer (aim, shoot,
+///     movement) always runs regardless.
+/// </summary>
+public enum AutoPlayDecisionBackend
+{
+    /// <summary>No strategic layer at all: heuristic + OCR cues only. No HTTP, no screenshots.</summary>
+    Heuristic,
+
+    /// <summary>Ollama vision model — sees the screen, slower (seconds), needs a local Ollama install.</summary>
+    Ollama,
+
+    /// <summary>Jev decision model — no eyes, decides from the structured state, ~0.1–0.5 s per decision.</summary>
+    Jev,
+}
+
+/// <summary>
 /// Represents an AutoPlay profile containing actions and LLM configuration.
 /// Similar to ActionTrigger but for AI-driven gameplay.
 /// </summary>
@@ -101,11 +117,8 @@ public class AutoPlayProfile : EditableNotificationObject
     }
 
     /// <summary>
-    ///     When <c>true</c> (default) the strategic Ollama layer runs alongside the heuristic and
-    ///     biases its decisions. When <c>false</c> the strategic loop never starts — no HTTP polling,
-    ///     no screenshot capture for the LLM — and AutoPlay is driven by the heuristic + OCR cues
-    ///     only. Useful when Ollama isn't installed, when latency matters more than tactical hints,
-    ///     or for benchmarking the heuristic in isolation.
+    ///     Legacy flag, kept so configs written before <see cref="DecisionBackend"/> existed still load
+    ///     with the behaviour their author picked. Read it through <see cref="Backend"/>, never directly.
     /// </summary>
     public bool UseOllama
     {
@@ -117,13 +130,7 @@ public class AutoPlayProfile : EditableNotificationObject
         }
     } = true;
 
-    /// <summary>
-    ///     Use a Jev decision model (local simple-jev server or TypeSafe hosted API) as the strategic
-    ///     layer instead of the Ollama vision model. Jev has no eyes — it decides from the structured
-    ///     state PowerAim already has (YOLO detections, OCR HP/ammo, recent intents) and answers in
-    ///     ~0.1–0.5 s with calibrated probabilities, so it can run at the DecisionInterval floor without
-    ///     screenshots or regex parsing. Takes precedence over <see cref="UseOllama"/> when both are on.
-    /// </summary>
+    /// <summary>Legacy flag — see <see cref="UseOllama"/>. Read through <see cref="Backend"/>.</summary>
     public bool UseJev
     {
         get;
@@ -131,6 +138,41 @@ public class AutoPlayProfile : EditableNotificationObject
         {
             if (SetProperty(ref field, value))
                 RaisePropertyChanged(nameof(Description));
+        }
+    }
+
+    /// <summary>
+    ///     The stored strategic-layer choice. <c>null</c> in configs written before this setting existed —
+    ///     <see cref="Backend"/> then derives it from the legacy bools, so upgrading changes nothing.
+    /// </summary>
+    public AutoPlayDecisionBackend? DecisionBackend
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value))
+            {
+                RaisePropertyChanged(nameof(Backend));
+                RaisePropertyChanged(nameof(Description));
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Which strategic layer this profile runs. Setting it also writes the legacy bools, so a config
+    ///     saved here still opens correctly in an older build.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public AutoPlayDecisionBackend Backend
+    {
+        get => DecisionBackend ?? (UseJev ? AutoPlayDecisionBackend.Jev
+                                  : UseOllama ? AutoPlayDecisionBackend.Ollama
+                                  : AutoPlayDecisionBackend.Heuristic);
+        set
+        {
+            UseOllama = value == AutoPlayDecisionBackend.Ollama;
+            UseJev = value == AutoPlayDecisionBackend.Jev;
+            DecisionBackend = value;
         }
     }
 
@@ -252,5 +294,10 @@ public class AutoPlayProfile : EditableNotificationObject
     /// <summary>
     /// Display description for UI
     /// </summary>
-    public string Description => $"{Name ?? "New Profile"} ({Actions.Count(a => a.IsValid)} actions, {(UseJev ? "Jev" : UseOllama ? OllamaModel : "heuristic only")})";
+    public string Description => $"{Name ?? "New Profile"} ({Actions.Count(a => a.IsValid)} actions, {Backend switch
+    {
+        AutoPlayDecisionBackend.Jev => "Jev",
+        AutoPlayDecisionBackend.Ollama => OllamaModel,
+        _ => "heuristic only",
+    }})";
 }

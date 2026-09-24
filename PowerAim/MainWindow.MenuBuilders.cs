@@ -1344,6 +1344,12 @@ public partial class MainWindow
         e.Handled = true;
     }
 
+    private void OpenContactWidget_Click(object sender, RoutedEventArgs e)
+        => Visuality.ConnectWindow.Show("contact", Locale.AboutContact, this);
+
+    private void OpenSupportWidget_Click(object sender, RoutedEventArgs e)
+        => Visuality.ConnectWindow.Show("support", Locale.AboutSupport, this);
+
     private void OpenReleasesOnGitHub_Click(object sender, RoutedEventArgs e)
         => OpenUrl(ApplicationConstants.ReleasesUrl);
 

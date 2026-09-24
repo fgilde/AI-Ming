@@ -250,10 +250,10 @@ public class AutoPlayGameAction : BaseAction
         EnsureSubscribed(profile);
         if (_mapDirty) { RebuildActionMap(profile); _mapDirty = false; }
 
-        // Live-respect the per-profile UseOllama flag. The "already running" guard inside makes
-        // this cheap to call every tick, and it covers the toggle-on-during-run case (toggle-off
-        // is handled inside the running loop itself).
-        if (profile.UseOllama || profile.UseJev) StartStrategicLayer();
+        // Live-respect the per-profile backend choice. The "already running" guard inside makes
+        // this cheap to call every tick, and it covers the switch-on-during-run case (switching to
+        // Heuristic is handled inside the running loop itself).
+        if (profile.Backend != AutoPlayDecisionBackend.Heuristic) StartStrategicLayer();
 
         _lastEnemyCount = predictions.Length; // surfaced to the strategic prompt
         if (predictions.Length == 0) _lastNearestDist = -1;
@@ -764,12 +764,12 @@ public class AutoPlayGameAction : BaseAction
     {
         if (_strategicTask is { IsCompleted: false }) return; // already running
         // Respect the per-profile opt-out: skip the whole strategic loop (no HTTP polling, no
-        // screenshot capture) when the active profile has UseOllama disabled. The loop's inner
-        // check picks up the toggle if it's flipped on later while AutoPlay is already running.
+        // screenshot capture) when the profile is set to Heuristic. The loop's inner check picks up a
+        // backend switch made later while AutoPlay is already running.
         var profile = GetActiveProfile();
-        if (profile != null && !profile.UseOllama && !profile.UseJev)
+        if (profile != null && profile.Backend == AutoPlayDecisionBackend.Heuristic)
         {
-            Log("Strategic layer skipped — active profile has neither Ollama nor Jev enabled");
+            Log("Strategic layer skipped — active profile runs on the heuristic only");
             return;
         }
         _strategicCts?.Dispose();
@@ -807,25 +807,25 @@ public class AutoPlayGameAction : BaseAction
                     continue;
                 }
 
-                // Jev takes precedence: text-only decision model, no screenshot, no regex.
-                if (profile.UseJev)
+                // Jev: text-only decision model, no screenshot, no regex.
+                if (profile.Backend == AutoPlayDecisionBackend.Jev)
                 {
                     await JevStepAsync(profile, ct);
+                    continue;
+                }
+
+                // Live opt-out: if the user switched the profile to Heuristic while the loop was
+                // running, stop doing the expensive work and idle until they switch back.
+                if (profile.Backend == AutoPlayDecisionBackend.Heuristic)
+                {
+                    lock (_intentLock) _intent = Default;
+                    await SafeDelay(5000, ct);
                     continue;
                 }
 
                 if (string.IsNullOrWhiteSpace(profile.OllamaModel))
                 {
                     await SafeDelay(3000, ct);
-                    continue;
-                }
-
-                // Live opt-out: if the user toggled UseOllama off while the loop was running, stop
-                // doing the expensive work and idle on a longer poll until they flip it back.
-                if (!profile.UseOllama)
-                {
-                    lock (_intentLock) _intent = Default;
-                    await SafeDelay(5000, ct);
                     continue;
                 }
 

@@ -52,12 +52,15 @@ public class PythonVersionTests
     public void Returns_null_when_not_a_banner(string? text) => Assert.Null(PythonVersion.Parse(text));
 
     [Fact]
-    public void Rejects_too_old_and_missing_interpreters()
+    public void Rejects_interpreters_below_simple_jevs_requires_python()
     {
         Assert.False(PythonVersion.IsSupported(null));
         Assert.False(PythonVersion.IsSupported(PythonVersion.Parse("Python 3.9.13")));
-        Assert.True(PythonVersion.IsSupported(PythonVersion.Parse("Python 3.10.0")));
-        Assert.True(PythonVersion.IsSupported(PythonVersion.Parse("Python 3.11.9")));
+        // 3.11 is the exact case that failed in the wild: pip refused with
+        // "Package 'simple-jev' requires a different Python: 3.11.9 not in '>=3.12'".
+        Assert.False(PythonVersion.IsSupported(PythonVersion.Parse("Python 3.11.9")));
+        Assert.True(PythonVersion.IsSupported(PythonVersion.Parse("Python 3.12.0")));
+        Assert.True(PythonVersion.IsSupported(PythonVersion.Parse("Python 3.13.1")));
     }
 }
 

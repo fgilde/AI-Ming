@@ -44,6 +44,12 @@ public class ApplicationConstants : Constants
     public const string DocsUrl = "https://fgilde.github.io/AI-Ming/documentation/";
     public static Uri DocsUri = new Uri(DocsUrl);
 
+    /// <summary>
+    ///     Contact + support page on the website. Used as the fallback when the embedded GildeConnect
+    ///     widgets can't run (no WebView2 runtime, no network) — the same forms live there.
+    /// </summary>
+    public const string ContactUrl = "https://poweraim.de/contact/";
+
     // ---- Project / author links -----------------------------------------------------------
     public const string Copyright    = "© Florian Gilde";
     public static Uri AuthorUrl    = new Uri("https://www.gilde.org");

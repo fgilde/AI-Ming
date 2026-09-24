@@ -7,6 +7,119 @@ param(
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $outputDir = Join-Path $scriptDir "PowerAim/bin/Release"
 
+# ---------------------------------------------------------------------------------------------
+# Code signing
+# ---------------------------------------------------------------------------------------------
+# Unsigned binaries are the main reason releases get flagged: Defender's cloud ML and Chrome's
+# Safe Browsing both score an unknown, unsigned .exe as "no reputation", and because every build
+# ships under a freshly rotated AssemblyName (see Get-RandomAssemblyName below), that score never
+# accumulates. A signature moves the reputation onto the CERTIFICATE, which does carry across
+# builds and across renames — including the random rename the launcher does at startup.
+#
+# Configured entirely through environment variables, so no secret ever lives in this file:
+#
+#   SIGN_CERT_THUMBPRINT  Thumbprint of a certificate in CurrentUser\My or LocalMachine\My. The
+#                         usual setup for an OV certificate on a hardware token.
+#   SIGN_CERT_PFX         Path to a .pfx file, used with SIGN_CERT_PASSWORD. Alternative to the store.
+#   SIGN_CERT_PASSWORD    Password for that .pfx.
+#   SIGN_COMMAND          Escape hatch for cloud signing services (Azure Trusted Signing, DigiCert
+#                         KeyLocker, SSL.com eSigner, or plain signtool.exe): a command line in which
+#                         {file} is replaced by each file to sign. Takes precedence over the above.
+#   SIGN_TIMESTAMP_URL    Timestamp server, default http://timestamp.digicert.com. Without a
+#                         timestamp every signature expires with the certificate.
+#   SIGN_REQUIRED         1/true/yes: a build that cannot sign FAILS instead of quietly shipping
+#                         unsigned binaries. Set this in CI for releases.
+#
+# With nothing configured the build still runs and only warns — local development needs no cert.
+
+function Get-SigningCertificate {
+    if ($env:SIGN_CERT_THUMBPRINT) {
+        $thumb = ($env:SIGN_CERT_THUMBPRINT -replace '[^0-9A-Fa-f]', '').ToUpperInvariant()
+        foreach ($store in @('Cert:\CurrentUser\My', 'Cert:\LocalMachine\My')) {
+            $found = @(Get-ChildItem $store -ErrorAction SilentlyContinue | Where-Object { $_.Thumbprint -eq $thumb })
+            if ($found.Count -gt 0) { return $found[0] }
+        }
+        throw "SIGN_CERT_THUMBPRINT is set, but no certificate with thumbprint $thumb exists in CurrentUser\My or LocalMachine\My."
+    }
+
+    if ($env:SIGN_CERT_PFX) {
+        if (-not (Test-Path $env:SIGN_CERT_PFX)) {
+            throw "SIGN_CERT_PFX points to '$($env:SIGN_CERT_PFX)', which does not exist."
+        }
+        # An empty SecureString rather than $null: passing $null makes the X509Certificate2
+        # constructor overload ambiguous on Windows PowerShell 5.1.
+        $secure = if ($env:SIGN_CERT_PASSWORD) {
+            ConvertTo-SecureString $env:SIGN_CERT_PASSWORD -AsPlainText -Force
+        } else {
+            New-Object System.Security.SecureString
+        }
+        return New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($env:SIGN_CERT_PFX, $secure)
+    }
+
+    return $null
+}
+
+function Invoke-CodeSigning {
+    param([string]$publishDir)
+
+    $required = $env:SIGN_REQUIRED -match '^(1|true|yes)$'
+    $timestamp = if ($env:SIGN_TIMESTAMP_URL) { $env:SIGN_TIMESTAMP_URL } else { 'http://timestamp.digicert.com' }
+
+    $cert = $null
+    if (-not $env:SIGN_COMMAND) {
+        $cert = Get-SigningCertificate
+        if (-not $cert) {
+            $msg = "No code signing certificate configured (SIGN_CERT_THUMBPRINT / SIGN_CERT_PFX / SIGN_COMMAND) — the output stays UNSIGNED."
+            if ($required) { throw "$msg SIGN_REQUIRED is set, so this build fails." }
+            Write-Warning $msg
+            return
+        }
+    }
+
+    # Only the executables this build produced, which are the ones at the top of $publishDir.
+    # Everything under Resources\ is a third-party installer that ships with its own signature —
+    # signing those with our certificate would mean vouching for someone else's binary. The
+    # already-signed filter is a second safety net for the same reason.
+    $targets = @(Get-ChildItem -Path $publishDir -Filter *.exe -File |
+                 Where-Object { (Get-AuthenticodeSignature $_.FullName).Status -ne 'Valid' })
+    if ($targets.Count -eq 0) {
+        Write-Host "Code signing: nothing to sign in $publishDir."
+        return
+    }
+
+    Write-Host ""
+    Write-Host "Signing $($targets.Count) executable(s) in $publishDir ..."
+    $failures = @()
+    foreach ($file in $targets) {
+        try {
+            if ($env:SIGN_COMMAND) {
+                # Plain string replace, not -replace: a regex would mangle backslashes in the path.
+                $command = $env:SIGN_COMMAND.Replace('{file}', $file.FullName)
+                Invoke-Expression $command
+                if ($LASTEXITCODE -ne 0) { throw "SIGN_COMMAND exited with code $LASTEXITCODE" }
+            } else {
+                $null = Set-AuthenticodeSignature -FilePath $file.FullName -Certificate $cert `
+                    -HashAlgorithm SHA256 -TimestampServer $timestamp -ErrorAction Stop
+            }
+
+            # Verify rather than trust: a signature that does not validate is worth nothing, and a
+            # silent failure here would ship exactly the unsigned binary this whole step exists to avoid.
+            $sig = Get-AuthenticodeSignature $file.FullName
+            if ($sig.Status -ne 'Valid') {
+                throw "signature check says '$($sig.Status)' ($($sig.StatusMessage))"
+            }
+            Write-Host "  signed: $($file.Name)  [$($sig.SignerCertificate.Subject)]"
+        } catch {
+            $failures += "$($file.Name): $_"
+            Write-Warning "  FAILED: $($file.Name): $_"
+        }
+    }
+
+    if ($failures.Count -gt 0 -and $required) {
+        throw "Code signing failed for $($failures.Count) file(s):`n" + ($failures -join "`n")
+    }
+}
+
 # Funktion für das Erstellen mit oder ohne CUDA.
 # Note: we publish each executable project EXPLICITLY (PowerAim + Launcher) instead of running
 # `dotnet publish` from the solution root. The solution-wide publish picks up Core.csproj too,
@@ -53,6 +166,10 @@ function Build-ProjectWithCuda {
     Write-Host "Publishing Launcher (IsCuda=$isCudaValue) -> $publishDir ..."
     dotnet publish Launcher/Launcher.csproj @commonArgs
     if ($LASTEXITCODE -ne 0) { throw "Launcher publish failed with exit code $LASTEXITCODE" }
+
+    # Sign before anything is zipped or copied: Installer.exe is a byte copy of Launcher.exe, and
+    # Authenticode covers the file content, not its name — so the copy inherits a valid signature.
+    Invoke-CodeSigning -publishDir $publishDir
 }
 
 # Check if the output directory exists and delete it

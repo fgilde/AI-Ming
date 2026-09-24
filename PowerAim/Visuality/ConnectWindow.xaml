@@ -1,0 +1,15 @@
+<Window x:Class="PowerAim.Visuality.ConnectWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:uiLibrary="clr-namespace:PowerAim.UILibrary"
+        Height="780"
+        Width="660"
+        MinWidth="420"
+        MinHeight="420"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource FluentSurface1}">
+    <ScrollViewer Margin="18" VerticalScrollBarVisibility="Auto" PanningMode="VerticalOnly">
+        <uiLibrary:GildeConnectPanel x:Name="Panel" HorizontalAlignment="Stretch" />
+    </ScrollViewer>
+</Window>
