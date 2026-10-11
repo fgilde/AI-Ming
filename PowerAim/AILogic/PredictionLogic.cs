@@ -51,6 +51,7 @@ public class PredictionLogic : IPredictionLogic
     private Bitmap? _resizeBuffer;
     private int _numClasses = 1;
     private bool _isDynamicModel;
+    private bool _outputTransposed;
     private readonly Dictionary<int, string> _modelClasses = new() { { 0, "Enemy" } };
 
     public OnnxExecutionProvider ExecutionProvider { get; private set; }
@@ -226,21 +227,37 @@ public class PredictionLogic : IPredictionLogic
     ///     output tensor. A YOLOv8 detection head is channels-first <c>[1, 4+numClasses, numDetections]</c>
     ///     (e.g. <c>[1,5,8400]</c> single-class, <c>[1,6,8400]</c> two-class). Reading them from the model
     ///     means a multi-class model, or one exported at a non-640 resolution, "just works" without
-    ///     relying on a <c>names</c> table or the configured image size lining up. Layouts we can't parse
-    ///     (transposed <c>[1,N,C]</c> or NMS-fused outputs) are left for <see cref="ValidateOnnxShape"/> to
-    ///     flag clearly.
+    ///     relying on a <c>names</c> table or the configured image size lining up. Channels-last
+    ///     <c>[1,N,C]</c> heads (ultralytics default export) are read transposed. NMS-fused outputs are
+    ///     left for <see cref="ValidateOnnxShape"/> to flag clearly.
     /// </summary>
     private void AdaptToOutputShape()
     {
-        if (_onnxModel == null || _isDynamicModel) return;
+        _outputTransposed = false;
+        if (_onnxModel == null) return;
         foreach (var meta in _onnxModel.OutputMetadata.Values)
         {
             var d = meta.Dimensions;
+            if (d.Length != 3) continue;
+            // Dynamic model: counts come from the live tensor, only the layout is decided here.
+            if (_isDynamicModel)
+            {
+                _outputTransposed = d[1] <= 0 && d[2] > 4;
+                return;
+            }
             // Channels-first detection head: [1, C, N], small channel count C, larger anchor count N.
-            if (d.Length == 3 && d[0] == 1 && d[1] > 4 && d[2] > d[1])
+            if (d[0] == 1 && d[1] > 4 && d[2] > d[1])
             {
                 _numClasses = d[1] - 4;
                 _numDetections = d[2];
+                return;
+            }
+            // Channels-last detection head: [1, N, C].
+            if (d[0] == 1 && d[2] > 4 && d[1] > d[2])
+            {
+                _numClasses = d[2] - 4;
+                _numDetections = d[1];
+                _outputTransposed = true;
                 return;
             }
         }
@@ -335,12 +352,14 @@ public class PredictionLogic : IPredictionLogic
     {
         if (_onnxModel == null || _isDynamicModel) return;
 
-        int[] expectedShape = [1, 4 + _numClasses, _numDetections];
+        int[] expectedShape = _outputTransposed
+            ? [1, _numDetections, 4 + _numClasses]
+            : [1, 4 + _numClasses, _numDetections];
         var outputs = _onnxModel.OutputMetadata.Values;
         if (outputs.All(m => m.Dimensions.SequenceEqual(expectedShape))) return;
 
-        // AdaptToOutputShape() already adopts any channels-first [1, 4+nc, N] head, so reaching here means
-        // a layout the parser can't read (transposed [1, N, C], NMS-fused, or a mismatched input size).
+        // AdaptToOutputShape() already adopts [1, 4+nc, N] and [1, N, 4+nc] heads, so reaching here means
+        // a layout the parser can't read (NMS-fused, or a mismatched input size).
         // Report the ACTUAL vs expected shape so the user knows to re-export — instead of silently
         // producing wrong / empty detections.
         string actual = string.Join(" ", outputs.Select(m => "[" + string.Join("x", m.Dimensions) + "]"));
@@ -455,7 +474,8 @@ public class PredictionLogic : IPredictionLogic
                 minConfidence,
                 allowedClassIds,
                 fovMinX, fovMaxX, fovMinY, fovMaxY,
-                ignoreRegions);
+                ignoreRegions,
+                _outputTransposed);
 
             if (filtered.Count == 0)
             {
@@ -553,7 +573,8 @@ public class PredictionLogic : IPredictionLogic
                 }
                 catch (Exception e)
                 {
-                    new NoticeBar(string.Format(Locale.CollectDataFailedFormat, e.Message), 6000).Show();
+                    Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+                        new NoticeBar(string.Format(Locale.CollectDataFailedFormat, e.Message), 6000).Show()));
                 }
             }
         }

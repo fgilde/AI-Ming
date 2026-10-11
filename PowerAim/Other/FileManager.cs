@@ -252,7 +252,7 @@ namespace PowerAim.Other
         {
             try
             {
-                GithubManager githubManager = new();
+                using var githubManager = new GithubManager();
 
                 var files = await githubManager.FetchGithubFilesAsync(repoLink);
 
@@ -266,13 +266,12 @@ namespace PowerAim.Other
                     }
                 }
 
-                githubManager.Dispose();
 
                 return allFiles;
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.ToString());
+                throw new Exception("Failed to retrieve files from GitHub.", ex);
             }
         }
 

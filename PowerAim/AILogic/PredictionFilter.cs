@@ -33,6 +33,10 @@ internal static class PredictionFilter
     /// <param name="fovMaxX">FOV clip — maximum X (image-space).</param>
     /// <param name="fovMinY">FOV clip — minimum Y (image-space).</param>
     /// <param name="fovMaxY">FOV clip — maximum Y (image-space).</param>
+    /// <param name="outputTransposed">
+    ///     <c>true</c> for channels-last <c>[1, N, 4+nc]</c> (ultralytics default export),
+    ///     <c>false</c> for channels-first <c>[1, 4+nc, N]</c>.
+    /// </param>
     public static List<Prediction> CreatePredictions(
         Tensor<float> outputTensor,
         Rectangle detectionBox,
@@ -46,18 +50,32 @@ internal static class PredictionFilter
         float fovMaxX,
         float fovMinY,
         float fovMaxY,
-        IReadOnlyList<DetectionMaskRegion>? ignoreRegions = null)
+        IReadOnlyList<DetectionMaskRegion>? ignoreRegions = null,
+        bool outputTransposed = false)
     {
         bool classFilter = allowedClassIds != null && allowedClassIds.Count > 0;
         bool maskFilter = ignoreRegions != null && ignoreRegions.Count > 0;
+
+        // Bound by the live tensor, not metadata, so a stale numDetections/numClasses can't index out of range.
+        var dims = outputTensor.Dimensions;
+        if (dims.Length < 3) return new List<Prediction>();
+        int tensorAnchors = outputTransposed ? dims[1] : dims[2];
+        int tensorChannels = outputTransposed ? dims[2] : dims[1];
+        numDetections = Math.Min(numDetections, tensorAnchors);
+        numClasses = Math.Min(numClasses, tensorChannels - 4);
+        if (numClasses < 1) return new List<Prediction>();
+
+        float At(int channel, int anchor) =>
+            outputTransposed ? outputTensor[0, anchor, channel] : outputTensor[0, channel, anchor];
+
         var predictions = new List<Prediction>(Math.Min(numDetections, 64));
 
         for (int i = 0; i < numDetections; i++)
         {
-            float xCenter = outputTensor[0, 0, i];
-            float yCenter = outputTensor[0, 1, i];
-            float width = outputTensor[0, 2, i];
-            float height = outputTensor[0, 3, i];
+            float xCenter = At(0, i);
+            float yCenter = At(1, i);
+            float width = At(2, i);
+            float height = At(3, i);
 
             int bestClassId = 0;
             float bestConfidence;
@@ -65,14 +83,14 @@ internal static class PredictionFilter
             if (numClasses <= 1)
             {
                 // Legacy fast path: channel 4 carries objectness directly.
-                bestConfidence = outputTensor[0, 4, i];
+                bestConfidence = At(4, i);
             }
             else
             {
                 bestConfidence = 0f;
                 for (int classId = 0; classId < numClasses; classId++)
                 {
-                    float c = outputTensor[0, 4 + classId, i];
+                    float c = At(4 + classId, i);
                     if (c > bestConfidence)
                     {
                         bestConfidence = c;

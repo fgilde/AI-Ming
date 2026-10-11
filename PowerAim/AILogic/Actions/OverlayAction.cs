@@ -34,7 +34,7 @@ public class OverlayAction : BaseAction
             switch (AppConfig.Current.DropdownState.OverlayDrawingMethod)
             {
                 case OverlayDrawingMethod.WpfWindowCanvas:
-                    _playerOverlay?.DrawPredictionCanvas(predictions.MinBy(p => p.Confidence));
+                    _playerOverlay?.DrawPredictionCanvas(predictions.MaxBy(p => p.Confidence));
                     break;
                 case OverlayDrawingMethod.DrawingContextVisualHost:
                     _playerOverlay?.DrawPredictions(predictions, ImageCapture.CaptureArea.ToRect());

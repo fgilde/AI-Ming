@@ -1,5 +1,4 @@
-﻿using static System.Net.Mime.MediaTypeNames;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO.Compression;
 
 namespace Core
@@ -16,8 +15,8 @@ namespace Core
 
         public UpdateManager(string? installDir = null)
         {
-            MainAppDir = installDir ?? Path.GetDirectoryName(Environment.ProcessPath);
-            client = new HttpClient();
+            MainAppDir = installDir ?? Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
+            client = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
         }
 
         public async Task<bool> CheckForUpdate(Version? currentVersion, string repoOwner, string repoName, bool useCudaVersion)
@@ -44,8 +43,9 @@ namespace Core
 
                 return true;
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
+                Console.WriteLine($"[UpdateManager] CheckForUpdate failed: {ex}");
                 return false;
             }
         }
@@ -75,7 +75,6 @@ namespace Core
             await ExtractZipAsync(localZipPath, extractPath);
 
 
-            //CreateUpdateBatchScript(mainAppDir, extractPath, localZipPath, filesToIgnore);
             CreateUpdatePowerShellScript(extractPath, localZipPath, filesToIgnore);
             StartUpdateProcess();
         }
@@ -106,6 +105,9 @@ namespace Core
         {
             await Task.Run(() => ZipFile.ExtractToDirectory(zipPath, destinationPath, true));
         }
+
+        // Single-quoted PowerShell literal: $, backticks and " in paths stay inert; ' is escaped by doubling.
+        private static string PsLiteral(string path) => "'" + (path ?? string.Empty).Replace("'", "''") + "'";
 
         private void CreateUpdatePowerShellScript(string extractPath, string zipPath, IEnumerable<string>? filesToIgnore)
         {
@@ -142,7 +144,7 @@ namespace Core
                 // Dateien im Hauptverzeichnis löschen
                 sw.WriteLine("$statusLabel.Content = 'Deleting old files...'");
                 sw.WriteLine("[System.Windows.Forms.Application]::DoEvents()");
-                sw.WriteLine($"Get-ChildItem -Path \"{MainAppDir}\" -File | ForEach-Object {{ Remove-Item $_.FullName -Force }}");
+                sw.WriteLine($"Get-ChildItem -Path {PsLiteral(MainAppDir)} -File | ForEach-Object {{ Remove-Item $_.FullName -Force }}");
 
                 string[] allFiles = Directory.GetFiles(extractPath, "*", SearchOption.AllDirectories);
                 int fileCount = allFiles.Length;
@@ -162,10 +164,10 @@ namespace Core
                             Directory.CreateDirectory(destinationDir);
                         }
 
-                        sw.WriteLine("$statusLabel.Content = 'Copying: " + relativePath.Replace("'", "''") + "'");
+                        sw.WriteLine($"$statusLabel.Content = {PsLiteral("Copying: " + relativePath)}");
                         sw.WriteLine("[System.Windows.Forms.Application]::DoEvents()");
 
-                        sw.WriteLine($"Copy-Item -Path \"{file}\" -Destination \"{destinationFile}\" -Force");
+                        sw.WriteLine($"Copy-Item -Path {PsLiteral(file)} -Destination {PsLiteral(destinationFile)} -Force");
 
                         sw.WriteLine("$counter++");
                         sw.WriteLine("$progressBar.Value = ($counter / $total) * 100");
@@ -178,12 +180,12 @@ namespace Core
                 sw.WriteLine("Start-Sleep -Seconds 2");
 
                 // Arbeitsverzeichnis setzen und Launcher.exe starten
-                sw.WriteLine($"Set-Location \"{MainAppDir}\"");
-                sw.WriteLine($"Start-Process -FilePath \"Launcher.exe\" -WorkingDirectory \"{MainAppDir}\"");
+                sw.WriteLine($"Set-Location {PsLiteral(MainAppDir)}");
+                sw.WriteLine($"Start-Process -FilePath 'Launcher.exe' -WorkingDirectory {PsLiteral(MainAppDir)}");
 
-                sw.WriteLine($"Remove-Item -Force \"{zipPath}\"");
-                sw.WriteLine($"Remove-Item -Recurse -Force \"{extractPath}\"");
-                sw.WriteLine($"Remove-Item -Force \"{ScriptPath}\"");
+                sw.WriteLine($"Remove-Item -Force {PsLiteral(zipPath)}");
+                sw.WriteLine($"Remove-Item -Recurse -Force {PsLiteral(extractPath)}");
+                sw.WriteLine($"Remove-Item -Force {PsLiteral(ScriptPath)}");
 
                 sw.WriteLine("$window.Close()");
             }
