@@ -108,16 +108,30 @@ internal static class OnnxModelSessionFactory
             var dims = kvp.Value.Dimensions;
             bool isDynamic = dims.Any(d => d <= 0);
 
-            // NCHW: [batch, channels, H, W]. Use H as canonical size for square models.
-            if (dims.Length == 4 && dims[2] > 0)
+            if (dims.Length != 4)
             {
-                return (dims[2], isDynamic);
+                if (isDynamic) return (0, true);
+                continue;
             }
+
+            // NCHW: [N, C, H, W] — C is typically 3.
+            if (dims[1] > 0 && dims[1] <= 4 && dims[2] > 0)
+                return (dims[2], isDynamic);
+
+            // NHWC: [N, H, W, C]
+            if (dims[3] > 0 && dims[3] <= 4 && dims[1] > 0)
+                return (dims[1], isDynamic);
+
+            // Fallback: largest spatial-looking dim among axes 1..3
+            int spatial = 0;
+            for (int i = 1; i < 4; i++)
+                if (dims[i] > spatial) spatial = dims[i];
+            if (spatial > 0)
+                return (spatial, isDynamic);
+
             if (isDynamic)
-            {
                 return (0, true);
             }
-        }
         return (0, true);
     }
 }

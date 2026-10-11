@@ -79,7 +79,7 @@ public class AimingAction : BaseAction
         }
 
         // ---- Legacy path ----
-        var fallback = predictions.MinBy(p => p.Confidence);
+        var fallback = predictions.MaxBy(p => p.Confidence);
         var ai = AppConfig.Current.AISettings;
         var selected = _stickyAim.SelectTarget(
             predictions, fallback, ai.StickyAimEnabled, ai.StickyAimThreshold, ai.StickyAimMaxLockScore);
