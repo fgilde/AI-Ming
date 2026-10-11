@@ -1,0 +1,1322 @@
+using System.Collections.Concurrent;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Drawing;
+using PowerAim.AI.Contracts;
+using PowerAim.Config;
+using PowerAim.Input;
+using PowerAim.Input.Contracts;
+using System.Windows.Forms;
+using System.Text.RegularExpressions;
+using PowerAim.Core.Jev;
+
+namespace PowerAim.AI.Actions;
+
+/// <summary>
+///     Single entry in the AutoPlay activity ring buffer surfaced in the Debug Overlay.
+///     <see cref="Category"/> is one of "Intent", "Tactical", "OCR", "Combat".
+/// </summary>
+public sealed record AutoPlayLogEntry(DateTime At, string Category, string Detail);
+
+/// <summary>
+///     What is steering the bot right now, for the AutoPlay decision panel. <see cref="Source"/> is
+///     "Heuristic" / "Ollama" / "Jev"; the probability, confidence, danger and latency fields are only
+///     populated by Jev (the others don't produce them). <see cref="Error"/> carries the last strategic
+///     failure so a silent fallback to the heuristic is visible instead of looking like a deliberate choice.
+/// </summary>
+public sealed record AutoPlayDecisionSnapshot(
+    string Source,
+    string Mode,
+    string? Direction,
+    string? Action,
+    double? Confidence,
+    IReadOnlyDictionary<string, double>? ModeProbabilities,
+    double? Danger,
+    double? LatencyMs,
+    DateTime At,
+    string? Error);
+
+/// <summary>
+///     Heuristic AutoPlay driver with an optional Ollama "strategic layer" running in parallel.
+///     <list type="bullet">
+///       <item><b>Hot path</b> (every tick, &lt;1 ms): non-blocking. Picks combat / exploration
+///             behaviour, applies inputs, manages aim + burst-fire.</item>
+///       <item><b>Strategic layer</b> (background task, every ~3-5 s): when an Ollama vision
+///             model is reachable, captures a frame, asks for a high-level intent, parses the
+///             response. The hot path reads that intent and biases its decisions. Failure /
+///             timeout in the strategic layer is fully tolerated — the heuristic keeps playing.</item>
+///       <item><b>Pitch centering</b>: every pitch movement we issue is summed into an
+///             accumulator. Periodically a small inverse correction is applied so the view
+///             doesn't drift to ceiling or floor over time.</item>
+///       <item><b>Profile-aware</b>: actions are resolved by semantic role (with substring
+///             fallback). Any action that doesn't fit a role becomes a "tactical" candidate the
+///             strategic layer (or random rotation) can pick from.</item>
+///     </list>
+/// </summary>
+public class AutoPlayGameAction : BaseAction
+{
+    // ============================================================================ STATE ====
+
+    private readonly record struct ScheduledRelease(AutoPlayAction Action, DateTime At);
+
+    /// <summary>
+    ///     High-level intent produced by the strategic layer. <see cref="Source"/> says WHICH layer decided
+    ///     ("Ollama" / "Jev" / "Heuristic"), <see cref="Confidence"/> + <see cref="ModeProbabilities"/> are
+    ///     only filled by Jev — surfaced in the AutoPlay decision panel so the user can see what's driving the bot.
+    /// </summary>
+    private sealed record StrategicIntent(
+        string Mode,            // "explore" | "retreat" | "engage" | "tactical" | "hold" | "default"
+        string? Direction,      // "left" | "right" | "forward" | "backward" | null
+        string? ActionHint,     // free-text name hint matching a profile action (e.g. "throw_grenade")
+        DateTime At,
+        string Source = "Heuristic",
+        double? Confidence = null,
+        IReadOnlyDictionary<string, double>? ModeProbabilities = null,
+        double? Danger = null);
+
+    private static StrategicIntent Default => new("default", null, null, DateTime.MinValue);
+
+    // ------ Action state ----
+    private readonly HashSet<AutoPlayAction> _heldActions = new();
+    private readonly List<ScheduledRelease> _scheduledReleases = new();
+
+    // ------ Profile cache ----
+    private AutoPlayProfile? _cachedProfile;
+    private AutoPlayAction? _aMoveFwd, _aMoveBack, _aMoveLeft, _aMoveRight;
+    private AutoPlayAction? _aSprint, _aJump, _aShoot, _aAim, _aCrouch, _aReload;
+    private readonly List<AutoPlayAction> _tacticalActions = new();
+    /// <summary>
+    ///     Everything the strategic layer may trigger: the free-form tactical actions PLUS role-mapped
+    ///     ones the heuristic does NOT drive every tick (jump, crouch, reload). Excluded are only the
+    ///     continuously-owned reflex slots — movement, sprint, aim, shoot — because those are decided per
+    ///     frame from the detections, not per second by a model.
+    /// </summary>
+    private readonly List<AutoPlayAction> _strategicActions = new();
+    /// <summary>Semantic slot an action was matched to ("shoot", "reload", …), for the ability labels.</summary>
+    private readonly Dictionary<AutoPlayAction, string> _actionRoles = new();
+    private bool _mapDirty = true;
+
+    // ------ Combat / aim state ----
+    private DateTime _lastSeenEnemy = DateTime.MinValue;
+    private DateTime _firstSightingThisStreak = DateTime.MinValue;
+    private DateTime _burstStartedAt = DateTime.MinValue;
+    private bool _burstOn = false;
+
+    // ------ Exploration state ----
+    private string _exploreDir = "forward";
+    private DateTime _commitDirectionUntil = DateTime.MinValue;
+    private int _ticksWithoutEnemy = 0;
+
+    // ------ Yaw scan state ----
+    private double _yawRemaining = 0, _yawPerTick = 0;
+    private DateTime _nextYawDecision = DateTime.MinValue;
+    private int _lastYawSign = 0;
+
+    // ------ Pitch accumulator (centering) ----
+    private double _pitchSum = 0;
+    private DateTime _lastPitchCorrection = DateTime.MinValue;
+
+    // ------ Tactical cooldown ----
+    private DateTime _nextTacticalUse = DateTime.MinValue;
+
+    // ------ OCR-driven cues ----
+    private DateTime _lastReloadAt = DateTime.MinValue;
+    private DateTime _healthRetreatUntil = DateTime.MinValue;
+
+    // ------ Strategic layer ----
+    private CancellationTokenSource? _strategicCts;
+    private Task? _strategicTask;
+    private OllamaClient? _ollama;
+    private StrategicIntent _intent = Default;
+    private readonly object _intentLock = new();
+
+    private readonly Random _rng = new();
+
+    // ------ Live context fed into the strategic prompt ----
+    private volatile int _lastEnemyCount;                 // detections on the most recent frame
+    // Nearest enemy relative to screen centre (px); dist < 0 = none. Written on the tick thread, read
+    // by the strategic loop — a torn read is harmless for a once-a-second decision.
+    private double _lastNearestDx, _lastNearestDy, _lastNearestDist = -1;
+    private JevDecisionClient? _jev;
+    private readonly Queue<string> _recentIntents = new(); // last few strategic modes (for variety)
+    private readonly object _recentIntentsLock = new();
+
+    // ============================================================================ CONSTANTS ====
+
+    private const double AimReleaseDelayMs   = 700;
+    private const double FireReleaseDelayMs  = 300;
+    private const double FireSettlingMs      = 140;
+    private const double BurstOnMs           = 220;
+    private const double BurstOffMs          = 110;
+    private const int    MaxYawStep          = 24;
+    private const double PitchCorrectionPeriodSec = 4;
+    private const double PitchCorrectionFraction  = 0.25;
+    private const int    PitchCorrectionMaxStep   = 14;
+
+    // ============================================================================ ACTIVITY LOG ====
+
+    /// <summary>
+    ///     Capacity of the activity ring buffer surfaced in the Debug Overlay. Kept tiny so the
+    ///     allocation pressure (per-tick enqueue/dequeue) stays negligible.
+    /// </summary>
+    private const int ActivityLogCapacity = 20;
+
+    private static readonly ConcurrentQueue<AutoPlayLogEntry> _activityLog = new();
+
+    /// <summary>Snapshot of the most recent decisions/actions, oldest first. Thread-safe.</summary>
+    public static IReadOnlyList<AutoPlayLogEntry> RecentEntries => _activityLog.ToArray();
+
+    /// <summary>
+    ///     What is steering the bot right now. Null until AutoPlay has run once. Written by the strategic
+    ///     loop, read by the UI — reference assignment, so readers always see a complete snapshot.
+    /// </summary>
+    public static AutoPlayDecisionSnapshot? CurrentDecision { get; private set; }
+
+    /// <summary>Record the active decision for the UI. <paramref name="error"/> marks a failed strategic step.</summary>
+    private static void PublishDecision(StrategicIntent intent, double? latencyMs, string? error)
+        => CurrentDecision = new AutoPlayDecisionSnapshot(intent.Source, intent.Mode, intent.Direction,
+            intent.ActionHint, intent.Confidence, intent.ModeProbabilities, intent.Danger, latencyMs, intent.At, error);
+
+    /// <summary>Report a strategic failure without changing the intent — the heuristic stays in charge.</summary>
+    private static void PublishStrategicError(string source, string error)
+    {
+        var prev = CurrentDecision;
+        CurrentDecision = new AutoPlayDecisionSnapshot(source, prev?.Mode ?? "default", prev?.Direction, prev?.Action,
+            null, null, null, null, DateTime.Now, error);
+    }
+
+    /// <summary>
+    ///     Append <paramref name="detail"/> to both the static ring buffer (Debug Overlay) and the
+    ///     debug trace. The queue is bounded to <see cref="ActivityLogCapacity"/> entries via a
+    ///     lock-free dequeue-on-overflow.
+    /// </summary>
+    private static void AddLogEntry(string category, string detail)
+    {
+        _activityLog.Enqueue(new AutoPlayLogEntry(DateTime.Now, category, detail));
+        while (_activityLog.Count > ActivityLogCapacity && _activityLog.TryDequeue(out _)) { /* trim */ }
+        Log($"{category}: {detail}");
+    }
+
+    // ============================================================================ LIFECYCLE ====
+
+    private static void Log(string msg)
+        => System.Diagnostics.Debug.WriteLine($"[AutoPlay {DateTime.Now:HH:mm:ss.fff}] {msg}");
+
+    public AutoPlayGameAction()
+    {
+        AppConfig.Current.ToggleState.PropertyChanged += OnToggleStateChanged;
+        Log("AutoPlayGameAction initialized (heuristic + optional Ollama strategic layer)");
+    }
+
+    private void OnToggleStateChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(AppConfig.Current.ToggleState.AutoPlay)) return;
+        if (AppConfig.Current.ToggleState.AutoPlay)
+        {
+            Log("AutoPlay enabled");
+            StartStrategicLayer();
+        }
+        else
+        {
+            Log("AutoPlay disabled");
+            ReleaseEverything();
+            StopStrategicLayer();
+        }
+    }
+
+    public override bool Active => base.Active && AppConfig.Current.ToggleState.AutoPlay;
+
+    public override Task OnPause()  { ReleaseEverything(); StopStrategicLayer(); return base.OnPause(); }
+    public override Task OnResume() { if (Active) StartStrategicLayer(); return base.OnResume(); }
+
+    public override void Dispose()
+    {
+        ReleaseEverything();
+        StopStrategicLayer();
+        UnsubscribeFromProfile();
+        AppConfig.Current.ToggleState.PropertyChanged -= OnToggleStateChanged;
+        base.Dispose();
+    }
+
+    // ============================================================================ MAIN TICK ====
+
+    public override Task ExecuteAsync(Prediction[] predictions)
+    {
+        if (!Active) { ReleaseEverything(); return Task.CompletedTask; }
+
+        var profile = GetActiveProfile();
+        if (profile == null) return Task.CompletedTask;
+
+        EnsureSubscribed(profile);
+        if (_mapDirty) { RebuildActionMap(profile); _mapDirty = false; }
+
+        // Live-respect the per-profile backend choice. The "already running" guard inside makes
+        // this cheap to call every tick, and it covers the switch-on-during-run case (switching to
+        // Heuristic is handled inside the running loop itself).
+        if (profile.Backend != AutoPlayDecisionBackend.Heuristic) StartStrategicLayer();
+
+        _lastEnemyCount = predictions.Length; // surfaced to the strategic prompt
+        if (predictions.Length == 0) _lastNearestDist = -1;
+
+        ProcessScheduledReleases();
+
+        var screen = Screen.PrimaryScreen;
+        if (screen == null) return Task.CompletedTask;
+        var centerX = screen.Bounds.Width / 2f;
+        var centerY = screen.Bounds.Height / 2f;
+
+        StrategicIntent intent;
+        lock (_intentLock) intent = _intent;
+
+        // OCR cues override the Ollama-driven intent: low-health triggers a short retreat window
+        // that overrides whatever the strategic layer last decided.
+        MaybeReactToOcrCues();
+        if (DateTime.UtcNow < _healthRetreatUntil)
+            intent = intent with { Mode = "retreat" };
+
+        if (predictions.Length > 0)
+        {
+            if ((DateTime.Now - _lastSeenEnemy).TotalMilliseconds > 800)
+            {
+                _firstSightingThisStreak = DateTime.Now;
+                AddLogEntry("Combat", $"{predictions.Length} enem{(predictions.Length == 1 ? "y" : "ies")}");
+            }
+            _lastSeenEnemy = DateTime.Now;
+            _ticksWithoutEnemy = 0;
+            HandleCombat(predictions, centerX, centerY, intent);
+        }
+        else
+        {
+            _ticksWithoutEnemy++;
+            HandleAimStickiness();
+            HandleExploration(intent);
+            MaybeUseTacticalAction(inCombat: false, intent);
+        }
+
+        StepSmoothYaw();
+        MaybeCorrectPitch();
+        return Task.CompletedTask;
+    }
+
+    // ============================================================================ COMBAT ====
+
+    private void HandleCombat(Prediction[] predictions, float centerX, float centerY, StrategicIntent intent)
+    {
+        // If the strategic layer says "retreat", treat enemies as a reason to back off rather
+        // than engage. Otherwise the normal engage logic runs.
+        bool retreatMode = intent.Mode == "retreat";
+
+        Prediction closest = predictions[0];
+        double bestDistSq = DistSq(closest, centerX, centerY);
+        for (int i = 1; i < predictions.Length; i++)
+        {
+            var d = DistSq(predictions[i], centerX, centerY);
+            if (d < bestDistSq) { bestDistSq = d; closest = predictions[i]; }
+        }
+        var dx = closest.CenterXTranslated - centerX;
+        var dy = closest.CenterYTranslated - centerY;
+        var dist = Math.Sqrt(bestDistSq);
+        _lastNearestDx = dx; _lastNearestDy = dy; _lastNearestDist = dist;
+
+        ActivateHold(_aAim);
+
+        bool aimAssistOn = AppConfig.Current?.ToggleState?.AimAssist == true;
+        if (!aimAssistOn)
+        {
+            int moveX = (int)Math.Clamp(dx * 0.20, -40, 40);
+            int moveY = (int)Math.Clamp(dy * 0.18, -30, 30);
+            if (moveX != 0 || moveY != 0)
+                ApplyMouseMove(moveX, moveY);
+        }
+
+        // Burst-fire once the aim has had time to settle. In retreat mode we still shoot back —
+        // makes the bot defend itself while it's pulling away.
+        var aimSettled = (DateTime.Now - _firstSightingThisStreak).TotalMilliseconds >= FireSettlingMs;
+        if (aimSettled)
+        {
+            bool readyToFire = aimAssistOn || (Math.Abs(dx) < 90 && Math.Abs(dy) < 90);
+            if (readyToFire) UpdateBurstFire();
+            else             Release(_aShoot);
+        }
+
+        Release(_aSprint);
+
+        // Strafe to centerline.
+        if (Math.Abs(dx) > 160)
+        {
+            if (dx < 0) { ActivateHold(_aMoveLeft); Release(_aMoveRight); }
+            else        { ActivateHold(_aMoveRight); Release(_aMoveLeft); }
+        }
+        else
+        {
+            Release(_aMoveLeft);
+            Release(_aMoveRight);
+        }
+
+        // Distance positioning. Retreat mode prefers backing off; engage mode pushes harder.
+        if (retreatMode)
+        {
+            ActivateHold(_aMoveBack);
+            Release(_aMoveFwd);
+        }
+        else
+        {
+            bool engagePush = intent.Mode == "engage";
+            int closeThreshold  = engagePush ? 250 : 300;
+            int retreatThreshold = engagePush ? 70  : 90;
+            if (dist > closeThreshold)        { ActivateHold(_aMoveFwd); Release(_aMoveBack); }
+            else if (dist < retreatThreshold) { ActivateHold(_aMoveBack); Release(_aMoveFwd); }
+            else                              { Release(_aMoveFwd); Release(_aMoveBack); }
+        }
+
+        if (predictions.Length >= 2)
+            MaybeUseTacticalAction(inCombat: true, intent);
+    }
+
+    private void UpdateBurstFire()
+    {
+        if (_aShoot == null) return;
+        var now = DateTime.Now;
+
+        if (!_burstOn && _heldActions.Contains(_aShoot))
+        {
+            if ((now - _burstStartedAt).TotalMilliseconds < BurstOffMs) return;
+            _burstOn = true;
+            _burstStartedAt = now;
+            ActivateHold(_aShoot);
+            return;
+        }
+        if (!_burstOn)
+        {
+            _burstOn = true;
+            _burstStartedAt = now;
+            ActivateHold(_aShoot);
+            return;
+        }
+
+        if ((now - _burstStartedAt).TotalMilliseconds >= BurstOnMs)
+        {
+            Release(_aShoot);
+            _burstOn = false;
+            _burstStartedAt = now;
+        }
+    }
+
+    private void HandleAimStickiness()
+    {
+        var msSinceEnemy = (DateTime.Now - _lastSeenEnemy).TotalMilliseconds;
+        if (msSinceEnemy > FireReleaseDelayMs)
+        {
+            Release(_aShoot);
+            _burstOn = false;
+        }
+        if (msSinceEnemy > AimReleaseDelayMs)
+            Release(_aAim);
+    }
+
+    // ============================================================================ EXPLORATION ====
+
+    private void HandleExploration(StrategicIntent intent)
+    {
+        var now = DateTime.Now;
+
+        if (now > _commitDirectionUntil)
+        {
+            _exploreDir = PickExploreDirection(intent);
+            _commitDirectionUntil = now.AddSeconds(_rng.NextDouble() * 3 + 4);
+        }
+
+        ActivateHold(_aSprint);
+
+        var (fwd, lft, rgt, bck) = (
+            _exploreDir.Contains("forward"),
+            _exploreDir.Contains("left"),
+            _exploreDir.Contains("right"),
+            _exploreDir.Contains("back"));
+        if (_exploreDir == "left")  { fwd = false; lft = true; }
+        if (_exploreDir == "right") { fwd = false; rgt = true; }
+
+        if (fwd) ActivateHold(_aMoveFwd); else Release(_aMoveFwd);
+        if (bck) ActivateHold(_aMoveBack); else Release(_aMoveBack);
+        if (lft) ActivateHold(_aMoveLeft); else Release(_aMoveLeft);
+        if (rgt) ActivateHold(_aMoveRight); else Release(_aMoveRight);
+
+        if (_rng.Next(400) < 1) Activate(_aJump);
+
+        if (now > _nextYawDecision && Math.Abs(_yawRemaining) < 1)
+            ScheduleNextYawScan(now);
+    }
+
+    /// <summary>
+    ///     Picks a committed explore direction. When the strategic layer has provided a
+    ///     direction hint, biases toward that; otherwise random walk with a forward bias.
+    /// </summary>
+    private string PickExploreDirection(StrategicIntent intent)
+    {
+        if (intent.Mode == "retreat") return "back";
+
+        if (!string.IsNullOrEmpty(intent.Direction))
+        {
+            // 70% chance to honour the hint, 30% random for variety.
+            if (_rng.NextDouble() < 0.7)
+            {
+                return intent.Direction switch
+                {
+                    "forward"  => "forward",
+                    "backward" => "back",
+                    "left"     => "forward_left",
+                    "right"    => "forward_right",
+                    _          => "forward"
+                };
+            }
+        }
+
+        // Learning-model bias: when ApplyModel is on and we have recorded the user's habit for
+        // the current explore state, prefer their direction. BiasStrength acts as the probability
+        // we accept the suggestion vs. fall through to the default random walk.
+        var direction = TryLearnedExploreDirection();
+        if (direction != null) return direction;
+
+        string[] patterns =
+        [
+            "forward", "forward", "forward", "forward",
+            "forward_left", "forward_right",
+            "left", "right",
+        ];
+        return patterns[_rng.Next(patterns.Length)];
+    }
+
+    /// <summary>
+    ///     Consult <see cref="AutoPlayLearningModel"/> with the current discretized state and map
+    ///     the user's most-frequent movement action to one of our direction labels. Returns
+    ///     <c>null</c> when learning is off, when no preference is recorded, or when the dice roll
+    ///     against <see cref="AutoPlayLearningSettings.BiasStrength"/> says "use random instead".
+    /// </summary>
+    private string? TryLearnedExploreDirection()
+    {
+        var settings = AppConfig.Current?.AutoPlayLearningSettings;
+        if (settings == null || !settings.ApplyModel) return null;
+
+        string state = LearningModelStateForCurrentTick(inCombat: false);
+        string? preferred = AutoPlayLearningModel.Instance.Preferred(state);
+        if (string.IsNullOrEmpty(preferred)) return null;
+
+        double bias = Math.Clamp(settings.BiasStrength, 0, 1);
+        if (_rng.NextDouble() >= bias) return null;
+
+        return preferred switch
+        {
+            "move_forward"  => "forward",
+            "move_backward" => "back",
+            "move_left"     => "left",
+            "move_right"    => "right",
+            "jump"          => "forward",   // jump implies user was advancing
+            _               => null
+        };
+    }
+
+    private void ScheduleNextYawScan(DateTime now)
+    {
+        _nextYawDecision = now.AddSeconds(_rng.NextDouble() * 2 + 1.5);
+
+        // Explicit alternation with 20 % randomness — pure random produced visible left-bias
+        // streaks even though it's mathematically balanced.
+        int sign = (_lastYawSign == 0 || _rng.NextDouble() < 0.20)
+            ? (_rng.Next(2) == 0 ? -1 : 1)
+            : -_lastYawSign;
+        _lastYawSign = sign;
+
+        int magnitude = _ticksWithoutEnemy > 200 ? _rng.Next(220, 360) : _rng.Next(80, 180);
+        int durationTicks = _rng.Next(8, 18);
+        _yawRemaining = sign * magnitude;
+        _yawPerTick   = _yawRemaining / durationTicks;
+    }
+
+    private void StepSmoothYaw()
+    {
+        if (Math.Abs(_yawRemaining) < 1) return;
+        int step = (int)Math.Round(_yawPerTick);
+        if (step == 0) step = Math.Sign(_yawRemaining);
+        step = Math.Clamp(step, -MaxYawStep, MaxYawStep);
+        ApplyMouseMove(step, 0);
+        _yawRemaining -= step;
+    }
+
+    // ============================================================================ PITCH CENTERING ====
+
+    /// <summary>
+    ///     Every <see cref="PitchCorrectionPeriodSec"/> seconds, nudge the view back toward
+    ///     "horizon" by undoing a fraction of the cumulative pitch we've induced. We only know
+    ///     the pitch we've sent ourselves — the game's own recoil isn't tracked — but in
+    ///     practice user-induced pitch dominates and this keeps the view from drifting to the
+    ///     ceiling/floor over long sessions.
+    /// </summary>
+    private void MaybeCorrectPitch()
+    {
+        var now = DateTime.Now;
+        if ((now - _lastPitchCorrection).TotalSeconds < PitchCorrectionPeriodSec) return;
+        _lastPitchCorrection = now;
+
+        if (Math.Abs(_pitchSum) < 6) return; // already close to neutral
+
+        double correction = -_pitchSum * PitchCorrectionFraction;
+        int correctY = (int)Math.Round(Math.Clamp(correction, -PitchCorrectionMaxStep, PitchCorrectionMaxStep));
+        if (correctY != 0)
+        {
+            ApplyMouseMove(0, correctY);
+        }
+    }
+
+    /// <summary>
+    ///     Wraps <see cref="InputSender.Move"/> so the pitch accumulator stays accurate. Applies
+    ///     the active profile's per-profile sensitivity scale (1.0 = no-op), then adds optional
+    ///     anti-detection jitter so the path doesn't look perfectly deterministic.
+    ///     <para>
+    ///     <b>Important:</b> dispatches through <see cref="InputSender.Move"/> (not
+    ///     <c>MouseManager.Move</c> directly), so when the user has set the Movement Method to
+    ///     <see cref="MouseMovementMethod.Gamepad"/> the corrections drive the virtual right-stick
+    ///     instead of synthesising mouse motion. Same routing the aim pipeline and anti-recoil
+    ///     actions use.
+    ///     </para>
+    /// </summary>
+    private void ApplyMouseMove(int dx, int dy)
+    {
+        if (dx == 0 && dy == 0) return;
+
+        var profile = GetActiveProfile();
+
+        // ---- Per-profile sens scale ----
+        double scale = profile?.MouseSensScale ?? 1.0;
+        if (scale != 1.0)
+        {
+            dx = (int)Math.Round(dx * scale);
+            dy = (int)Math.Round(dy * scale);
+        }
+
+        // ---- Anti-detection jitter ----
+        int jitter = profile?.MouseJitterPx ?? 0;
+        if (jitter > 0)
+        {
+            dx += _rng.Next(-jitter, jitter + 1);
+            dy += _rng.Next(-jitter, jitter + 1);
+        }
+
+        if (dx != 0 || dy != 0)
+        {
+            InputSender.Move(dx, dy);
+            _pitchSum += dy;
+        }
+    }
+
+    // ============================================================================ TACTICAL ====
+
+    private void MaybeUseTacticalAction(bool inCombat, StrategicIntent intent)
+    {
+        if (_tacticalActions.Count == 0) return;
+        var now = DateTime.Now;
+        if (now < _nextTacticalUse) return;
+
+        // If the strategic layer asked for a specific action by name, prefer that — provided it
+        // actually exists in the profile and isn't currently held.
+        // Search the full strategic set, not just the free-form tactical ones: Jev picks from the profile's
+        // real actions, which include role-mapped-but-not-reflex ones (jump, crouch, reload). Exact name
+        // first — Jev returns the profile's own name verbatim — then substring for Ollama's fuzzier hints.
+        AutoPlayAction? action = null;
+        if (!string.IsNullOrEmpty(intent.ActionHint))
+        {
+            var pool = _strategicActions.Count > 0 ? _strategicActions : _tacticalActions;
+            action = pool.FirstOrDefault(a => !_heldActions.Contains(a) && a.Name != null &&
+                         string.Equals(a.Name, intent.ActionHint, StringComparison.OrdinalIgnoreCase))
+                  ?? pool.FirstOrDefault(a => !_heldActions.Contains(a) && a.Name != null &&
+                         a.Name.Contains(intent.ActionHint, StringComparison.OrdinalIgnoreCase));
+        }
+
+        // Learning model bias: if the recorder has been used and ApplyModel is on, ask the model
+        // what the user typically does in this state and pick a tactical action whose name matches
+        // it (substring). Loss-free fallback to the random selector when no match.
+        if (action == null && AppConfig.Current.AutoPlayLearningSettings?.ApplyModel == true)
+        {
+            string state = LearningModelStateForCurrentTick(inCombat);
+            string? preferred = AutoPlayLearningModel.Instance.Preferred(state);
+            if (!string.IsNullOrEmpty(preferred))
+            {
+                var match = _tacticalActions.FirstOrDefault(a =>
+                    !_heldActions.Contains(a) && a.Name != null &&
+                    a.Name.Contains(preferred, StringComparison.OrdinalIgnoreCase));
+                // Probabilistic acceptance based on BiasStrength so the learned hint can be
+                // partially overridden by exploration.
+                double bias = AppConfig.Current.AutoPlayLearningSettings.BiasStrength;
+                if (match != null && _rng.NextDouble() < bias) action = match;
+            }
+        }
+
+        if (action == null)
+        {
+            var candidates = _tacticalActions.Where(a => !_heldActions.Contains(a)).ToList();
+            if (candidates.Count == 0) { _nextTacticalUse = now.AddSeconds(2); return; }
+            action = candidates[_rng.Next(candidates.Count)];
+        }
+
+        Activate(action);
+        AddLogEntry("Tactical", action.Name ?? "?");
+        Log($"Tactical: {action.Name} (combat={inCombat}, hinted={intent.ActionHint != null})");
+
+        _nextTacticalUse = now.AddSeconds(inCombat
+            ? _rng.NextDouble() * 4 + 3
+            : _rng.NextDouble() * 8 + 6);
+    }
+
+    /// <summary>
+    ///     Coarse state label used to look the user's preference up in
+    ///     <see cref="AutoPlayLearningModel"/>. Intentionally low-cardinality so even small
+    ///     recording sessions produce a useful prior.
+    /// </summary>
+    private string LearningModelStateForCurrentTick(bool inCombat)
+        => inCombat
+            ? (_burstOn ? "combat_burst" : "combat_aim")
+            : (_ticksWithoutEnemy < 30 ? "explore_recent" : "explore_idle");
+
+    // ============================================================================ OCR CUES ====
+
+    /// <summary>
+    ///     Inspects the OCR HUD-reader output (<see cref="OcrService.Instance.Latest"/>) and reacts
+    ///     to two well-known cues:
+    ///     <list type="bullet">
+    ///       <item><b>Ammo low</b> (region named ammo / mag / bullets, value &lt; <see cref="LowAmmoThreshold"/>):
+    ///             triggers the profile's reload action, with a cooldown so we don't spam.</item>
+    ///       <item><b>Health low</b> (region named health / hp / armor, value &lt; <see cref="LowHealthThreshold"/>):
+    ///             sets a brief retreat window that overrides the Ollama intent.</item>
+    ///     </list>
+    ///     Both cues are <i>opt-in</i> — they only fire if the user actually configured a matching
+    ///     OCR region. No region = no behaviour change.
+    /// </summary>
+    private void MaybeReactToOcrCues()
+    {
+        // OCR can be disabled entirely (engine off) — bail cheaply.
+        if (AppConfig.Current?.OcrSettings?.Enabled != true) return;
+
+        var now = DateTime.UtcNow;
+        var ocr = OcrService.Instance.Latest;
+        if (ocr.Count == 0) return;
+
+        // ---- Ammo cue ----
+        double? ammo = TryReadOcrNumber(ocr, _ammoAliases);
+        if (ammo.HasValue && ammo.Value <= LowAmmoThreshold
+            && (now - _lastReloadAt).TotalSeconds > ReloadCooldownSec)
+        {
+            if (_aReload != null && _aReload.IsValid)
+            {
+                Activate(_aReload);
+                _lastReloadAt = now;
+                AddLogEntry("OCR", $"reload (ammo={ammo.Value:0})");
+            }
+        }
+
+        // ---- Health cue ----
+        double? health = TryReadOcrNumber(ocr, _healthAliases);
+        if (health.HasValue && health.Value <= LowHealthThreshold)
+        {
+            // Extend (or open) the retreat window. Letting the timer slide forward as long as
+            // health stays low avoids the bot bouncing between retreat and engage.
+            bool wasActive = now < _healthRetreatUntil;
+            _healthRetreatUntil = now + TimeSpan.FromSeconds(HealthRetreatSeconds);
+            if (!wasActive)
+                AddLogEntry("OCR", $"retreat (hp={health.Value:0})");
+        }
+    }
+
+    /// <summary>
+    ///     Look up the first OCR region whose name (case-insensitive) matches one of the
+    ///     <paramref name="aliases"/> and return its parsed numeric value, if any.
+    /// </summary>
+    private static double? TryReadOcrNumber(IReadOnlyDictionary<string, OcrResult> latest, string[] aliases)
+    {
+        foreach (var kv in latest)
+        {
+            foreach (var alias in aliases)
+            {
+                if (kv.Key.Equals(alias, StringComparison.OrdinalIgnoreCase)
+                    || kv.Key.Contains(alias, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Only accept readings with a sane confidence — Tesseract's confidence is
+                    // 0..1 here (already normalized in OcrService) and below 0.3 is usually noise.
+                    if (kv.Value.Confidence >= 0.3f && kv.Value.Number.HasValue)
+                        return kv.Value.Number;
+                }
+            }
+        }
+        return null;
+    }
+
+    // Region name conventions the OCR cue layer recognizes. Users can name their regions any of
+    // these (case-insensitive, substring match).
+    private static readonly string[] _ammoAliases   = ["ammo", "mag", "bullets", "magazine", "rounds"];
+    private static readonly string[] _healthAliases = ["health", "hp", "armor", "armour", "shield"];
+
+    private const double LowAmmoThreshold    = 6;
+    private const double LowHealthThreshold  = 30;
+    private const double ReloadCooldownSec   = 4.0;
+    private const double HealthRetreatSeconds = 2.5;
+
+    // ============================================================================ STRATEGIC (Ollama) ====
+
+    private void StartStrategicLayer()
+    {
+        if (_strategicTask is { IsCompleted: false }) return; // already running
+        // Respect the per-profile opt-out: skip the whole strategic loop (no HTTP polling, no
+        // screenshot capture) when the profile is set to Heuristic. The loop's inner check picks up a
+        // backend switch made later while AutoPlay is already running.
+        var profile = GetActiveProfile();
+        if (profile != null && profile.Backend == AutoPlayDecisionBackend.Heuristic)
+        {
+            Log("Strategic layer skipped — active profile runs on the heuristic only");
+            return;
+        }
+        _strategicCts?.Dispose();
+        _strategicCts = new CancellationTokenSource();
+        _ollama ??= new OllamaClient();
+        _strategicTask = Task.Run(() => StrategicLoopAsync(_strategicCts.Token));
+    }
+
+    private void StopStrategicLayer()
+    {
+        try { _strategicCts?.Cancel(); } catch { /* ignored */ }
+        _strategicTask = null;
+        lock (_intentLock) _intent = Default;
+        // No strategic layer running → the heuristic alone decides. Say so instead of leaving the panel
+        // showing a stale "Jev / engage" from before the toggle.
+        CurrentDecision = new AutoPlayDecisionSnapshot("Heuristic", "default", null, null, null, null, null, null, DateTime.Now, null);
+    }
+
+    /// <summary>
+    ///     Background loop: every few seconds (per <see cref="AutoPlayProfile.DecisionInterval"/>),
+    ///     grabs a screenshot of the play area and asks the configured Ollama vision model for a
+    ///     high-level intent. Failures are swallowed so the heuristic keeps running.
+    /// </summary>
+    private async Task StrategicLoopAsync(CancellationToken ct)
+    {
+        Log("Strategic layer started");
+        try
+        {
+            while (!ct.IsCancellationRequested)
+            {
+                var profile = GetActiveProfile();
+                if (profile == null)
+                {
+                    await SafeDelay(3000, ct);
+                    continue;
+                }
+
+                // Jev: text-only decision model, no screenshot, no regex.
+                if (profile.Backend == AutoPlayDecisionBackend.Jev)
+                {
+                    await JevStepAsync(profile, ct);
+                    continue;
+                }
+
+                // Live opt-out: if the user switched the profile to Heuristic while the loop was
+                // running, stop doing the expensive work and idle until they switch back.
+                if (profile.Backend == AutoPlayDecisionBackend.Heuristic)
+                {
+                    lock (_intentLock) _intent = Default;
+                    await SafeDelay(5000, ct);
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(profile.OllamaModel))
+                {
+                    await SafeDelay(3000, ct);
+                    continue;
+                }
+
+                bool available;
+                try { available = await _ollama!.IsAvailableAsync(); }
+                catch { available = false; }
+
+                if (!available)
+                {
+                    lock (_intentLock) _intent = Default; // drop stale hints when Ollama drops out
+                    await SafeDelay(5000, ct);
+                    continue;
+                }
+
+                try
+                {
+                    var bmp = CaptureFrameSafely();
+                    if (bmp != null)
+                    {
+                        var prompt = BuildPrompt(profile);
+                        var raw = await _ollama.AnalyzeImageAsync(bmp, prompt, profile.OllamaModel);
+                        var intent = ParseIntent(raw);
+                        if (intent != null)
+                        {
+                            lock (_intentLock) _intent = intent;
+                            RememberIntent(intent);
+                            PublishDecision(intent, null, null);
+                            Log($"Intent: {intent.Mode} dir={intent.Direction} action={intent.ActionHint}");
+                        }
+                        bmp.Dispose();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log($"Strategic query failed: {ex.Message}");
+                    PublishStrategicError("Ollama", ex.Message);
+                }
+
+                var waitSec = Math.Max(0.5, profile.DecisionInterval);
+                await SafeDelay(TimeSpan.FromSeconds(waitSec), ct);
+            }
+        }
+        catch (OperationCanceledException) { /* expected */ }
+        catch (Exception ex) { Log($"Strategic loop crashed: {ex.Message}"); }
+        finally { Log("Strategic layer stopped"); }
+    }
+
+    // ============================================================================ STRATEGIC (Jev) ====
+
+    /// <summary>
+    ///     One strategic step against the Jev endpoint: reachability, decide, map to
+    ///     <see cref="StrategicIntent"/>, sleep the profile's DecisionInterval. Question building and
+    ///     answer mapping live in <c>Core.Jev</c> (unit-tested); this method only wires state + timing.
+    ///     Failures are logged and tolerated — the heuristic keeps playing on the previous intent.
+    /// </summary>
+    private async Task JevStepAsync(AutoPlayProfile profile, CancellationToken ct)
+    {
+        _jev ??= new JevDecisionClient();
+
+        if (!await _jev.IsAvailableAsync(ct))
+        {
+            lock (_intentLock) _intent = Default;
+            Log($"Jev unreachable: {_jev.LastError}");
+            PublishStrategicError("Jev", _jev.LastError ?? "server unreachable");
+            await SafeDelay(5000, ct);
+            return;
+        }
+
+        try
+        {
+            var abilities = BuildJevAbilities();
+            var decision = await _jev.DecideAsync(BuildJevState(profile, abilities), JevQuestionBuilder.Build(abilities), ct);
+            if (decision == null)
+            {
+                Log($"Jev query failed: {_jev.LastError}");
+                PublishStrategicError("Jev", _jev.LastError ?? "no answer");
+            }
+            else
+            {
+                double minConf = AppConfig.Current?.JevSettings?.MinConfidence ?? 0.35;
+                var mapped = JevIntentMapper.Map(decision, abilities, minConf);
+                if (mapped == null)
+                {
+                    Log("Jev: no usable mode answer or confidence below threshold — keeping current intent");
+                    PublishStrategicError("Jev", $"confidence below {minConf:0.00} — keeping previous intent");
+                }
+                else
+                {
+                    var intent = new StrategicIntent(mapped.Mode, mapped.Direction, mapped.Action, DateTime.Now,
+                        Source: "Jev", Confidence: mapped.Confidence, ModeProbabilities: mapped.ModeProbabilities,
+                        Danger: mapped.Danger);
+                    lock (_intentLock) _intent = intent;
+                    RememberIntent(intent);
+                    PublishDecision(intent, _jev.LastLatencyMs, null);
+                    Log($"Jev intent: {intent.Mode} dir={intent.Direction} action={intent.ActionHint} conf={mapped.Confidence:0.00} danger={mapped.Danger:0.00} ({_jev.LastLatencyMs:0} ms)");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Log($"Jev step failed: {ex.Message}");
+            PublishStrategicError("Jev", ex.Message);
+        }
+
+        await SafeDelay(TimeSpan.FromSeconds(Math.Max(0.3, profile.DecisionInterval)), ct);
+    }
+
+    /// <summary>
+    ///     The abilities the model may pick from, carrying the profile's own name, description and action
+    ///     type — the profile already declares what the bot can do and what each action means, so that's
+    ///     what gets handed over rather than a bare name list.
+    /// </summary>
+    private List<JevAbility> BuildJevAbilities()
+        => _strategicActions
+            .Where(a => a.IsValid && !string.IsNullOrWhiteSpace(a.Name))
+            .Select(a => new JevAbility(
+                a.Name!,
+                a.Description,
+                a.ActionType.ToString(),
+                _actionRoles.TryGetValue(a, out var role) ? role : null))
+            .ToList();
+
+    /// <summary>The structured "what the bot sees" — everything the VLM used to guess from a downscaled frame, as numbers.</summary>
+    private object BuildJevState(AutoPlayProfile profile, IReadOnlyList<JevAbility> abilities)
+    {
+        double? ammo = null, health = null;
+        if (AppConfig.Current?.OcrSettings?.Enabled == true)
+        {
+            var ocr = OcrService.Instance.Latest;
+            if (ocr.Count > 0)
+            {
+                ammo = TryReadOcrNumber(ocr, _ammoAliases);
+                health = TryReadOcrNumber(ocr, _healthAliases);
+            }
+        }
+
+        string[] recent;
+        lock (_recentIntentsLock) recent = _recentIntents.ToArray();
+
+        double dist = _lastNearestDist;
+        return new
+        {
+            game = string.IsNullOrWhiteSpace(profile.GameContext) ? "first-person shooter" : profile.GameContext,
+            enemies_visible = _lastEnemyCount,
+            nearest_enemy = dist < 0 ? null : new
+            {
+                horizontal_offset_px = (int)_lastNearestDx,   // negative = left of crosshair
+                vertical_offset_px = (int)_lastNearestDy,     // negative = above crosshair
+                distance_px = (int)dist,
+            },
+            ammo,
+            health,
+            recent_decisions = recent,
+            seconds_since_last_enemy = Math.Round((DateTime.Now - _lastSeenEnemy).TotalSeconds, 1),
+
+            // What the bot can do, straight from the profile. "abilities" are the ones the model may pick
+            // in the ability question; "reflex_controls" are driven per frame by the aim/combat loop — listed
+            // so the model knows the bot already handles them and shouldn't plan around doing them itself.
+            abilities = JevQuestionBuilder.Offerable(abilities)
+                .Select(a => new { name = a.Name, does = a.Description, type = a.Type, role = a.Role }).ToArray(),
+            reflex_controls = _actionRoles
+                .Where(kv => !_strategicActions.Contains(kv.Key))
+                .Select(kv => kv.Value).ToArray(),
+        };
+    }
+
+    private Bitmap? CaptureFrameSafely()
+    {
+        try
+        {
+            var capture = ImageCapture;
+            if (capture == null) return null;
+            var area = capture.CaptureArea;
+            if (area.Width < 8 || area.Height < 8) return null;
+            return capture.Capture(area);
+        }
+        catch { return null; }
+    }
+
+    private string BuildPrompt(AutoPlayProfile profile)
+    {
+        var tactical = string.Join(", ", _tacticalActions.Select(a => a.Name));
+        var ctx = string.IsNullOrWhiteSpace(profile.GameContext) ? "a first-person shooter game" : profile.GameContext;
+        var sb = new System.Text.StringBuilder();
+        sb.Append("You are guiding an AI bot playing ").Append(ctx).Append('.').Append('\n');
+        sb.Append("Look at the current frame and produce ONE single-line JSON with the bot's tactical intent.\n");
+
+        AppendSituation(sb);
+
+        sb.Append("Allowed shapes:\n");
+        sb.Append("  {\"mode\":\"explore\",\"direction\":\"forward\"|\"backward\"|\"left\"|\"right\"}\n");
+        sb.Append("  {\"mode\":\"engage\",\"priority\":\"left\"|\"right\"|\"center\"}\n");
+        sb.Append("  {\"mode\":\"retreat\"}\n");
+        sb.Append("  {\"mode\":\"hold\"}\n");
+        sb.Append("  {\"mode\":\"tactical\",\"action\":\"<name>\"}    where <name> is one of: ").Append(tactical).Append('\n');
+        sb.Append("Avoid repeating the same mode every time; vary your decisions to keep the bot moving.\n");
+        sb.Append("Reply with the JSON only, no other text.");
+        return sb.ToString();
+    }
+
+    /// <summary>
+    ///     Appends the live "current situation" block to the strategic prompt: how many enemies the
+    ///     detector currently sees, any OCR HP/ammo readings, and the bot's recent intent history.
+    ///     Gives the vision model grounded numbers it can't reliably read off a downscaled frame, and
+    ///     lets it react to its own recent choices instead of oscillating.
+    /// </summary>
+    private void AppendSituation(System.Text.StringBuilder sb)
+    {
+        sb.Append("Current situation:\n");
+        int enemies = _lastEnemyCount;
+        sb.Append("  - enemies detected on screen: ").Append(enemies).Append('\n');
+
+        if (AppConfig.Current?.OcrSettings?.Enabled == true)
+        {
+            var ocr = OcrService.Instance.Latest;
+            if (ocr.Count > 0)
+            {
+                double? ammo = TryReadOcrNumber(ocr, _ammoAliases);
+                if (ammo.HasValue)
+                    sb.Append("  - ammo (OCR): ").Append(ammo.Value.ToString("0")).Append('\n');
+                double? health = TryReadOcrNumber(ocr, _healthAliases);
+                if (health.HasValue)
+                    sb.Append("  - health (OCR): ").Append(health.Value.ToString("0")).Append('\n');
+            }
+        }
+
+        string[] recent;
+        lock (_recentIntentsLock) recent = _recentIntents.ToArray();
+        if (recent.Length > 0)
+            sb.Append("  - your recent decisions (oldest→newest): ").Append(string.Join(", ", recent)).Append('\n');
+    }
+
+    private static readonly Regex IntentRegex = new(
+        @"""mode""\s*:\s*""(?<mode>[a-zA-Z_]+)""(?:[^}]*?""direction""\s*:\s*""(?<dir>[a-zA-Z_]+)"")?(?:[^}]*?""action""\s*:\s*""(?<act>[^""]+)"")?",
+        RegexOptions.Compiled);
+
+    private StrategicIntent? ParseIntent(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return null;
+        var m = IntentRegex.Match(raw);
+        if (!m.Success) return null;
+        var mode = m.Groups["mode"].Value.ToLowerInvariant();
+        var dir = m.Groups["dir"].Success ? m.Groups["dir"].Value.ToLowerInvariant() : null;
+        var act = m.Groups["act"].Success ? m.Groups["act"].Value : null;
+        return new StrategicIntent(mode, dir, act, DateTime.Now, Source: "Ollama");
+    }
+
+    /// <summary>Keep a short rolling history of strategic modes so the next prompt can ask for variety.</summary>
+    private void RememberIntent(StrategicIntent intent)
+    {
+        var label = string.IsNullOrEmpty(intent.Direction) ? intent.Mode : $"{intent.Mode}/{intent.Direction}";
+        bool changed;
+        lock (_recentIntentsLock)
+        {
+            // Only emit an activity-log entry when the strategic intent actually shifts — avoids
+            // 20 identical "explore" rows after a long stretch of unchanged decisions.
+            changed = _recentIntents.Count == 0 || _recentIntents.Last() != label;
+            _recentIntents.Enqueue(label);
+            while (_recentIntents.Count > 5) _recentIntents.Dequeue();
+        }
+        if (changed) AddLogEntry("Intent", label);
+    }
+
+    private static async Task SafeDelay(int ms, CancellationToken ct)
+    {
+        try { await Task.Delay(ms, ct); } catch { /* cancelled */ }
+    }
+    private static async Task SafeDelay(TimeSpan span, CancellationToken ct)
+    {
+        try { await Task.Delay(span, ct); } catch { /* cancelled */ }
+    }
+
+    // ============================================================================ PROFILE MAP ====
+
+    private AutoPlayProfile? GetActiveProfile()
+        => AppConfig.Current.AutoPlayProfiles.FirstOrDefault(p => p.IsActive);
+
+    private void EnsureSubscribed(AutoPlayProfile profile)
+    {
+        if (ReferenceEquals(_cachedProfile, profile)) return;
+        UnsubscribeFromProfile();
+        _cachedProfile = profile;
+        profile.Actions.CollectionChanged += OnActionsCollectionChanged;
+        foreach (var a in profile.Actions) a.PropertyChanged += OnActionPropertyChanged;
+        _mapDirty = true;
+    }
+
+    private void UnsubscribeFromProfile()
+    {
+        if (_cachedProfile == null) return;
+        _cachedProfile.Actions.CollectionChanged -= OnActionsCollectionChanged;
+        foreach (var a in _cachedProfile.Actions) a.PropertyChanged -= OnActionPropertyChanged;
+        _cachedProfile = null;
+    }
+
+    private void OnActionsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.OldItems != null)
+            foreach (AutoPlayAction a in e.OldItems) a.PropertyChanged -= OnActionPropertyChanged;
+        if (e.NewItems != null)
+            foreach (AutoPlayAction a in e.NewItems) a.PropertyChanged += OnActionPropertyChanged;
+        _mapDirty = true;
+    }
+
+    private void OnActionPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(AutoPlayAction.Name)
+            or nameof(AutoPlayAction.Keys)
+            or nameof(AutoPlayAction.ActionType))
+        {
+            _mapDirty = true;
+        }
+    }
+
+    private void RebuildActionMap(AutoPlayProfile profile)
+    {
+        _aMoveFwd   = FindAction(profile, "move_forward",  "forward", "fwd", "walk", "move_fwd");
+        _aMoveBack  = FindAction(profile, "move_backward", "move_back", "backward", "back", "retreat");
+        _aMoveLeft  = FindAction(profile, "move_left",     "strafe_left", "left");
+        _aMoveRight = FindAction(profile, "move_right",    "strafe_right", "right");
+        _aSprint    = FindAction(profile, "sprint",        "run", "dash");
+        _aJump      = FindAction(profile, "jump",          "leap");
+        _aShoot     = FindAction(profile, "shoot",         "fire", "attack", "primary");
+        _aAim       = FindAction(profile, "aim",           "ads", "scope", "secondary");
+        _aCrouch    = FindAction(profile, "crouch",        "duck", "prone");
+        _aReload    = FindAction(profile, "reload");
+
+        var mapped = new HashSet<AutoPlayAction?>
+        {
+            _aMoveFwd, _aMoveBack, _aMoveLeft, _aMoveRight,
+            _aSprint, _aJump, _aShoot, _aAim, _aCrouch, _aReload
+        };
+        _tacticalActions.Clear();
+        foreach (var a in profile.Actions)
+            if (a.IsValid && !mapped.Contains(a)) _tacticalActions.Add(a);
+
+        // Record which slot each action filled so the strategic layer can label it, and build the set the
+        // model may pick from: everything except the reflex slots the hot path owns per frame.
+        _actionRoles.Clear();
+        void Role(AutoPlayAction? a, string role) { if (a != null) _actionRoles[a] = role; }
+        Role(_aMoveFwd, "move_forward"); Role(_aMoveBack, "move_backward");
+        Role(_aMoveLeft, "move_left");   Role(_aMoveRight, "move_right");
+        Role(_aSprint, "sprint");        Role(_aJump, "jump");
+        Role(_aShoot, "shoot");          Role(_aAim, "aim");
+        Role(_aCrouch, "crouch");        Role(_aReload, "reload");
+
+        var reflexOwned = new HashSet<AutoPlayAction?>
+        {
+            _aMoveFwd, _aMoveBack, _aMoveLeft, _aMoveRight, _aSprint, _aAim, _aShoot
+        };
+        _strategicActions.Clear();
+        foreach (var a in profile.Actions)
+            if (a.IsValid && !reflexOwned.Contains(a)) _strategicActions.Add(a);
+
+        Log($"Profile '{profile.Name}': fwd={(_aMoveFwd != null)} L={(_aMoveLeft != null)} R={(_aMoveRight != null)} " +
+            $"shoot={(_aShoot != null)} aim={(_aAim != null)} jump={(_aJump != null)} tactical={_tacticalActions.Count} " +
+            $"strategic={_strategicActions.Count}");
+    }
+
+    private static AutoPlayAction? FindAction(AutoPlayProfile profile, params string[] candidates)
+    {
+        foreach (var c in candidates)
+        {
+            var hit = profile.Actions.FirstOrDefault(a => a.IsValid &&
+                string.Equals(a.Name, c, StringComparison.OrdinalIgnoreCase));
+            if (hit != null) return hit;
+        }
+        foreach (var c in candidates)
+        {
+            var hit = profile.Actions.FirstOrDefault(a => a.IsValid && a.Name != null &&
+                a.Name.Contains(c, StringComparison.OrdinalIgnoreCase));
+            if (hit != null) return hit;
+        }
+        return null;
+    }
+
+    // ============================================================================ ACTIVATION ====
+
+    /// <summary>Activate respecting <see cref="AutoPlayAction.ActionType"/>.</summary>
+    private void Activate(AutoPlayAction? action)
+    {
+        if (action == null || !action.IsValid) return;
+        switch (action.ActionType)
+        {
+            case AutoPlayActionType.Instant:
+            case AutoPlayActionType.Toggle:
+                Tap(action);
+                break;
+            default:
+                Press(action);
+                break;
+        }
+    }
+
+    /// <summary>Always-hold path — for movement / aim / shoot / sprint.</summary>
+    private void ActivateHold(AutoPlayAction? action) => Press(action);
+
+    private void Press(AutoPlayAction? action)
+    {
+        if (action == null || !action.IsValid) return;
+        if (!_heldActions.Add(action)) return;
+        SendKeysWithJitter(action, KeyPressState.Down);
+    }
+
+    private void Release(AutoPlayAction? action)
+    {
+        if (action == null || !action.IsValid) return;
+        if (!_heldActions.Remove(action)) return;
+        SendKeysWithJitter(action, KeyPressState.Up);
+    }
+
+    /// <summary>
+    ///     Dispatches the action's key burst with optional anti-detection delay jitter. When
+    ///     <see cref="AutoPlayProfile.KeyDelayJitterMs"/> is 0 we keep the existing zero-overhead
+    ///     fire-and-forget path. When &gt; 0 we wrap the loop in <see cref="Task.Run"/> and sleep
+    ///     a random 0..N ms before the keys go out — without blocking the tick thread.
+    ///     <para>
+    ///     <b>All valid bindings fire</b>, including mixed mouse+gamepad on the same action —
+    ///     <see cref="InputSender.SendKeyAsync"/> routes each binding to the right sender by
+    ///     looking at the binding's runtime type (mouse → MouseManager, gamepad → GamepadSender,
+    ///     keyboard → keyboard). Same shape Triggers use. The active Movement Method only steers
+    ///     aim-delta motion (<see cref="ApplyMouseMove"/> → <see cref="InputSender.Move"/>) —
+    ///     not which discrete bindings to send.
+    ///     </para>
+    /// </summary>
+    private void SendKeysWithJitter(AutoPlayAction action, KeyPressState state)
+    {
+        var profile = GetActiveProfile();
+        int jitter = profile?.KeyDelayJitterMs ?? 0;
+        var keys = action.Keys.Where(k => k.IsValid).ToArray();
+        if (keys.Length == 0) return;
+
+        if (jitter <= 0)
+        {
+            foreach (var key in keys)
+                _ = InputSender.SendKeyAsync(key, state);
+            return;
+        }
+
+        int delay = _rng.Next(0, jitter + 1);
+        _ = Task.Run(async () =>
+        {
+            if (delay > 0) await Task.Delay(delay);
+            foreach (var key in keys)
+                await InputSender.SendKeyAsync(key, state);
+        });
+    }
+
+    private void Tap(AutoPlayAction? action)
+    {
+        if (action == null || !action.IsValid) return;
+        if (_heldActions.Contains(action)) return;
+        _heldActions.Add(action);
+        foreach (var key in action.Keys.Where(k => k.IsValid))
+            _ = InputSender.SendKeyAsync(key, KeyPressState.Down);
+        var delaySec = Math.Max(action.Duration, 0.05);
+        _scheduledReleases.Add(new ScheduledRelease(action, DateTime.Now.AddSeconds(delaySec)));
+    }
+
+    private void ProcessScheduledReleases()
+    {
+        if (_scheduledReleases.Count == 0) return;
+        var now = DateTime.Now;
+        for (int i = _scheduledReleases.Count - 1; i >= 0; i--)
+        {
+            if (_scheduledReleases[i].At > now) continue;
+            var action = _scheduledReleases[i].Action;
+            _scheduledReleases.RemoveAt(i);
+            if (_heldActions.Remove(action))
+                foreach (var key in action.Keys.Where(k => k.IsValid))
+                    _ = InputSender.SendKeyAsync(key, KeyPressState.Up);
+        }
+    }
+
+    // ============================================================================ HELPERS ====
+
+    private void ReleaseEverything()
+    {
+        foreach (var action in _heldActions.ToList())
+            foreach (var key in action.Keys.Where(k => k.IsValid))
+                _ = InputSender.SendKeyAsync(key, KeyPressState.Up);
+        _heldActions.Clear();
+        _scheduledReleases.Clear();
+        _burstOn = false;
+        _yawRemaining = 0;
+    }
+
+    private static double DistSq(Prediction p, float cx, float cy)
+    {
+        var dx = p.CenterXTranslated - cx;
+        var dy = p.CenterYTranslated - cy;
+        return dx * dx + dy * dy;
+    }
+}

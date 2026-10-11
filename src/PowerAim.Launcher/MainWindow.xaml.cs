@@ -1,0 +1,326 @@
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.IO;
+using System.Windows;
+using System.Windows.Input;
+using PowerAim.Core;
+using WinForms = System.Windows.Forms;
+
+
+namespace PowerAim.Launcher
+{
+    /// <summary>
+    /// Interaction logic for MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : BaseDialog
+    {
+        private string _status = string.Empty;
+        private bool _isInstallerMode;
+        private string _version = string.Empty;
+        private string? _installDirectory;
+        private string _subTitle = "Please wait...";
+        private bool _installing;
+        private bool _canClose = true;
+        private readonly string _repoOwner = Constants.RepoOwner;
+        private readonly string _repoName = Constants.RepoName;
+        public string RepoDisplay => $"{_repoOwner}/{_repoName}";
+        private GitHubRelease? _selectedRelease;
+        private bool _containsCudaRelease;
+
+        #region Properties
+        public Visibility InstallerVisibility => IsInstallerMode ? Visibility.Visible : Visibility.Collapsed;
+        public bool IsInstallerMode
+        {
+            get => _isInstallerMode;
+            set
+            {
+                if (SetField(ref _isInstallerMode, value))
+                {
+                    OnPropertyChanged(nameof(InstallerVisibility));
+                }
+            }
+        }
+
+        public bool ContainsCudaRelease
+        {
+            get => _containsCudaRelease;
+            set => SetField(ref _containsCudaRelease, value);
+        }
+
+        public ObservableCollection<GitHubRelease> Releases { get; set; } = new();
+
+        public GitHubRelease? SelectedRelease
+        {
+            get => _selectedRelease;
+            set
+            {
+                if (SetField(ref _selectedRelease, value))
+                {
+                    CheckCudaAvailability();
+                    OnPropertyChanged(nameof(CanInstall));
+                    OnPropertyChanged(nameof(SelectedReleaseLabel));
+                }
+            }
+        }
+
+        /// <summary>Text shown in the version-picker dropdown button.</summary>
+        public string SelectedReleaseLabel => SelectedRelease?.TagName ?? "Select a version…";
+
+        /// <summary>Install button is enabled only when a release is selected and the window is closable.</summary>
+        public bool CanInstall => SelectedRelease != null && CanClose;
+
+        public bool CanClose
+        {
+            get => _canClose;
+            set
+            {
+                if (SetField(ref _canClose, value))
+                    OnPropertyChanged(nameof(CanInstall));
+            }
+        }
+
+        public bool Installing
+        {
+            get => _installing;
+            set => SetField(ref _installing, value);
+        }
+
+        public string SubTitle
+        {
+            get => _subTitle;
+            set => SetField(ref _subTitle, value);
+        }
+
+        public string Status
+        {
+            get => _status;
+            set => SetField(ref _status, value);
+        }
+
+        public string Version
+        {
+            get => _version;
+            set => SetField(ref _version, value);
+        }
+
+        public string InstallDirectory
+        {
+            get => _installDirectory ?? Path.GetDirectoryName(Environment.ProcessPath);
+            set => SetField(ref _installDirectory, value);
+        }
+
+        #endregion
+
+
+        public MainWindow()
+        {
+            Title = "AI-M";
+            InitializeComponent();
+
+            DataContext = this;
+            // Never let a startup failure vanish into a fire-and-forget task — surface it in the status line.
+            Task.Delay(400).ContinueWith(async _ =>
+            {
+                try { await Execute(); }
+                catch (Exception e) { Status = $"Error: {e.Message}"; SubTitle = "Start failed"; }
+            });
+        }
+        private void CheckCudaAvailability()
+        {
+            ContainsCudaRelease = SelectedRelease?.Assets.Any(a => a.Name.Contains("_cuda.zip")) == true;
+        }
+
+        private async Task Execute()
+        {
+            Status = "Search executable...";
+            await Task.Delay(100);
+            var exe = ExecutableManager.FindExecutable();
+            if (string.IsNullOrEmpty(exe) || !File.Exists(exe))
+            {
+                IsInstallerMode = true;
+                SubTitle = "Install";
+                Status = string.Empty;
+                LoadReleases();
+            }
+            else
+            {
+                Version = ExecutableManager.LoadResourceTable(exe, s => Status = s)?.FileVersion;
+                await Task.Delay(200);
+                await RenameExe(exe);
+            }
+        }
+
+        private async void LoadReleases()
+        {
+            await ReleaseManager.LoadReleasesAsync(Releases);
+            SelectedRelease = Releases.FirstOrDefault();
+            if (Releases.Count == 0 && !string.IsNullOrEmpty(ReleaseManager.LastError))
+            {
+                Status = ReleaseManager.LastError;
+            }
+        }
+
+
+        private async Task RenameExe(string exe)
+        {
+            var error = await ExecutableManager.RenameExecutable(exe, newName =>
+            {
+                Status = $"Shuffle name to {newName}";
+            });
+
+            if (error != null)
+            {
+                // Stay open so the user can actually read why nothing happened.
+                Status = error;
+                SubTitle = "Start failed";
+                return;
+            }
+
+            await Dispatcher.Invoke(() =>
+            {
+                Close();
+                System.Windows.Application.Current.Shutdown();
+                return Task.CompletedTask;
+            });
+        }
+
+
+        private void Border_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            DragMove();
+        }
+
+        private void Exit_OnClick(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
+        private void Minimize_OnClick(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+
+        /// <summary>
+        /// Skip installer: anonymize + launch the app already present next to the launcher
+        /// (or under a sibling PowerAim\bin\... folder). Ported from DigitalAI.Launcher.
+        /// </summary>
+        private async void Skip_Click(object sender, RoutedEventArgs e)
+        {
+            var exe = ExecutableManager.FindExecutable();
+
+            if (string.IsNullOrEmpty(exe) || !File.Exists(exe))
+            {
+                Status =
+                    "No application found. The launcher looked next to itself and in a " +
+                    "sibling PowerAim\\bin\\... folder. Either place the app next to " +
+                    "the launcher, or press Install to download a release.";
+                SubTitle = "Nothing to launch";
+                return;
+            }
+
+            CanClose = false;
+            Installing = true;
+            SubTitle = "Launching";
+            Status = "Anonymizing application...";
+
+            var error = await ExecutableManager.RenameExecutable(exe, newName =>
+            {
+                Status = $"Shuffle name to {newName}";
+            }).ConfigureAwait(true);
+
+            if (error != null)
+            {
+                Status = error;
+                SubTitle = "Start failed";
+                CanClose = true;
+                Installing = false;
+                return;
+            }
+
+            CanClose = true;
+            Installing = false;
+            await Dispatcher.InvokeAsync(() => System.Windows.Application.Current.Shutdown());
+        }
+
+        private async void Install_Click(object sender, RoutedEventArgs e)
+        {
+            var useCuda = ContainsCudaRelease && CudaCheckBox.IsChecked == true;
+            Installing = true;
+            CanClose = false;
+            FolderSelect.Visibility = Visibility.Collapsed;
+            ProgressBar.IsIndeterminate = true;
+            ProgressBar.Visibility = Visibility.Visible;
+            Status = "Installing (Check and create Directory)...";
+            var dir = InstallDirectory;
+            try
+            {
+                if (!Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
+                await Task.Delay(500);
+                Status = "Checking for latest version...";
+                if (string.IsNullOrEmpty(SelectedRelease?.DownloadUrl))
+                {
+                    Status = "Can not install";
+                    return;
+                }
+                var installer = new UpdateManager(dir);
+                installer.SetRelease(SelectedRelease, useCuda);
+                ProgressBar.IsIndeterminate = false;
+
+                await installer.DoUpdate(new Progress<double>(p =>
+                {
+                    ProgressBar.Value = p;
+                    Status = $"Downloading... {p:0.00}%";
+                }));
+
+            }
+            catch (Exception exception)
+            {
+                Status = $"Error: {exception.Message}";
+                return;
+            }
+            finally
+            {
+                Installing = false;
+                CanClose = true;
+                ProgressBar.IsIndeterminate = false;
+            }
+
+            if (ProgressBar.Value >= 99.0 || (Status?.StartsWith("Downloading", StringComparison.Ordinal) == true && ProgressBar.Value > 0))
+            {
+                Status = "Installation complete.";
+                SubTitle = "Done";
+                ProgressBar.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void SelectDir_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new System.Windows.Forms.FolderBrowserDialog();
+            dlg.InitialDirectory = InstallDirectory;
+            if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                InstallDirectory = dlg.SelectedPath;
+            }
+        }
+
+        private void MainWindow_OnClosing(object? sender, CancelEventArgs e)
+        {
+            e.Cancel = !CanClose;
+        }
+
+        /// <summary>
+        ///     Close the version-picker popup once the user picks a release. The popup's
+        ///     <c>IsOpen</c> is bound to <c>VersionDropToggle.IsChecked</c>, so unchecking the
+        ///     toggle closes the popup.
+        /// </summary>
+        private void VersionList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (sender is System.Windows.Controls.ListBox lb && lb.SelectedItem != null)
+            {
+                VersionDropToggle.IsChecked = false;
+            }
+        }
+    }
+}

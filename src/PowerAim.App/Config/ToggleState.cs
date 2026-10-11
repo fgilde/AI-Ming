@@ -1,0 +1,276 @@
+﻿namespace PowerAim.Config;
+
+public class ToggleState : BaseSettings
+{
+    public bool AutoPlay
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    /// <summary>Show the topmost <see cref="PowerAim.UI.Visuality.DebugOverlay"/> with live stats.</summary>
+    public bool ShowDebugOverlay
+    {
+        get;
+        set
+        {
+            if (SetField(ref field, value))
+            {
+                // Toggle the overlay on/off. Dispatched to UI thread because the WPF Window
+                // constructor needs to run there.
+                System.Windows.Application.Current?.Dispatcher?.BeginInvoke(new Action(() =>
+                    PowerAim.UI.Visuality.DebugOverlay.ShowOrHide(value)));
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Show the live "sent input" visualizer (keyboard + mouse + controller diagrams) inside the
+    ///     debug overlay. Off by default — it's a deeper diagnostic than the stats readout.
+    /// </summary>
+    public bool ShowInputVisualizer
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    /// <summary>Show the topmost <see cref="PowerAim.UI.Visuality.CrosshairOverlay"/>.</summary>
+    public bool ShowCrosshairOverlay
+    {
+        get;
+        set
+        {
+            if (SetField(ref field, value))
+            {
+                System.Windows.Application.Current?.Dispatcher?.BeginInvoke(new Action(() =>
+                    PowerAim.UI.Visuality.CrosshairOverlay.ShowOrHide(value)));
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Show the topmost <see cref="PowerAim.UI.Visuality.OcrRegionsOverlay"/> with a labelled rectangle for
+    ///     every enabled OCR region plus its live recognized value. The overlay also has an "edit
+    ///     mode" checkbox that makes the rectangles draggable + resizable.
+    /// </summary>
+    public bool ShowOcrRegionsOverlay
+    {
+        get;
+        set
+        {
+            if (SetField(ref field, value))
+            {
+                System.Windows.Application.Current?.Dispatcher?.BeginInvoke(new Action(() =>
+                    PowerAim.UI.Visuality.OcrRegionsOverlay.ShowOrHide(value)));
+            }
+        }
+    }
+
+    public bool EnsureCaptureForeground
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public bool ShowCapturedArea
+    {
+        get;
+        set
+        {
+            if (SetField(ref field, value))
+                AppConfig.Current?.ColorState?.OnPropertyChanged(nameof(ColorState.ActiveCapturedAreaBorderBrush));
+        }
+    } = true;
+
+    public bool AutoHideController
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public bool GlobalActive
+    {
+        get;
+        set => SetField(ref field, value);
+    } = false;
+
+    public bool AimAssist
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public bool Predictions
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public bool EMASmoothening
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public bool EnableGunSwitchingKeybind
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public bool AutoTrigger
+    {
+        get;
+        set => SetField(ref field, value);
+    } = true;
+
+    /// <summary>
+    ///     When true, the aim/move pipeline drives the virtual Xbox controller's right-stick
+    ///     instead of synthesising mouse motion. Only effective when <see cref="PowerAim.Input.GamepadManager.CanSend"/>
+    ///     is true (i.e. the user has set up the ViGEm bus and a sender is connected). Reflected
+    ///     in the AimConfig UI with auto-gating so the toggle stays disabled until the user has
+    ///     a working gamepad sender configured.
+    /// </summary>
+    public bool UseControllerForAim
+    {
+        get;
+        set => SetField(ref field, value);
+    } = false;
+
+    /// <summary>
+    ///     Master switch for the controller/keyboard mapping engine. When false, the engine
+    ///     resolves no profile (no input is read or synthesized). Bound to a toggle on the
+    ///     Mapping page that supports a global hotkey — so the user can flip mapping on/off
+    ///     mid-game without alt-tabbing to PowerAim.
+    /// </summary>
+    public bool MappingActive
+    {
+        get;
+        set => SetField(ref field, value);
+    } = false;
+
+    public bool AntiRecoil
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public bool FOV
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public bool DynamicFOV
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public bool Masking
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public bool ShowDetectedPlayer
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public bool ShowSizes
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public bool ShowTriggerHeadArea
+    {
+        get;
+        set => SetField(ref field, value);
+    } = true;
+
+    public bool ShowAIConfidence
+    {
+        get;
+        set => SetField(ref field, value);
+    } = true;
+
+    public bool ShowTracers
+    {
+        get;
+        set => SetField(ref field, value);
+    } = true;
+
+    public bool CollectDataWhilePlaying
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public bool AutoLabelData
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public bool LGHubMouseMovement
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public bool HideUIFromCapture
+    {
+        get;
+        set => SetField(ref field, value);
+    } = true;
+
+    public bool ShowHelpTexts
+    {
+        get;
+        set => SetField(ref field, value);
+    } = true;
+
+    /// <summary>
+    ///     When a toggle is flipped via its global keybind, briefly show a notice bar telling the
+    ///     user the new on/off state (so they get feedback without alt-tabbing back to PowerAim).
+    /// </summary>
+    public bool ShowToggleNotifications
+    {
+        get;
+        set => SetField(ref field, value);
+    } = true;
+
+    /// <summary>
+    ///     When true, global keybinds (toggle hotkeys, trigger/mapping enable hotkeys, model &amp;
+    ///     config switch hotkeys, …) only fire while <see cref="GlobalActive"/> is on. The Global
+    ///     Active hotkey itself is always exempt (via <see cref="PowerAim.UI.UILibrary.AKeyChanger.IgnoreGlobalActiveGate"/>)
+    ///     so it can still be switched back on. Off by default — keybinds work regardless of Global Active.
+    /// </summary>
+    public bool RequireGlobalActiveForKeybinds
+    {
+        get;
+        set => SetField(ref field, value);
+    } = true;
+
+    public bool UITopMost
+    {
+        get;
+        set => SetField(ref field, value);
+    } = true;
+
+    /// <summary>
+    ///     Instead of always aiming at the centre of <see cref="SliderSettings.AimRegion"/>, pick a
+    ///     random point inside the region. The point is re-rolled once per aim "session" (each time
+    ///     the aim key is freshly held / a new lock starts), NOT every frame — re-rolling per frame
+    ///     would fight EMA smoothing and make the crosshair shake. Adds humanisation / reduces the
+    ///     always-same-pixel bot tell. Default off.
+    /// </summary>
+    public bool RandomAimPoint
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+}
