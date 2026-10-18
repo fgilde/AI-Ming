@@ -954,5 +954,10 @@
   "DetectionFlash": "检测时闪烁",
   "DetectionFlashColor": "闪烁颜色",
   "DetectionFlashDuration": "闪烁持续时间",
-  "DetectionFlashHelp": "检测到敌人时短暂为准星着色，无需打开调试覆盖层即可获得安静的视觉提示。"
+  "DetectionFlashHelp": "检测到敌人时短暂为准星着色，无需打开调试覆盖层即可获得安静的视觉提示。",
+  "SmartNeuralAntiRecoil": "Smart Neural Anti-Recoil",
+  "AntiRecoilModeSmartNeural": "Smart Neural (screen-only)",
+  "SmartNeuralStrengthHelp": "Compensation strength for the pure neural / vision anti-recoil path. Higher = stronger counter-movement.",
+  "SmartNeuralConfidence": "Neural confidence threshold",
+  "SmartNeuralConfidenceHelp": "Ignore frames whose phase-correlation confidence is below this value (0–1)."
 }

@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en" style="background:#0e0f14;">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PowerAim V4 — Full Project Audit Report</title>
+<style>
+  :root {
+    --bg: #0e0f14;
+    --surface1: #16181f;
+    --surface2: #1d1f28;
+    --surface3: #252733;
+    --accent: #7c6af7;
+    --accent2: #5be0b0;
+    --accent3: #f76a6a;
+    --accent4: #f7c26a;
+    --text1: #e8eaf0;
+    --text2: #9fa3b1;
+    --text3: #5c6070;
+    --stroke: #2a2d3a;
+    --stroke2: #3a3d4a;
+    --tag-ai: #2d2060;
+    --tag-ai-text: #a99ef7;
+    --tag-ui: #1a2d40;
+    --tag-ui-text: #5bc0eb;
+    --tag-core: #1a3030;
+    --tag-core-text: #5be0b0;
+    --tag-risk: #3d1a1a;
+    --tag-risk-text: #f76a6a;
+    --tag-warn: #3d2e00;
+    --tag-warn-text: #f7c26a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { background: #0e0f14 !important; color: #e8eaf0; scroll-behavior: smooth; }
+  body { background: #0e0f14 !important; min-height: 100vh; }
+  .section { scroll-margin-top: 24px; }
+  /* Keep content visible even if a parent theme forces light */
+  .container, .header, .footer, .toc, .card, .section { color: inherit; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text1);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .header {
+    background: linear-gradient(135deg, #1a1540 0%, #0e0f14 60%);
+    border-bottom: 1px solid var(--stroke2);
+    padding: 48px 48px 36px;
+  }
+  .header-meta { color: var(--text2); font-size: 13px; margin-bottom: 8px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .header h1 { font-size: 34px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 10px; }
+  .header h1 span { color: var(--accent); }
+  .header-sub { color: var(--text2); font-size: 15px; max-width: 760px; }
+  .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .badge {
+    font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px;
+    letter-spacing: 0.3px;
+  }
+  .b-lang { background: #1a1f3a; color: #7c9ef7; border: 1px solid #2d3560; }
+  .b-platform { background: #1a2d1a; color: #5be0b0; border: 1px solid #2a4a2a; }
+  .b-framework { background: #2d2060; color: #a99ef7; border: 1px solid #4a3a8a; }
+  .b-risk { background: var(--tag-risk); color: var(--tag-risk-text); border: 1px solid #6a2a2a; }
+  .b-note { background: #1a2530; color: #5bc0eb; border: 1px solid #2a4050; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 48px; }
+  @media (max-width: 700px) { .container { padding: 24px 20px; } .header { padding: 32px 20px; } }
+
+  .section { margin-bottom: 48px; }
+  .section-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+  }
+  .section-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--stroke);
+  }
+  h2 { font-size: 22px; font-weight: 700; margin-bottom: 12px; color: var(--text1); }
+  h3 { font-size: 16px; font-weight: 600; color: var(--text1); margin-bottom: 8px; margin-top: 20px; }
+  h4 { font-size: 14px; font-weight: 600; color: var(--text2); margin-bottom: 6px; margin-top: 14px; }
+  p { color: var(--text2); margin-bottom: 10px; }
+  li { color: var(--text2); margin-bottom: 5px; }
+  ul, ol { padding-left: 20px; }
+
+  .card {
+    background: var(--surface1);
+    border: 1px solid var(--stroke);
+    border-radius: 10px;
+    padding: 22px 24px;
+    margin-bottom: 16px;
+  }
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+  }
+  .card-title { font-size: 14px; font-weight: 700; color: var(--text1); margin-bottom: 6px; }
+  .card-sub { font-size: 13px; color: var(--text2); }
+  .card.highlight { border-color: var(--accent); background: #16152a; }
+  .card.warn { border-color: var(--accent4); background: #1e1a0a; }
+  .card.danger { border-color: var(--accent3); background: #1e0a0a; }
+  .card.safe { border-color: var(--accent2); background: #0a1e18; }
+
+  .stats-row { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 24px; }
+  .stat-pill {
+    background: var(--surface2);
+    border: 1px solid var(--stroke2);
+    border-radius: 8px;
+    padding: 12px 20px;
+    min-width: 130px;
+    text-align: center;
+  }
+  .stat-num { font-size: 26px; font-weight: 700; color: var(--accent); display: block; }
+  .stat-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .tag {
+    display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px;
+    border-radius: 4px; margin-right: 4px; vertical-align: middle;
+  }
+  .tag-ai { background: var(--tag-ai); color: var(--tag-ai-text); }
+  .tag-ui { background: var(--tag-ui); color: var(--tag-ui-text); }
+  .tag-core { background: var(--tag-core); color: var(--tag-core-text); }
+  .tag-risk { background: var(--tag-risk); color: var(--tag-risk-text); }
+  .tag-warn { background: var(--tag-warn); color: var(--tag-warn-text); }
+
+  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  th {
+    text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--text3); padding: 10px 14px;
+    background: var(--surface2); border-bottom: 1px solid var(--stroke2);
+  }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--stroke); font-size: 13px; color: var(--text2); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+  td strong { color: var(--text1); }
+
+  code {
+    background: var(--surface2); border: 1px solid var(--stroke2); border-radius: 4px;
+    font-family: 'Fira Mono', 'Cascadia Code', monospace; font-size: 12px;
+    padding: 1px 6px; color: var(--accent2);
+  }
+
+  .rating-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .rating-label { font-size: 13px; color: var(--text2); width: 210px; flex-shrink: 0; }
+  .rating-bar-bg { flex: 1; height: 6px; background: var(--surface3); border-radius: 3px; overflow: hidden; }
+  .rating-bar-fill { height: 100%; border-radius: 3px; }
+  .fill-green { background: var(--accent2); }
+  .fill-yellow { background: var(--accent4); }
+  .fill-red { background: var(--accent3); }
+  .fill-blue { background: var(--accent); }
+  .rating-score { font-size: 12px; color: var(--text3); width: 40px; text-align: right; }
+
+  .divider { border: none; border-top: 1px solid var(--stroke); margin: 32px 0; }
+
+  .footer { border-top: 1px solid var(--stroke); padding: 24px 48px; color: var(--text3); font-size: 12px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+
+  .toc { background: var(--surface1); border: 1px solid var(--stroke); border-radius: 10px; padding: 20px 24px; margin-bottom: 36px; }
+  .toc-title { font-size: 12px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .toc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 4px; }
+  .toc a { display: block; font-size: 13px; color: var(--text2); padding: 4px 8px; border-radius: 5px; }
+  .toc a:hover { background: var(--surface2); color: var(--text1); text-decoration: none; }
+  .toc-num { color: var(--accent); font-size: 11px; margin-right: 5px; }
+</style>
+</head>
+<body style="background:#0e0f14;color:#e8eaf0;margin:0;min-height:100vh;">
+
+<div class="header">
+  <div class="header-meta">Project Audit · October 2026 · SmartNeural Updated Archive</div>
+  <h1>PowerAim <span>V4</span> — Full Source Audit</h1>
+  <p class="header-sub">
+    Holistic analysis of the attached PowerAim V4 SmartNeural Updated source tree: solution layout,
+    metrics, AI/inference pipeline, aiming, anti-recoil, AutoPlay, capture, OCR, input, config,
+    anonymization, UI, launcher, Core, risks, and recommendations — measured against the code as shipped in this archive.
+  </p>
+  <div class="badge-row">
+    <span class="badge b-lang">C# / .NET 10 (net10.0-windows)</span>
+    <span class="badge b-platform">Windows (WPF)</span>
+    <span class="badge b-framework">ONNX Runtime 1.24.4</span>
+    <span class="badge b-framework">OpenCvSharp4</span>
+    <span class="badge b-framework">Tesseract OCR</span>
+    <span class="badge b-framework">ViGEm / vJoy</span>
+    <span class="badge b-note">AssemblyName: PixelCraft</span>
+    <span class="badge b-risk">Anti-Detection Mechanisms</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="toc">
+    <div class="toc-title">Table of Contents</div>
+    <div class="toc-grid">
+      <a href="#overview"><span class="toc-num">1.</span> Project Overview</a>
+      <a href="#structure"><span class="toc-num">2.</span> Solution Structure</a>
+      <a href="#metrics"><span class="toc-num">3.</span> Code Metrics</a>
+      <a href="#ai-pipeline"><span class="toc-num">4.</span> AI / Inference Pipeline</a>
+      <a href="#aiming"><span class="toc-num">5.</span> Aiming Subsystem</a>
+      <a href="#antirecoil"><span class="toc-num">6.</span> Anti-Recoil Subsystem</a>
+      <a href="#autoplay"><span class="toc-num">7.</span> AutoPlay / Bot Engine</a>
+      <a href="#capture"><span class="toc-num">8.</span> Screen Capture</a>
+      <a href="#ocr"><span class="toc-num">9.</span> OCR Subsystem</a>
+      <a href="#input"><span class="toc-num">10.</span> Input &amp; Controller</a>
+      <a href="#config"><span class="toc-num">11.</span> Configuration System</a>
+      <a href="#anonymization"><span class="toc-num">12.</span> Anonymization &amp; Evasion</a>
+      <a href="#ui"><span class="toc-num">13.</span> UI Layer</a>
+      <a href="#launcher"><span class="toc-num">14.</span> Launcher</a>
+      <a href="#core"><span class="toc-num">15.</span> PowerAim.Core</a>
+      <a href="#risks"><span class="toc-num">16.</span> Risk &amp; Quality Assessment</a>
+      <a href="#summary"><span class="toc-num">17.</span> Summary &amp; Recommendations</a>
+    </div>
+  </div>
+
+  <!-- 1 -->
+  <div class="section" id="overview"><a id="a-overview" name="overview"></a>
+    <div class="section-title">1. Project Overview</div>
+    <p>
+      PowerAim V4 is an open-source, AI-powered <strong>game aim-assistance and automation tool</strong> for Windows.
+      This archive targets <strong>.NET 10</strong> (<code>net10.0-windows</code> / <code>net10.0</code>), ships as a WPF application,
+      and uses ONNX Runtime to run real-time object-detection models against a screen-capture feed. Detections drive mouse and
+      virtual-controller input for aiming, recoil control, triggering, and full AutoPlay bot behaviour.
+    </p>
+    <p>
+      Upstream origin is Florian Gilde’s <code>fgilde/AI-Ming</code> (community models also merged from <code>Babyhamsta/Aimmy</code>).
+      This tree is labeled <strong>PowerAim_V4_SmartNeural_Updated</strong>: Smart Neural anti-recoil, RAR-merge / crash fixes,
+      MUST hot-path work, and build-warning cleanup. The published binary is stamped with assembly name <code>PixelCraft</code>
+      and a rotating brand-name pool at build time.
+    </p>
+    <div class="card warn">
+      <div class="card-title">Intended design posture</div>
+      <div class="card-sub">
+        The codebase is explicitly structured as a gameplay-assistance / automation tool with dedicated anonymization,
+        process/window identity spoofing, PE VERSIONINFO patching, and humanized input timing. Those subsystems exist
+        to reduce visibility to process monitors and anti-cheat fingerprinting.
+      </div>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div class="section" id="structure"><a id="a-structure" name="structure"></a>
+    <div class="section-title">2. Solution Structure</div>
+    <p>Solution file: <code>PowerAim.sln</code> (VS 18 format). Four projects under <code>src/</code> and <code>tests/</code>:</p>
+    <table>
+      <tr><th>Project</th><th>TFM</th><th>Purpose</th></tr>
+      <tr>
+        <td><strong>PowerAim.App</strong></td>
+        <td><code>net10.0-windows</code></td>
+        <td>Main WPF app — AI pipeline, actions, UI, config, capture, input. Bulk of the code (~280+ App sources).</td>
+      </tr>
+      <tr>
+        <td><strong>PowerAim.Launcher</strong></td>
+        <td><code>net10.0-windows</code></td>
+        <td>Standalone launcher: exe rename/patch, PE VERSIONINFO spoof, parent-process spoof, update path.</td>
+      </tr>
+      <tr>
+        <td><strong>PowerAim.Core</strong></td>
+        <td><code>net10.0</code></td>
+        <td>Shared library: constants, GitHub/update managers, caching HTTP, Jev decision types.</td>
+      </tr>
+      <tr>
+        <td><strong>PowerAim.Core.Tests</strong></td>
+        <td>xUnit</td>
+        <td>Unit tests limited to Jev response parsing and Python version helpers.</td>
+      </tr>
+    </table>
+    <p>Top-level folders:</p>
+    <table>
+      <tr><th>Folder</th><th>Contents</th></tr>
+      <tr><td><code>assets/</code></td><td>Icons, Universalv3 TensorFlow.js web model (7 shards), native <code>DirectML.dll</code> + <code>cudart64_110.dll</code>, recoil predictor README.</td></tr>
+      <tr><td><code>configs/</code></td><td>Default config <code>_default.cfg</code>.</td></tr>
+      <tr><td><code>docs/</code></td><td>Dependency graph (<code>graph.json</code>/<code>graph.html</code>), GRAPH_REPORT, manifest, KnownIssues (currently promo text for starring the repo).</td></tr>
+      <tr><td><code>tools/</code></td><td><code>build.ps1</code>, <code>check_cuda.ps1</code>, <code>generate_icon.ps1</code>, <code>quickrun.yml</code>.</td></tr>
+      <tr><td><code>CHANGELOG.md</code></td><td><strong>Empty</strong> in this archive (0 bytes).</td></tr>
+    </table>
+  </div>
+
+  <!-- 3 -->
+  <div class="section" id="metrics"><a id="a-metrics" name="metrics"></a>
+    <div class="section-title">3. Code Metrics</div>
+    <div class="stats-row">
+      <div class="stat-pill"><span class="stat-num">482</span><span class="stat-label">Total Files</span></div>
+      <div class="stat-pill"><span class="stat-num">318</span><span class="stat-label">Source Files (.cs)</span></div>
+      <div class="stat-pill"><span class="stat-num">53,824</span><span class="stat-label">Lines of C#</span></div>
+      <div class="stat-pill"><span class="stat-num">85</span><span class="stat-label">XAML Files</span></div>
+      <div class="stat-pill"><span class="stat-num">4</span><span class="stat-label">Projects</span></div>
+      <div class="stat-pill"><span class="stat-num">~28 MB</span><span class="stat-label">Bundled TF.js Model</span></div>
+    </div>
+    <h3>LOC by area (App + Core + Launcher)</h3>
+    <table>
+      <tr><th>Area</th><th>Approx. LOC</th><th>Notes</th></tr>
+      <tr><td>UI (UILibrary + Visuality + converters/theme)</td><td>~17,220</td><td>Largest surface; custom control set + dialogs</td></tr>
+      <tr><td>AI (pipeline, actions, aiming, capture, OCR helpers)</td><td>~11,239</td><td>Inference + all IAction implementations</td></tr>
+      <tr><td>Input (bindings, gamepad, mapping, tools)</td><td>~6,411</td><td>ViGEm / vJoy / Titan Two / XInput emu paths</td></tr>
+      <tr><td>Config</td><td>~5,174</td><td>Profiles, toggles, OCR/Jev/AutoPlay settings</td></tr>
+      <tr><td>MainWindow</td><td>~3,171</td><td>Shell, menu builders, chrome</td></tr>
+      <tr><td>Class / native helpers</td><td>~2,891</td><td>Anonymization, DeviceHide, HumanTiming, P/Invoke</td></tr>
+      <tr><td>Other</td><td>~2,447</td><td>Misc utilities</td></tr>
+      <tr><td>MouseMovement backends</td><td>~715</td><td>GHub / Razer / ddxoft / SendInput</td></tr>
+      <tr><td>PowerAim.Core</td><td>~1,000</td><td>Constants, GitHub, Jev types</td></tr>
+      <tr><td>PowerAim.Launcher</td><td>~1,119</td><td>ExecutableManager, window settings, release mgmt</td></tr>
+    </table>
+    <div class="card-grid">
+      <div class="card"><div class="card-title">AI / Inference Layer</div><div class="card-sub">58 source files under <code>AI/</code>: inference, 10 action types, aiming algorithms, recoil, OCR hooks, DXGI/GDI/process capture, GPU/TensorRT helpers.</div></div>
+      <div class="card"><div class="card-title">UI Layer</div><div class="card-sub">98 .cs + 79 .xaml under UI — custom A* controls, Visuality windows/dialogs, theme, converters.</div></div>
+      <div class="card"><div class="card-title">Config Layer</div><div class="card-sub">47 settings/profile/trigger classes with BaseSettings + INotifyPropertyChanged graph.</div></div>
+      <div class="card"><div class="card-title">Input Layer</div><div class="card-sub">Unified InputSender, multi-backend mouse, multiple gamepad senders (ViGEm, vJoy, DS4, Titan Two, XInput emu), HidHide helpers.</div></div>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="section" id="ai-pipeline"><a id="a-ai-pipeline" name="ai-pipeline"></a>
+    <div class="section-title">4. AI / Inference Pipeline</div>
+    <h2>Core Inference Loop</h2>
+    <p>
+      Orchestrated by <strong><code>AIManager</code></strong> (singleton). Owns an <code>ICapture</code> backend, an
+      <code>IPredictionLogic</code> (ONNX) session, and a list of <code>IAction</code> instances. A dedicated background
+      thread runs the loop with consecutive-error tolerance (<code>MaxConsecutiveLoopErrors = 10</code>) so transient
+      DXGI device-lost events do not tear down the session. <code>CreateAsync</code> builds the potentially slow
+      inference session off the UI thread (TensorRT first-build can take 30 s–2 min).
+    </p>
+
+    <h3>PredictionLogic (ONNX)</h3>
+    <ul>
+      <li>YOLOv8-oriented; auto-detects input resolution, class count, and channels-first vs channels-last output layouts (including dynamic axes).</li>
+      <li>Reusable resize buffer to avoid per-frame allocation when FOV ≠ model size.</li>
+      <li>Class filtering via configurable target class IDs / modes; detection mask regions applied post-decode.</li>
+      <li>FP16 sibling model path for CUDA/DirectML; TensorRT builds FP16 from FP32 when preferred.</li>
+      <li>SessionOptions lifetime is owned carefully — options must outlive the session (documented crash fix in this tree).</li>
+      <li>KD-tree (<code>Supercluster.KDTree</code>) used for nearest-neighbor candidate lookup in the broader aim path.</li>
+    </ul>
+
+    <h3>Execution Provider Chain</h3>
+    <div class="card highlight">
+      <code>TensorRT → CUDA → DirectML → CPU</code>
+      <p style="margin-top:8px;margin-bottom:0">
+        Gated by presence of TensorRT libs and a valid NVIDIA device index (DXGI adapter ordering). Failures fall back
+        with diagnostics. Default SessionOptions are DirectML-safe (MemoryPattern off, Sequential execution).
+      </p>
+    </div>
+
+    <h3>Action Registration</h3>
+    <p>
+      <code>BaseAction.AllActions()</code> reflects the assembly for non-abstract <code>IAction</code> implementors and
+      instantiates them. Registered set in this tree:
+    </p>
+    <table>
+      <tr><th>Action</th><th>~LOC</th><th>Role</th></tr>
+      <tr><td><code>AimingAction</code></td><td>440</td><td>Core aim-assist (smart + legacy paths)</td></tr>
+      <tr><td><code>AutoTriggerAction</code></td><td>240</td><td>Conditional key/button automation</td></tr>
+      <tr><td><code>AntiRecoilAction</code></td><td>83</td><td>Legacy fixed-step recoil</td></tr>
+      <tr><td><code>ImageBasedAntiRecoilAction</code></td><td>197</td><td>Phase-correlation vision recoil</td></tr>
+      <tr><td><code>SmartNeuralAntiRecoilAction</code></td><td>351</td><td>Neural feed-forward + residual feedback</td></tr>
+      <tr><td><code>RecoilPatternPlaybackAction</code></td><td>139</td><td>Recorded pattern replay</td></tr>
+      <tr><td><code>OverlayAction</code></td><td>221</td><td>ESP / overlay drawing</td></tr>
+      <tr><td><code>AutoPlayGameAction</code></td><td>1,322</td><td>Full bot driver (heuristic + strategic)</td></tr>
+      <tr><td><code>AutoPlayLearningAction</code></td><td>114</td><td>Behaviour capture for learning model</td></tr>
+    </table>
+
+    <h3>Supporting AI modules</h3>
+    <p>
+      <code>PerformanceBenchmark</code> probes resolutions for FPS targets; <code>TensorRtRuntime</code> /
+      <code>TensorRtInstaller</code> / <code>TensorRtBuildCoordinator</code> manage engine builds;
+      <code>CudaDiagnostics</code>, <code>GpuAdapterEnumerator</code>, <code>FpsCapHelper</code>,
+      <code>ReplayBuffer</code>, <code>SensitivityCalibrator</code>, <code>StickyAimSelector</code>,
+      <code>OllamaClient</code>, <code>JevDecisionClient</code>, OCR service and condition evaluator.
+    </p>
+  </div>
+
+  <!-- 5 -->
+  <div class="section" id="aiming"><a id="a-aiming" name="aiming"></a>
+    <div class="section-title">5. Aiming Subsystem</div>
+    <p>
+      Centered on <code>AimingAction</code> plus <code>AI/Aiming/</code>: <code>AimController</code>,
+      <code>TargetTracker</code>, <code>TargetTrack</code>, <code>TargetSelector</code>, <code>NsaKalmanFilter</code>,
+      <code>OneEuroFilter</code>, <code>PidAimSmoother</code>.
+    </p>
+
+    <h3>Smart path (default)</h3>
+    <ol>
+      <li><strong>Target selection</strong> — nearest / sticky selection in model space; challenger hysteresis in <code>TargetSelector</code>.</li>
+      <li><strong>Tracking (opt-in)</strong> — StrongSORT-style: NSA Kalman on (cx, cy, aspect, height) + velocity, Hungarian assignment on IoU/distance cost, Mahalanobis gate (χ² 99% for 4 DoF ≈ 13.28). Replaces older greedy SORT.</li>
+      <li><strong>Aim point</strong> — head / body / fractional box point; head area editable via UI.</li>
+      <li><strong>Smoothing</strong> — EMA, One-Euro (adaptive cutoff), or adaptive dual-axis PID (gains scale with box size, confidence, speed).</li>
+      <li><strong>AimController</strong> — frame-rate-independent proportional move, high-strength near-linear mode, sub-pixel accumulator, max-step floor raised to 400 for large flicks.</li>
+    </ol>
+
+    <h3>Profiles</h3>
+    <p>
+      <code>AimSettings</code> holds multiple <code>AimProfile</code> objects (per-profile aim key, FOV, smoothing,
+      disengage rules, OCR conditions). Effective profile is resolved from which aim key is held — supports head vs body
+      on separate binds in the same session.
+    </p>
+
+    <h3>Legacy prediction</h3>
+    <p>
+      <code>PredictionMethod</code> enum retains Kalman, Shall0e, and WiseTheFox EMA predictors for the legacy path.
+      Velocity-aware Kalman state lives in the prediction manager for lead-time support.
+    </p>
+  </div>
+
+  <!-- 6 -->
+  <div class="section" id="antirecoil"><a id="a-antirecoil" name="antirecoil"></a>
+    <div class="section-title">6. Anti-Recoil Subsystem</div>
+    <p>Four modes, gated by <code>ToggleState.AntiRecoil</code> and active <code>AntiRecoilProfile.Mode</code>:</p>
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-title">Legacy</div>
+        <div class="card-sub">Fixed X/Y compensation from HoldTime / FireRate / XRecoil / YRecoil. Deterministic, game-agnostic.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Pattern Playback</div>
+        <div class="card-sub">Replays recorded (dx, dy) samples while trigger held; loops; per-weapon JSON patterns.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Image-Based</div>
+        <div class="card-sub">Phase-correlation on screen patches; EMA baseline isolates intentional aim from recoil impulse.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Smart Neural</div>
+        <div class="card-sub">
+          <code>RecoilPredictor</code> anticipates kick from burst index + residual history; combined with phase-correlation
+          residual, EMA baseline, vertical/horizontal gains, micro-steps, pure vision (no game memory).
+        </div>
+      </div>
+    </div>
+    <p>All compensation routes through <code>InputSender.Move</code>, so gamepad right-stick aim receives anti-recoil as well.</p>
+  </div>
+
+  <!-- 7 -->
+  <div class="section" id="autoplay"><a id="a-autoplay" name="autoplay"></a>
+    <div class="section-title">7. AutoPlay / Bot Engine</div>
+    <p>
+      <code>AutoPlayGameAction</code> (~1.3k LOC) is a multi-layer bot:
+    </p>
+    <table>
+      <tr><th>Layer</th><th>Cadence</th><th>Role</th></tr>
+      <tr><td><strong>Hot path (heuristic)</strong></td><td>Every frame (&lt;1 ms)</td><td>Combat aim/shoot, movement, sprint, crouch, reload — non-blocking.</td></tr>
+      <tr><td><strong>Strategic (Ollama)</strong></td><td>~3–5 s background</td><td>Vision/LLM guidance when configured; failures surface on decision snapshot.</td></tr>
+      <tr><td><strong>Jev decisions</strong></td><td>On demand / budgeted</td><td>Choice + noul questions over HTTP; probabilities, danger, latency tracked.</td></tr>
+    </table>
+    <p>
+      Decision transparency uses <code>AutoPlayDecisionSnapshot</code> and an activity ring buffer
+      (<code>AutoPlayLogEntry</code>) for the debug / decision panel. Learning path captures behaviour into
+      <code>AutoPlayLearningModel</code> via <code>AutoPlayLearningAction</code>.
+    </p>
+  </div>
+
+  <!-- 8 -->
+  <div class="section" id="capture"><a id="a-capture" name="capture"></a>
+    <div class="section-title">8. Screen Capture</div>
+    <p><code>ICapture</code> implementations selected by <code>CaptureSource</code>:</p>
+    <ul>
+      <li><strong>DxgiScreenCapture</strong> — primary Desktop Duplication path (Vortice.DXGI / D3D11).</li>
+      <li><strong>GdiScreenCapture</strong> — fallback BitBlt path.</li>
+      <li><strong>ProcessCapture</strong> — window/process-targeted capture.</li>
+      <li><strong>ScreenCapture</strong> — facade / default wiring used by AIManager constructors.</li>
+    </ul>
+    <p>
+      AIManager chooses backend from target type; DXGI device-lost is treated as recoverable within the consecutive-error budget.
+      Sensitivity calibration can measure pixel drift via phase correlation after known mouse impulses.
+    </p>
+  </div>
+
+  <!-- 9 -->
+  <div class="section" id="ocr"><a id="a-ocr" name="ocr"></a>
+    <div class="section-title">9. OCR Subsystem</div>
+    <p>
+      <code>OcrService</code> runs Tesseract (Tesseract.NET) on user-defined regions with OpenCV binarization
+      preprocessing and optional auto-download of <code>eng.traineddata</code>. Results are exposed as an observable
+      latest-per-region dictionary.
+    </p>
+    <p>
+      <code>OcrConditionEvaluator</code> evaluates condition trees (AND/OR/NOT style nodes) to gate aim, triggers, and
+      AutoPlay. UI: region painting overlay + dialogs; condition builder for profiles.
+    </p>
+  </div>
+
+  <!-- 10 -->
+  <div class="section" id="input"><a id="a-input" name="input"></a>
+    <div class="section-title">10. Input &amp; Controller Subsystem</div>
+    <p>All synthetic output goes through <code>InputSender</code>:</p>
+    <ul>
+      <li><strong>Mouse:</strong> backends selected by <code>MouseMovementMethod</code> — MouseEvent, SendInput, LG HUB, Razer Synapse, ddxoft, or <strong>Gamepad</strong> (virtual right-stick). Legacy separate “use controller for aim” toggle was folded into this enum.</li>
+      <li><strong>Gamepad senders:</strong> ViGEm, vJoy, DualShock4, Titan Two, internal, XInput emulation, reporting wrapper.</li>
+      <li><strong>Keyboard:</strong> SendInput / InputSimulator key sequences.</li>
+      <li><strong>HumanTiming:</strong> non-uniform timing / Bezier-style jitter on sequences to reduce regularity.</li>
+    </ul>
+    <h3>Bindings &amp; mapping</h3>
+    <p>
+      <code>InputBindingManager</code> + <code>StoredInputBinding</code> unify mouse/keyboard/gamepad binds.
+      Controller mapping profiles, HID enumeration, HidHide helpers, and device-hide UI support virtual substitution
+      without conflicting physical devices. <code>AutoTriggerAction</code> adds cooldowns, charge vs DownAndUp modes,
+      OCR gates, and detection-presence requirements.
+    </p>
+  </div>
+
+  <!-- 11 -->
+  <div class="section" id="config"><a id="a-config" name="config"></a>
+    <div class="section-title">11. Configuration System</div>
+    <p>
+      Rooted at <code>AppConfig</code> with a deep JSON graph. Settings types extend <code>BaseSettings</code>
+      (<code>INotifyPropertyChanged</code> via <code>SetField</code>) for WPF binding.
+    </p>
+    <table>
+      <tr><th>Section</th><th>Examples</th></tr>
+      <tr><td>AI</td><td>Smart aim, sticky/track, smoothing mode, FOV, class filter, masks, provider preference</td></tr>
+      <tr><td>Aim</td><td>AimProfile collection, schema version, migration</td></tr>
+      <tr><td>Anti-recoil</td><td>Profiles + modes (Legacy / ImageBased / Pattern / SmartNeural)</td></tr>
+      <tr><td>Sliders / Toggles</td><td>FOV, confidence, image size, master feature switches</td></tr>
+      <tr><td>Bindings</td><td>Aim keys, anti-recoil, FOV, magnifier, etc.</td></tr>
+      <tr><td>AutoPlay / Jev / Ollama</td><td>Profiles, models, decision server URLs, learning settings</td></tr>
+      <tr><td>OCR / Controller</td><td>Regions, tessdata, virtual pad, mapping profiles</td></tr>
+    </table>
+    <p>
+      Schema migration upgrades legacy flat fields into per-profile structures; helpers strip old polymorphic condition
+      trees that lack type discriminators so older configs still deserialize.
+    </p>
+  </div>
+
+  <!-- 12 -->
+  <div class="section" id="anonymization"><a id="a-anonymization" name="anonymization"></a>
+    <div class="section-title">12. Anonymization &amp; Anti-Detection</div>
+    <div class="card danger">
+      <div class="card-title">Explicit evasion subsystem</div>
+      <div class="card-sub">
+        <code>AnonymizationCore</code>, launcher PE patching, rotating assembly names, and input humanization form a
+        deliberate stack aimed at process/window identity, PE metadata, network User-Agent fingerprinting, and input regularity.
+      </div>
+    </div>
+    <table>
+      <tr><th>Technique</th><th>Where</th><th>Purpose</th></tr>
+      <tr>
+        <td><strong>Window identity spoof</strong></td>
+        <td><code>AnonymizationCore.SpoofWindowIdentity</code></td>
+        <td>Strip APPWINDOW / add TOOLWINDOW; random plausible titles (e.g. system-like names).</td>
+      </tr>
+      <tr>
+        <td><strong>Parent process spoof</strong></td>
+        <td><code>LaunchWithSpoofedParent</code> + <code>PROC_THREAD_ATTRIBUTE_PARENT_PROCESS</code></td>
+        <td>Appear under explorer.exe in process tree scans.</td>
+      </tr>
+      <tr>
+        <td><strong>Random assembly / brand</strong></td>
+        <td><code>Constants</code> name pool + <code>build.ps1</code>; App AssemblyName <code>PixelCraft</code></td>
+        <td>Rotate product identity across builds.</td>
+      </tr>
+      <tr>
+        <td><strong>PE VERSIONINFO patch</strong></td>
+        <td>Launcher <code>ExecutableManager</code></td>
+        <td>Rewrite FileDescription/ProductName; rename exe to random hex; skip unsafe patch on single-file bundles.</td>
+      </tr>
+      <tr>
+        <td><strong>Network header rotation</strong></td>
+        <td>Core network helpers / User-Agent pools</td>
+        <td>Vary outbound identity to GitHub / local LLM / Jev endpoints.</td>
+      </tr>
+      <tr>
+        <td><strong>Human timing</strong></td>
+        <td><code>HumanTiming</code></td>
+        <td>Non-uniform delays / Bezier-style jitter on automated sequences.</td>
+      </tr>
+      <tr>
+        <td><strong>Device hide</strong></td>
+        <td><code>DeviceHide</code> + HidHide helpers</td>
+        <td>Hide physical HID devices for virtual pad substitution / enumeration control.</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- 13 -->
+  <div class="section" id="ui"><a id="a-ui" name="ui"></a>
+    <div class="section-title">13. UI Layer</div>
+    <p>WPF design split into <code>UILibrary</code> (reusable controls) and <code>Visuality</code> (windows/dialogs).</p>
+    <div class="card-grid">
+      <div class="card"><div class="card-title">ASlider / AToggle / ADropdown</div><div class="card-sub">Themed, bindable primitives used across settings pages.</div></div>
+      <div class="card"><div class="card-title">AKeyChanger / MultiKeyChanger</div><div class="card-sub">Capture mouse, keyboard, and gamepad bindings interactively.</div></div>
+      <div class="card"><div class="card-title">Profile editors</div><div class="card-sub">Aim, AntiRecoil, AutoPlay profile list/edit panels with mode-specific parameter UIs.</div></div>
+      <div class="card"><div class="card-title">Gamepad diagnostics / tester</div><div class="card-sub">Live axis/button visualization and hidden-controller management.</div></div>
+      <div class="card"><div class="card-title">Capture / OCR / masks</div><div class="card-sub">Source wizard, OCR region overlay, detection mask painting, FOV visualizer.</div></div>
+      <div class="card"><div class="card-title">Setup / debug</div><div class="card-sub">CUDA/TensorRT setup, calibration wizard, debug overlay, notice bar, config saver.</div></div>
+    </div>
+    <p>
+      Theme system via <code>ThemePalette</code> / ApplicationConstants (dark/light, accent colors). Multi-panel layout
+      and global search over settings. MaterialDesign / WPF-UI packages present alongside the custom A* control set.
+    </p>
+  </div>
+
+  <!-- 14 -->
+  <div class="section" id="launcher"><a id="a-launcher" name="launcher"></a>
+    <div class="section-title">14. Launcher (PowerAim.Launcher)</div>
+    <ul>
+      <li><strong>Executable lifecycle:</strong> copy/rename main binary to random 8-char hex under AppData; track current/previous names (up to 16) in launcher state JSON (schema-versioned).</li>
+      <li><strong>PE patching:</strong> VERSIONINFO strings via ResourceLib when safe; detects .NET single-file bundle footer and skips destructive patch.</li>
+      <li><strong>Parent spoof:</strong> launches main process with spoofed parent through AnonymizationCore.</li>
+      <li><strong>Updates:</strong> ReleaseManager / UpdateManager against GitHub releases.</li>
+      <li><strong>Window chrome:</strong> WindowSettingsManager persists size/position.</li>
+    </ul>
+  </div>
+
+  <!-- 15 -->
+  <div class="section" id="core"><a id="a-core" name="core"></a>
+    <div class="section-title">15. PowerAim.Core (Shared Library)</div>
+    <table>
+      <tr><th>Component</th><th>Function</th></tr>
+      <tr><td><code>Constants</code></td><td>Paths, repo coordinates (<code>fgilde/AI-Ming</code> + upstream <code>Babyhamsta/Aimmy</code>), rotating name/slogan pools.</td></tr>
+      <tr><td><code>GithubManager</code> / <code>GitHubRelease</code></td><td>Release + model listing with disk cache; Atom feed fallback on rate limits; merges both repos.</td></tr>
+      <tr><td><code>UpdateManager</code></td><td>Version compare, download, install orchestration.</td></tr>
+      <tr><td><code>CachingHttpClient</code></td><td>TTL disk cache; serves stale content on network/rate-limit errors.</td></tr>
+      <tr><td>Jev types</td><td><code>JevQuestionBuilder</code>, <code>JevResponseParser</code>, <code>JevIntentMapper</code>, <code>JevDecision</code>, <code>JevAbility</code>, <code>PythonVersion</code> — unit-tested parser path.</td></tr>
+    </table>
+  </div>
+
+  <!-- 16 -->
+  <div class="section" id="risks"><a id="a-risks" name="risks"></a>
+    <div class="section-title">16. Risk &amp; Quality Assessment</div>
+
+    <h3>Code Quality Ratings</h3>
+    <div class="rating-row"><div class="rating-label">Architecture / Structure</div><div class="rating-bar-bg"><div class="rating-bar-fill fill-green" style="width:82%"></div></div><div class="rating-score">8.2/10</div></div>
+    <div class="rating-row"><div class="rating-label">Algorithm Sophistication</div><div class="rating-bar-bg"><div class="rating-bar-fill fill-green" style="width:84%"></div></div><div class="rating-score">8.4/10</div></div>
+    <div class="rating-row"><div class="rating-label">Code Documentation</div><div class="rating-bar-bg"><div class="rating-bar-fill fill-green" style="width:80%"></div></div><div class="rating-score">8/10</div></div>
+    <div class="rating-row"><div class="rating-label">Test Coverage</div><div class="rating-bar-bg"><div class="rating-bar-fill fill-red" style="width:8%"></div></div><div class="rating-score">1/10</div></div>
+    <div class="rating-row"><div class="rating-label">Error Handling</div><div class="rating-bar-bg"><div class="rating-bar-fill fill-green" style="width:74%"></div></div><div class="rating-score">7.4/10</div></div>
+    <div class="rating-row"><div class="rating-label">Thread Safety</div><div class="rating-bar-bg"><div class="rating-bar-fill fill-yellow" style="width:65%"></div></div><div class="rating-score">6.5/10</div></div>
+    <div class="rating-row"><div class="rating-label">Memory / Disposal Hygiene</div><div class="rating-bar-bg"><div class="rating-bar-fill fill-yellow" style="width:72%"></div></div><div class="rating-score">7.2/10</div></div>
+    <div class="rating-row"><div class="rating-label">Build / Changelog Hygiene</div><div class="rating-bar-bg"><div class="rating-bar-fill fill-yellow" style="width:55%"></div></div><div class="rating-score">5.5/10</div></div>
+    <div class="rating-row"><div class="rating-label">Policy / ToS Exposure</div><div class="rating-bar-bg"><div class="rating-bar-fill fill-red" style="width:5%"></div></div><div class="rating-score">1/10</div></div>
+
+    <hr class="divider">
+
+    <h3>Findings</h3>
+    <div class="card danger">
+      <div class="card-title">Critical — Design intent vs multiplayer ToS</div>
+      <div class="card-sub">
+        The product is built for automated aim, recoil, trigger, and bot behaviour in games, with explicit anti-detection.
+        Use in online multiplayer typically violates publisher Terms of Service and can trigger permanent bans or account action.
+      </div>
+    </div>
+    <div class="card warn">
+      <div class="card-title">Low automated test coverage</div>
+      <div class="card-sub">
+        Only <code>JevResponseParser</code> and <code>PythonVersion</code> are covered. No unit tests for ONNX decode,
+        tracker/Hungarian math, AimController, SmartNeural residual path, config migration, or InputSender backends.
+        Regressions depend on manual playtesting.
+      </div>
+    </div>
+    <div class="card warn">
+      <div class="card-title">Global mutable state</div>
+      <div class="card-sub">
+        <code>AppConfig.Current</code> and <code>AIManager.Instance</code> are process-wide singletons. The AI loop and UI
+        both touch config without a universal snapshot/lock strategy. Some maps use ConcurrentDictionary; many fields do not.
+      </div>
+    </div>
+    <div class="card warn">
+      <div class="card-title">OpenCV Mat lifetime in SmartNeural</div>
+      <div class="card-sub">
+        <code>SmartNeuralAntiRecoilAction</code> retains a queue of gray <code>Mat</code> frames. Eviction/disposal on
+        pause, profile switch, or reset must stay correct or native memory can grow across long sessions.
+      </div>
+    </div>
+    <div class="card warn">
+      <div class="card-title">Empty CHANGELOG + third-party “Updated” label</div>
+      <div class="card-sub">
+        <code>CHANGELOG.md</code> is empty. SmartNeural / crash-fix / hot-path work is not recorded in-tree. Downstream
+        consumers should diff against upstream <code>fgilde/AI-Ming</code> when auditing supply-chain changes.
+      </div>
+    </div>
+    <div class="card safe">
+      <div class="card-title">Strong provider fallback &amp; session ownership</div>
+      <div class="card-sub">
+        TensorRT→CUDA→DirectML→CPU chain, explicit SessionOptions lifetime notes, and CreateAsync off-UI loading are solid
+        production-oriented choices for heterogeneous GPUs.
+      </div>
+    </div>
+    <div class="card safe">
+      <div class="card-title">Tracking &amp; control quality</div>
+      <div class="card-sub">
+        StrongSORT-style tracker with NSA Kalman + Hungarian + Mahalanobis, plus OneEuro/PID/AimController stack, is
+        unusually thorough for this class of tool and is well commented.
+      </div>
+    </div>
+    <div class="card safe">
+      <div class="card-title">Config migration pattern</div>
+      <div class="card-sub">
+        Schema versioning and legacy field migration reduce breakage for long-lived user profiles — important given profile depth.
+      </div>
+    </div>
+  </div>
+
+  <!-- 17 -->
+  <div class="section" id="summary"><a id="a-summary" name="summary"></a>
+    <div class="section-title">17. Summary &amp; Recommendations</div>
+
+    <h2>Technical summary</h2>
+    <p>
+      This SmartNeural Updated tree is a large, coherent C# / .NET 10 WPF application (~54k LOC of C#) with a real
+      multi-provider ONNX pipeline, StrongSORT-derived tracking, adaptive smoothers, four anti-recoil strategies
+      (including vision + neural feed-forward), a substantial AutoPlay stack (heuristic + Ollama + Jev), multi-backend
+      mouse and virtual gamepad output, OCR gating, and a full custom UI system. Documentation quality on the hot AI
+      paths is high; automated tests and CHANGELOG hygiene are not.
+    </p>
+
+    <h2>Recommendations (engineering)</h2>
+    <table>
+      <tr><th>Priority</th><th>Area</th><th>Recommendation</th></tr>
+      <tr>
+        <td><span class="tag tag-warn">High</span></td>
+        <td>Tests</td>
+        <td>Unit-test ONNX layout parse, NMS/class filter, TargetTracker assignment, AimController accumulator, config migration, and Jev client timeouts.</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-warn">High</span></td>
+        <td>Thread safety</td>
+        <td>Publish a read-only config snapshot (or versioned view) to the AI loop each tick instead of live mutable AppConfig fields.</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-warn">Medium</span></td>
+        <td>Hot path latency</td>
+        <td>Double-buffer capture/inference; drop aged frames; optional GPU phase-correlation for SmartNeural.</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-core">Medium</span></td>
+        <td>Disposal</td>
+        <td>Audit Mat queues and InferenceSession/options pairs on every stop/reset path.</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-core">Medium</span></td>
+        <td>CHANGELOG / provenance</td>
+        <td>Document SmartNeural, crash fixes, and hot-path changes; keep a clear diff policy vs upstream.</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-core">Low</span></td>
+        <td>DI / testability</td>
+        <td>Reduce reliance on static Instance/Current for managers that need multi-instance or pure unit tests.</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-ai">Low</span></td>
+        <td>Aim UX</td>
+        <td>Expose AimController step caps and high-strength thresholds as profile sliders; live predicted-point overlay.</td>
+      </tr>
+    </table>
+
+    <h2>Operational note</h2>
+    <p>
+      From a pure software-engineering standpoint the archive is advanced and intentionally structured. From a product
+      policy standpoint it is purpose-built for automation that multiplayer publishers prohibit. Treat deployment and
+      distribution decisions accordingly; this report does not endorse online multiplayer use.
+    </p>
+  </div>
+
+</div>
+
+<div class="footer">
+  <span>PowerAim V4 — Full Project Audit Report · SmartNeural Updated · October 2026</span>
+  <span>318 .cs files · 53,824 LOC · 85 XAML · net10.0-windows · 4 projects</span>
+</div>
+
+</body>
+</html>

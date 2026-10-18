@@ -28,6 +28,7 @@
         <StackPanel x:Name="LegacyPanel" Margin="0,10,0,0" />
         <StackPanel x:Name="ImageBasedPanel" Margin="0,10,0,0" />
         <StackPanel x:Name="PatternPanel" Margin="0,10,0,0" />
+        <StackPanel x:Name="NeuralPanel" Margin="0,10,0,0" />
 
         <uiLibrary:Line Margin="0,10,0,10" />
 

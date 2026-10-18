@@ -26,12 +26,12 @@ internal static class EspBoxSmoother
     private static readonly object _gate = new();
 
     /// <summary>EMA blend for position/size. Higher = snappier, lower = smoother.</summary>
-    public static float Alpha { get; set; } = 0.45f;
+    public static float Alpha { get; set; } = 0.55f;
 
     /// <summary>Match radius as fraction of max(box size, 40px).</summary>
     public static float MatchScale { get; set; } = 1.25f;
 
-    public static int MaxMissed { get; set; } = 8;
+    public static int MaxMissed { get; set; } = 90; // ~1–3s hold at typical FPS
 
     /// <summary>
     /// Smooth a set of detections. Returns rectangles in the same coordinate space

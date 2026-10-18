@@ -170,6 +170,51 @@ internal static class PredictionFilter
             });
         }
 
-        return predictions;
+        // Class-aware NMS: suppress overlapping duplicates so aim/tracker see one box per object.
+        return NonMaxSuppression(predictions, iouThreshold: 0.45f);
+    }
+
+    /// <summary>
+    ///     Greedy class-aware NMS. Sort by confidence descending; suppress same-class boxes with
+    ///     IoU &gt;= threshold. Keeps cross-class overlaps (head vs body) intact.
+    /// </summary>
+    internal static List<Prediction> NonMaxSuppression(List<Prediction> predictions, float iouThreshold = 0.45f)
+    {
+        if (predictions.Count <= 1) return predictions;
+
+        predictions.Sort((a, b) => b.Confidence.CompareTo(a.Confidence));
+        var keep = new List<Prediction>(Math.Min(predictions.Count, 64));
+        var suppressed = new bool[predictions.Count];
+
+        for (int i = 0; i < predictions.Count; i++)
+        {
+            if (suppressed[i]) continue;
+            var a = predictions[i];
+            keep.Add(a);
+            if (keep.Count >= 64) break;
+
+            var ra = a.Rectangle;
+            for (int j = i + 1; j < predictions.Count; j++)
+            {
+                if (suppressed[j]) continue;
+                var b = predictions[j];
+                if (a.ClassId != b.ClassId) continue;
+                if (IoU(ra, b.Rectangle) >= iouThreshold)
+                    suppressed[j] = true;
+            }
+        }
+        return keep;
+    }
+
+    private static float IoU(RectangleF a, RectangleF b)
+    {
+        float x1 = Math.Max(a.Left, b.Left);
+        float y1 = Math.Max(a.Top, b.Top);
+        float x2 = Math.Min(a.Right, b.Right);
+        float y2 = Math.Min(a.Bottom, b.Bottom);
+        float inter = Math.Max(0f, x2 - x1) * Math.Max(0f, y2 - y1);
+        if (inter <= 0f) return 0f;
+        float uni = a.Width * a.Height + b.Width * b.Height - inter;
+        return uni > 0f ? inter / uni : 0f;
     }
 }

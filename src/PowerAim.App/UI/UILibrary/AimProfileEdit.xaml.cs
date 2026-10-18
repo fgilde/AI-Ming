@@ -237,7 +237,7 @@ namespace PowerAim.UI.UILibrary
                     v => { if (!_buildingTunePanel) Profile!.MovementPathType = v; });
 
                 TunePanel.AddDropdown(Locale.AimSmoothing, Profile!.SmoothingMode,
-                        new[] { AimSmoothingMode.None, AimSmoothingMode.Ema, AimSmoothingMode.OneEuro },
+                        new[] { AimSmoothingMode.None, AimSmoothingMode.Ema, AimSmoothingMode.OneEuro, AimSmoothingMode.Pid },
                         v => { if (!_buildingTunePanel) Profile!.SmoothingMode = v; },
                         toStringFn: SmoothingLabel);
 
@@ -250,6 +250,16 @@ namespace PowerAim.UI.UILibrary
                     TunePanel.AddSlider(Locale.AimSmoothingBeta, Locale.Amount, 0.05, 0.05, 0, 5, false, 2, false)
                         .InitWith(s => s.ToolTip = Locale.AimSmoothingBetaTooltip)
                         .BindTo(() => Profile!.OneEuroBeta);
+                }
+
+                if (Profile!.SmoothingMode == AimSmoothingMode.Pid)
+                {
+                    TunePanel.AddSlider("PID Kp", Locale.Amount, 0.01, 0.01, 0.01, 5, false, 2, false)
+                        .BindTo(() => Profile!.PidKp);
+                    TunePanel.AddSlider("PID Ki", Locale.Amount, 0.01, 0.01, 0, 2, false, 2, false)
+                        .BindTo(() => Profile!.PidKi);
+                    TunePanel.AddSlider("PID Kd", Locale.Amount, 0.01, 0.01, 0, 2, false, 2, false)
+                        .BindTo(() => Profile!.PidKd);
                 }
 
                 // How far the lock follows the same enemy before re-acquiring (issue #19). Applies in
@@ -297,6 +307,7 @@ namespace PowerAim.UI.UILibrary
             AimSmoothingMode.None => Locale.AimSmoothingNone,
             AimSmoothingMode.Ema => Locale.AimSmoothingEma,
             AimSmoothingMode.OneEuro => Locale.AimSmoothingOneEuro,
+            AimSmoothingMode.Pid => "PID",
             _ => mode.ToString(),
         };
 

@@ -243,10 +243,13 @@ public static class GamepadManager
 
     public static void Dispose()
     {
-        if (_controllerHidden && GamepadReader is IXInputGamepadReader xs)
-            xs.Controller.Show();
-        // GamepadReader?.Dispose();
-        GamepadSender?.Dispose();
+        try
+        {
+            if (_controllerHidden && GamepadReader is IXInputGamepadReader xs)
+                xs.Controller.Show();
+        }
+        catch { /* ignore */ }
+        try { GamepadSender?.Dispose(); } catch { /* ignore */ }
         GamepadSender = null;
         RawSender = null;
         CanRead = false;

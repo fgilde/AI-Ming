@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PowerAim V4 — Full Sourcebase Enhancement Report</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+    --code-bg: #0d1117;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 2rem 1rem 4rem;
+  }
+  .container { max-width: 960px; margin: 0 auto; }
+  h1 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--accent);
+  }
+  .meta {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 2rem 0 0.75rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 1.25rem 0 0.5rem;
+    color: var(--accent);
+  }
+  p, li { margin-bottom: 0.5rem; }
+  ul, ol { padding-left: 1.4rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.35rem; }
+  strong { color: var(--text); font-weight: 600; }
+  .current {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--muted);
+    padding: 0.75rem 1rem;
+    margin: 0.75rem 0 1rem;
+    font-size: 0.95rem;
+    color: var(--muted);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0 1.5rem;
+    font-size: 0.9rem;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.6rem 0.75rem;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: var(--surface);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  tr:nth-child(even) td { background: rgba(22, 27, 34, 0.5); }
+  code {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.85em;
+    background: var(--surface);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  .order-list { counter-reset: step; list-style: none; padding-left: 0; }
+  .order-list li {
+    counter-increment: step;
+    padding: 0.5rem 0.75rem 0.5rem 2.5rem;
+    position: relative;
+    border-left: 2px solid var(--border);
+    margin-left: 0.75rem;
+  }
+  .order-list li::before {
+    content: counter(step);
+    position: absolute;
+    left: -0.85rem;
+    top: 0.45rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    background: var(--accent);
+    color: var(--bg);
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .quick-wins {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+  }
+  .quick-wins ul { margin-bottom: 0; }
+  .summary {
+    background: linear-gradient(135deg, rgba(88,166,255,0.08), rgba(63,185,80,0.06));
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-top: 2rem;
+  }
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 2rem;
+  }
+  .toc ol { margin-bottom: 0; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  footer {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>PowerAim V4 — Full Sourcebase Enhancement Report</h1>
+<p class="meta">
+  Architecture reviewed: AIManager loop, PredictionLogic/ONNX, AimController + filters, TargetTracker/Selector,
+  SmartNeuralAntiRecoil + RecoilPredictor, InputSender/Mouse backends, capture stack (DXGI/GDI/Process),
+  Jev decision client, profiles, overlays, replay, AutoPlay learning, launcher, Core.<br>
+  Prioritized by impact on latency, robustness, and feature depth. Concrete upgrades to existing modules.
+</p>
+
+<nav class="toc">
+  <strong>Contents</strong>
+  <ol>
+    <li><a href="#s1">Detection &amp; Inference Hot Path</a></li>
+    <li><a href="#s2">Aim Pipeline</a></li>
+    <li><a href="#s3">Smart Neural Anti-Recoil + RecoilPredictor</a></li>
+    <li><a href="#s4">Capture Stack</a></li>
+    <li><a href="#s5">Input / Mouse / Gamepad</a></li>
+    <li><a href="#s6">Tracking, Sticky Aim, Prediction</a></li>
+    <li><a href="#s7">AutoPlay / Learning / Jev / OCR</a></li>
+    <li><a href="#s8">Profiles, Config, Persistence</a></li>
+    <li><a href="#s9">UI / Overlays / Debug</a></li>
+    <li><a href="#s10">Reliability, Diagnostics, Tooling</a></li>
+    <li><a href="#s11">Architecture / Code Hygiene</a></li>
+    <li><a href="#s12">Suggested Implementation Order</a></li>
+    <li><a href="#qw">Quick Wins</a></li>
+  </ol>
+</nav>
+
+<!-- Section 1 -->
+<h2 id="s1">1. Detection &amp; Inference Hot Path (highest ROI)</h2>
+<div class="current">
+  <strong>Current:</strong> PredictionLogic owns ONNX session, letterbox, NMS, mask regions. FP16 sibling + TensorRT path already present. SessionOptions lifetime fixed. Loop error tolerance = 10 consecutive failures.
+</div>
+<table>
+  <thead>
+    <tr><th>Area</th><th>Improvement</th><th>Why</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Async / double-buffer inference</strong></td>
+      <td>Overlap capture of frame N+1 with inference on frame N. Two pinned float buffers + ring of 2 <code>DenseTensor</code>s.</td>
+      <td>Removes ~1 frame of pure sequential latency on CUDA/TRT.</td>
+    </tr>
+    <tr>
+      <td><strong>Dynamic batch / multi-ROI</strong></td>
+      <td>Optional second pass on sticky-target crop only (smaller tensor) when FOV is large.</td>
+      <td>Higher effective resolution on the active target without full 640² cost every frame.</td>
+    </tr>
+    <tr>
+      <td><strong>Class / team filtering at tensor level</strong></td>
+      <td>Early prune by class ID before NMS when game-specific models expose team/enemy classes.</td>
+      <td>Less post-process work; fewer false positives into tracker.</td>
+    </tr>
+    <tr>
+      <td><strong>Adaptive image size</strong></td>
+      <td>Runtime switch 320/416/512/640 based on measured FPS budget and target distance.</td>
+      <td>Maintain 144+ Hz on weaker GPUs without config reload.</td>
+    </tr>
+    <tr>
+      <td><strong>ORT arena + thread pool isolation</strong></td>
+      <td>Dedicated <code>OrtEnv</code> / session for AI loop; never share with UI/OCR/Jev HTTP.</td>
+      <td>Prevents UI freezes during engine rebuild or first Run().</td>
+    </tr>
+    <tr>
+      <td><strong>Model warm-start cache</strong></td>
+      <td>Persist TensorRT engines + DirectML graph cache keyed by GPU + model hash.</td>
+      <td>Kill the 30 s–2 min first-load tax after driver updates.</td>
+    </tr>
+    <tr>
+      <td><strong>Output tensor layout auto-detect</strong></td>
+      <td>Already partial; harden for YOLOv5/v8/v9/v10/RT-DETR mixed layouts and dynamic axes.</td>
+      <td>Custom models stop breaking silently.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- Section 2 -->
+<h2 id="s2">2. Aim Pipeline (AimController / filters / selection)</h2>
+<div class="current">
+  <strong>Current:</strong> Proportional controller with high-strength near-linear mode, accumulator, max-step floor 400. OneEuro + PID adaptive + NSA Kalman exist. Sticky selector with challenger hysteresis.
+</div>
+<ul>
+  <li><strong>Unified smoother chain</strong> — Configurable pipeline: <code>Raw → OneEuro → Kalman lead → PID → AimController step</code>. Expose order + enable flags in AimProfile. Today pieces exist but composition is rigid inside AimingAction.</li>
+  <li><strong>Ballistic / acceleration lead</strong> — Extend Kalman state to <code>[x,y,vx,vy,ax,ay]</code> or use constant-acceleration model when track history ≥ 6 frames. Better on strafing + vertical jumps.</li>
+  <li><strong>Humanization layer</strong> — Micro-jitter + Bezier / minimum-jerk paths (MovementPaths already partially present) scaled by strength and distance. Optional “human curve” intensity on profile.</li>
+  <li><strong>Bone / hitbox offset</strong> — Per-class aim-point bias (head/chest/pelvis) driven by box height ratio + configurable head % slider. EditHeadArea UI exists — wire it fully into TargetTrack aim point.</li>
+  <li><strong>Disengage / re-acquire rules</strong> — AimDisengageRule is present; expand to velocity-based break (target exceeds max track speed), occlusion frames, and “lost behind cover” OCR/region conditions.</li>
+  <li><strong>Sub-pixel residual carry across backends</strong> — AimController already accumulates. Guarantee the same fractional carry survives MouseManager → GHub / Razer / ddxoft / SendInput / Gamepad stick so micro-corrections never quantize differently per method.</li>
+  <li><strong>FOV-aware strength curve</strong> — Strength = f(distance_to_edge_of_FOV). Soften near edges so the bot doesn’t fight the user’s turn when target is leaving FOV.</li>
+</ul>
+
+<!-- Section 3 -->
+<h2 id="s3">3. Smart Neural Anti-Recoil + RecoilPredictor</h2>
+<div class="current">
+  <strong>Current:</strong> Patch capture, phase-correlation residual, EMA baseline, RNN/analytic prior, micro-steps. Pure vision path (good).
+</div>
+<ul>
+  <li><strong>Weapon / class classifier feed</strong> — Use detection class or a tiny secondary head to select PriorY/PriorX tables and PredictWeight. Different weapons need different vertical gain and burst curves.</li>
+  <li><strong>Burst-phase state machine</strong> — Explicit phases: pre-fire, initial kick, sustained, spray, cooldown. Reset residual history and baseline only on true LMB edges + shot-count delta, not on every frame.</li>
+  <li><strong>Adaptive PredictWeight</strong> — Lower weight when phase-correlation confidence is high and residual is consistent; raise when correlation fails (smoke, flash, low light).</li>
+  <li><strong>Dual-path compensation</strong> — Optional hybrid: recorded RecoilPatternPlaybackAction + SmartNeural residual. Pattern handles deterministic first 8–12 shots; neural cleans the stochastic tail.</li>
+  <li><strong>GPU phase correlation</strong> — Move OpenCvSharp phaseCorrelate off CPU when CUDA is available (or use a small ONNX correlation net). Current path can be the loop’s second-largest cost after detection.</li>
+  <li><strong>Per-profile neural weights</strong> — Serialize residual history stats + learned gain offsets into AntiRecoilProfile so the model “remembers” a user’s sensitivity and weapon set.</li>
+</ul>
+
+<!-- Section 4 -->
+<h2 id="s4">4. Capture Stack</h2>
+<div class="current">
+  <strong>Current:</strong> DXGI primary, GDI fallback, ProcessCapture, CaptureSource abstraction.
+</div>
+<ul>
+  <li><strong>Desktop Duplication + multi-monitor affinity</strong> — Pin duplication to the adapter that owns the game window; auto-rebind on display change / HDR toggle / exclusive fullscreen switch.</li>
+  <li><strong>Shared surface / zero-copy path</strong> — When possible, keep the captured frame in GPU memory and feed ORT CUDA/TensorRT directly (avoid CPU round-trip + BGRA→RGB conversion).</li>
+  <li><strong>Frame timestamp + latency budget</strong> — Stamp every capture; drop frames older than N ms instead of processing stale data. AIManager already has FpsCapHelper — couple it to age, not only rate.</li>
+  <li><strong>HDR / wide-color handling</strong> — Explicit tone-map or sRGB conversion path so detection doesn’t collapse under HDR games.</li>
+  <li><strong>Process capture reliability</strong> — Better window-handle refresh, DPI awareness, and “game lost focus but still rendering” detection so the loop doesn’t thrash between DXGI and GDI.</li>
+</ul>
+
+<!-- Section 5 -->
+<h2 id="s5">5. Input / Mouse / Gamepad</h2>
+<div class="current">
+  <strong>Current:</strong> Unified InputSender, MouseManager backends (GHub, Razer, ddxoft, SendInput), gamepad right-stick aim, HidHide.
+</div>
+<ul>
+  <li><strong>Backend health probe</strong> — Continuous light heartbeat; automatic failover (GHub → Razer → SendInput) with UI notice when a driver silently dies.</li>
+  <li><strong>Relative vs absolute calibration</strong> — SensitivityCalibrator exists — expand to full pixels-per-count measurement per backend and store in profile so the same strength feels identical across methods.</li>
+  <li><strong>Stick aim curve editor</strong> — Response curves for gamepad aim (deadzone, expo, saturation) instead of linear mapping of pixel error → stick deflection.</li>
+  <li><strong>Input event bus telemetry</strong> — Latency histogram from “detection ready” → “Move() returned” exposed in DebugOverlay. Identifies which backend is the bottleneck.</li>
+  <li><strong>Safer HidHide integration</strong> — Explicit device whitelist UI + restore-on-exit guarantee so users don’t lose physical mouse after crash.</li>
+</ul>
+
+<!-- Section 6 -->
+<h2 id="s6">6. Tracking, Sticky Aim, Prediction</h2>
+<div class="current">
+  <strong>Current:</strong> TargetTracker + TargetTrack + StickyAimSelector + KalmanPrediction + PredictionFilter.
+</div>
+<ul>
+  <li><strong>ID stability under occlusion</strong> — Short-term predicted ghost track (Kalman coast) so sticky ID survives 3–8 frames of missing detection.</li>
+  <li><strong>Multi-target priority model</strong> — Score = distance + confidence + class priority + “threat” (facing camera / closer to crosshair velocity). Configurable weights in AimProfile.</li>
+  <li><strong>Team / friendly fire filter</strong> — When model supports it, hard-exclude ally classes; optional color/outline heuristic for games without class IDs.</li>
+  <li><strong>Prediction lead UI</strong> — Live visualization of predicted point vs current box on DebugOverlay / FOV overlay so users can tune lead time by eye.</li>
+</ul>
+
+<!-- Section 7 -->
+<h2 id="s7">7. AutoPlay / Learning / Jev / OCR</h2>
+<div class="current">
+  <strong>Current:</strong> AutoPlayLearningModel, AutoPlay actions, JevDecisionClient (HTTP), OcrService + condition evaluator, Ollama client.
+</div>
+<ul>
+  <li><strong>Closed-loop AutoPlay</strong> — Record (state, action, outcome) tuples into ReplayBuffer-style storage; offline policy update or simple bandit for trigger timing / ability use.</li>
+  <li><strong>Jev latency budget</strong> — Hard timeout + local fallback policy so a slow decision server never stalls the aim loop. Parallel non-blocking decision path only.</li>
+  <li><strong>OCR region stability</strong> — Temporal voting + small tracking on OCR boxes so flicker doesn’t fire actions. Cache last good text for N frames.</li>
+  <li><strong>Condition graph editor</strong> — Visual node editor for OcrTriggerCondition trees (already structured as nodes) instead of pure list UI.</li>
+  <li><strong>Ollama / local LLM tool use</strong> — Structured tool calls for “should I reload / swap / hold angle” with strict schema so responses stay machine-parseable.</li>
+</ul>
+
+<!-- Section 8 -->
+<h2 id="s8">8. Profiles, Config, Persistence</h2>
+<div class="current">
+  <strong>Current:</strong> Rich AimProfile / AntiRecoilProfile / AutoPlayProfile, AppConfig, many settings classes.
+</div>
+<ul>
+  <li><strong>Profile hot-swap without full AI restart</strong> — Swap strength, FOV, filters, recoil tables while loop runs; only reload model session when model path / provider changes.</li>
+  <li><strong>Per-process auto-load</strong> — ActiveProcessSettings already exists — strengthen to automatic profile bind + capture source bind when process appears.</li>
+  <li><strong>Config migration + schema version</strong> — Explicit version field + migrators so future fields don’t silently reset user data.</li>
+  <li><strong>Import/export with dependency check</strong> — Profiles that reference missing models or backends warn instead of loading half-broken state.</li>
+  <li><strong>Cloud / local sync optional</strong> — Encrypted profile pack (no account required) for multi-PC users.</li>
+</ul>
+
+<!-- Section 9 -->
+<h2 id="s9">9. UI / Overlays / Debug</h2>
+<div class="current">
+  <strong>Current:</strong> Heavy Visuality set (FOV, DebugOverlay, Crosshair, DetectionMasks, CalibrationWizard, etc.).
+</div>
+<ul>
+  <li><strong>Performance HUD</strong> — Capture ms | Infer ms | Track ms | Move ms | total budget | GPU util (where available). One glance diagnosis.</li>
+  <li><strong>Live filter response plot</strong> — Mini graph of OneEuro / PID output vs raw error for tuning.</li>
+  <li><strong>Mask painting improvements</strong> — Brush + polygon + “exclude UI chrome” presets; save with profile.</li>
+  <li><strong>Non-intrusive notice system</strong> — NoticeBar exists — route backend failover, model load, TRT build progress through it instead of modal dialogs during play.</li>
+  <li><strong>Theme / accent consistency</strong> — Single theme tokens for all custom controls so new dialogs don’t drift visually.</li>
+</ul>
+
+<!-- Section 10 -->
+<h2 id="s10">10. Reliability, Diagnostics, Tooling</h2>
+<div class="current">
+  <strong>Current:</strong> AppDebugLog, CudaDiagnostics, PerformanceBenchmark, TensorRtInstaller, consecutive error counter, replay export.
+</div>
+<ul>
+  <li><strong>Structured crash / hang reports</strong> — On MaxConsecutiveLoopErrors or unhandled exception: dump last N replay frames + config snapshot + ORT/provider state + backend name.</li>
+  <li><strong>Self-test suite on startup</strong> — Optional: capture probe, model load, one dummy Move(), backend ping. Surface results in launcher before main window.</li>
+  <li><strong>Benchmark mode</strong> — Fixed synthetic detections → measure end-to-end aim latency distribution (p50/p95/p99). Already have PerformanceBenchmark — wire to a one-click UI action that writes a report.</li>
+  <li><strong>Log levels + ring buffer</strong> — Keep last 5–10 k lines in memory; export on demand. Avoid unbounded file growth.</li>
+  <li><strong>Build / packaging</strong> — Separate CUDA vs DirectML vs CPU publish profiles; keep native DLLs out of the wrong package. Single-file already used — document which natives must stay external.</li>
+</ul>
+
+<!-- Section 11 -->
+<h2 id="s11">11. Architecture / Code Hygiene</h2>
+<ul>
+  <li><strong>Clear ownership of the AI loop thread</strong> — AIManager owns the thread; actions must be re-entrant-safe or explicitly documented as “AI-thread only”. Avoid hidden UI thread affinity inside actions.</li>
+  <li><strong>Interface tightening</strong> — IPredictionLogic / ICapture / IAction are good. Push more of the filter and controller surface behind small interfaces so AimingAction stops growing into a god object (440 lines already).</li>
+  <li><strong>Reduce static singletons</strong> — ReplayBuffer, some managers — prefer explicit composition from AIManager / App for testability (Core.Tests already exists; expand coverage to tracker + controller math).</li>
+  <li><strong>Nullability &amp; warnings</strong> — Project already uses NRT and NoWarn cleanup. Finish remaining <code>string?</code> / disposable patterns in capture and ONNX paths so Release builds stay clean.</li>
+  <li><strong>CHANGELOG.md is empty</strong> — Populate from the actual SmartNeural / crash-fix / hot-path work so users and future diffs have a timeline.</li>
+</ul>
+
+<!-- Section 12 -->
+<h2 id="s12">12. Suggested Implementation Order</h2>
+<ol class="order-list">
+  <li>Double-buffer inference + frame-age drop (latency).</li>
+  <li>Unified smoother pipeline + bone offset (aim quality).</li>
+  <li>Weapon-aware SmartNeural + adaptive PredictWeight (recoil).</li>
+  <li>Capture zero-copy / adapter affinity (stability under fullscreen).</li>
+  <li>Backend health + failover (input reliability).</li>
+  <li>Ghost tracks + multi-target scoring (tracking).</li>
+  <li>Profile hot-swap + process auto-bind (UX).</li>
+  <li>Performance HUD + structured dumps (ops).</li>
+  <li>AutoPlay closed loop + Jev non-blocking (advanced features).</li>
+  <li>Test coverage for Kalman / selector / controller math.</li>
+</ol>
+
+<!-- Quick Wins -->
+<h2 id="qw">Quick Wins (low effort, high visibility)</h2>
+<div class="quick-wins">
+  <ul>
+    <li>Expose AimController max-step and high-strength threshold as profile sliders (currently comments/hardcoded floors).</li>
+    <li>Live predicted-point overlay.</li>
+    <li>Backend name + last Move latency on DebugOverlay.</li>
+    <li>Persist last successful TensorRT engine path.</li>
+    <li>Fill CHANGELOG with the RAR-merge / crash-fix / MUST hot-path work already done.</li>
+    <li>One-click “self-test capture + model + move” from launcher.</li>
+  </ul>
+</div>
+
+<div class="summary">
+  <strong>Summary</strong><br>
+  Source base is already strong: solid provider fallbacks, sticky tracking, vision-only neural recoil, multi-backend input, profiles, replay, Jev.
+  Highest leverage is finishing the hot-path overlap, making aim composition configurable, and hardening capture + input under real game conditions.
+</div>
+
+<footer>
+  PowerAim V4 SmartNeural — Enhancement Report · Generated for project source review
+</footer>
+
+</div>
+</body>
+</html>

@@ -88,9 +88,12 @@ namespace PowerAim.UI.UILibrary
             }
 
             var content = await response.Content.ReadAsByteArrayAsync();
-            var filePath = Path.Combine("bin", path, name);
-
-            Directory.CreateDirectory(Path.GetDirectoryName(filePath)); // just in case
+            // Always resolve against the app base directory. Relative "bin\models\..." fails when
+            // the process cwd is not the publish folder (Explorer shortcuts, drag-drop, installers).
+            var filePath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bin", path, name));
+            var dir = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrEmpty(dir))
+                Directory.CreateDirectory(dir);
             await File.WriteAllBytesAsync(filePath, content);
             return true;
         }

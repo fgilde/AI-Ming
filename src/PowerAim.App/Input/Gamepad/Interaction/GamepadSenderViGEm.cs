@@ -242,8 +242,12 @@ public class GamepadSenderViGEm : IGamepadSender
 
     public void Dispose()
     {
-        StopSync();
-        _virtualController?.Disconnect();
-        _client.Dispose();
+        try { StopSync(); } catch { /* ignore */ }
+        try { _virtualController?.Disconnect(); } catch { /* ignore */ }
+        _virtualController = null;
+        // ViGEm init may have failed — _client stays null. Never NRE on app close.
+        try { _client?.Dispose(); } catch { /* ignore */ }
+        _client = null;
+        _connected = false;
     }
 }

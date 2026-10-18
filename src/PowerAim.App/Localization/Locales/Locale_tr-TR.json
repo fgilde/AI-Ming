@@ -954,5 +954,10 @@
   "DetectionFlash": "Algılamada parlama",
   "DetectionFlashColor": "Parlama rengi",
   "DetectionFlashDuration": "Parlama süresi",
-  "DetectionFlashHelp": "Bir düşman algılandığında nişangâhı kısaca renklendirir, böylece hata ayıklama yer paylaşımını açmadan sessiz bir görsel ipucu alırsınız."
+  "DetectionFlashHelp": "Bir düşman algılandığında nişangâhı kısaca renklendirir, böylece hata ayıklama yer paylaşımını açmadan sessiz bir görsel ipucu alırsınız.",
+  "SmartNeuralAntiRecoil": "Smart Neural Anti-Recoil",
+  "AntiRecoilModeSmartNeural": "Smart Neural (screen-only)",
+  "SmartNeuralStrengthHelp": "Compensation strength for the pure neural / vision anti-recoil path. Higher = stronger counter-movement.",
+  "SmartNeuralConfidence": "Neural confidence threshold",
+  "SmartNeuralConfidenceHelp": "Ignore frames whose phase-correlation confidence is below this value (0–1)."
 }

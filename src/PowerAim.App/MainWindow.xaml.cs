@@ -75,7 +75,13 @@ public partial class MainWindow
 
         var writer = new TextBoxStreamWriter(OutputTextBox);
         Console.SetOut(writer);
-        AppConfig.ConfigLoaded += (s, e) => CreateUI();
+        // Same as original: ConfigLoaded rebuilds UI. LoadConfig sets _configLoadInProgress
+        // so nested selection-changed loads cannot re-enter while CreateUI runs.
+        AppConfig.ConfigLoaded += (s, e) =>
+        {
+            if (_configLoadInProgress) return;
+            CreateUI();
+        };
         Console.WriteLine(Locale.InitUIMessage);
         Config = AppConfig.Load();
 
@@ -122,8 +128,14 @@ public partial class MainWindow
         }
     }
 
+    private bool _uiRebuildInProgress;
+
     private void CreateUI()
     {
+        if (_uiRebuildInProgress) return;
+        _uiRebuildInProgress = true;
+        try
+        {
         string? menu = null;
         var isRecreating = IsInitialized && _uiCreated;
         if (isRecreating && CurrentMenu != nameof(AimMenu))
@@ -215,6 +227,8 @@ public partial class MainWindow
         {
             _ = NavigateTo(menu, false);
         }
+        }
+        finally { _uiRebuildInProgress = false; }
     }
 
     internal AIManager AIManager => AIManager.Instance;

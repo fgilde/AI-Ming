@@ -18,6 +18,8 @@ public enum AntiRecoilMode
     ImageBased = 1,
     /// <summary>Recorded recoil-pattern playback (looked up by name in the shared library).</summary>
     PatternPlayback = 2,
+    /// <summary>Pure neural / screen-vision anti-recoil (no memory). Uses temporal frame analysis.</summary>
+    SmartNeural = 3,
 }
 
 /// <summary>
@@ -180,6 +182,20 @@ public class AntiRecoilProfile : EditableNotificationObject
         set => SetProperty(ref field, value);
     } = 0.85;
 
+    /// <summary>Strength of the smart-neural anti-recoil. Range [0, 2.0]. Only used when Mode == SmartNeural.</summary>
+    public double NeuralStrength
+    {
+        get;
+        set => SetProperty(ref field, value);
+    } = 1.25;
+
+    /// <summary>Confidence threshold (0-1) below which neural compensation is ignored. Lower = more aggressive.</summary>
+    public double NeuralConfidenceThreshold
+    {
+        get;
+        set => SetProperty(ref field, value);
+    } = 0.20;
+
     // ------------------------------------------ PatternPlayback mode parameters --
 
     /// <summary>Name of the entry in <see cref="AntiRecoilSettings.Patterns"/>. Empty = nothing to play.</summary>
@@ -255,6 +271,7 @@ public class AntiRecoilProfile : EditableNotificationObject
                 AntiRecoilMode.Legacy => "Legacy",
                 AntiRecoilMode.ImageBased => "Image-based",
                 AntiRecoilMode.PatternPlayback => string.IsNullOrEmpty(PatternName) ? "Pattern (none)" : $"Pattern: {PatternName}",
+                AntiRecoilMode.SmartNeural => "Smart Neural",
                 _ => Mode.ToString(),
             };
             string suffix = string.IsNullOrWhiteSpace(WeaponMatch) ? "" : $" · OCR: \"{WeaponMatch}\"";

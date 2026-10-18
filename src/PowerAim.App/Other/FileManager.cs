@@ -2,9 +2,11 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using PowerAim.Config;
+using PowerAim.Other;
 using PowerAim.UI.Visuality;
 using PowerAim;
 using PowerAim.Core;
+using PowerAim.Localization;
 using PowerAim.Extensions;
 using Nextended.Core.Extensions;
 
@@ -84,12 +86,25 @@ namespace PowerAim.Other
         private async void ModelListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (ModelListBox.SelectedItem == null) return;
+            if (CurrentlyLoadingModel) return;
 
             string selectedModel = ModelListBox.SelectedItem.ToString()!;
 
-            string modelPath = Path.Combine(Constants.ModelsBasePath, selectedModel);
+            // Always resolve against the app base directory — relative "bin\models\..." breaks when
+            // the process cwd is not the publish folder (common after Explorer drag-drop / shortcuts).
+            string modelsDir = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constants.ModelsBasePath));
+            Directory.CreateDirectory(modelsDir);
+            string modelPath = Path.Combine(modelsDir, selectedModel);
 
-            await LoadModel(selectedModel, modelPath);
+            try
+            {
+                await LoadModel(selectedModel, modelPath);
+            }
+            catch (Exception ex)
+            {
+                CurrentlyLoadingModel = false;
+                new NoticeBar(string.Format(Locale.ErrorStartingModelFormat, ex.Message), 6000).Show();
+            }
         }
 
         public async Task LoadModel(string selectedModel, string modelPath, bool force = false)
@@ -100,6 +115,7 @@ namespace PowerAim.Other
             int gen = System.Threading.Interlocked.Increment(ref _loadGeneration);
 
             CurrentlyLoadingModel = true;
+            AppDebugLog.Info("Model", $"Load start: {selectedModel}", modelPath);
             AppConfig.Current.LastLoadedModel = selectedModel;
             AppConfig.Current.OnPropertyChanged(nameof(AppConfig.Current.LastLoadedModel));
 
@@ -116,23 +132,40 @@ namespace PowerAim.Other
 
             try
             {
-                // Let the AI finish up
-                await Task.Delay(150);
+                // Let the AI finish the current frame and release the session gate before we
+                // build the replacement. Too short and InferenceSession.Run races Dispose → crash.
+                await Task.Delay(250);
 
-                // Build off the UI thread — a first-time TensorRT engine build is slow and would otherwise
-                // freeze the window during model load.
+                // Absolute path safety net (callers sometimes pass relative bin\models\...).
+                if (!Path.IsPathRooted(modelPath))
+                    modelPath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, modelPath));
+
+                if (!File.Exists(modelPath))
+                    throw new FileNotFoundException($"ONNX model not found: {modelPath}", modelPath);
+
+                // Build off the UI thread — InferenceSession + EP init must never run on the dispatcher.
+                // A first-time TensorRT engine build is especially slow and would freeze the window.
                 var mgr = await global::AIManager.CreateAsync(modelPath, AppConfig.Current.CaptureSource);
 
                 if (gen != _loadGeneration)
                 {
-                    // A newer load superseded us (e.g. the user hit "use CUDA" while our TensorRT engine was
-                    // still building). Discard our result rather than clobbering the newer one.
+                    // A newer load superseded us. Discard our result rather than clobbering the newer one.
                     mgr?.Dispose();
                     return;
                 }
 
-                AIManager?.Dispose();   // drop the previously-active manager now that the new one is ready
+                // Dispose previous manager OFF the UI thread. Dispose may Join the AI loop for up to
+                // ~2s — doing that on the dispatcher freezes (and can crash) the window.
+                var previous = AIManager;
                 AIManager = mgr;
+                if (previous != null)
+                {
+                    _ = Task.Run(() =>
+                    {
+                        try { previous.Dispose(); }
+                        catch (Exception ex) { System.Diagnostics.Debug.WriteLine("[LoadModel] dispose: " + ex.Message); }
+                    });
+                }
 
                 // The session may have failed to load at the ONNX level (all providers fell through) —
                 // CreateAsync still returns an AIManager, but IsModelLoaded is false. Surface the real
@@ -148,13 +181,14 @@ namespace PowerAim.Other
                     string content = Locale.LoadedModel.FormatWith(selectedModel);
                     SelectedModelNotifier.Content = content;
                     new NoticeBar(content, 2000).Show();
+                    AppDebugLog.Info("Model", $"Load OK: {selectedModel}",
+                        "provider=" + (AIManager?.PredictionLogic?.ExecutionProvider.ToString() ?? "?"));
                 }
             }
             catch (Exception ex)
             {
-                // A hard failure (capture source, session construction, etc.) must NOT leave the UI stuck
-                // on "loading" forever — report it (only if we're still the latest load) and let finally
-                // clear the loading state.
+                AppDebugLog.Exception("Model", ex, "LoadModel " + selectedModel);
+                // A hard failure must NOT leave the UI stuck on "loading" forever.
                 if (gen == _loadGeneration)
                 {
                     SelectedModelNotifier.Content = Locale.ModelLoadFailed;
@@ -163,8 +197,7 @@ namespace PowerAim.Other
             }
             finally
             {
-                // Only the latest generation finalizes — restore toggles, clear the loading flag, refresh
-                // the UI. Superseded loads leave all of that to the winner (their finally is a no-op).
+                // Only the latest generation finalizes — restore toggles, clear the loading flag.
                 if (gen == _loadGeneration)
                 {
                     lock (_toggleStateLock)
@@ -179,8 +212,6 @@ namespace PowerAim.Other
 
                     CurrentlyLoadingModel = false;
 
-                    // Raising IsModelLoaded also resolves the empty-state card's "loading…" look
-                    // (OnPropertyChanged clears ModelLoadPending) and refreshes the status-strip text.
                     if (Application.Current?.MainWindow is MainWindow mw)
                         mw.CallPropertyChanged(nameof(mw.IsModelLoaded));
                 }
@@ -192,9 +223,17 @@ namespace PowerAim.Other
             if (ConfigListBox.SelectedItem == null) return;
             string selectedConfig = ConfigListBox.SelectedItem.ToString()!;
 
-            string configPath = Path.Combine(Constants.ConfigBasePath, selectedConfig);
-            MainWindow.Instance.LoadConfig(configPath);
-            SelectedConfigNotifier.Content = Locale.LoadedConfig.FormatWith(selectedConfig);
+            string configPath = Path.GetFullPath(Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory, Constants.ConfigBasePath, selectedConfig));
+
+            try
+            {
+                MainWindow.Instance?.LoadConfig(configPath);
+            }
+            catch (Exception ex)
+            {
+                new NoticeBar(string.Format(Locale.ErrorFormat, ex.Message), 6000).Show();
+            }
         }
 
         public void InitializeFileWatchers()
@@ -210,7 +249,11 @@ namespace PowerAim.Other
         /// </summary>
         private static FileSystemWatcher CreateWatcher(string path, string filter, FileSystemEventHandler onChange)
         {
-            var watcher = new FileSystemWatcher { Path = path, Filter = filter, EnableRaisingEvents = true };
+            string fullPath = Path.IsPathRooted(path)
+                ? path
+                : Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path));
+            Directory.CreateDirectory(fullPath);
+            var watcher = new FileSystemWatcher { Path = fullPath, Filter = filter, EnableRaisingEvents = true };
             watcher.Changed += onChange;
             watcher.Created += onChange;
             watcher.Deleted += onChange;
@@ -239,15 +282,33 @@ namespace PowerAim.Other
             if (InQuittingState) return;
             Application.Current.Dispatcher.Invoke(() =>
             {
+                // Resolve relative content dirs against the app base directory (cwd is unreliable).
+                string fullDir = Path.IsPathRooted(dir)
+                    ? dir
+                    : Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, dir));
+
+                var previousSelection = listBox.SelectedItem as string;
                 listBox.Items.Clear();
-                foreach (string filePath in Directory.GetFiles(dir, filter))
-                    listBox.Items.Add(Path.GetFileName(filePath));
+                if (Directory.Exists(fullDir))
+                {
+                    foreach (string filePath in Directory.GetFiles(fullDir, filter))
+                        listBox.Items.Add(Path.GetFileName(filePath));
+                }
 
                 if (listBox.Items.Count > 0)
                 {
                     string? lastLoaded = getLastLoaded();
-                    if (lastLoaded != "N/A" && !listBox.Items.Contains(lastLoaded))
-                        listBox.SelectedItem = lastLoaded;
+                    // Prefer last-loaded when present; otherwise keep prior selection so a FileSystemWatcher
+                    // refresh does not re-fire SelectionChanged and start a second concurrent load mid-load.
+                    string? prefer = null;
+                    if (!string.IsNullOrEmpty(lastLoaded) && lastLoaded != "N/A" && listBox.Items.Contains(lastLoaded))
+                        prefer = lastLoaded;
+                    else if (!string.IsNullOrEmpty(previousSelection) && listBox.Items.Contains(previousSelection))
+                        prefer = previousSelection;
+
+                    if (prefer != null && !Equals(listBox.SelectedItem, prefer))
+                        listBox.SelectedItem = prefer;
+
                     updateNotifier(lastLoaded);
                 }
                 listBox.EnsureRenderedAndInitialized();

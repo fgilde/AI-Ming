@@ -210,6 +210,9 @@ public partial class MainWindow
         AntiRecoil.AddToggleWithKeyBind(Locale.AntiRecoil, nameof(Locale.AntiRecoil), BindingManager)
             .BindTo(() => AppConfig.Current.ToggleState.AntiRecoil)
             .BindActiveStateColor(AntiRecoil);
+        AntiRecoil.AddToggleWithKeyBind(Locale.SmartNeuralAntiRecoil, nameof(Locale.SmartNeuralAntiRecoil), BindingManager)
+            .BindTo(() => AppConfig.Current.ToggleState.SmartNeuralAntiRecoil)
+            .BindActiveStateColor(AntiRecoil);
         AntiRecoil.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind), () => keybind.AntiRecoilKeybind, BindingManager);
         AntiRecoil.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.DisableAntiRecoilKeybind), () => keybind.DisableAntiRecoilKeybind, BindingManager);
 
@@ -999,6 +1002,14 @@ public partial class MainWindow
         UISettings.AddToggle(Locale.RequireGlobalActiveForKeybinds)
             .InitWith(t => t.ToolTip = Locale.RequireGlobalActiveForKeybindsTooltip)
             .BindTo(() => AppConfig.Current.ToggleState.RequireGlobalActiveForKeybinds);
+
+        // Application debug logging — feature flips, model load/switch, exceptions → %LocalAppData%\PowerAim\logs
+        var debugLogToggle = UISettings.AddToggle("Enable Debug Logging");
+        debugLogToggle.InitWith(t => t.ToolTip =
+            "Log every feature enable/disable, model switch, and error to %LocalAppData%\\PowerAim\\logs\\ and the Debug Log panel.");
+        debugLogToggle.BindTo(() => AppConfig.Current.ToggleState.EnableDebugLogging);
+        UISettings.AddButton("Open Debug Log Panel").Reader.Click += (s, e) =>
+            PowerAim.UI.Visuality.DebugLogPanel.ShowSingleton(this);
 
         var hideCaptureToggle = UISettings.AddToggle(Locale.HideUIFromCapture);
         hideCaptureToggle.BindTo(() => AppConfig.Current.ToggleState.HideUIFromCapture);

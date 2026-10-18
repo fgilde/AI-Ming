@@ -89,12 +89,14 @@ public sealed class DxgiScreenCapture : ICapture
 
         lock (_captureLock)
         {
-            // Frame cache: serve the previous bitmap if we just captured for the same box.
+            // Frame cache: serve a CLONE of the previous bitmap if we just captured for the same box.
+            // Callers (ReplayBuffer encode, SaveFrameAsync, AI loop) must not share the internal buffer —
+            // the next Capture may dispose/overwrite _lastCapture.
             if (_lastCapture != null
                 && _lastBox == detectionBox
                 && DateTime.UtcNow - _lastCaptureUtc < FrameCacheTtl)
             {
-                return _lastCapture;
+                return (Bitmap)_lastCapture.Clone();
             }
 
             try
@@ -102,10 +104,12 @@ public sealed class DxgiScreenCapture : ICapture
                 var bmp = CaptureInternal(detectionBox);
                 if (bmp != null)
                 {
+                    _lastCapture?.Dispose();
                     _lastCapture = bmp;
                     _lastBox = detectionBox;
                     _lastCaptureUtc = DateTime.UtcNow;
-                    return bmp;
+                    // Return a clone so the internal cache remains exclusively owned by this class.
+                    return (Bitmap)bmp.Clone();
                 }
             }
             catch (Exception ex)

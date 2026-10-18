@@ -1,4 +1,5 @@
 using System.Drawing;
+using PowerAim.Class;
 using PowerAim.AI.Aiming;
 using PowerAim.AI.Contracts;
 using PowerAim.Config;
@@ -43,6 +44,9 @@ public class AimingAction : BaseAction
     private double _emaX, _emaY;
     private bool _hasEma;
     private readonly OneEuroFilter2D _oneEuro = new();
+    private readonly PidAimSmoother _pid = new();
+    private float _lastTargetConf = 1f;
+    private RectangleF _lastAimBox;
     // Last-seen mode flags — detect a mid-session mode flip so we never resume a smoother/tracker on
     // stale state (a frozen track or a stale EMA/1€ anchor). Seeded to the config defaults.
     private bool _lastUseTracking;
@@ -95,6 +99,7 @@ public class AimingAction : BaseAction
         _tracker.Reset();
         _selector.Reset();
         _oneEuro.Reset();
+        _pid.Reset();
         _controller.Reset();
         _wasAiming = false;
         _hasLastTarget = false;
@@ -136,6 +141,7 @@ public class AimingAction : BaseAction
             _hasLastTarget = false;
             _hasEma = false;
             _oneEuro.Reset();
+        _pid.Reset();
             _controller.Reset();
         }
 
@@ -145,6 +151,7 @@ public class AimingAction : BaseAction
         if (ai.SmoothingMode != _lastSmoothingMode)
         {
             _oneEuro.Reset();
+        _pid.Reset();
             _hasEma = false;
             _lastSmoothingMode = ai.SmoothingMode;
         }
@@ -185,13 +192,26 @@ public class AimingAction : BaseAction
         {
             var track = _selector.Select(tracks!, center, center, ai.SwitchMarginPct, ai.SwitchFrames, stickyModelPx);
             if (track == null) { Disengage(); return; }
-            box = track.LastDetectionBox; // RAW detection — never the extrapolated Box (ego-safe)
+            // AimBox coasts on miss (smooth lock-follow). Add a short velocity lead so the
+            // crosshair stays on a laterally moving target instead of lagging one detection behind.
+            box = track.LastDetectionBox;
+            _lastTargetConf = track.Confidence;
+            _lastAimBox = box;
+            double leadSec = Math.Clamp(dt * 1.5, 0.008, 0.05); // 8–50 ms lead
+            float leadX = (float)(track.Vx * leadSec);
+            float leadY = (float)(track.Vy * leadSec);
+            // Cap lead to half box size so we never overshoot wildly on noisy velocity.
+            leadX = Math.Clamp(leadX, -box.Width * 0.5f, box.Width * 0.5f);
+            leadY = Math.Clamp(leadY, -box.Height * 0.5f, box.Height * 0.5f);
+            box = new RectangleF(box.X + leadX, box.Y + leadY, box.Width, box.Height);
         }
         else
         {
             var target = SelectNearestSticky(predictions, center, center, stickyModelPx);
             if (target == null) { Disengage(); return; }
             box = target.Rectangle;
+            _lastTargetConf = target.Confidence;
+            _lastAimBox = box;
         }
         _lastTargetX = box.X + box.Width / 2.0;
         _lastTargetY = box.Y + box.Height / 2.0;
@@ -212,6 +232,7 @@ public class AimingAction : BaseAction
             }
             _hasEma = false;
             _oneEuro.Reset();
+        _pid.Reset();
         }
         _wasAiming = true;
 
@@ -238,6 +259,15 @@ public class AimingAction : BaseAction
                     (px, py) = _oneEuro.Filter(px, py, dt);
                     break;
                 }
+            case AimSmoothingMode.Pid:
+                {
+                    _pid.Configure(ai.PidKp, ai.PidKi, ai.PidKd);
+                    _pid.Adaptive = true;
+                    double fovUnits = Math.Max(16.0, modelSize);
+                    var ab = _lastAimBox.Width > 1 ? _lastAimBox : box;
+                    (px, py) = _pid.Filter(px, py, dt, _lastTargetConf, ab.Width, ab.Height, fovUnits);
+                    break;
+                }
                 // AimSmoothingMode.None → aim at the raw point.
         }
 
@@ -254,6 +284,12 @@ public class AimingAction : BaseAction
         // Feed the debug input visualiser the coarse aim direction (mouse path only).
         if (!InputSender.GamepadAimActive)
             InputEventBus.MouseMove(targetX - captureSize / 2.0, targetY - captureSize / 2.0);
+
+        // Timing jitter: add ±Gaussian noise to the inter-frame aim interval so the
+        // periodicity signature is broken for behavioral analysis.
+        int jitterMs = HumanTiming.JitterMs();
+        if (jitterMs > 0)
+            System.Threading.Thread.Sleep(jitterMs);
 
         // Proportional move toward the target. Strength = approach fraction per frame; the calibration
         // ratio (if set) converts the pixel error to exact mouse counts → game-independent feel.

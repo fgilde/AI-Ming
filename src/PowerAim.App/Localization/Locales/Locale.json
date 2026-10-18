@@ -928,7 +928,7 @@
   "YourVersionIsOutdated": "Your version is outdated",
   "ZoomFactor": "Zoom Factor",
   "ZoomStep": "Step ZoomIn/ZoomOut",
-  "vJoyInfoInfoText": "Virtual Gamepad with vJoy. {0}In order to use the Gamepad with vJoy you need to install vJoy from https://sourceforge.net/projects/vjoystick/ {0}Then a Virtual Xbox360 Controller will be created and your current controller will be synced with the virtual one. Please then ensure you use the virtual device in your game",
+  "vJoyInfoInfoText": "Virtual Gamepad with vJoy. {0}In order to use the Gamepad with vJoy you need to install vJoy from https://sourceforge.net/projects/vjoystick/ {0}Then a Virtual Xbox360 Controller will be created and your current controller will be synced with the virtual one. Please then ensure you use the virtual device in your game",
   "AutoPlayMouseSensScale": "AutoPlay mouse sensitivity scale",
   "AutoPlayMouseJitter": "Mouse jitter (anti-detection)",
   "AutoPlayKeyDelayJitter": "Key delay jitter (anti-detection)",
@@ -938,5 +938,10 @@
   "DetectionFlash": "Flash on detection",
   "DetectionFlashColor": "Flash color",
   "DetectionFlashDuration": "Flash duration",
-  "DetectionFlashHelp": "Briefly tints the crosshair when an enemy is detected, so you get a quiet visual cue without checking the debug overlay."
+  "DetectionFlashHelp": "Briefly tints the crosshair when an enemy is detected, so you get a quiet visual cue without checking the debug overlay.",
+  "SmartNeuralAntiRecoil": "Smart Neural Anti-Recoil",
+  "AntiRecoilModeSmartNeural": "Smart Neural (screen-only)",
+  "SmartNeuralStrengthHelp": "Compensation strength for the pure neural / vision anti-recoil path. Higher = stronger counter-movement.",
+  "SmartNeuralConfidence": "Neural confidence threshold",
+  "SmartNeuralConfidenceHelp": "Ignore frames whose phase-correlation confidence is below this value (0–1)."
 }

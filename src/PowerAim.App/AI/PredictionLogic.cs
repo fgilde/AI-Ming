@@ -39,6 +39,12 @@ public class PredictionLogic : IPredictionLogic, IDisposable
 
     private DateTime lastSavedTime = DateTime.MinValue;
     private InferenceSession? _onnxModel;
+    /// <summary>SessionOptions owned by this instance (created by the factory). Must outlive the session.</summary>
+    private SessionOptions? _ownedSessionOptions;
+    /// <summary>Serializes Run vs Dispose so a model-switch never tears the session under an in-flight Run.</summary>
+    private readonly object _sessionGate = new();
+    private int _inflightRuns;
+    private string? _modelPath;
     private List<string> _outputNames = new();
     private string _inputName = "images"; // the model's real input name, read at load (not all are "images")
     private readonly RunOptions? _modeloptions = new();
@@ -136,9 +142,14 @@ public class PredictionLogic : IPredictionLogic, IDisposable
         if (string.IsNullOrWhiteSpace(modelPath) || !System.IO.File.Exists(modelPath))
             throw new System.IO.FileNotFoundException($"ONNX model not found: {modelPath}", modelPath);
 
+        _modelPath = modelPath;
+
         // Dispose any prior session so model-switching at runtime doesn't leak ORT handles.
-        _onnxModel?.Dispose();
+        // Session first, then its owned options (options must outlive the session).
+        try { _onnxModel?.Dispose(); } catch { /* ignore */ }
         _onnxModel = null;
+        try { _ownedSessionOptions?.Dispose(); } catch { /* ignore */ }
+        _ownedSessionOptions = null;
 
         // Make a user-installed TensorRT runtime (dropped into LocalRuntimeDir by the setup wizard)
         // discoverable to ORT's TensorRT provider before we build the session.
@@ -172,11 +183,15 @@ public class PredictionLogic : IPredictionLogic, IDisposable
         }
 
         var loaded = OnnxModelSessionFactory.Load(effectiveModelPath, provider, sessionOptions, deviceId, preferFp16Trt, cacheDir);
+        // SessionOptions MUST outlive InferenceSession — disposing them early freezes/crashes ORT.
+        try { _ownedSessionOptions?.Dispose(); } catch { /* ignore */ }
+        _ownedSessionOptions = loaded.OwnedSessionOptions;
         _onnxModel = loaded.Session;
         _outputNames = loaded.OutputNames;
         _inputName = loaded.InputName;
         ExecutionProvider = loaded.ExecutionProvider;
         _isDynamicModel = loaded.IsDynamicInput;
+        AppDebugLog.Info("ONNX", $"Session ready provider={ExecutionProvider} size={loaded.InputImageSize}", effectiveModelPath);
 
         // Transparency: if we didn't get the requested provider (e.g. TensorRT silently fell back to
         // CUDA because nvinfer isn't installed, or DirectML dropped to CPU), say so — but stay quiet for
@@ -321,9 +336,13 @@ public class PredictionLogic : IPredictionLogic, IDisposable
     }
 
     /// <summary>
-    ///     Parse the YOLOv8 <c>names</c> custom metadata into <see cref="_modelClasses"/> and
-    ///     update <see cref="NumClasses"/>. Falls back to the legacy single-class
-    ///     <c>{ 0: "Enemy" }</c> table when the metadata is absent or malformed.
+    ///     Build the class-id → name table used by the Target Classes dialog and the filter.
+    ///     Order of preference:
+    ///     1) ONNX custom metadata <c>names</c> (Ultralytics dict JSON),
+    ///     2) <c>bin/labels/labels.txt</c> (app labels dir; one name per line, id = line index),
+    ///     3) class count inferred from the output tensor (<c>_numClasses</c> from AdaptToOutputShape),
+    ///        with generic names Class_0..N-1 (or Enemy/Target when N==2).
+    ///     Legacy single-class fallback remains { 0: "Enemy" } only when nothing else is known.
     /// </summary>
     private void LoadClasses()
     {
@@ -331,6 +350,7 @@ public class PredictionLogic : IPredictionLogic, IDisposable
 
         _modelClasses.Clear();
 
+        // 1) Embedded Ultralytics-style names metadata.
         try
         {
             var metadata = _onnxModel.ModelMetadata;
@@ -338,19 +358,44 @@ public class PredictionLogic : IPredictionLogic, IDisposable
                 && metadata.CustomMetadataMap.TryGetValue("names", out string? value)
                 && !string.IsNullOrEmpty(value))
             {
-                JObject data = JObject.Parse(value);
-                foreach (var item in data)
+                // Ultralytics may emit a JSON object {"0":"Enemy","1":"Target"} or a list ["Enemy","Target"].
+                value = value.Trim();
+                if (value.StartsWith('{'))
                 {
-                    if (int.TryParse(item.Key, out int classId) && item.Value?.Type == JTokenType.String)
+                    JObject data = JObject.Parse(value);
+                    foreach (var item in data)
                     {
-                        _modelClasses[classId] = item.Value.ToString();
+                        if (int.TryParse(item.Key, out int classId) && item.Value != null)
+                            _modelClasses[classId] = item.Value.ToString() ?? $"Class_{classId}";
                     }
+                }
+                else if (value.StartsWith('['))
+                {
+                    var arr = JArray.Parse(value);
+                    for (int i = 0; i < arr.Count; i++)
+                        _modelClasses[i] = arr[i]?.ToString() ?? $"Class_{i}";
                 }
             }
         }
         catch
         {
-            // Ignore — model just doesn't expose a class table. We'll treat it as single-class.
+            // Malformed metadata — try labels.txt / tensor shape next.
+        }
+
+        // 2) bin/labels/labels.txt (canonical) or model-local sidecar.
+        if (_modelClasses.Count == 0)
+            TryLoadClassesFromLabelsFile();
+
+        // 3) Tensor already told us how many classes (AdaptToOutputShape ran before LoadClasses).
+        //    Synthesize selectable entries so the dialog is not stuck on a single "Enemy".
+        if (_modelClasses.Count == 0 && _numClasses > 1)
+        {
+            for (int i = 0; i < _numClasses; i++)
+            {
+                _modelClasses[i] = _numClasses == 2
+                    ? (i == 0 ? "Enemy" : "Target")
+                    : $"Class_{i}";
+            }
         }
 
         if (_modelClasses.Count == 0)
@@ -360,7 +405,62 @@ public class PredictionLogic : IPredictionLogic, IDisposable
         }
         else
         {
-            _numClasses = _modelClasses.Keys.Max() + 1;
+            // Prefer the larger of metadata count vs tensor-derived count so a 2-class head
+            // is never collapsed to 1 just because names metadata was missing.
+            int fromNames = _modelClasses.Keys.Max() + 1;
+            if (_numClasses < fromNames) _numClasses = fromNames;
+            // Fill any gaps (sparse ids) so the picker lists every id the head can emit.
+            for (int i = 0; i < _numClasses; i++)
+            {
+                if (!_modelClasses.ContainsKey(i))
+                    _modelClasses[i] = $"Class_{i}";
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Load class names from the app labels directory first:
+    ///     <c>{BaseDirectory}/bin/labels/labels.txt</c> (one name per line; line index = class id).
+    ///     Falls back to a sidecar next to the loaded model if the app labels file is missing.
+    /// </summary>
+    private void TryLoadClassesFromLabelsFile()
+    {
+        try
+        {
+            var candidates = new List<string>
+            {
+                // Canonical location requested by the app layout.
+                Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "bin", "labels", "labels.txt")),
+                Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "bin", "labels", "classes.txt")),
+            };
+
+            // Optional model-local sidecars (secondary).
+            if (!string.IsNullOrWhiteSpace(_modelPath))
+            {
+                string? dir = Path.GetDirectoryName(_modelPath);
+                string stem = Path.GetFileNameWithoutExtension(_modelPath);
+                if (!string.IsNullOrEmpty(dir))
+                {
+                    candidates.Add(Path.Combine(dir, "labels.txt"));
+                    candidates.Add(Path.Combine(dir, stem + ".txt"));
+                    candidates.Add(Path.Combine(dir, stem + "_labels.txt"));
+                    candidates.Add(Path.Combine(dir, "classes.txt"));
+                }
+            }
+
+            string? labelsPath = candidates.FirstOrDefault(File.Exists);
+            if (labelsPath == null) return;
+
+            var lines = File.ReadAllLines(labelsPath)
+                .Select(l => l.Trim())
+                .Where(l => l.Length > 0 && !l.StartsWith('#'))
+                .ToList();
+            for (int i = 0; i < lines.Count; i++)
+                _modelClasses[i] = lines[i];
+        }
+        catch
+        {
+            // Optional sidecars must never fail the model load.
         }
     }
 
@@ -459,7 +559,7 @@ public class PredictionLogic : IPredictionLogic, IDisposable
             int w = modelFrame.Width, h = modelFrame.Height;
             int tensorLen = 3 * w * h;
             float[]? rented = null;
-            IDisposableReadOnlyCollection<DisposableNamedOnnxValue> results;
+            IDisposableReadOnlyCollection<DisposableNamedOnnxValue>? results = null;
             try
             {
                 Tensor<float> inputTensor;
@@ -478,7 +578,33 @@ public class PredictionLogic : IPredictionLogic, IDisposable
                 }
 
                 var inputs = new List<NamedOnnxValue> { NamedOnnxValue.CreateFromTensor(_inputName, inputTensor) };
-                results = _onnxModel.Run(inputs, _outputNames, _modeloptions);
+                // Snapshot under the gate so Dispose cannot free the native session mid-Run.
+                InferenceSession? session;
+                lock (_sessionGate)
+                {
+                    session = _onnxModel;
+                    if (session == null)
+                        return Array.Empty<Prediction>();
+                    System.Threading.Interlocked.Increment(ref _inflightRuns);
+                }
+                try
+                {
+                    results = session.Run(inputs, _outputNames, _modeloptions);
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Model was switched while we were queued — treat as empty frame, not a crash.
+                    return Array.Empty<Prediction>();
+                }
+                catch (Microsoft.ML.OnnxRuntime.OnnxRuntimeException)
+                {
+                    // Session torn down mid-switch / provider reset — swallow and keep the app alive.
+                    return Array.Empty<Prediction>();
+                }
+                finally
+                {
+                    System.Threading.Interlocked.Decrement(ref _inflightRuns);
+                }
             }
             finally
             {
@@ -487,6 +613,8 @@ public class PredictionLogic : IPredictionLogic, IDisposable
             }
             // Free the native ONNX output buffers deterministically at end-of-frame instead of leaving
             // them to the finalizer (they were never disposed before).
+            if (results == null)
+                return Array.Empty<Prediction>();
             using var onnxResults = results;
 
             var outputTensor = results[0].AsTensor<float>();
@@ -593,16 +721,28 @@ public class PredictionLogic : IPredictionLogic, IDisposable
                 {
                     await Task.Run(() =>
                     {
-                        frame.Save(Path.Combine("bin", "images", $"{uuid}.jpg"));
+                        string baseDir = AppContext.BaseDirectory;
+                        string imagesDir = Path.Combine(baseDir, "bin", "images");
+                        string labelsDir = Path.Combine(baseDir, "bin", "labels");
+                        Directory.CreateDirectory(imagesDir);
+                        Directory.CreateDirectory(labelsDir);
+                        frame.Save(Path.Combine(imagesDir, $"{uuid}.jpg"));
 
-                        if (AppConfig.Current.ToggleState.AutoLabelData && DoLabel != null)
+                        if (AppConfig.Current?.ToggleState?.AutoLabelData == true && DoLabel != null)
                         {
-                            var labelPath = Path.Combine("bin", "labels", $"{uuid}.txt");
+                            var labelPath = Path.Combine(labelsDir, $"{uuid}.txt");
 
-                            float x = (DoLabel!.Rectangle.X + DoLabel.Rectangle.Width / 2) / frame.Width;
-                            float y = (DoLabel!.Rectangle.Y + DoLabel.Rectangle.Height / 2) / frame.Height;
-                            float width = DoLabel.Rectangle.Width / frame.Width;
-                            float height = DoLabel.Rectangle.Height / frame.Height;
+                            // Map model-space box into the saved frame's pixel space (FOV may differ from model input).
+                            float scaleX = frame.Width / (float)Math.Max(1, _imageSize);
+                            float scaleY = frame.Height / (float)Math.Max(1, _imageSize);
+                            float bx = DoLabel!.Rectangle.X * scaleX;
+                            float by = DoLabel.Rectangle.Y * scaleY;
+                            float bw = DoLabel.Rectangle.Width * scaleX;
+                            float bh = DoLabel.Rectangle.Height * scaleY;
+                            float x = (bx + bw / 2f) / Math.Max(1, frame.Width);
+                            float y = (by + bh / 2f) / Math.Max(1, frame.Height);
+                            float width = bw / Math.Max(1, frame.Width);
+                            float height = bh / Math.Max(1, frame.Height);
 
                             // YOLO label format: <class-id> <x> <y> <w> <h>
                             File.WriteAllText(labelPath, $"{DoLabel.ClassId} {x} {y} {width} {height}");
@@ -632,12 +772,29 @@ public class PredictionLogic : IPredictionLogic, IDisposable
 
     public void Dispose()
     {
-        try
+        // Stop new Runs from taking the session, then wait briefly for any in-flight Run to finish
+        // before freeing native ORT handles. This is the difference between a clean model-switch
+        // and an AccessViolation / process crash when downloading or switching models.
+        InferenceSession? session;
+        SessionOptions? options;
+        lock (_sessionGate)
         {
-            _onnxModel?.Dispose();
+            session = _onnxModel;
             _onnxModel = null;
+            options = _ownedSessionOptions;
+            _ownedSessionOptions = null;
         }
-        catch { /* ignore dispose races */ }
+
+        var spin = 0;
+        while (System.Threading.Volatile.Read(ref _inflightRuns) > 0 && spin < 200)
+        {
+            System.Threading.Thread.Sleep(5);
+            spin++;
+        }
+
+        try { session?.Dispose(); } catch { /* ignore dispose races */ }
+        // Options after session — ORT requires options to outlive the session.
+        try { options?.Dispose(); } catch { }
         try
         {
             _resizeBuffer?.Dispose();

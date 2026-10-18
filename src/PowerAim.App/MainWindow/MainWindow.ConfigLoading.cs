@@ -16,23 +16,53 @@ namespace PowerAim;
 
 public partial class MainWindow
 {
+    // Mirrors original PowerAim LoadConfig behaviour (working path), with a re-entry
+    // guard so ConfigLoaded → CreateUI cannot nest another LoadConfig mid-rebuild.
+    private bool _configLoadInProgress;
+
     internal void LoadConfig(string path = AppConfig.DefaultConfigPath)
     {
         if (path == AppConfig.Current.Path)
             return;
-        AppConfig.Current.Save();
-        Console.WriteLine(Locale.LoadingConfigMessage + path);
-        Config = AppConfig.Load(path);
-        OnPropertyChanged(nameof(Config));
+        if (_configLoadInProgress)
+            return;
 
-        if (!string.IsNullOrEmpty(AppConfig.Current.SuggestedModelName) && AppConfig.Current.SuggestedModelName != "N/A")
-            MessageDialog.Show(
-                $"{Locale.ModelSuggestionText}:\n" + AppConfig.Current.SuggestedModelName,
-                Locale.SuggestedModel,
-                MessageDialog.DialogButtons.OK,
-                MessageDialog.DialogIcon.Info,
-                owner: this);
-        LoadModel();
+        _configLoadInProgress = true;
+        try
+        {
+            AppConfig.Current.Save();
+            Console.WriteLine(Locale.LoadingConfigMessage + path);
+            Config = AppConfig.Load(path);
+            OnPropertyChanged(nameof(Config));
+
+            if (!string.IsNullOrEmpty(AppConfig.Current.SuggestedModelName) && AppConfig.Current.SuggestedModelName != "N/A")
+                MessageDialog.Show(
+                    $"{Locale.ModelSuggestionText}:\n" + AppConfig.Current.SuggestedModelName,
+                    Locale.SuggestedModel,
+                    MessageDialog.DialogButtons.OK,
+                    MessageDialog.DialogIcon.Info,
+                    owner: this);
+
+            // Model reload after UI is stable — same outcome as original LoadModel() call,
+            // but deferred one dispatcher tick so CreateUI (from ConfigLoaded) finishes first.
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                try { LoadModel(); }
+                catch (Exception ex)
+                {
+                    new NoticeBar(string.Format(Locale.ErrorFormat, ex.Message), 5000).Show();
+                }
+            }), System.Windows.Threading.DispatcherPriority.Background);
+        }
+        catch (Exception ex)
+        {
+            new NoticeBar(string.Format(Locale.ErrorFormat, ex.Message), 6000).Show();
+            System.Diagnostics.Debug.WriteLine("[LoadConfig] " + ex);
+        }
+        finally
+        {
+            _configLoadInProgress = false;
+        }
     }
 
     private void LoadAntiRecoilConfig(string path = Constants.AntiRecoilConfigBasePath + "\\Default.cfg",

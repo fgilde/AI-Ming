@@ -168,6 +168,7 @@ public static class PerformanceBenchmark
         finally
         {
             loaded.Session.Dispose();
+            try { loaded.OwnedSessionOptions?.Dispose(); } catch { /* ignore */ }
         }
     }
 

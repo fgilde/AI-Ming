@@ -32,7 +32,7 @@
     </Product>
     <Title>
     </Title>
-    <AssemblyName>PrecisionLab</AssemblyName>
+    <AssemblyName>PixelCraft</AssemblyName>
     <Version>4.0.0.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>False</SignAssembly>

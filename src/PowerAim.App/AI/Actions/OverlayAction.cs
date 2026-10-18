@@ -16,6 +16,10 @@ public class OverlayAction : BaseAction
     private DetectedPlayerWindow? _playerOverlay = new();
     private FOV? _fov = new();
     private bool _useForm = false;
+    /// <summary>Last non-empty set used when a frame has no detections (hold ESP stable).</summary>
+    private Prediction[] _lastDrawn = Array.Empty<Prediction>();
+    private int _emptyStreak;
+    private const int EmptyHoldFrames = 45; // ~0.5–1s depending on FPS before clear
     public OverlayAction()
     {
         EnsureFormOverlay();
@@ -31,11 +35,28 @@ public class OverlayAction : BaseAction
         _useForm = false;
         if (Active)
         {
-            // Always ensure the WPF overlay is shown when ESP is active (constructor alone does not Show).
+            // Always ensure the WPF overlay is shown and opaque while ESP is on.
             var overlay = EnsurePlayerOverlay();
-            // Best detection for the single-box canvas path (old MinBy picked the weakest).
-            Prediction? best = predictions is { Length: > 0 }
-                ? predictions.MaxBy(p => p.Confidence)
+            SetOverlayEnabled(true);
+
+            // Hold last non-empty detections so a brief miss does not blank the ESP.
+            Prediction[] drawSet;
+            if (predictions is { Length: > 0 })
+            {
+                _lastDrawn = predictions;
+                _emptyStreak = 0;
+                drawSet = predictions;
+            }
+            else
+            {
+                _emptyStreak++;
+                drawSet = _emptyStreak <= EmptyHoldFrames ? _lastDrawn : Array.Empty<Prediction>();
+                if (_emptyStreak > EmptyHoldFrames)
+                    _lastDrawn = Array.Empty<Prediction>();
+            }
+
+            Prediction? best = drawSet is { Length: > 0 }
+                ? drawSet.MaxBy(p => p.Confidence)
                 : null;
 
             switch (AppConfig.Current.DropdownState.OverlayDrawingMethod)
@@ -44,19 +65,16 @@ public class OverlayAction : BaseAction
                     overlay.DrawPredictionCanvas(best);
                     break;
                 case OverlayDrawingMethod.DrawingContextVisualHost:
-                    // VisualHost is capture-aligned; drawer uses model-space boxes (no screen offset).
-                    overlay.DrawPredictions(predictions, System.Windows.Rect.Empty);
+                    overlay.DrawPredictions(drawSet, System.Windows.Rect.Empty);
                     break;
                 case OverlayDrawingMethod.DesktopDC:
                     overlay.DrawPredictionCanvas(null);
-                    // Desktop DC is screen space — use TranslatedRectangle (screen absolute); no extra offset.
-                    PredictionDrawer.DrawPredictions(predictions, targetArea: null);
+                    PredictionDrawer.DrawPredictions(drawSet, targetArea: null);
                     break;
                 case OverlayDrawingMethod.OverlayFormGDI:
                     _useForm = true;
                     overlay.DrawPredictionCanvas(null);
-                    // Form is already positioned on CaptureArea; draw in form-local coords (model Rectangle).
-                    PredictionDrawer.DrawPredictions(EnsureFormOverlay(), predictions, targetArea: null, useScreenSpace: false);
+                    PredictionDrawer.DrawPredictions(EnsureFormOverlay(), drawSet, targetArea: null, useScreenSpace: false);
                     break;
             }
         }
@@ -113,17 +131,46 @@ public class OverlayAction : BaseAction
 
     private DetectedPlayerWindow EnsurePlayerOverlay()
     {
-        _playerOverlay ??= new DetectedPlayerWindow();
-        if (_playerOverlay.Visibility != Visibility.Visible)
+        void ShowIt(DetectedPlayerWindow w)
         {
-            _playerOverlay.Show();
+            if (w.Visibility != Visibility.Visible)
+                w.Show();
+            if (w.Opacity < 1)
+                w.Opacity = 1;
+            if (!w.IsVisible)
+                w.Show();
+            // Keep above game without stealing focus
+            try { w.Topmost = true; } catch { /* ignore */ }
         }
+
+        if (_playerOverlay == null)
+        {
+            // Must create on UI thread
+            if (Application.Current?.Dispatcher != null && !Application.Current.Dispatcher.CheckAccess())
+            {
+                return Application.Current.Dispatcher.Invoke(() =>
+                {
+                    _playerOverlay ??= new DetectedPlayerWindow();
+                    ShowIt(_playerOverlay);
+                    return _playerOverlay;
+                });
+            }
+            _playerOverlay = new DetectedPlayerWindow();
+        }
+
+        if (_playerOverlay.Dispatcher.CheckAccess())
+            ShowIt(_playerOverlay);
+        else
+            _playerOverlay.Dispatcher.Invoke(() => ShowIt(_playerOverlay!));
+
         return _playerOverlay;
     }
 
     public override Task OnResume()
     {
+        _emptyStreak = 0;
         SetOverlayEnabled(true);
+        try { EnsurePlayerOverlay(); } catch { /* UI not ready */ }
         return base.OnResume();
     }
 

@@ -85,6 +85,7 @@ public class AIManager : IDisposable
         // Reflect the ACTUAL load result — false when every provider (incl. the DirectML fallback)
         // failed, so the UI shows the empty-state / error instead of pretending a model is ready.
         NotifyLoaded(predictionLogic.IsLoaded);
+        AppDebugLog.Info("AIManager", $"Created IsModelLoaded={IsModelLoaded}");
 
         _isAiLoopRunning = true;
         _loopCts = new CancellationTokenSource();
@@ -100,10 +101,11 @@ public class AIManager : IDisposable
     private void NotifyLoaded(bool loaded)
     {
         IsModelLoaded = loaded;
-        var w = Application.Current.MainWindow as MainWindow;
+        var w = Application.Current?.MainWindow as MainWindow;
+        if (w == null) return;
         w.Dispatcher.BeginInvoke(new Action(() =>
         {
-            if (AppConfig.Current.ToggleState.GlobalActive)
+            if (AppConfig.Current?.ToggleState?.GlobalActive == true)
                 w.SetActive(loaded);
             w.CallPropertyChanged(nameof(w.IsModelLoaded));
         }));
@@ -111,12 +113,23 @@ public class AIManager : IDisposable
 
     private async void AiLoop()
     {
+        // async void: any exception that escapes this method becomes UnhandledException and can
+        // terminate the process. TaskCanceledException/OperationCanceledException are expected when
+        // Dispose cancels _loopCts during a model switch — swallow them and exit cleanly.
+        try
+        {
         while (_isAiLoopRunning)
         {
             // Effective active = user wants it on AND Auto-Pause says we're focused on a game.
             // AutoPauseManager is a query-only helper; pausing here gates every action equally,
             // exactly like flipping GlobalActive off.
-            if (AppConfig.Current.ToggleState.GlobalActive && PowerAim.Class.AutoPauseManager.ShouldBeActive())
+            var cfg = AppConfig.Current;
+            if (cfg?.ToggleState == null)
+            {
+                await Task.Delay(50, _loopCts?.Token ?? CancellationToken.None);
+                continue;
+            }
+            if (cfg.ToggleState.GlobalActive && PowerAim.Class.AutoPauseManager.ShouldBeActive())
             {
                 if (_pausedNotified)
                 {
@@ -128,15 +141,15 @@ public class AIManager : IDisposable
 
                 var cursorPosition = NativeAPIMethods.GetCursorPosition();
 
-                var targetX = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.X - area.Left : area.Width / 2;
-                var targetY = AppConfig.Current.DropdownState.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.Y - area.Top : area.Height / 2;
+                var targetX = cfg.DropdownState?.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.X - area.Left : area.Width / 2;
+                var targetY = cfg.DropdownState?.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.Y - area.Top : area.Height / 2;
 
                 // The captured region is driven by the FOV size (centered on the aim point), NOT by
                 // the model input resolution. PredictionLogic downscales the captured patch to the
                 // model input before inference, so the FOV can be larger than the model resolution
                 // and the AI then "sees" a wider slice of the screen. Clamp to the screen so the
                 // centered box always fits. At FOV == model input this is identical to the old box.
-                int fov = (int)Math.Round(AppConfig.Current.SliderSettings.ActualFovSize);
+                int fov = (int)Math.Round(cfg.SliderSettings?.ActualFovSize ?? 640);
                 int maxCapture = Math.Max(16, Math.Min(area.Width, area.Height));
                 int captureSize = Math.Clamp(fov, 16, maxCapture);
                 Rectangle detectionBox = new(targetX - captureSize / 2, targetY - captureSize / 2, captureSize, captureSize);
@@ -177,6 +190,11 @@ public class AIManager : IDisposable
                     // per-frame delay is gone. Real frames (several ms) skip this entirely.
                     if (sw.Elapsed.TotalMilliseconds < 1.0) await Task.Delay(1, _loopCts?.Token ?? CancellationToken.None);
                 }
+                catch (OperationCanceledException)
+                {
+                    // Dispose cancelled the CTS mid-frame — exit the loop cleanly.
+                    break;
+                }
                 catch (Exception e)
                 {
                     // Transient failures (a dropped capture on alt-tab, a device-lost frame, one bad
@@ -184,9 +202,11 @@ public class AIManager : IDisposable
                     // is genuinely broken (many failures back-to-back). Previously ANY exception
                     // disposed the whole AI silently.
                     Console.WriteLine(e);
+                    AppDebugLog.Exception("AILoop", e, $"consecutive={_consecutiveLoopErrors + 1}");
                     if (++_consecutiveLoopErrors < MaxConsecutiveLoopErrors)
                     {
-                        await Task.Delay(50, _loopCts?.Token ?? CancellationToken.None); // brief back-off so a hard-failing frame can't spin
+                        try { await Task.Delay(50, _loopCts?.Token ?? CancellationToken.None); }
+                        catch (OperationCanceledException) { break; }
                         continue;
                     }
 
@@ -218,6 +238,16 @@ public class AIManager : IDisposable
                 await Task.Delay(15, _loopCts?.Token ?? CancellationToken.None);
             }
         }
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected on Dispose / model switch — do not treat as fatal.
+            AppDebugLog.Debug("AILoop", "Cancelled (model switch or shutdown)");
+        }
+        catch (Exception ex)
+        {
+            AppDebugLog.Exception("AILoop", ex, "unhandled in AiLoop");
+        }
     }
 
     private async Task SetActionsState(bool paused)
@@ -234,26 +264,29 @@ public class AIManager : IDisposable
 
     public void Dispose()
     {
+        AppDebugLog.Info("AIManager", "Dispose begin");
         IsModelLoaded = false;
         _isAiLoopRunning = false;
-        try { _loopCts?.Cancel(); } catch { }
-        try { _loopCts?.Dispose(); } catch { }
-        _loopCts = null;
-        // Never join our own thread: Dispose can be reached from inside the loop (fatal-error path),
-        // and a self-join would just burn a second and then self-interrupt.
+        try { _loopCts?.Cancel(); } catch { /* ignore */ }
+        // Never join our own thread: Dispose can be reached from inside the loop (fatal-error path).
+        // Do NOT Thread.Interrupt — unsafe with async state machines / ORT; rely on CTS + flag.
+        // Wait long enough for an in-flight inference frame to finish before disposing the session.
         if (_aiLoopThread is { IsAlive: true } && !ReferenceEquals(Thread.CurrentThread, _aiLoopThread))
         {
-            if (!_aiLoopThread.Join(TimeSpan.FromSeconds(1)))
-            {
-                _aiLoopThread.Interrupt();
-            }
+            if (!_aiLoopThread.Join(TimeSpan.FromSeconds(3)))
+                System.Diagnostics.Debug.WriteLine("[AIManager] AI loop did not exit within 3s; abandoning join.");
         }
+        try { _loopCts?.Dispose(); } catch { /* ignore */ }
+        _loopCts = null;
         foreach (var action in _actions)
         {
-            action.Dispose();
+            try { action.Dispose(); } catch { /* ignore */ }
         }
         _actions.Clear();
-        PredictionLogic?.Dispose();
-        ImageCapture?.Dispose();
+        // PredictionLogic last among consumers: session gate waits for any remaining Run.
+        try { PredictionLogic?.Dispose(); } catch { /* ignore */ }
+        try { ImageCapture?.Dispose(); } catch { /* ignore */ }
+        if (ReferenceEquals(Instance, this))
+            Instance = null;
     }
 }

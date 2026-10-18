@@ -20,23 +20,80 @@
         SizeChanged="OnWindowSizeChanged"
         LocationChanged="OnWindowLocationChanged">
 
-    <Grid 
-        Visibility="{Binding Path=ToggleState.FOV, Converter={StaticResource boolToVis}}"
-        HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MouseMove="OnMouseMove">
+    <!-- FOV guide only. Capture region remains a square of ActualFovSize; the ring is visual. -->
+    <Grid Visibility="{Binding Path=ToggleState.FOV, Converter={StaticResource boolToVis}}"
+          HorizontalAlignment="Stretch"
+          VerticalAlignment="Stretch"
+          MouseMove="OnMouseMove">
         <Grid x:Name="FOVStrictEnclosure"
               Visibility="{Binding Path=ToggleState.GlobalActive, Converter={StaticResource boolToVis}}"
               HorizontalAlignment="Stretch"
               VerticalAlignment="Stretch">
-            <Ellipse x:Name="Circle"
-                     HorizontalAlignment="Left"
-                     VerticalAlignment="Top"
-                     SizeChanged="OnWindowSizeChanged"
-                     Width="{Binding SliderSettings.ActualFovSize}"
-                     Height="{Binding SliderSettings.ActualFovSize}">
-                <Ellipse.Stroke>
-                    <SolidColorBrush Color="{Binding ColorState.FOVColor}"></SolidColorBrush>
-                </Ellipse.Stroke>
-            </Ellipse>
+
+            <!-- Layered ring: soft outer glow + crisp stroke + light dash + center cross -->
+            <Canvas x:Name="FovCanvas"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Width="{Binding SliderSettings.ActualFovSize}"
+                    Height="{Binding SliderSettings.ActualFovSize}"
+                    IsHitTestVisible="False">
+
+                <!-- Soft outer glow -->
+                <Ellipse x:Name="Glow"
+                         Width="{Binding SliderSettings.ActualFovSize}"
+                         Height="{Binding SliderSettings.ActualFovSize}"
+                         StrokeThickness="5"
+                         Opacity="0.28"
+                         IsHitTestVisible="False">
+                    <Ellipse.Stroke>
+                        <SolidColorBrush Color="{Binding ColorState.FOVColor}" />
+                    </Ellipse.Stroke>
+                </Ellipse>
+
+                <!-- Main crisp ring -->
+                <Ellipse x:Name="Circle"
+                         Width="{Binding SliderSettings.ActualFovSize}"
+                         Height="{Binding SliderSettings.ActualFovSize}"
+                         StrokeThickness="1.75"
+                         IsHitTestVisible="False">
+                    <Ellipse.Stroke>
+                        <SolidColorBrush Color="{Binding ColorState.FOVColor}" />
+                    </Ellipse.Stroke>
+                </Ellipse>
+
+                <!-- Subtle dashed inner ring (reads better on busy scenes) -->
+                <Ellipse x:Name="DashRing"
+                         Width="{Binding SliderSettings.ActualFovSize}"
+                         Height="{Binding SliderSettings.ActualFovSize}"
+                         StrokeThickness="1"
+                         StrokeDashArray="3 5"
+                         Opacity="0.55"
+                         IsHitTestVisible="False">
+                    <Ellipse.Stroke>
+                        <SolidColorBrush Color="{Binding ColorState.FOVColor}" />
+                    </Ellipse.Stroke>
+                </Ellipse>
+
+                <!-- Center cross (short ticks) — not full crosshair clutter -->
+                <Line x:Name="CrossH"
+                      StrokeThickness="1.25"
+                      Opacity="0.85"
+                      IsHitTestVisible="False"
+                      X1="0" Y1="0" X2="0" Y2="0">
+                    <Line.Stroke>
+                        <SolidColorBrush Color="{Binding ColorState.FOVColor}" />
+                    </Line.Stroke>
+                </Line>
+                <Line x:Name="CrossV"
+                      StrokeThickness="1.25"
+                      Opacity="0.85"
+                      IsHitTestVisible="False"
+                      X1="0" Y1="0" X2="0" Y2="0">
+                    <Line.Stroke>
+                        <SolidColorBrush Color="{Binding ColorState.FOVColor}" />
+                    </Line.Stroke>
+                </Line>
+            </Canvas>
         </Grid>
     </Grid>
 </Window>

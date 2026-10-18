@@ -38,6 +38,8 @@ public class ImageBasedAntiRecoilAction : BaseAction
     private double _baselineY = 0;
     private double _baselineX = 0;
     private bool   _baselineSeeded = false;
+    private DateTime _lastRunUtc = DateTime.MinValue;
+    private const double MinIntervalMs = 12.0;
 
     public override bool Active
     {
@@ -70,8 +72,29 @@ public class ImageBasedAntiRecoilAction : BaseAction
             area.Y + (area.Height - PatchSize) / 2,
             PatchSize, PatchSize);
 
-        Bitmap? bmp;
-        try { bmp = capture.Capture(patchRect); }
+        // Throttle: phase-correlate + extra DXGI capture is a common lag source when LMB held.
+        var now = DateTime.UtcNow;
+        if ((now - _lastRunUtc).TotalMilliseconds < MinIntervalMs)
+            return Task.CompletedTask;
+        _lastRunUtc = now;
+
+        // Prefer cropping the AI loop's latest full capture when present — avoids a second
+        // DXGI Acquire under the same lock (main source of mouse hitch vs upstream AI-Ming).
+        Bitmap? bmp = null;
+        try
+        {
+            var last = capture.LastCapture;
+            if (last != null && last.Width >= PatchSize && last.Height >= PatchSize)
+            {
+                int x = Math.Clamp((last.Width - PatchSize) / 2, 0, Math.Max(0, last.Width - PatchSize));
+                int y = Math.Clamp((last.Height - PatchSize) / 2, 0, Math.Max(0, last.Height - PatchSize));
+                bmp = last.Clone(new System.Drawing.Rectangle(x, y, PatchSize, PatchSize), last.PixelFormat);
+            }
+            else
+            {
+                bmp = capture.Capture(patchRect);
+            }
+        }
         catch { return Task.CompletedTask; }
         if (bmp == null) return Task.CompletedTask;
 

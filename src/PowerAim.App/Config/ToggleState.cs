@@ -8,6 +8,23 @@ public class ToggleState : BaseSettings
         set => SetField(ref field, value);
     }
 
+    /// <summary>
+    ///     Master switch for <see cref="PowerAim.Other.AppDebugLog"/>.
+    ///     When on: every feature enable/disable, model load/switch, and exception is written to
+    ///     %LocalAppData%\PowerAim\logs\ and kept in a memory ring for the Debug Log panel.
+    /// </summary>
+    public bool EnableDebugLogging
+    {
+        get;
+        set
+        {
+            if (SetField(ref field, value))
+            {
+                PowerAim.Other.AppDebugLog.Enable(value, "ToggleState.EnableDebugLogging");
+            }
+        }
+    }
+
     /// <summary>Show the topmost <see cref="PowerAim.UI.Visuality.DebugOverlay"/> with live stats.</summary>
     public bool ShowDebugOverlay
     {
@@ -150,6 +167,17 @@ public class ToggleState : BaseSettings
     } = false;
 
     public bool AntiRecoil
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    /// <summary>
+    ///     Master switch for pure neural-network (screen-only) anti-recoil.
+    ///     Independent of profile mode; when on, SmartNeuralAntiRecoilAction runs if a
+    ///     SmartNeural profile is active OR when this toggle alone is used as a global override.
+    /// </summary>
+    public bool SmartNeuralAntiRecoil
     {
         get;
         set => SetField(ref field, value);

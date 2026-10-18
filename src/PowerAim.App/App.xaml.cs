@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows;
 using PowerAim.AI;
 using PowerAim.Config;
+using PowerAim.Other;
 using PowerAim.UI.Theme;
 
 namespace PowerAim;
@@ -26,6 +27,10 @@ public partial class App : System.Windows.Application
         // so booting always is cheap. ViGEm bus driver is only required if the user enables
         // a profile with gamepad targets.
         PowerAim.Input.Mapping.MappingEngine.Instance.Start();
+        // Application debug log: feature flips, model switches, exceptions.
+        AppDebugLog.InstallHooks();
+        if (AppConfig.Current?.ToggleState?.EnableDebugLogging == true)
+            AppDebugLog.Enable(true, "startup");
     }
 
     protected override void OnExit(ExitEventArgs e)
@@ -33,6 +38,7 @@ public partial class App : System.Windows.Application
         try { PowerAim.Input.InputSender.Shutdown(); } catch { }
         try { OcrService.Instance.Stop(); } catch { }
         try { PowerAim.Input.Mapping.MappingEngine.Instance.Dispose(); } catch { }
+        try { AppDebugLog.Flush(); } catch { }
         base.OnExit(e);
     }
 

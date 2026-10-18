@@ -71,28 +71,38 @@ public partial class MainWindow
 
     private void LoadModel(string? modelName = null)
     {
-        FileManager.AIManager?.Dispose();
-        FileManager.AIManager = null;
-        FileManager.CurrentlyLoadingModel = false;
+        // Do NOT dispose here. FileManager.LoadModel owns the atomic swap:
+        // create new manager first, then dispose the previous one off the UI thread.
+        // Pre-disposing raced the AI loop against a still-running InferenceSession.Run
+        // and crashed the process on model download / switch.
+        if (FileManager.CurrentlyLoadingModel)
+            return;
         LoadLastModel(modelName);
     }
 
     private void LoadLastModel(string? modelName = null)
     {
         modelName ??= Config.LastLoadedModel;
-        var lastLoaded = Path.Combine(ApplicationConstants.ModelsBasePath, modelName);
-        var modelPath = File.Exists(lastLoaded) ? lastLoaded : Path.Combine(ApplicationConstants.ModelsBasePath, ApplicationConstants.DefaultModel);
-        if (File.Exists(modelPath) && !FileManager.CurrentlyLoadingModel &&
-            FileManager.AIManager?.IsModelLoaded != true)
+        // Resolve against the app base directory — relative paths fail when cwd differs.
+        string modelsDir = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ApplicationConstants.ModelsBasePath));
+        Directory.CreateDirectory(modelsDir);
+        var lastLoaded = Path.Combine(modelsDir, modelName ?? string.Empty);
+        var modelPath = File.Exists(lastLoaded)
+            ? lastLoaded
+            : Path.Combine(modelsDir, ApplicationConstants.DefaultModel);
+        // Always attempt load when a file exists and no load is already in flight.
+        // FileManager.LoadModel performs the safe create-then-dispose swap; do not gate on
+        // AIManager?.IsModelLoaded (that blocked legitimate model switches).
+        if (File.Exists(modelPath) && !FileManager.CurrentlyLoadingModel)
         {
-            // A model is about to load — keep the empty-state card in its "loading" look so the
-            // "no model" message doesn't flash during the brief load.
             ModelLoadPending = true;
-            _ = _fileManager.LoadModel(Path.GetFileName(modelPath), modelPath);
+            if (_fileManager != null)
+                _ = _fileManager.LoadModel(Path.GetFileName(modelPath), modelPath);
+            else
+                ModelLoadPending = false;
         }
         else if (!IsModelLoaded)
         {
-            // Nothing to load (no model file present) — reveal the empty-state message now.
             ModelLoadPending = false;
         }
         UpdateModelText();

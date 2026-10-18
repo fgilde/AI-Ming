@@ -132,6 +132,27 @@ public class AISettings : BaseSettings
         set => SetField(ref field, Math.Clamp(value, 0.0, 5.0));
     } = 0.7;
 
+    /// <summary>PID proportional gain (SmoothingMode.Pid). Higher = snappier follow.</summary>
+    public double PidKp
+    {
+        get;
+        set => SetField(ref field, Math.Clamp(value, 0.01, 5.0));
+    } = 0.55;
+
+    /// <summary>PID integral gain. Clears steady-state offset; keep low to avoid windup.</summary>
+    public double PidKi
+    {
+        get;
+        set => SetField(ref field, Math.Clamp(value, 0.0, 2.0));
+    } = 0.05;
+
+    /// <summary>PID derivative gain. Damps overshoot; too high amplifies detection noise.</summary>
+    public double PidKd
+    {
+        get;
+        set => SetField(ref field, Math.Clamp(value, 0.0, 2.0));
+    } = 0.12;
+
     // ---- Opt-in layer 1b: stable multi-target tracking + switch hysteresis (ego-motion-immune) ----
     // Uses the SORT-style tracker for identity/association ONLY; the aim point is always taken from
     // the raw last detection (TargetTrack.LastDetectionBox), never the velocity-extrapolated box, so
@@ -291,5 +312,8 @@ public enum AimSmoothingMode
     Ema = 1,
 
     /// <summary>Adaptive 1€ filter — heavy smoothing at rest, light during fast motion.</summary>
-    OneEuro = 2
+    OneEuro = 2,
+
+    /// <summary>Discrete PID servo on aim point — classic smooth lock / adaptive gains.</summary>
+    Pid = 3
 }

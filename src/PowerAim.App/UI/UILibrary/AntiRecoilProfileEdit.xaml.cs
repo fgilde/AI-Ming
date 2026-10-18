@@ -58,6 +58,7 @@ namespace PowerAim.UI.UILibrary
                 new ModeOption(AntiRecoilMode.Legacy,          Locale.AntiRecoilModeLegacy),
                 new ModeOption(AntiRecoilMode.ImageBased,      Locale.AntiRecoilModeImageBased),
                 new ModeOption(AntiRecoilMode.PatternPlayback, Locale.AntiRecoilModePatternPlayback),
+                new ModeOption(AntiRecoilMode.SmartNeural,     Locale.AntiRecoilModeSmartNeural),
             };
             ModeCombo.DisplayMemberPath = nameof(ModeOption.Label);
             ModeCombo.SelectedItem = ((IEnumerable<ModeOption>)ModeCombo.ItemsSource)
@@ -90,6 +91,7 @@ namespace PowerAim.UI.UILibrary
             BuildLegacyPanel();
             BuildImageBasedPanel();
             BuildPatternPanel();
+            BuildNeuralPanel();
             UpdateModeSectionVisibility();
         }
 
@@ -148,12 +150,25 @@ namespace PowerAim.UI.UILibrary
 
         // ====================================================================== HANDLERS ====
 
+        
+        private void BuildNeuralPanel()
+        {
+            NeuralPanel.Children.Clear();
+            NeuralPanel.AddSlider(Locale.AntiRecoilStrength, Locale.Amount, 0.05, 0.05, 0, 2.0)
+                .InitWith(s => s.ToolTip = Locale.SmartNeuralStrengthHelp)
+                .BindTo(() => Profile!.NeuralStrength);
+            NeuralPanel.AddSlider(Locale.SmartNeuralConfidence, Locale.Amount, 0.05, 0.05, 0, 1.0)
+                .InitWith(s => s.ToolTip = Locale.SmartNeuralConfidenceHelp)
+                .BindTo(() => Profile!.NeuralConfidenceThreshold);
+        }
+
         private void UpdateModeSectionVisibility()
         {
             if (Profile == null) return;
             LegacyPanel.Visibility     = Profile.Mode == AntiRecoilMode.Legacy          ? Visibility.Visible : Visibility.Collapsed;
             ImageBasedPanel.Visibility = Profile.Mode == AntiRecoilMode.ImageBased      ? Visibility.Visible : Visibility.Collapsed;
             PatternPanel.Visibility    = Profile.Mode == AntiRecoilMode.PatternPlayback ? Visibility.Visible : Visibility.Collapsed;
+            NeuralPanel.Visibility     = Profile.Mode == AntiRecoilMode.SmartNeural     ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void ModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)

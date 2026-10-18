@@ -954,5 +954,10 @@
   "DetectionFlash": "Flash à la détection",
   "DetectionFlashColor": "Couleur du flash",
   "DetectionFlashDuration": "Durée du flash",
-  "DetectionFlashHelp": "Teinte brièvement le réticule quand un ennemi est détecté, pour un signal visuel discret sans avoir à ouvrir le overlay de débogage."
+  "DetectionFlashHelp": "Teinte brièvement le réticule quand un ennemi est détecté, pour un signal visuel discret sans avoir à ouvrir le overlay de débogage.",
+  "SmartNeuralAntiRecoil": "Smart Neural Anti-Recoil",
+  "AntiRecoilModeSmartNeural": "Smart Neural (screen-only)",
+  "SmartNeuralStrengthHelp": "Compensation strength for the pure neural / vision anti-recoil path. Higher = stronger counter-movement.",
+  "SmartNeuralConfidence": "Neural confidence threshold",
+  "SmartNeuralConfidenceHelp": "Ignore frames whose phase-correlation confidence is below this value (0–1)."
 }
