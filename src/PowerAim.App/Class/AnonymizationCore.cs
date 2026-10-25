@@ -17,30 +17,31 @@ namespace PowerAim.Class;
 /// </summary>
 public static class AnonymizationCore
 {
+    
     public static void SpoofWindowIdentity(Window window)
-        => throw new NotImplementedException("AnonymizationCore.SpoofWindowIdentity: stub, not shipped.");
+        => WinAnonymizer.Anonymizer.Current.SpoofWindowIdentity(window);
 
     public static void HideFromShell(Window window)
-        => throw new NotImplementedException("AnonymizationCore.HideFromShell: stub, not shipped.");
+        => WinAnonymizer.Anonymizer.Current.HideFromShell(window);
 
     public static void SpoofPebImagePath()
-        => throw new NotImplementedException("AnonymizationCore.SpoofPebImagePath: stub, not shipped.");
+        => WinAnonymizer.Anonymizer.Current.SpoofPebImagePath();
 
     /// <summary>Stub — no-op. Real version sampled a log-normal human reaction delay.</summary>
-    public static TimeSpan SampleReactionTime() => TimeSpan.Zero;
+    public static TimeSpan SampleReactionTime() => WinAnonymizer.Anonymizer.Current.SampleReactionTime();
 
     /// <summary>Stub — no-op. Real version added Gaussian jitter to the aim loop's frame delay.</summary>
-    public static int SampleTimingJitterMs() => 0;
+    public static int SampleTimingJitterMs() => WinAnonymizer.Anonymizer.Current.SampleTimingJitterMs();
 
     /// <summary>Stub — neutral factor (1.0 = no jitter). Real version randomized network polling intervals.</summary>
-    public static double SampleNetworkIntervalFactor() => 1.0;
+    public static double SampleNetworkIntervalFactor() => WinAnonymizer.Anonymizer.Current.SampleNetworkIntervalFactor();
 
     public static IReadOnlyList<(int dx, int dy)> HumanizeMouseDelta(int dx, int dy)
-        => throw new NotImplementedException("AnonymizationCore.HumanizeMouseDelta: stub, not shipped.");
+        => WinAnonymizer.Anonymizer.Current.HumanizeMouseDelta(dx, dy);
 
     public static string RandomUserAgent()
-        => throw new NotImplementedException("AnonymizationCore.RandomUserAgent: stub, not shipped.");
+        => WinAnonymizer.Anonymizer.Current.RandomUserAgent();
 
     public static bool LaunchWithSpoofedParent(string exePath, string? workingDir = null)
-        => throw new NotImplementedException("AnonymizationCore.LaunchWithSpoofedParent: stub, not shipped.");
+        => WinAnonymizer.Anonymizer.Current.LaunchWithSpoofedParent(exePath, workingDir);
 }
