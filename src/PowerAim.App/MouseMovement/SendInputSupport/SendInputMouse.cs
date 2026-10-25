@@ -1,20 +1,15 @@
 using System;
 using System.Runtime.InteropServices;
-using Nextended.UI.Native;
 
 namespace PowerAim.MouseMovement.SendInputSupport;
 
 /// <summary>
 /// Relative mouse injection via Win32 SendInput.
-/// Fixed: correct x64 INPUT layout (type @0, union @8), SetLastError,
-/// MOUSEEVENTF_MOVE_NOCOALESCE to stop coalescing under high fire-rate,
-/// and GetMessageExtraInfo so injected packets stay distinguishable.
+/// Explicit x64 INPUT layout (type @0, union @8) and SetLastError.
 /// </summary>
 internal static class SendInputMouse
 {
     private const int INPUT_MOUSE = 0;
-    private const uint MOUSEEVENTF_MOVE = 0x0001;
-    private const uint MOUSEEVENTF_MOVE_NOCOALESCE = 0x2000;
 
     [StructLayout(LayoutKind.Sequential)]
     private struct MOUSEINPUT
@@ -40,20 +35,10 @@ internal static class SendInputMouse
     [DllImport("user32.dll", SetLastError = true)]
     private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
 
-    [DllImport("user32.dll")]
-    private static extern UIntPtr GetMessageExtraInfo();
-
-    /// <summary>
-    /// Emit a relative mouse packet. Flags may include button / wheel bits;
-    /// when only motion is requested, MOUSEEVENTF_MOVE_NOCOALESCE is OR'd in
-    /// so high-rate aim frames do not get merged by the OS.
-    /// </summary>
+    /// <summary>Emit a relative mouse packet. Flags may include button / wheel bits.</summary>
     public static void SendMouseCommand(uint mouseCommand, int x = 0, int y = 0)
     {
         uint flags = mouseCommand;
-        // Relative motion: prevent coalescing of rapid small deltas (common freeze/jitter cause).
-        if ((flags & MOUSEEVENTF_MOVE) != 0)
-            flags |= MOUSEEVENTF_MOVE_NOCOALESCE;
 
         var input = new INPUT
         {
@@ -65,7 +50,7 @@ internal static class SendInputMouse
                 mouseData = 0,
                 dwFlags = flags,
                 time = 0,
-                dwExtraInfo = GetMessageExtraInfo()
+                dwExtraInfo = UIntPtr.Zero
             }
         };
 

@@ -103,6 +103,37 @@ public sealed class TargetTracker
             for (int di = 0; di < dets.Count; di++) unmatchedDets.Add(di);
         }
 
+        // 3b) Distance fallback for whatever IoU/Mahalanobis couldn't pair (issue #19): a fast view pan
+        //     — very much including the aim assist's own correction — shifts every box together, so
+        //     predicted and detected boxes stop overlapping and the identity would tear apart (the enemy
+        //     comes back as a NEW track and the selector's hysteresis is bypassed). Re-attach by centre
+        //     distance, gated relative to the track's own size so a track never grabs a far detection.
+        if (unmatchedTracks.Count > 0 && unmatchedDets.Count > 0)
+        {
+            var fallback = new List<(double DistSq, int TrackIdx, int DetIdx)>();
+            foreach (int ti in unmatchedTracks)
+            {
+                var tr = _tracks[ti];
+                double gate = Math.Max(24.0, Math.Sqrt(tr.Width * tr.Width + tr.Height * tr.Height) * 1.5);
+                foreach (int di in unmatchedDets)
+                {
+                    var r = dets[di].Rectangle;
+                    double dx = r.X + r.Width / 2.0 - tr.X;
+                    double dy = r.Y + r.Height / 2.0 - tr.Y;
+                    double distSq = dx * dx + dy * dy;
+                    if (distSq <= gate * gate) fallback.Add((distSq, ti, di));
+                }
+            }
+            fallback.Sort((x, y) => x.DistSq.CompareTo(y.DistSq));
+            foreach (var (_, ti, di) in fallback)
+            {
+                if (!unmatchedTracks.Contains(ti) || !unmatchedDets.Contains(di)) continue;
+                matches.Add((ti, di));
+                unmatchedTracks.Remove(ti);
+                unmatchedDets.Remove(di);
+            }
+        }
+
         // 4) Apply
         foreach (var (ti, di) in matches)
             _tracks[ti].Update(_kf, dets[di], MinHits);

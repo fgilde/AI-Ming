@@ -193,18 +193,11 @@ public class AimingAction : BaseAction
         {
             var track = _selector.Select(tracks!, center, center, ai.SwitchMarginPct, ai.SwitchFrames, stickyModelPx);
             if (track == null) { Disengage(); return; }
-            // AimBox coasts on miss (smooth lock-follow). Add a short velocity lead so the
-            // crosshair stays on a laterally moving target instead of lagging one detection behind.
+            // RAW detection — never a velocity-extrapolated box: in this closed loop the track's velocity
+            // includes our own view movement (no ego-motion compensation), so a lead would overshoot.
             box = track.LastDetectionBox;
             _lastTargetConf = track.Confidence;
             _lastAimBox = box;
-            double leadSec = Math.Clamp(dt * 1.5, 0.008, 0.05); // 8–50 ms lead
-            float leadX = (float)(track.Vx * leadSec);
-            float leadY = (float)(track.Vy * leadSec);
-            // Cap lead to half box size so we never overshoot wildly on noisy velocity.
-            leadX = Math.Clamp(leadX, -box.Width * 0.5f, box.Width * 0.5f);
-            leadY = Math.Clamp(leadY, -box.Height * 0.5f, box.Height * 0.5f);
-            box = new RectangleF(box.X + leadX, box.Y + leadY, box.Width, box.Height);
         }
         else
         {

@@ -106,10 +106,8 @@ public class SmartNeuralAntiRecoilAction : BaseAction
                 _burstFrame = (int)(shots - _shotsAtBurstStart);
             else
             {
-                // No external shot counter: advance locally and keep SessionStats in sync.
+                // No shot counter running: advance per tick. Session stats count real shots only.
                 _burstFrame++;
-                SessionStats.Instance.IncrementShots();
-                _shotsAtBurstStart = SessionStats.Instance.ShotsFired - _burstFrame;
             }
         }
 

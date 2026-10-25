@@ -39,12 +39,7 @@ namespace PowerAim.Input
             double x = uu * u * start.X + 3 * uu * t * control1.X + 3 * u * tt * control2.X + tt * t * end.X;
             double y = uu * u * start.Y + 3 * uu * t * control1.Y + 3 * u * tt * control2.Y + tt * t * end.Y;
 
-            if (IsEMASmoothingEnabled)
-            {
-                x = EmaSmoothing(previousX, x, smoothingFactor);
-                y = EmaSmoothing(previousY, y, smoothingFactor);
-            }
-
+            // EMA is applied once, to the output delta in MoveCrosshair, for every path type.
             return new Point((int)x, (int)y);
         }
 
@@ -308,7 +303,7 @@ namespace PowerAim.Input
             double t = sens;
             Point newPosition = AppConfig.Current.DropdownState.MovementPathType switch
             {
-                MovementPathType.Lerp => MovementPaths.Robotic(start, end, t),
+                MovementPathType.Lerp => MovementPaths.Lerp(start, end, t),
                 MovementPathType.Exponential => MovementPaths.Exponential(start, end, t),
                 MovementPathType.Adaptive => MovementPaths.Adaptive(start, end, t),
                 MovementPathType.PerlinNoise => MovementPaths.PerlinNoise(start, end, t),

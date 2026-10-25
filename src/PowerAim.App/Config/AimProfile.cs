@@ -103,9 +103,10 @@ public class AimProfile : EditableNotificationObject
     /// <summary>1€ filter speed coefficient — only used in OneEuro smoothing mode.</summary>
     public double OneEuroBeta { get; set => SetProperty(ref field, value); } = 0.7;
 
-    public double PidKp { get; set; } = 0.55;
-    public double PidKi { get; set; } = 0.05;
-    public double PidKd { get; set; } = 0.12;
+    /// <summary>PID gains — only used in PID smoothing mode. Mirror to <see cref="AISettings.PidKp"/> etc.</summary>
+    public double PidKp { get; set => SetProperty(ref field, value); } = 0.55;
+    public double PidKi { get; set => SetProperty(ref field, value); } = 0.05;
+    public double PidKd { get; set => SetProperty(ref field, value); } = 0.12;
 
     /// <summary>
     ///     How far (px) the aim keeps following the same enemy before re-acquiring another (issue #19).
