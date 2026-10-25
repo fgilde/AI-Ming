@@ -79,11 +79,7 @@ public partial class MainWindow
         Console.SetOut(writer);
         // Same as original: ConfigLoaded rebuilds UI. LoadConfig sets _configLoadInProgress
         // so nested selection-changed loads cannot re-enter while CreateUI runs.
-        AppConfig.ConfigLoaded += (s, e) =>
-        {
-            if (_configLoadInProgress) return;
-            CreateUI();
-        };
+        AppConfig.ConfigLoaded += (s, e) => CreateUI();
         Console.WriteLine(Locale.InitUIMessage);
         Config = AppConfig.Load();
 
