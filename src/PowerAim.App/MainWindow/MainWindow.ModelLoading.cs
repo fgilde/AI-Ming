@@ -77,8 +77,6 @@ public partial class MainWindow
         // create new manager first, then dispose the previous one off the UI thread.
         // Pre-disposing raced the AI loop against a still-running InferenceSession.Run
         // and crashed the process on model download / switch.
-        if (FileManager.CurrentlyLoadingModel)
-            return;
         LoadLastModel(modelName);
     }
 
@@ -92,14 +90,15 @@ public partial class MainWindow
         var modelPath = File.Exists(lastLoaded)
             ? lastLoaded
             : Path.Combine(modelsDir, ApplicationConstants.DefaultModel);
-        // Always attempt load when a file exists and no load is already in flight.
-        // FileManager.LoadModel performs the safe create-then-dispose swap; do not gate on
-        // AIManager?.IsModelLoaded (that blocked legitimate model switches).
-        if (File.Exists(modelPath) && !FileManager.CurrentlyLoadingModel)
+        // Always load when the file exists. FileManager.LoadModel performs the safe create-then-dispose
+        // swap; do not gate on AIManager?.IsModelLoaded (that blocked legitimate model switches). A
+        // request during a running load (provider/precision change, config switch, download) is
+        // forced: the newest load wins and the superseded one discards its result.
+        if (File.Exists(modelPath))
         {
             ModelLoadPending = true;
             if (_fileManager != null)
-                _ = _fileManager.LoadModel(Path.GetFileName(modelPath), modelPath);
+                _ = _fileManager.LoadModel(Path.GetFileName(modelPath), modelPath, force: FileManager.CurrentlyLoadingModel);
             else
                 ModelLoadPending = false;
         }

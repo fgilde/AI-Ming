@@ -242,13 +242,12 @@ public class PredictionLogic : IPredictionLogic, IDisposable
     }
 
     /// <summary>
-    ///     For a fixed-shape model, adopt the class count and anchor count straight from the model's
-    ///     output tensor. A YOLOv8 detection head is channels-first <c>[1, 4+numClasses, numDetections]</c>
-    ///     (e.g. <c>[1,5,8400]</c> single-class, <c>[1,6,8400]</c> two-class). Reading them from the model
-    ///     means a multi-class model, or one exported at a non-640 resolution, "just works" without
+    ///     Adopt the class count, anchor count and layout straight from the model's output tensor
+    ///     (see <see cref="ReadOutputLayout"/>): channels-first <c>[1, 4+numClasses, numDetections]</c>
+    ///     (e.g. <c>[1,5,8400]</c>) or channels-last <c>[1, numDetections, 4+numClasses]</c>. Reading them from
+    ///     the model means a multi-class model, or one exported at a non-640 resolution, "just works" without
     ///     relying on a <c>names</c> table or the configured image size lining up. Layouts we can't parse
-    ///     (transposed <c>[1,N,C]</c> or NMS-fused outputs) are left for <see cref="ValidateOnnxShape"/> to
-    ///     flag clearly.
+    ///     (NMS-fused outputs) are left for <see cref="ValidateOnnxShape"/> to flag clearly.
     /// </summary>
     private void AdaptToOutputShape()
     {
@@ -257,46 +256,44 @@ public class PredictionLogic : IPredictionLogic, IDisposable
 
         foreach (var meta in _onnxModel.OutputMetadata.Values)
         {
-            var d = meta.Dimensions;
-            if (d.Length != 3) continue;
-
-            // Fixed channels-first: [1, C, N] with C = 4+nc small, N anchors large (classic YOLOv8).
-            if (d[0] == 1 && d[1] > 4 && d[1] < 512 && d[2] > d[1])
-            {
-                _numClasses = Math.Max(1, d[1] - 4);
-                _numDetections = d[2];
-                _outputTransposed = false;
-                return;
-            }
-
-            // Fixed channels-last / ultralytics default export: [1, N, C] with N large, C = 4+nc small.
-            if (d[0] == 1 && d[2] > 4 && d[2] < 512 && d[1] > d[2])
-            {
-                _numClasses = Math.Max(1, d[2] - 4);
-                _numDetections = d[1];
-                _outputTransposed = true;
-                return;
-            }
-
-            // Dynamic axes (any dim <= 0): adopt what we can, mark transposed by relative sizes when known.
-            if (d.Any(x => x <= 0))
-            {
-                if (d[1] > 4 && d[1] < 512 && (d[2] <= 0 || d[2] > d[1]))
-                {
-                    _numClasses = Math.Max(1, d[1] - 4);
-                    if (d[2] > 0) _numDetections = d[2];
-                    _outputTransposed = false;
-                    return;
-                }
-                if (d[2] > 4 && d[2] < 512 && (d[1] <= 0 || d[1] > d[2]))
-                {
-                    _numClasses = Math.Max(1, d[2] - 4);
-                    if (d[1] > 0) _numDetections = d[1];
-                    _outputTransposed = true;
-                    return;
-                }
-            }
+            if (ReadOutputLayout(meta.Dimensions) is not { } layout) continue;
+            _numClasses = layout.NumClasses;
+            if (layout.NumDetections > 0) _numDetections = layout.NumDetections;
+            _outputTransposed = layout.Transposed;
+            return;
         }
+    }
+
+    /// <summary>Fewer output rows than this is not an anchor grid (e.g. an NMS-fused export).</summary>
+    private const int MinAnchorRows = 1000;
+
+    /// <summary>
+    ///     Reads a detection head's layout from its output dims (-1/0 = dynamic): channels-first
+    ///     <c>[1, 4+nc, N]</c> or channels-last <c>[1, N, 4+nc]</c>. NumDetections is 0 when dynamic.
+    ///     Null for anything else — including an NMS-fused export (<c>[1, 300, 6]</c> = x1 y1 x2 y2 score
+    ///     class), which only looks like a 2-class channels-last head and is left to ValidateOnnxShape.
+    /// </summary>
+    internal static (int NumClasses, int NumDetections, bool Transposed)? ReadOutputLayout(int[] d)
+    {
+        if (d.Length != 3) return null;
+        bool dynamic = d.Any(x => x <= 0);
+
+        // Fixed channels-first: [1, C, N] with C = 4+nc small, N anchors large (classic YOLOv8).
+        if (!dynamic && d[0] == 1 && d[1] > 4 && d[1] < 512 && d[2] > d[1])
+            return (Math.Max(1, d[1] - 4), d[2], false);
+
+        // Fixed channels-last: [1, N, C]. Anchor heads have thousands of rows (8400 at 640).
+        if (!dynamic && d[0] == 1 && d[2] > 4 && d[2] < 512 && d[1] > d[2] && d[1] >= MinAnchorRows)
+            return (Math.Max(1, d[2] - 4), d[1], true);
+
+        if (dynamic)
+        {
+            if (d[1] > 4 && d[1] < 512 && (d[2] <= 0 || d[2] > d[1]))
+                return (Math.Max(1, d[1] - 4), Math.Max(0, d[2]), false);
+            if (d[2] > 4 && d[2] < 512 && (d[1] <= 0 || (d[1] > d[2] && d[1] >= MinAnchorRows)))
+                return (Math.Max(1, d[2] - 4), Math.Max(0, d[1]), true);
+        }
+        return null;
     }
 
     /// <summary>
@@ -596,9 +593,10 @@ public class PredictionLogic : IPredictionLogic, IDisposable
                     // Model was switched while we were queued — treat as empty frame, not a crash.
                     return Array.Empty<Prediction>();
                 }
-                catch (Microsoft.ML.OnnxRuntime.OnnxRuntimeException)
+                catch (Microsoft.ML.OnnxRuntime.OnnxRuntimeException) when (!ReferenceEquals(System.Threading.Volatile.Read(ref _onnxModel), session))
                 {
-                    // Session torn down mid-switch / provider reset — swallow and keep the app alive.
+                    // Session torn down mid-switch — treat as an empty frame. Any other inference failure
+                    // propagates, so the AI loop counts it and tells the user when it persists.
                     return Array.Empty<Prediction>();
                 }
                 finally

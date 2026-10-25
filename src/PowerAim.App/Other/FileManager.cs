@@ -84,9 +84,12 @@ namespace PowerAim.Other
         private static readonly object _toggleStateLock = new();
         private static Dictionary<string, object>? _savedToggleStates;
 
+        /// <summary>A watcher refresh is re-filling a list: re-selecting the current item must not (re)load it.</summary>
+        private bool _refreshingList;
+
         private async void ModelListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (ModelListBox.SelectedItem == null) return;
+            if (_refreshingList || ModelListBox.SelectedItem == null) return;
             if (CurrentlyLoadingModel) return;
 
             string selectedModel = ModelListBox.SelectedItem.ToString()!;
@@ -221,7 +224,7 @@ namespace PowerAim.Other
 
         private void ConfigListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (ConfigListBox.SelectedItem == null) return;
+            if (_refreshingList || ConfigListBox.SelectedItem == null) return;
             string selectedConfig = ConfigListBox.SelectedItem.ToString()!;
 
             string configPath = Path.GetFullPath(Path.Combine(
@@ -230,6 +233,7 @@ namespace PowerAim.Other
             try
             {
                 MainWindow.Instance?.LoadConfig(configPath);
+                SelectedConfigNotifier.Content = Locale.LoadedConfig.FormatWith(selectedConfig);
             }
             catch (Exception ex)
             {
@@ -270,7 +274,7 @@ namespace PowerAim.Other
         public void LoadConfigsIntoListBox(object? sender, FileSystemEventArgs? e) =>
             LoadFilesIntoListBox(ConfigListBox, Constants.ConfigBasePath, Constants.ConfigFileFilter,
                 () => AppConfig.Current.LastLoadedConfig,
-                last => SelectedConfigNotifier.Content = "Loaded Config: " + last);
+                last => SelectedConfigNotifier.Content = Locale.LoadedConfig.FormatWith(Path.GetFileName(last)));
 
         /// <summary>
         ///     Shared list refresh used by both watchers: re-list the <paramref name="filter"/> files
@@ -289,28 +293,36 @@ namespace PowerAim.Other
                     : Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, dir));
 
                 var previousSelection = listBox.SelectedItem as string;
-                listBox.Items.Clear();
-                if (Directory.Exists(fullDir))
+                _refreshingList = true;
+                try
                 {
-                    foreach (string filePath in Directory.GetFiles(fullDir, filter))
-                        listBox.Items.Add(Path.GetFileName(filePath));
+                    listBox.Items.Clear();
+                    if (Directory.Exists(fullDir))
+                    {
+                        foreach (string filePath in Directory.GetFiles(fullDir, filter))
+                            listBox.Items.Add(Path.GetFileName(filePath));
+                    }
+
+                    if (listBox.Items.Count > 0)
+                    {
+                        string? lastLoaded = getLastLoaded();
+                        // Prefer last-loaded when present; otherwise keep the prior selection. Only highlights:
+                        // _refreshingList keeps SelectionChanged from (re)loading on a watcher refresh.
+                        string? prefer = null;
+                        if (!string.IsNullOrEmpty(lastLoaded) && lastLoaded != "N/A" && listBox.Items.Contains(lastLoaded))
+                            prefer = lastLoaded;
+                        else if (!string.IsNullOrEmpty(previousSelection) && listBox.Items.Contains(previousSelection))
+                            prefer = previousSelection;
+
+                        if (prefer != null && !Equals(listBox.SelectedItem, prefer))
+                            listBox.SelectedItem = prefer;
+
+                        updateNotifier(lastLoaded);
+                    }
                 }
-
-                if (listBox.Items.Count > 0)
+                finally
                 {
-                    string? lastLoaded = getLastLoaded();
-                    // Prefer last-loaded when present; otherwise keep prior selection so a FileSystemWatcher
-                    // refresh does not re-fire SelectionChanged and start a second concurrent load mid-load.
-                    string? prefer = null;
-                    if (!string.IsNullOrEmpty(lastLoaded) && lastLoaded != "N/A" && listBox.Items.Contains(lastLoaded))
-                        prefer = lastLoaded;
-                    else if (!string.IsNullOrEmpty(previousSelection) && listBox.Items.Contains(previousSelection))
-                        prefer = previousSelection;
-
-                    if (prefer != null && !Equals(listBox.SelectedItem, prefer))
-                        listBox.SelectedItem = prefer;
-
-                    updateNotifier(lastLoaded);
+                    _refreshingList = false;
                 }
                 listBox.EnsureRenderedAndInitialized();
                 MainWindow.Instance.FillMenus();

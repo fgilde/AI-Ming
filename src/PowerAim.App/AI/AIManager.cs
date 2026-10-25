@@ -211,11 +211,7 @@ public class AIManager : IDisposable
                         continue;
                     }
 
-                    Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
-                        new NoticeBar(string.Format(Locale.ErrorFormat, e.Message), 6000).Show()));
-                    Instance?.Dispose();
-                    FileManager.AIManager = null;
-                    MainWindow.Instance?.OnPropertyChanged(nameof(IsModelLoaded));
+                    StopAfterFatalError(e);
                 }
 
                 // Optional inference FPS cap — when SliderSettings.MaxInferenceFPS > 0 the helper
@@ -248,7 +244,22 @@ public class AIManager : IDisposable
         catch (Exception ex)
         {
             AppDebugLog.Exception("AILoop", ex, "unhandled in AiLoop");
+            StopAfterFatalError(ex);
         }
+    }
+
+    /// <summary>The loop can't continue: tell the user and unload, instead of stopping silently.</summary>
+    private void StopAfterFatalError(Exception e)
+    {
+        // A loop that is already being shut down (model switch, exit) just ends. Its error must not
+        // unload the manager that replaced it — only the active manager reports and unloads itself.
+        if (!_isAiLoopRunning || !ReferenceEquals(Instance, this)) return;
+        Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+            new NoticeBar(string.Format(Locale.ErrorFormat, e.Message), 6000).Show()));
+        Dispose();
+        if (ReferenceEquals(FileManager.AIManager, this))
+            FileManager.AIManager = null;
+        MainWindow.Instance?.OnPropertyChanged(nameof(IsModelLoaded));
     }
 
     private async Task SetActionsState(bool paused)
