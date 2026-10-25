@@ -1006,11 +1006,11 @@ public partial class MainWindow
             .BindTo(() => AppConfig.Current.ToggleState.RequireGlobalActiveForKeybinds);
 
         // Application debug logging — feature flips, model load/switch, exceptions → %LocalAppData%\PowerAim\logs
-        var debugLogToggle = UISettings.AddToggle("Enable Debug Logging");
+        var debugLogToggle = UISettings.AddToggle(Locale.EnableDebugLogging);
         debugLogToggle.InitWith(t => t.ToolTip =
             "Log every feature enable/disable, model switch, and error to %LocalAppData%\\PowerAim\\logs\\ and the Debug Log panel.");
         debugLogToggle.BindTo(() => AppConfig.Current.ToggleState.EnableDebugLogging);
-        UISettings.AddButton("Open Debug Log Panel").Reader.Click += (s, e) =>
+        UISettings.AddButton(Locale.OpenDebugLogPanel).Reader.Click += (s, e) =>
             PowerAim.UI.Visuality.DebugLogPanel.ShowSingleton(this);
 
         var hideCaptureToggle = UISettings.AddToggle(Locale.HideUIFromCapture);

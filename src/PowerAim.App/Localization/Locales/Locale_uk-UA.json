@@ -955,9 +955,14 @@
   "DetectionFlashColor": "Колір спалаху",
   "DetectionFlashDuration": "Тривалість спалаху",
   "DetectionFlashHelp": "Коротко підсвічує приціл, коли виявлено ворога — тихий візуальний сигнал без необхідності відкривати відлагоджувальний оверлей.",
-  "SmartNeuralAntiRecoil": "Smart Neural Anti-Recoil",
-  "AntiRecoilModeSmartNeural": "Smart Neural (screen-only)",
-  "SmartNeuralStrengthHelp": "Compensation strength for the pure neural / vision anti-recoil path. Higher = stronger counter-movement.",
-  "SmartNeuralConfidence": "Neural confidence threshold",
-  "SmartNeuralConfidenceHelp": "Ignore frames whose phase-correlation confidence is below this value (0–1)."
+  "SmartNeuralAntiRecoil": "Антивіддача Smart Neural",
+  "AntiRecoilModeSmartNeural": "Smart Neural (лише екран)",
+  "SmartNeuralStrengthHelp": "Сила компенсації для суто нейронної / візуальної антивіддачі. Вище = сильніший зустрічний рух.",
+  "SmartNeuralConfidence": "Поріг нейронної впевненості",
+  "SmartNeuralConfidenceHelp": "Ігнорувати кадри, у яких впевненість фазової кореляції нижча за це значення (0–1).",
+  "EnableDebugLogging": "Увімкнути журнал налагодження",
+  "OpenDebugLogPanel": "Відкрити панель журналу налагодження",
+  "AimEditorFailedFormat": "Не вдалося відкрити редактор прицілювання: {0}",
+  "AimKeyBinderUnavailable": "Призначення клавіш недоступне (вікно не готове).",
+  "AimKeyBinderFailed": "Не вдалося завантажити призначення клавіші прицілювання."
 }

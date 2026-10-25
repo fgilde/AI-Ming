@@ -955,9 +955,14 @@
   "DetectionFlashColor": "Цвет вспышки",
   "DetectionFlashDuration": "Длительность вспышки",
   "DetectionFlashHelp": "Кратко подсвечивает прицел при обнаружении противника — тихий визуальный сигнал без необходимости открывать отладочный оверлей.",
-  "SmartNeuralAntiRecoil": "Smart Neural Anti-Recoil",
-  "AntiRecoilModeSmartNeural": "Smart Neural (screen-only)",
-  "SmartNeuralStrengthHelp": "Compensation strength for the pure neural / vision anti-recoil path. Higher = stronger counter-movement.",
-  "SmartNeuralConfidence": "Neural confidence threshold",
-  "SmartNeuralConfidenceHelp": "Ignore frames whose phase-correlation confidence is below this value (0–1)."
+  "SmartNeuralAntiRecoil": "Анти-отдача Smart Neural",
+  "AntiRecoilModeSmartNeural": "Smart Neural (только экран)",
+  "SmartNeuralStrengthHelp": "Сила компенсации для чисто нейронной / визуальной анти-отдачи. Выше = сильнее встречное движение.",
+  "SmartNeuralConfidence": "Порог нейронной уверенности",
+  "SmartNeuralConfidenceHelp": "Игнорировать кадры, у которых уверенность фазовой корреляции ниже этого значения (0–1).",
+  "EnableDebugLogging": "Включить журнал отладки",
+  "OpenDebugLogPanel": "Открыть панель журнала отладки",
+  "AimEditorFailedFormat": "Не удалось открыть редактор прицеливания: {0}",
+  "AimKeyBinderUnavailable": "Назначение клавиш недоступно (окно не готово).",
+  "AimKeyBinderFailed": "Не удалось загрузить назначение клавиши прицеливания."
 }

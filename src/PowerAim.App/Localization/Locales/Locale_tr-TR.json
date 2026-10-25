@@ -955,9 +955,14 @@
   "DetectionFlashColor": "Parlama rengi",
   "DetectionFlashDuration": "Parlama süresi",
   "DetectionFlashHelp": "Bir düşman algılandığında nişangâhı kısaca renklendirir, böylece hata ayıklama yer paylaşımını açmadan sessiz bir görsel ipucu alırsınız.",
-  "SmartNeuralAntiRecoil": "Smart Neural Anti-Recoil",
-  "AntiRecoilModeSmartNeural": "Smart Neural (screen-only)",
-  "SmartNeuralStrengthHelp": "Compensation strength for the pure neural / vision anti-recoil path. Higher = stronger counter-movement.",
-  "SmartNeuralConfidence": "Neural confidence threshold",
-  "SmartNeuralConfidenceHelp": "Ignore frames whose phase-correlation confidence is below this value (0–1)."
+  "SmartNeuralAntiRecoil": "Smart Neural Geri Tepme",
+  "AntiRecoilModeSmartNeural": "Smart Neural (yalnızca ekran)",
+  "SmartNeuralStrengthHelp": "Saf nöral / görüntü tabanlı geri tepme önleme için telafi gücü. Daha yüksek = daha güçlü karşı hareket.",
+  "SmartNeuralConfidence": "Nöral güven eşiği",
+  "SmartNeuralConfidenceHelp": "Faz korelasyonu güveni bu değerin altında olan kareleri yok say (0–1).",
+  "EnableDebugLogging": "Hata ayıklama günlüğünü etkinleştir",
+  "OpenDebugLogPanel": "Hata ayıklama günlüğü panelini aç",
+  "AimEditorFailedFormat": "Nişan düzenleyicisi açılamadı: {0}",
+  "AimKeyBinderUnavailable": "Tuş atama kullanılamıyor (pencere hazır değil).",
+  "AimKeyBinderFailed": "Nişan tuşu ataması yüklenemedi."
 }

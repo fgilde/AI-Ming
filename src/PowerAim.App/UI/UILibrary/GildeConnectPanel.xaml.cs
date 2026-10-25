@@ -192,7 +192,7 @@ public partial class GildeConnectPanel : UserControl
                  title="{{title}}" width="560" radius="18" padding="28"
                  show-logo="true" show-description="{{showDescription}}" show-homepage="true"
                  show-preview-notice="false" show-footer="false"
-                 support-layout="rows" show-support-icons="true" show-support-qr="true">{{title}}</{{tag}}>
+                 show-support-hint="false" support-layout="rows" show-support-icons="true" show-support-qr="true">{{title}}</{{tag}}>
               <script>
                 // Report the rendered height to the host so the WPF control can size itself. The widget
                 // grows and shrinks (validation errors, provider list), hence an observer, not a one-shot.

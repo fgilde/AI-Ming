@@ -955,9 +955,14 @@
   "DetectionFlashColor": "Color del destello",
   "DetectionFlashDuration": "Duración del destello",
   "DetectionFlashHelp": "Tiñe brevemente el punto de mira cuando se detecta un enemigo, dándote un aviso visual discreto sin tener que abrir el overlay de depuración.",
-  "SmartNeuralAntiRecoil": "Smart Neural Anti-Recoil",
-  "AntiRecoilModeSmartNeural": "Smart Neural (screen-only)",
-  "SmartNeuralStrengthHelp": "Compensation strength for the pure neural / vision anti-recoil path. Higher = stronger counter-movement.",
-  "SmartNeuralConfidence": "Neural confidence threshold",
-  "SmartNeuralConfidenceHelp": "Ignore frames whose phase-correlation confidence is below this value (0–1)."
+  "SmartNeuralAntiRecoil": "Anti retroceso Smart Neural",
+  "AntiRecoilModeSmartNeural": "Smart Neural (solo pantalla)",
+  "SmartNeuralStrengthHelp": "Intensidad de compensación del anti retroceso puramente neuronal / visual. Más alto = contramovimiento más fuerte.",
+  "SmartNeuralConfidence": "Umbral de confianza neuronal",
+  "SmartNeuralConfidenceHelp": "Ignorar fotogramas cuya confianza de correlación de fase esté por debajo de este valor (0–1).",
+  "EnableDebugLogging": "Activar registro de depuración",
+  "OpenDebugLogPanel": "Abrir panel de registro de depuración",
+  "AimEditorFailedFormat": "No se pudo abrir el editor de puntería: {0}",
+  "AimKeyBinderUnavailable": "Asignación de teclas no disponible (ventana no lista).",
+  "AimKeyBinderFailed": "No se pudo cargar la asignación de la tecla de puntería."
 }

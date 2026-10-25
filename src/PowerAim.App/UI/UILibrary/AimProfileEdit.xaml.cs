@@ -4,6 +4,8 @@ using System.Windows.Controls;
 using PowerAim;
 using PowerAim.Config;
 using PowerAim.Extensions;
+using PowerAim.Other;
+using PowerAim.UI.Visuality;
 using Nextended.UI.WPF.Extensions;
 
 namespace PowerAim.UI.UILibrary
@@ -56,7 +58,7 @@ namespace PowerAim.UI.UILibrary
                     {
                         if (self._buildingTunePanel) return;
                         try { self.BuildTunePanel(); }
-                        catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"BuildTunePanel: {ex}"); }
+                        catch (Exception ex) { ReportError("BuildTunePanel", ex); }
                     }), System.Windows.Threading.DispatcherPriority.Background);
                 }
             };
@@ -77,9 +79,16 @@ namespace PowerAim.UI.UILibrary
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"AimProfileEdit init: {ex}");
+                    ReportError("AimProfileEdit init", ex);
                 }
             }), System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+
+        // A part of the editor failed to build: tell the user (it would otherwise just look empty) and log it.
+        private static void ReportError(string context, Exception ex)
+        {
+            AppDebugLog.Exception("AimProfileEdit", ex, context);
+            new NoticeBar(string.Format(Locale.ErrorFormat, ex.Message), 5000).Show();
         }
 
         private void PopulatePresetCombo()
@@ -120,7 +129,7 @@ namespace PowerAim.UI.UILibrary
             {
                 AimKeyPanel.Children.Add(new System.Windows.Controls.TextBlock
                 {
-                    Text = "Key binder unavailable (window not ready).",
+                    Text = Locale.AimKeyBinderUnavailable,
                     Opacity = 0.7,
                     Margin = new Thickness(4)
                 });
@@ -135,10 +144,10 @@ namespace PowerAim.UI.UILibrary
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"PopulateAimKeyBinder: {ex}");
+                ReportError("PopulateAimKeyBinder", ex);
                 AimKeyPanel.Children.Add(new System.Windows.Controls.TextBlock
                 {
-                    Text = "Failed to load aim-key binder.",
+                    Text = Locale.AimKeyBinderFailed,
                     Opacity = 0.7,
                     Margin = new Thickness(4)
                 });
@@ -234,7 +243,7 @@ namespace PowerAim.UI.UILibrary
                 _buildingTunePanel = true;
                 // Movement path (Lerp = snappy/robotic direct aim)
                 _buildingTunePanel = true;
-                TunePanel.AddDropdown("Movement path", Profile!.MovementPathType,
+                TunePanel.AddDropdown(Locale.MovementPath, Profile!.MovementPathType,
                     v => { if (!_buildingTunePanel) Profile!.MovementPathType = v; });
 
                 TunePanel.AddDropdown(Locale.AimSmoothing, Profile!.SmoothingMode,
@@ -289,7 +298,7 @@ namespace PowerAim.UI.UILibrary
                 TunePanel.AddToggle(Locale.Predictions).BindTo(() => Profile!.Predictions);
                 _buildingTunePanel = true;
                 _buildingTunePanel = true;
-                TunePanel.AddDropdown("Movement path", Profile!.MovementPathType,
+                TunePanel.AddDropdown(Locale.MovementPath, Profile!.MovementPathType,
                     v => { if (!_buildingTunePanel) Profile!.MovementPathType = v; });
                 TunePanel.AddDropdown(Locale.PredictionMethod, Profile!.PredictionMethod,
                     v => { if (!_buildingTunePanel) Profile!.PredictionMethod = v; });

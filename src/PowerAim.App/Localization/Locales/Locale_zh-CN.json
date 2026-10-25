@@ -955,9 +955,14 @@
   "DetectionFlashColor": "闪烁颜色",
   "DetectionFlashDuration": "闪烁持续时间",
   "DetectionFlashHelp": "检测到敌人时短暂为准星着色，无需打开调试覆盖层即可获得安静的视觉提示。",
-  "SmartNeuralAntiRecoil": "Smart Neural Anti-Recoil",
-  "AntiRecoilModeSmartNeural": "Smart Neural (screen-only)",
-  "SmartNeuralStrengthHelp": "Compensation strength for the pure neural / vision anti-recoil path. Higher = stronger counter-movement.",
-  "SmartNeuralConfidence": "Neural confidence threshold",
-  "SmartNeuralConfidenceHelp": "Ignore frames whose phase-correlation confidence is below this value (0–1)."
+  "SmartNeuralAntiRecoil": "Smart Neural 防后坐力",
+  "AntiRecoilModeSmartNeural": "Smart Neural（仅屏幕）",
+  "SmartNeuralStrengthHelp": "纯神经网络/视觉防后坐力的补偿强度。越高 = 反向移动越强。",
+  "SmartNeuralConfidence": "神经置信度阈值",
+  "SmartNeuralConfidenceHelp": "忽略相位相关置信度低于此值的帧（0–1）。",
+  "EnableDebugLogging": "启用调试日志",
+  "OpenDebugLogPanel": "打开调试日志面板",
+  "AimEditorFailedFormat": "无法打开瞄准编辑器：{0}",
+  "AimKeyBinderUnavailable": "按键绑定不可用（窗口尚未就绪）。",
+  "AimKeyBinderFailed": "无法加载瞄准键绑定。"
 }

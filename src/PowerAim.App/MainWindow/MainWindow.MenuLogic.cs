@@ -621,7 +621,7 @@ public partial class MainWindow
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"OpenAimEditor: {ex}");
-            new NoticeBar($"Aim editor failed to open: {ex.Message}", 6000).Show();
+            new NoticeBar(string.Format(Locale.AimEditorFailedFormat, ex.Message), 6000).Show();
             SetSidebarLocked(false);
         }
     }

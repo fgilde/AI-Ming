@@ -955,9 +955,14 @@
   "DetectionFlashColor": "Colore del lampo",
   "DetectionFlashDuration": "Durata del lampo",
   "DetectionFlashHelp": "Tinge brevemente il mirino quando viene rilevato un nemico, per un segnale visivo discreto senza dover aprire l'overlay di debug.",
-  "SmartNeuralAntiRecoil": "Smart Neural Anti-Recoil",
-  "AntiRecoilModeSmartNeural": "Smart Neural (screen-only)",
-  "SmartNeuralStrengthHelp": "Compensation strength for the pure neural / vision anti-recoil path. Higher = stronger counter-movement.",
-  "SmartNeuralConfidence": "Neural confidence threshold",
-  "SmartNeuralConfidenceHelp": "Ignore frames whose phase-correlation confidence is below this value (0–1)."
+  "SmartNeuralAntiRecoil": "Antirinculo Smart Neural",
+  "AntiRecoilModeSmartNeural": "Smart Neural (solo schermo)",
+  "SmartNeuralStrengthHelp": "Intensità di compensazione dell'antirinculo puramente neurale / visivo. Più alto = contromovimento più forte.",
+  "SmartNeuralConfidence": "Soglia di confidenza neurale",
+  "SmartNeuralConfidenceHelp": "Ignora i fotogrammi con confidenza di correlazione di fase inferiore a questo valore (0–1).",
+  "EnableDebugLogging": "Attiva log di debug",
+  "OpenDebugLogPanel": "Apri pannello log di debug",
+  "AimEditorFailedFormat": "Impossibile aprire l'editor di mira: {0}",
+  "AimKeyBinderUnavailable": "Assegnazione tasti non disponibile (finestra non pronta).",
+  "AimKeyBinderFailed": "Impossibile caricare l'assegnazione del tasto di mira."
 }
