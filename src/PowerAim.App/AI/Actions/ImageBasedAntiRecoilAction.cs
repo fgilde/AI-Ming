@@ -79,23 +79,10 @@ public class ImageBasedAntiRecoilAction : BaseAction
             return Task.CompletedTask;
         _lastRunUtc = now;
 
-        // Prefer cropping the AI loop's latest full capture when present — avoids a second
-        // DXGI Acquire under the same lock (main source of mouse hitch vs upstream AI-Ming).
-        Bitmap? bmp = null;
-        try
-        {
-            var last = capture.LastCapture;
-            if (last != null && last.Width >= PatchSize && last.Height >= PatchSize)
-            {
-                int x = Math.Clamp((last.Width - PatchSize) / 2, 0, Math.Max(0, last.Width - PatchSize));
-                int y = Math.Clamp((last.Height - PatchSize) / 2, 0, Math.Max(0, last.Height - PatchSize));
-                bmp = last.Clone(new System.Drawing.Rectangle(x, y, PatchSize, PatchSize), last.PixelFormat);
-            }
-            else
-            {
-                bmp = capture.Capture(patchRect);
-            }
-        }
+        // Prefer a copy of the AI loop's latest frame: a second DXGI acquire would consume desktop
+        // frames the loop then has to wait for (mouse hitch). Own capture only before the first frame.
+        Bitmap? bmp;
+        try { bmp = capture.CopyLastCaptureCenter(PatchSize) ?? capture.Capture(patchRect); }
         catch { return Task.CompletedTask; }
         if (bmp == null) return Task.CompletedTask;
 

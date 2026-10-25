@@ -60,13 +60,23 @@ public class ProcessCapture : ICapture
         if (detectionBox.Width <= 0)
             detectionBox.Width = windowRect.Right - windowRect.Left;
 
-        LastCapture = new Bitmap(detectionBox.Width, detectionBox.Height, PixelFormat.Format32bppArgb);
-        using Graphics graphics = Graphics.FromImage(LastCapture);
-        graphics.CopyFromScreen(detectionBox.Left, detectionBox.Top, 0, 0, detectionBox.Size, CopyPixelOperation.SourceCopy);
-        return LastCapture;
+        var frame = new Bitmap(detectionBox.Width, detectionBox.Height, PixelFormat.Format32bppArgb);
+        using (Graphics graphics = Graphics.FromImage(frame))
+            graphics.CopyFromScreen(detectionBox.Left, detectionBox.Top, 0, 0, detectionBox.Size, CopyPixelOperation.SourceCopy);
+        // Publish only the finished frame.
+        lock (_sync)
+            _lastCapture = frame;
+        return frame;
     }
 
-    public Bitmap LastCapture { get; private set; }
+    private readonly object _sync = new();
+    private Bitmap? _lastCapture;
+
+    public Bitmap? CopyLastCaptureCenter(int size)
+    {
+        lock (_sync)
+            return CapturedFrame.CopyCenter(_lastCapture, size);
+    }
 
     public Task OnPause()
     {

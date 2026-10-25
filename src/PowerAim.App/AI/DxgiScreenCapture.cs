@@ -48,7 +48,11 @@ public sealed class DxgiScreenCapture : ICapture
 
     public Rectangle CaptureArea => Screen.Bounds;
 
-    public Bitmap LastCapture => _lastCapture!;
+    public Bitmap? CopyLastCaptureCenter(int size)
+    {
+        lock (_captureLock)
+            return CapturedFrame.CopyCenter(_lastCapture, size);
+    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -104,10 +108,15 @@ public sealed class DxgiScreenCapture : ICapture
                 var bmp = CaptureInternal(detectionBox);
                 if (bmp != null)
                 {
-                    _lastCapture?.Dispose();
-                    _lastCapture = bmp;
-                    _lastBox = detectionBox;
-                    _lastCaptureUtc = DateTime.UtcNow;
+                    // No new desktop frame (timeout / empty crop) hands back the cached bitmap itself;
+                    // only a fresh frame replaces (and disposes) the cache.
+                    if (!ReferenceEquals(bmp, _lastCapture))
+                    {
+                        _lastCapture?.Dispose();
+                        _lastCapture = bmp;
+                        _lastBox = detectionBox;
+                        _lastCaptureUtc = DateTime.UtcNow;
+                    }
                     // Return a clone so the internal cache remains exclusively owned by this class.
                     return (Bitmap)bmp.Clone();
                 }
@@ -120,7 +129,9 @@ public sealed class DxgiScreenCapture : ICapture
 
             // If we get here, the capture failed and we couldn't recover. Return the previous
             // frame so the AI loop doesn't crash on a null bitmap.
-            return _lastCapture ?? new Bitmap(detectionBox.Width, detectionBox.Height, PixelFormat.Format32bppArgb);
+            return _lastCapture != null
+                ? (Bitmap)_lastCapture.Clone()
+                : new Bitmap(detectionBox.Width, detectionBox.Height, PixelFormat.Format32bppArgb);
         }
     }
 

@@ -31,7 +31,7 @@ public class ScreenCapture : ICapture
 
     public Rectangle CaptureArea => _inner.CaptureArea;
 
-    public Bitmap LastCapture => _inner.LastCapture;
+    public Bitmap? CopyLastCaptureCenter(int size) => _inner.CopyLastCaptureCenter(size);
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
