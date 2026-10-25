@@ -18,9 +18,11 @@ public class OverlayAction : BaseAction
     private DetectedPlayerWindow? _playerOverlay = new();
     private FOV? _fov = new();
     private bool _useForm = false;
-    /// <summary>Last non-empty set used when a frame has no detections (hold ESP stable).</summary>
+    /// <summary>Last non-empty set, redrawn for <see cref="EmptyHold"/> when a frame has no detections.</summary>
     private Prediction[] _lastDrawn = Array.Empty<Prediction>();
-    private int _emptyStreak;
+    private DateTime _lastDetectionUtc;
+    /// <summary>Bridges single-frame detection drops (no flicker) without leaving boxes behind a gone target.</summary>
+    private static readonly TimeSpan EmptyHold = TimeSpan.FromMilliseconds(150);
     /// <summary>
     ///     The WPF overlay window is shown and opaque. It carries the ESP boxes and the captured-area border,
     ///     so it is shown while either is on — toggled only on change, never per frame.
@@ -28,7 +30,6 @@ public class OverlayAction : BaseAction
     private bool _overlayShown;
     /// <summary>ESP boxes may still be on the overlay and must be cleared when ESP turns off.</summary>
     private bool _espDrawn;
-    private const int EmptyHoldFrames = 45; // ~0.5–1s depending on FPS before clear
     public OverlayAction()
     {
         EnsureFormOverlay();
@@ -53,42 +54,38 @@ public class OverlayAction : BaseAction
         {
             _espDrawn = true;
 
-            // Hold last non-empty detections so a brief miss does not blank the ESP.
-            Prediction[] drawSet;
+            var now = DateTime.UtcNow;
             if (predictions is { Length: > 0 })
             {
                 _lastDrawn = predictions;
-                _emptyStreak = 0;
-                drawSet = predictions;
+                _lastDetectionUtc = now;
             }
-            else
-            {
-                _emptyStreak++;
-                drawSet = _emptyStreak <= EmptyHoldFrames ? _lastDrawn : Array.Empty<Prediction>();
-                if (_emptyStreak > EmptyHoldFrames)
-                    _lastDrawn = Array.Empty<Prediction>();
-            }
+            var drawSet = now - _lastDetectionUtc <= EmptyHold ? _lastDrawn : Array.Empty<Prediction>();
 
             Prediction? best = drawSet is { Length: > 0 }
                 ? drawSet.MaxBy(p => p.Confidence)
                 : null;
 
+            // Predictions are relative to the capture area. The overlay window and the form sit on the
+            // capture area (draw local, origin 0,0); the desktop DC is the whole screen (offset by it).
+            var captureArea = ImageCapture.CaptureArea;
+            var local = new System.Drawing.Rectangle(0, 0, captureArea.Width, captureArea.Height);
             switch (AppConfig.Current.DropdownState.OverlayDrawingMethod)
             {
                 case OverlayDrawingMethod.WpfWindowCanvas:
                     overlay.DrawPredictionCanvas(best);
                     break;
                 case OverlayDrawingMethod.DrawingContextVisualHost:
-                    overlay.DrawPredictions(drawSet, System.Windows.Rect.Empty);
+                    overlay.DrawPredictions(drawSet, local.ToRect());
                     break;
                 case OverlayDrawingMethod.DesktopDC:
                     overlay.DrawPredictionCanvas(null);
-                    PredictionDrawer.DrawPredictions(drawSet, targetArea: null);
+                    PredictionDrawer.DrawPredictions(drawSet, captureArea);
                     break;
                 case OverlayDrawingMethod.OverlayFormGDI:
                     _useForm = true;
                     overlay.DrawPredictionCanvas(null);
-                    PredictionDrawer.DrawPredictions(EnsureFormOverlay(), drawSet, targetArea: null, useScreenSpace: false);
+                    PredictionDrawer.DrawPredictions(EnsureFormOverlay(), drawSet, local);
                     break;
             }
         }
@@ -98,6 +95,7 @@ public class OverlayAction : BaseAction
             _espDrawn = false;
             _lastDrawn = Array.Empty<Prediction>();
             _playerOverlay?.DrawPredictions(Array.Empty<Prediction>(), System.Windows.Rect.Empty);
+            _playerOverlay?.DrawPredictionCanvas(null);
         }
         if (formActive != _useForm && !_useForm)
         {
@@ -203,7 +201,7 @@ public class OverlayAction : BaseAction
     public override Task OnResume()
     {
         // The overlay itself is shown by the next frame (ExecuteAsync) when ESP or the captured-area border is on.
-        _emptyStreak = 0;
+        _lastDrawn = Array.Empty<Prediction>();
         return base.OnResume();
     }
 

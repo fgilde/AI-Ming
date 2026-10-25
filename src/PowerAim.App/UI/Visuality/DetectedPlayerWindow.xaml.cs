@@ -139,12 +139,11 @@ namespace PowerAim.UI.Visuality
                 return;
             }
             PredictionHost.Visibility = Visibility.Collapsed;
-            // TranslatedRectangle is screen-absolute. This window is positioned on CaptureArea,
-            // so convert to window-local coordinates before placing the focus rect.
-            var capture = AIManager.Instance.ImageCapture.CaptureArea;
+            // TranslatedRectangle is relative to the capture area, and this window sits on the capture
+            // area — so it already is window-local (no origin offset).
             var lastDetectionBox = prediction.TranslatedRectangle;
-            float localX = lastDetectionBox.X - capture.Left;
-            float localY = lastDetectionBox.Y - capture.Top;
+            float localX = lastDetectionBox.X;
+            float localY = lastDetectionBox.Y;
             // Fallback to model-space rectangle if translation was never filled.
             if (lastDetectionBox.Width <= 1 && prediction.Rectangle.Width > 1)
             {

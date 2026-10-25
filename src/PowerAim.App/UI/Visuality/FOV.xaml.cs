@@ -19,9 +19,6 @@ namespace PowerAim.UI.Visuality
     public partial class FOV : Window
     {
         private readonly DispatcherTimer _mousePositionTimer;
-        private const double CrossArmFraction = 0.08; // each tick = 8% of FOV radius-ish (diameter-based)
-        private const double CrossMinPx = 6;
-        private const double CrossMaxPx = 28;
 
         public static FOV? Instance { get; private set; }
 
@@ -65,13 +62,11 @@ namespace PowerAim.UI.Visuality
                 {
                     Dispatcher.BeginInvoke(new Action(() =>
                     {
-                        UpdateCrossGeometry();
                         PositionCircle();
                     }), DispatcherPriority.Render);
                 }
             };
 
-            UpdateCrossGeometry();
             PositionCircle();
         }
 
@@ -88,7 +83,6 @@ namespace PowerAim.UI.Visuality
             this.HideForCaptureIfEnabled();
             if (AIManager.Instance?.ImageCapture != null)
                 AIManager.Instance.ImageCapture.PropertyChanged += ImageCaptureOnPropertyChanged;
-            UpdateCrossGeometry();
             PositionCircle();
         }
 
@@ -110,14 +104,12 @@ namespace PowerAim.UI.Visuality
             if ((bool)e.NewValue && AIManager.Instance?.ImageCapture?.CaptureArea is not null)
             {
                 this.MoveTo(AIManager.Instance.ImageCapture.CaptureArea);
-                UpdateCrossGeometry();
                 PositionCircle();
             }
         }
 
         private void OnWindowSizeChanged(object sender, SizeChangedEventArgs e)
         {
-            UpdateCrossGeometry();
             PositionCircle();
         }
 
@@ -129,30 +121,6 @@ namespace PowerAim.UI.Visuality
                 return;
             var mousePosition = e.GetPosition(this);
             PositionCircle(mousePosition.X, mousePosition.Y);
-        }
-
-        /// <summary>Short center ticks scaled to FOV diameter.</summary>
-        private void UpdateCrossGeometry()
-        {
-            if (FovCanvas == null || CrossH == null || CrossV == null) return;
-
-            double size = FovCanvas.Width;
-            if (double.IsNaN(size) || size <= 0)
-                size = AppConfig.Current?.SliderSettings?.ActualFovSize ?? 0;
-            if (size <= 0) return;
-
-            double arm = Math.Clamp(size * CrossArmFraction, CrossMinPx, CrossMaxPx);
-            double mid = size * 0.5;
-
-            CrossH.X1 = mid - arm;
-            CrossH.Y1 = mid;
-            CrossH.X2 = mid + arm;
-            CrossH.Y2 = mid;
-
-            CrossV.X1 = mid;
-            CrossV.Y1 = mid - arm;
-            CrossV.X2 = mid;
-            CrossV.Y2 = mid + arm;
         }
 
         private void PositionCircle(double? targetX = null, double? targetY = null)
@@ -188,7 +156,6 @@ namespace PowerAim.UI.Visuality
             }
 
             FovCanvas.Margin = new Thickness(left, top, 0, 0);
-            UpdateCrossGeometry();
         }
     }
 }

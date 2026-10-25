@@ -30,7 +30,7 @@
               HorizontalAlignment="Stretch"
               VerticalAlignment="Stretch">
 
-            <!-- Layered ring: soft outer glow + crisp stroke + light dash + center cross -->
+            <!-- Layered ring: soft outer glow + crisp stroke + light dash -->
             <Canvas x:Name="FovCanvas"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
@@ -73,26 +73,6 @@
                         <SolidColorBrush Color="{Binding ColorState.FOVColor}" />
                     </Ellipse.Stroke>
                 </Ellipse>
-
-                <!-- Center cross (short ticks) — not full crosshair clutter -->
-                <Line x:Name="CrossH"
-                      StrokeThickness="1.25"
-                      Opacity="0.85"
-                      IsHitTestVisible="False"
-                      X1="0" Y1="0" X2="0" Y2="0">
-                    <Line.Stroke>
-                        <SolidColorBrush Color="{Binding ColorState.FOVColor}" />
-                    </Line.Stroke>
-                </Line>
-                <Line x:Name="CrossV"
-                      StrokeThickness="1.25"
-                      Opacity="0.85"
-                      IsHitTestVisible="False"
-                      X1="0" Y1="0" X2="0" Y2="0">
-                    <Line.Stroke>
-                        <SolidColorBrush Color="{Binding ColorState.FOVColor}" />
-                    </Line.Stroke>
-                </Line>
             </Canvas>
         </Grid>
     </Grid>

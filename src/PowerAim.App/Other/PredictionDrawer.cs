@@ -46,71 +46,10 @@ namespace PowerAim.Other
             ReleaseDC(hwnd, hdc);
         }
 
-        public static void DrawPredictions(Graphics graphics, IEnumerable<Prediction> predictions, Rectangle? targetArea = null, bool useScreenSpace = true)
+        public static void DrawPredictions(Graphics graphics, IEnumerable<Prediction> predictions, Rectangle? targetArea = null)
         {
-            // Temporal EMA + soft identity → stable boxes (no raw YOLO jitter).
-            // useScreenSpace: true  → EspBoxSmoother uses TranslatedRectangle (absolute screen)
-            //                 false → model-space Rectangle (form / capture-local DC)
-            var smoothed = EspBoxSmoother.Smooth(predictions, useScreenSpace: useScreenSpace);
-            foreach (var (box, conf, classId, className, locked) in smoothed)
-                DrawSmoothedBox(graphics, box, conf, className, locked, targetArea);
-        }
-
-        /// <summary>Form overlay path: model-space boxes, form already placed on capture area.</summary>
-        public static void DrawPredictions(Form window, IEnumerable<Prediction> predictions, Rectangle? targetArea, bool useScreenSpace)
-        {
-            if (window.InvokeRequired)
-            {
-                window.Invoke(() => DrawPredictions(window, predictions, targetArea, useScreenSpace));
-                return;
-            }
-            var hwnd = window.Handle;
-            IntPtr hdc = GetDC(hwnd);
-            using (Graphics graphics = Graphics.FromHdc(hdc))
-            {
-                DrawPredictions(graphics, predictions, targetArea, useScreenSpace);
-            }
-            ReleaseDC(hwnd, hdc);
-        }
-
-        private static void DrawSmoothedBox(Graphics graphics, RectangleF rect, float confidence, string className, bool locked, Rectangle? targetArea)
-        {
-            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            var config = AppConfig.Current;
-            var color = locked
-                ? System.Drawing.Color.FromArgb(255, 255, 64, 64) // locked = warmer
-                : config.ColorState.DetectedPlayerColor.ToDrawingColor();
-            var borderThickness = (float)config.SliderSettings.BorderThickness;
-            if (locked) borderThickness = Math.Max(borderThickness, borderThickness + 1f);
-
-            // Only apply targetArea offset when boxes are in model space and targetArea is the
-            // screen origin of the capture. Screen-space boxes must not be offset again.
-            if (targetArea.HasValue)
-            {
-                rect.X += targetArea.Value.Left;
-                rect.Y += targetArea.Value.Top;
-            }
-
-            Draw(graphics, rect, (float)config.SliderSettings.CornerRadius, color, borderThickness);
-
-            if (config.ToggleState.ShowAIConfidence)
-            {
-                var font = new Font("Consolas", config.SliderSettings.AIConfidenceFontSize);
-                var confidenceText = $"{Math.Round(confidence * 100, 1)}%";
-                if (!string.IsNullOrEmpty(className) && className != "Enemy")
-                    confidenceText = $"{className} {confidenceText}";
-                DrawText(graphics, confidenceText, rect, font, color);
-                font.Dispose();
-            }
-
-            if (config.ToggleState.ShowTracers)
-            {
-                var centerX = rect.X + rect.Width / 2;
-                var bottomY = rect.Y + rect.Height;
-                PointF tracerStart = targetArea?.GetBottomCenter() ?? Screen.PrimaryScreen!.Bounds.GetBottomCenter();
-                Draw(graphics, tracerStart, new PointF(centerX, bottomY),
-                    System.Windows.Media.Color.FromArgb(color.A, color.R, color.G, color.B), 2);
-            }
+            foreach (var prediction in predictions)
+                DrawPrediction(graphics, prediction, targetArea);
         }
 
 

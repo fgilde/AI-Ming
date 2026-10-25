@@ -9,35 +9,18 @@ namespace PowerAim.Other
 {
     internal static partial class PredictionDrawer
     {
-        /// <summary>
-        /// WPF / DrawingContext path (OverlayDrawingMethod.DrawingContextVisualHost
-        /// and WpfWindowCanvas consumers). Uses the same EspBoxSmoother as GDI so
-        /// all four overlay methods share stable boxes.
-        /// </summary>
         public static void DrawPredictions(DrawingContext dc, IEnumerable<Prediction> predictions, Rect? targetArea = null)
         {
-            // PredictionVisualHost is a child of the capture-aligned DetectedPlayerWindow.
-            // Boxes must be in capture-local / model space — never add CaptureArea origin again.
-            var smoothed = EspBoxSmoother.Smooth(predictions, useScreenSpace: false);
-            foreach (var (box, conf, classId, className, locked) in smoothed)
-                DrawSmoothedBox(dc, box, conf, className, locked, targetArea: null);
+            foreach (var prediction in predictions)
+                DrawPrediction(dc, prediction, targetArea);
         }
 
-        private static void DrawSmoothedBox(
-            DrawingContext dc,
-            System.Drawing.RectangleF box,
-            float confidence,
-            string className,
-            bool locked,
-            Rect? targetArea)
+        public static void DrawPrediction(DrawingContext dc, Prediction prediction, Rect? targetArea)
         {
-            var rect = new Rect(box.X, box.Y, box.Width, box.Height);
+            var rect = prediction.TranslatedRectangle.ToRect();
             var config = AppConfig.Current;
-            var color = locked
-                ? Color.FromArgb(255, 255, 64, 64)
-                : config.ColorState.DetectedPlayerColor;
+            var color = config.ColorState.DetectedPlayerColor;
             var borderThickness = config.SliderSettings.BorderThickness;
-            if (locked) borderThickness = Math.Max(borderThickness, borderThickness + 1);
             var cornerRadius = config.SliderSettings.CornerRadius;
 
             if (targetArea.HasValue)
@@ -46,67 +29,72 @@ namespace PowerAim.Other
                 rect.Y += targetArea.Value.Top;
             }
 
+            // Draw the main rectangle with rounded corners
             DrawRoundedRectangle(dc, rect, cornerRadius, color, borderThickness);
 
+            // Draw AI confidence text if enabled
             if (config.ToggleState.ShowAIConfidence)
             {
-                var confidenceText = $"{Math.Round(confidence * 100, 1)}%";
-                if (!string.IsNullOrEmpty(className) && className != "Enemy")
-                    confidenceText = $"{className} {confidenceText}";
+                var confidenceText = $"{Math.Round((prediction.Confidence * 100), 2)}%";
                 DrawText(dc, confidenceText, rect, config.SliderSettings.AIConfidenceFontSize, color);
             }
 
+            // Draw tracers if enabled
             if (config.ToggleState.ShowTracers)
             {
                 var centerX = rect.X + rect.Width / 2;
                 var bottomY = rect.Y + rect.Height;
-                Point tracerStart = targetArea?.GetBottomCenter().ToPoint()
-                    ?? System.Windows.Forms.Screen.PrimaryScreen!.Bounds.GetBottomCenter().ToPoint();
-                DrawLine(dc, tracerStart, new Point(centerX, bottomY), color, 2);
+
+                Point tracerStart = targetArea?.GetBottomCenter().ToPoint() ?? System.Windows.Forms.Screen.PrimaryScreen!.Bounds.GetBottomCenter().ToPoint();
+                Point tracerEnd = new Point(centerX, bottomY);
+
+                DrawLine(dc, tracerStart, tracerEnd, color, 2);
             }
 
+            // Draw trigger head area if enabled
             if (config.ToggleState.ShowTriggerHeadArea)
             {
-                var headRelativeRect = AppConfig.Current.Triggers.FirstOrDefault(t =>
-                    t is { Enabled: true, ExecutionIntersectionCheck: TriggerCheck.HeadIntersectingCenter })
-                    ?.ExecutionIntersectionArea ?? RelativeRect.Default;
+                var headRelativeRect = AppConfig.Current.Triggers.FirstOrDefault(t => t is { Enabled: true, ExecutionIntersectionCheck: TriggerCheck.HeadIntersectingCenter })?.ExecutionIntersectionArea ?? RelativeRect.Default;
 
                 double headAreaWidth = rect.Width * headRelativeRect.WidthPercentage;
                 double headAreaHeight = rect.Height * headRelativeRect.HeightPercentage;
                 double headAreaLeft = rect.X + rect.Width * headRelativeRect.LeftMarginPercentage;
                 double headAreaTop = rect.Y + rect.Height * headRelativeRect.TopMarginPercentage;
 
-                DrawRectangle(dc,
-                    new Rect(headAreaLeft, headAreaTop, headAreaWidth, headAreaHeight),
-                    Colors.Green, borderThickness);
+                var headAreaRect = new Rect(headAreaLeft, headAreaTop, headAreaWidth, headAreaHeight);
+                DrawRectangle(dc, headAreaRect, Colors.Green, borderThickness);
             }
 
+            // Draw sizes if enabled
             if (config.ToggleState.ShowSizes)
+            {
                 DrawSizes(dc, rect, color);
-        }
-
-        /// <summary>Single-prediction draw (kept for any direct callers).</summary>
-        public static void DrawPrediction(DrawingContext dc, Prediction prediction, Rect? targetArea)
-        {
-            DrawPredictions(dc, new[] { prediction }, targetArea);
+            }
         }
 
         private static void DrawRoundedRectangle(DrawingContext dc, Rect rect, double cornerRadius, Color color, double borderThickness)
         {
             var pen = new Pen(new SolidColorBrush(color), borderThickness);
             var brush = Brushes.Transparent;
-            cornerRadius = Math.Max(cornerRadius, 0.1);
 
             var geometry = new StreamGeometry();
             using (var context = geometry.Open())
             {
                 context.BeginFigure(new Point(rect.X + cornerRadius, rect.Y), true, true);
+
+                // Top line and top-right corner
                 context.LineTo(new Point(rect.X + rect.Width - cornerRadius, rect.Y), true, false);
                 context.ArcTo(new Point(rect.X + rect.Width, rect.Y + cornerRadius), new Size(cornerRadius, cornerRadius), 0, false, SweepDirection.Clockwise, true, false);
+
+                // Right line and bottom-right corner
                 context.LineTo(new Point(rect.X + rect.Width, rect.Y + rect.Height - cornerRadius), true, false);
                 context.ArcTo(new Point(rect.X + rect.Width - cornerRadius, rect.Y + rect.Height), new Size(cornerRadius, cornerRadius), 0, false, SweepDirection.Clockwise, true, false);
+
+                // Bottom line and bottom-left corner
                 context.LineTo(new Point(rect.X + cornerRadius, rect.Y + rect.Height), true, false);
                 context.ArcTo(new Point(rect.X, rect.Y + rect.Height - cornerRadius), new Size(cornerRadius, cornerRadius), 0, false, SweepDirection.Clockwise, true, false);
+
+                // Left line and top-left corner
                 context.LineTo(new Point(rect.X, rect.Y + cornerRadius), true, false);
                 context.ArcTo(new Point(rect.X + cornerRadius, rect.Y), new Size(cornerRadius, cornerRadius), 0, false, SweepDirection.Clockwise, true, false);
             }
@@ -116,14 +104,6 @@ namespace PowerAim.Other
 
         private static void DrawText(DrawingContext dc, string text, Rect rect, double fontSize, Color color)
         {
-            double ppd = 1.0;
-            try
-            {
-                if (Application.Current?.MainWindow != null)
-                    ppd = VisualTreeHelper.GetDpi(Application.Current.MainWindow).PixelsPerDip;
-            }
-            catch { /* design-time / no window */ }
-
             var formattedText = new FormattedText(
                 text,
                 System.Globalization.CultureInfo.CurrentCulture,
@@ -131,62 +111,77 @@ namespace PowerAim.Other
                 new Typeface("Consolas"),
                 fontSize,
                 new SolidColorBrush(color),
-                ppd);
+                VisualTreeHelper.GetDpi(Application.Current.MainWindow).PixelsPerDip);
 
-            var x = rect.X + (rect.Width - formattedText.Width) / 2;
-            var y = rect.Y - formattedText.Height - 2;
+            var textWidth = formattedText.Width;
+            var textHeight = formattedText.Height;
+            var x = rect.X + (rect.Width - textWidth) / 2;
+            var y = rect.Y - textHeight - 2;
+
             dc.DrawText(formattedText, new Point(x, y));
         }
 
         private static void DrawLine(DrawingContext dc, Point start, Point end, Color color, double thickness)
         {
-            dc.DrawLine(new Pen(new SolidColorBrush(color), thickness), start, end);
+            var pen = new Pen(new SolidColorBrush(color), thickness);
+            dc.DrawLine(pen, start, end);
         }
 
         private static void DrawRectangle(DrawingContext dc, Rect rect, Color color, double thickness)
         {
-            dc.DrawRectangle(null, new Pen(new SolidColorBrush(color), thickness), rect);
+            var pen = new Pen(new SolidColorBrush(color), thickness);
+            dc.DrawRectangle(null, pen, rect);
         }
 
         private static void DrawSizes(DrawingContext dc, Rect rect, Color color)
         {
-            const double fontSize = 10.0;
+            var fontSize = 10.0;
             var brush = new SolidColorBrush(color);
-            double ppd = 1.0;
-            try
-            {
-                if (Application.Current?.MainWindow != null)
-                    ppd = VisualTreeHelper.GetDpi(Application.Current.MainWindow).PixelsPerDip;
-            }
-            catch { }
 
+            // Draw width text
+            string widthText = $"{rect.Width:F1}";
             var widthFormattedText = new FormattedText(
-                $"{rect.Width:F1}",
+                widthText,
                 System.Globalization.CultureInfo.CurrentCulture,
                 FlowDirection.LeftToRight,
                 new Typeface("Consolas"),
                 fontSize,
                 brush,
-                ppd);
-            dc.DrawText(widthFormattedText,
-                new Point(rect.X + (rect.Width - widthFormattedText.Width) / 2, rect.Y + rect.Height + 2));
+                VisualTreeHelper.GetDpi(Application.Current.MainWindow).PixelsPerDip);
 
+            var widthTextPosition = new Point(rect.X + (rect.Width - widthFormattedText.Width) / 2, rect.Y + rect.Height + 2);
+            dc.DrawText(widthFormattedText, widthTextPosition);
+
+            // Draw height text rotated -90 degrees
+            string heightText = $"{rect.Height:F1}";
             var heightFormattedText = new FormattedText(
-                $"{rect.Height:F1}",
+                heightText,
                 System.Globalization.CultureInfo.CurrentCulture,
                 FlowDirection.LeftToRight,
                 new Typeface("Consolas"),
                 fontSize,
                 brush,
-                ppd);
+                VisualTreeHelper.GetDpi(Application.Current.MainWindow).PixelsPerDip);
+
             var heightTextPosition = new Point(rect.X + rect.Width + 2 + heightFormattedText.Height, rect.Y + rect.Height);
             dc.PushTransform(new TranslateTransform(heightTextPosition.X, heightTextPosition.Y));
             dc.PushTransform(new RotateTransform(-90));
+
             dc.DrawText(heightFormattedText, new Point(0, 0));
-            dc.Pop();
-            dc.Pop();
+
+            dc.Pop(); // RotateTransform
+            dc.Pop(); // TranslateTransform
         }
 
-        private static Point ToPoint(this System.Drawing.PointF point) => new(point.X, point.Y);
+        // Extension methods to convert between types
+        private static Color ToMediaColor(this System.Drawing.Color color)
+        {
+            return Color.FromArgb(color.A, color.R, color.G, color.B);
+        }
+
+        private static Point ToPoint(this System.Drawing.PointF point)
+        {
+            return new Point(point.X, point.Y);
+        }
     }
 }
