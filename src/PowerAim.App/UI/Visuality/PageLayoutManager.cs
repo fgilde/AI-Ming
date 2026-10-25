@@ -178,7 +178,7 @@ public sealed class PageLayoutManager
     private ControlTemplate MakeChromeButtonTemplate(string glyph)
     {
         // Tiny rounded-corner overlay with a Fluent glyph. Implemented via XAML string parse so
-        // we don't have to repeat the boiRoboticlate for every chrome button.
+        // we don't have to repeat the boilerplate for every chrome button.
         var xaml = $@"
 <ControlTemplate xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation""
                  xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml""

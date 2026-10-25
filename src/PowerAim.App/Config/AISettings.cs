@@ -85,7 +85,7 @@ public class AISettings : BaseSettings
     /// <summary>
     ///     Master switch for the smart aim path (nearest detection + frame-rate-independent
     ///     proportional move, with optional smoothing/tracking and pixel→count calibration). When off,
-    ///     the legacy sticky-selector + Robotic path runs instead. Default <c>true</c>.
+    ///     the legacy sticky-selector + Lerp path runs instead. Default <c>true</c>.
     /// </summary>
     public bool SmartAimEnabled
     {

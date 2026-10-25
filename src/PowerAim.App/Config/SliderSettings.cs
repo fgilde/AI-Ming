@@ -46,7 +46,7 @@ public class SliderSettings : BaseSettings
     public double DynamicFOVSize { get; set => SetField(ref field, value); } = 200;
 
     // Smart-aim semantics: this is the per-60Hz-frame approach fraction — HIGHER = snappier,
-    // LOWER = smoother (the inverse of the old 1-sensitivity Robotic, and now meaningful all the way
+    // LOWER = smoother (the inverse of the old 1-sensitivity Lerp, and now meaningful all the way
     // down to 0.0001 for high-DPI mice — GitHub issue #10). 0.25 ≈ a smooth-but-responsive default.
     public double MouseSensitivity { get; set => SetField(ref field, value); } = 0.25;
 

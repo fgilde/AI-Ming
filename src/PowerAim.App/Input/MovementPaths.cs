@@ -38,7 +38,7 @@ public static class MovementPaths
     }
 
     /// <summary>Linear interpolation.</summary>
-    public static Point Robotic(Point start, Point end, double t)
+    public static Point Lerp(Point start, Point end, double t)
     {
         int x = (int)(start.X + (end.X - start.X) * t);
         int y = (int)(start.Y + (end.Y - start.Y) * t);
@@ -54,13 +54,13 @@ public static class MovementPaths
     }
 
     /// <summary>
-    ///     Adaptive: Robotic for short distances (below <paramref name="threshold"/>) and a cubic Bezier
+    ///     Adaptive: Lerp for short distances (below <paramref name="threshold"/>) and a cubic Bezier
     ///     with 1/3 + 2/3 control points for longer movements.
     /// </summary>
     public static Point Adaptive(Point start, Point end, double t, double threshold = 100.0)
     {
         double distance = Math.Sqrt(Math.Pow(end.X - start.X, 2) + Math.Pow(end.Y - start.Y, 2));
-        if (distance < threshold) return Robotic(start, end, t);
+        if (distance < threshold) return Lerp(start, end, t);
 
         var control1 = new Point(start.X + (end.X - start.X) / 3, start.Y + (end.Y - start.Y) / 3);
         var control2 = new Point(start.X + 2 * (end.X - start.X) / 3, start.Y + 2 * (end.Y - start.Y) / 3);
@@ -98,7 +98,7 @@ public static class MovementPaths
     // -------- Perlin internals --------
 
     private static double Fade(double t) => t * t * t * (t * (t * 6 - 15) + 10);
-    private static double RoboticD(double a, double b, double t) => a + t * (b - a);
+    private static double LerpD(double a, double b, double t) => a + t * (b - a);
 
     private static double Grad(int hash, double x, double y)
     {
@@ -125,10 +125,10 @@ public static class MovementPaths
         int BA = _permutation[B];
         int BB = _permutation[B + 1];
 
-        return RoboticD(
-            RoboticD(Grad(_permutation[AA], x, y),
+        return LerpD(
+            LerpD(Grad(_permutation[AA], x, y),
                   Grad(_permutation[BA], x - 1, y), u),
-            RoboticD(Grad(_permutation[AB], x, y - 1),
+            LerpD(Grad(_permutation[AB], x, y - 1),
                   Grad(_permutation[BB], x - 1, y - 1), u),
             v);
     }

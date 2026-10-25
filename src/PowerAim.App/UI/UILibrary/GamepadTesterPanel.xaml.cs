@@ -50,7 +50,7 @@ public partial class GamepadTesterPanel : UserControl
         _releasedBrush = TryFindResource("FluentSurface3") as SolidColorBrush
                          ?? new(Color.FromArgb(255, 44, 44, 44));
         InitializeController();
-        ControlRoboticicker.SelectionChanged += OnControlRoboticicked;
+        ControllerPicker.SelectionChanged += OnControllerPicked;
         _updateTimer.Start();
     }
 
@@ -58,7 +58,7 @@ public partial class GamepadTesterPanel : UserControl
     {
         _updateTimer.Stop();
         _sequenceCts?.Cancel();
-        ControlRoboticicker.SelectionChanged -= OnControlRoboticicked;
+        ControllerPicker.SelectionChanged -= OnControllerPicked;
     }
 
     /// <summary>
@@ -68,7 +68,7 @@ public partial class GamepadTesterPanel : UserControl
     ///     the virtual pad (select it → buttons light up) but not on the physical one (select it → no
     ///     test effect, only your own input).
     /// </summary>
-    private void OnControlRoboticicked(object? sender, ControllerInfo? info)
+    private void OnControllerPicked(object? sender, ControllerInfo? info)
     {
         _selected = info;
         _controller = info?.Slot is int slot ? new Controller((UserIndex)slot) : null;

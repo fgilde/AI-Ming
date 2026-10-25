@@ -119,7 +119,7 @@
                     <StackPanel>
                         <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='GamepadTestSource'}"
                                    Style="{StaticResource SubHeader}" HorizontalAlignment="Left" Margin="0,0,0,8" />
-                        <ui:ControllerManageControl x:Name="ControlRoboticicker" Mode="Select" />
+                        <ui:ControllerManageControl x:Name="ControllerPicker" Mode="Select" />
                         <TextBlock Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='GamepadTestSourceHint'}"
                                    Foreground="{DynamicResource FluentTextTertiary}"
                                    FontFamily="Segoe UI Variable Small"
