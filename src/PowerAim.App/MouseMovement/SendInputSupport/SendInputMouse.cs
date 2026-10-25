@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using Nextended.UI.Native;
 
 namespace PowerAim.MouseMovement.SendInputSupport;
 

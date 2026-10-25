@@ -10,6 +10,7 @@ using PowerAim.Models;
 using Nextended.Core.Extensions;
 using PowerAim.Other;
 using PowerAim.UI.Visuality;
+using Nextended.UI.Native;
 
 
 public class AIManager : IDisposable
@@ -139,7 +140,7 @@ public class AIManager : IDisposable
                 }
                 var area = ImageCapture.CaptureArea;
 
-                var cursorPosition = NativeAPIMethods.GetCursorPosition();
+                var cursorPosition = NativeMethods.GetCursorPosition();
 
                 var targetX = cfg.DropdownState?.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.X - area.Left : area.Width / 2;
                 var targetY = cfg.DropdownState?.DetectionAreaType == DetectionAreaType.ClosestToMouse ? cursorPosition.Y - area.Top : area.Height / 2;

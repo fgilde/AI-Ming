@@ -7,6 +7,8 @@ using PowerAim.Class;
 using PowerAim.Class.Native;
 using PowerAim.Config;
 using PowerAim.Extensions;
+using Nextended.UI.Native;
+using Nextended.UI.WPF.Extensions;
 
 namespace PowerAim.UI.Visuality
 {
@@ -77,7 +79,7 @@ namespace PowerAim.UI.Visuality
         {
             if (AppConfig.Current.DropdownState.DetectionAreaType != DetectionAreaType.ClosestToMouse)
                 return;
-            var cursorPosition = NativeAPIMethods.GetCursorPosition();
+            var cursorPosition = NativeMethods.GetCursorPosition();
             PositionCircle(cursorPosition.X, cursorPosition.Y);
         }
 
@@ -170,7 +172,7 @@ namespace PowerAim.UI.Visuality
                 if (!targetX.HasValue || !targetY.HasValue)
                 {
                     // Fallback: current cursor in screen space
-                    var c = NativeAPIMethods.GetCursorPosition();
+                    var c = NativeMethods.GetCursorPosition();
                     targetX = c.X;
                     targetY = c.Y;
                 }

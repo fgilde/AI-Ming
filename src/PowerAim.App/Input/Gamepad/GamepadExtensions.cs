@@ -3,6 +3,7 @@ using SharpDX.XInput;
 using System.Runtime.InteropServices;
 using PowerAim.Input.Contracts;
 using PowerAim.Input;
+using Nextended.UI.Input.Gamepad;
 
 namespace PowerAim.Input
 {

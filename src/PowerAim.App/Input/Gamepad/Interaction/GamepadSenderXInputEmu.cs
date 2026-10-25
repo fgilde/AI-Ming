@@ -3,6 +3,7 @@ using System.Net.Sockets;
 using System.Text;
 using PowerAim.Input.Contracts;
 using SharpDX.XInput;
+using Nextended.UI.Input.Gamepad;
 
 public class GamepadSenderXInputEmu : IGamepadSender
 {

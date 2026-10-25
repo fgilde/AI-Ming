@@ -9,3 +9,5 @@ using System.Windows;
                                                 // app, or any theme specific resource dictionaries)
 
 )]
+
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("PowerAim.App.Tests")]

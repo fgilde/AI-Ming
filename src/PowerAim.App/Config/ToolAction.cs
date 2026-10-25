@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Text.Json.Serialization;
 using Nextended.Core;
 using PowerAim.Input;
+using Nextended.UI.Input;
 
 namespace PowerAim.Config;
 

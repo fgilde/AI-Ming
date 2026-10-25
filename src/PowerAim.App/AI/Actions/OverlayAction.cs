@@ -5,6 +5,8 @@ using PowerAim.Config;
 using PowerAim.Extensions;
 using PowerAim.Other;
 using PowerAim.UI.Visuality;
+using Nextended.UI.Native;
+using Nextended.UI.WPF.Extensions;
 using Application = System.Windows.Application;
 
 
@@ -121,8 +123,8 @@ public class OverlayAction : BaseAction
 
         if (_formOverlay.IsHandleCreated)
         {
-            NativeAPIMethods.MakeClickThrough(_formOverlay.Handle);
-            NativeAPIMethods.HideForCapture(_formOverlay.Handle);
+            NativeMethods.MakeClickThrough(_formOverlay.Handle);
+            NativeMethods.HideForCapture(_formOverlay.Handle);
         }
 
         return _formOverlay;

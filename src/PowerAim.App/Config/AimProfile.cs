@@ -4,6 +4,7 @@ using Nextended.Core;
 using Nextended.Core.Extensions;
 using PowerAim.Input;
 using PowerAim.Types;
+using Nextended.UI.Input;
 
 namespace PowerAim.Config;
 

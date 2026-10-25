@@ -1,76 +1,10 @@
-﻿using System.ComponentModel;
-using Nefarius.ViGEm.Client.Targets.Xbox360;
+﻿using Nefarius.ViGEm.Client.Targets.Xbox360;
 using Nefarius.ViGEm.Client.Targets.DualShock4;
 using SharpDX.XInput;
 using static CoreDX.vJoy.Wrapper.VJoyControllerManager;
+using Nextended.UI.Input.Gamepad;
 
 namespace PowerAim.Input.Contracts;
-
-
-public enum GamepadButton
-{
-    [Description("A")]
-    A,
-
-    [Description("B")]
-    B,
-
-    [Description("X")]
-    X,
-
-    [Description("Y")]
-    Y,
-
-    [Description("LB")]
-    LeftShoulder,
-
-    [Description("RB")]
-    RightShoulder,
-
-    [Description("BACK")]
-    Back,
-
-    [Description("START")]
-    Start,
-
-    [Description("LS")]
-    LeftThumb,
-
-    [Description("RS")]
-    RightThumb,
-
-    [Description("UP")]
-    Up,
-
-    [Description("DOWN")]
-    Down,
-
-    [Description("LEFT")]
-    Left,
-
-    [Description("RIGHT")]
-    Right
-}
-
-public enum GamepadSlider
-{
-    [Description("LT")]
-    LeftTrigger,
-    [Description("RT")]
-    RightTrigger
-}
-
-public enum GamepadAxis
-{
-    [Description("LSX")]
-    LeftThumbX, 
-    [Description("LSY")]
-    LeftThumbY,
-    [Description("RSX")]
-    RightThumbX, 
-    [Description("RSY")]
-    RightThumbY
-}
 
 public static class GamepadEnumExtensions
 {

@@ -22,6 +22,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
+using Nextended.UI.Input;
+using Nextended.UI.WPF.Extensions;
 using Application = System.Windows.Application;
 using Brushes = System.Windows.Media.Brushes;
 using Button = System.Windows.Controls.Button;
@@ -170,10 +172,12 @@ public partial class MainWindow
             BindingManager.Dispose();
         }
 
-        BindingManager = new InputBindingManager();
+        // Gamepad input comes through GamepadManager (it owns and swaps the readers), not a reader of the manager's own.
+        BindingManager = new InputBindingManager(enableGamepad: false);
+        BindingManager.AttachGamepadReader(new GamepadManagerReader());
         OnPropertyChanged(nameof(BindingManager));
 
-        // Seed the default keybinds in one pass (was nine near-identical SetupDefault calls).
+        // Seed the default keybinds in one pass (was nine near-identical registration calls).
         // nameof(b.X) yields the same binding id ("X") the explicit calls used, so this is 1:1.
         var b = AppConfig.Current.BindingSettings;
         // NOTE: MagnifierKeybind is intentionally absent — the magnifier's start key is now the unified
@@ -190,7 +194,7 @@ public partial class MainWindow
             (nameof(b.Gun2Key),                  b.Gun2Key),
         ];
         foreach (var (id, bind) in keybindDefaults)
-            BindingManager.SetupDefault(id, bind);
+            BindingManager.RegisterBinding(id, bind);
 
         LoadAimMenu();
         LoadTools();
@@ -292,7 +296,7 @@ public partial class MainWindow
             toggle.Changed += (s, e) => SetActive(e.Value);
         }, border => border.Background = Brushes.Transparent, changer =>
         {
-            changer.BindButton.Margin = new Thickness(14, 7, 2, 7);
+            changer.Margin = new Thickness(9, 0, 0, 0);
             changer.CanEditMinTime = true;
             // The Global Active hotkey must always work, even when the "keybinds only while Global
             // Active" gate is on — otherwise there'd be no way to switch it back on by hotkey.

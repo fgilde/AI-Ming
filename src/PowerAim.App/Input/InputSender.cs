@@ -5,6 +5,9 @@ using System.Windows.Forms;
 using PowerAim.Class.Native;
 using WindowsInput;
 using PowerAim.Input;
+using Nextended.UI.Input;
+using Nextended.UI.Input.Gamepad;
+using Nextended.UI.Native;
 
 namespace PowerAim.Input
 {
@@ -177,11 +180,10 @@ namespace PowerAim.Input
         /// <summary>Sends ONE input (mouse / gamepad / keyboard). Chords are decomposed into these by <see cref="SendKeyAsync"/>.</summary>
         private static async Task SendSingleAsync(StoredInputBinding evt, KeyPressState pressState, CancellationTokenSource token = default)
         {
-            if (evt.Is<MouseEventArgs>())
+            if (evt.MouseButton is { } button)
             {
-                MouseEventArgs mouseArgs = evt.MouseEventArgs;
-                ReportMouse(mouseArgs.Button, pressState);
-                if (mouseArgs.Button == MouseButtons.Left)
+                ReportMouse(button, pressState);
+                if (button == MouseButtons.Left)
                 {
                     if (pressState == KeyPressState.Down)
                         MouseManager.LeftDown();
@@ -191,16 +193,15 @@ namespace PowerAim.Input
                         await MouseManager.DoTriggerClick();
                 }
                 else
-                    MouseManager.SendMouseEvent(mouseArgs, pressState);
+                    MouseManager.SendMouseEvent(button, state: pressState);
             }
-            else if (evt.Is<GamepadEventArgs>() && GamepadManager.CanSend)
+            else if (evt.ToGamepadEventArgs() is { } gamepadArgs && GamepadManager.CanSend)
             {
-                GamepadManager.GamepadSender?.Send(evt.GamepadEventArgs, pressState);
+                GamepadManager.GamepadSender?.Send(gamepadArgs, pressState);
             }
-            else if (evt.Is<KeyEventArgs>())
+            else if (evt.KeyboardKey is { } key)
             {
-                KeyEventArgs keyArgs = evt.KeyEventArgs;
-                await SendKeyboardKeyAsync(keyArgs, KeyboardSendMode.UseInputSimulator, pressState);
+                await SendKeyboardKeyAsync(new KeyEventArgs(key), KeyboardSendMode.UseInputSimulator, pressState);
             }
         }
 
@@ -286,7 +287,7 @@ namespace PowerAim.Input
 
                 if (inputs.Count > 0)
                 {
-                    NativeAPIMethods.SendInput((uint)inputs.Count, inputs.ToArray(), Marshal.SizeOf(typeof(INPUT)));
+                    NativeMethods.SendInput((uint)inputs.Count, inputs.ToArray(), Marshal.SizeOf(typeof(INPUT)));
                 }
             }
             else if (sendMode == KeyboardSendMode.WindowsSendInputByScanCode)
@@ -332,7 +333,7 @@ namespace PowerAim.Input
 
                 if (inputs.Count > 0)
                 {
-                    NativeAPIMethods.SendInput((uint)inputs.Count, inputs.ToArray(), Marshal.SizeOf(typeof(INPUT)));
+                    NativeMethods.SendInput((uint)inputs.Count, inputs.ToArray(), Marshal.SizeOf(typeof(INPUT)));
                 }
             }
         }

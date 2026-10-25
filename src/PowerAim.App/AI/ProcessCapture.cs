@@ -9,6 +9,8 @@ using PowerAim.Class.Native;
 using PowerAim.Config;
 using Nextended.Core;
 using PowerAim.UI.Visuality;
+using Nextended.UI.Native;
+using Nextended.UI.WPF.Extensions;
 
 namespace PowerAim.AI;
 
@@ -96,10 +98,10 @@ public class ProcessCapture : ICapture
     private bool SetTopMostIf(IntPtr? handle = null)
     {
         handle ??= GetProcessWindowHandle();
-        if (!_isTopMostSet && !NativeAPIMethods.IsWindowTopMost(handle.Value))
+        if (!_isTopMostSet && !NativeMethods.IsWindowTopMost(handle.Value))
         {
             
-            NativeAPIMethods.SetTopMost(handle.Value);
+            NativeMethods.SetTopMost(handle.Value);
 
             _isTopMostSet = true;
             return true;
@@ -112,7 +114,7 @@ public class ProcessCapture : ICapture
         handle ??= GetProcessWindowHandle();
         if (_isTopMostSet)
         {
-            NativeAPIMethods.RemoveTopMost(handle.Value);
+            NativeMethods.RemoveTopMost(handle.Value);
 
             _isTopMostSet = false;
             return true;
@@ -146,7 +148,7 @@ public class ProcessCapture : ICapture
     // New helper method to avoid duplication
     private Rectangle GetWindowRectangle(IntPtr handle)
     {
-        return NativeAPIMethods.GetWindowRectangle(handle).ToRectangle();
+        return NativeMethods.GetWindowRectangle(handle).ToRectangle();
     }
 
     public Screen Screen { get; private set; }

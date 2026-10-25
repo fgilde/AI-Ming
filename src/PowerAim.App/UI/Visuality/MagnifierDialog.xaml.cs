@@ -7,6 +7,7 @@ using PowerAim.Class;
 using System.Windows.Interop;
 using PowerAim.AI.Contracts;
 using PowerAim.Class.Native;
+using Nextended.UI.WPF.Extensions;
 
 namespace PowerAim.UI.Visuality
 {

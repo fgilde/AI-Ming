@@ -6,6 +6,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using PowerAim.Config;
 using PowerAim.Extensions;
+using Nextended.UI.WPF.Extensions;
 
 namespace PowerAim.UI.UILibrary
 {

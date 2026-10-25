@@ -3,6 +3,7 @@ using PowerAim.Input.Contracts;
 using CoreDX.vJoy.Wrapper;
 using SharpDX.XInput;
 using static CoreDX.vJoy.Wrapper.VJoyControllerManager;
+using Nextended.UI.Input.Gamepad;
 
 public class GamepadSenderVJoy : IGamepadSender
 {

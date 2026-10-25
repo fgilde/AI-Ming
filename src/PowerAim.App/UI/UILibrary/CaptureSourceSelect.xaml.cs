@@ -29,6 +29,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using PowerAim;
+using Nextended.UI.Native;
 
 namespace PowerAim.UI.UILibrary
 {
@@ -231,7 +232,7 @@ namespace PowerAim.UI.UILibrary
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
-            var processes = NativeAPIMethods.RecordableProcesses().Take(40).ToList();
+            var processes = NativeMethods.RecordableProcesses().Take(40).ToList();
             var rows = (processes.Count + 1) / 2;
             for (var r = 0; r < rows; r++)
                 grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });

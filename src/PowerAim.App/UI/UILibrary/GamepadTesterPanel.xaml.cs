@@ -8,6 +8,7 @@ using PowerAim.Input.Gamepad;
 using PowerAim.Input.Gamepad.Interaction;
 using PowerAim;
 using SharpDX.XInput;
+using Nextended.UI.Input.Gamepad;
 
 namespace PowerAim.UI.UILibrary;
 
@@ -99,7 +100,7 @@ public partial class GamepadTesterPanel : UserControl
     {
         // The tester visualizes an XInput Controller. A DirectInput-backed reader (e.g. a raw DualSense)
         // has no XInput Controller, so fall through to the slot scan (which also only finds XInput pads).
-        if (GamepadManager.GamepadReader is PowerAim.Input.Contracts.IXInputGamepadReader xr &&
+        if (GamepadManager.GamepadReader is Nextended.UI.Input.Gamepad.IXInputGamepadReader xr &&
             xr.IsConnected)
         {
             _controller = xr.Controller;

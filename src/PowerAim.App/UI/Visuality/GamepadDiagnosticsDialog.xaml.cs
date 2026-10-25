@@ -7,6 +7,7 @@ using PowerAim.Config;
 using PowerAim.Input;
 using PowerAim.Input.Contracts;
 using SharpDX.XInput;
+using Nextended.UI.Input.Gamepad;
 
 namespace PowerAim.UI.Visuality;
 

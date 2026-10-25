@@ -6,6 +6,7 @@ using PowerAim;
 using PowerAim.AI;
 using PowerAim.Config;
 using PowerAim.Extensions;
+using Nextended.UI.WPF.Extensions;
 
 namespace PowerAim.UI.UILibrary
 {
@@ -13,8 +14,8 @@ namespace PowerAim.UI.UILibrary
     ///     Form for editing a single <see cref="AntiRecoilProfile"/>. Hosted by the in-window
     ///     AntiRecoil edit page (analog to the AutoPlay / Trigger edit pages). Sliders, mode-
     ///     specific sub-panels and the OCR-region picker are populated from code-behind so the
-    ///     binding wiring matches the project's <see cref="UIElementExtensions.AddSlider"/> +
-    ///     <see cref="UIElementExtensions.BindTo"/> conventions.
+    ///     binding wiring matches the project's <see cref="PowerAimUIExtensions.AddSlider"/> +
+    ///     <see cref="PowerAimUIExtensions.BindTo"/> conventions.
     /// </summary>
     public partial class AntiRecoilProfileEdit : UserControl, INotifyPropertyChanged
     {

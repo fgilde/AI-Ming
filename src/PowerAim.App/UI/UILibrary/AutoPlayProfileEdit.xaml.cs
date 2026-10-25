@@ -5,6 +5,7 @@ using PowerAim.AI;
 using PowerAim.Config;
 using PowerAim.Extensions;
 using PowerAim;
+using Nextended.UI.WPF.Extensions;
 
 namespace PowerAim.UI.UILibrary
 {

@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using PowerAim.Input;
 using Nextended.Core;
 using Nextended.Core.Extensions;
+using Nextended.UI.Input;
 
 namespace PowerAim.Config;
 

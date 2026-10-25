@@ -14,6 +14,8 @@ using PowerAim.Class;
 using PowerAim.Config;
 using PowerAim.UI.Converters;
 using PowerAim.Extensions;
+using Nextended.UI.WPF.Extensions;
+using Nextended.UI;
 
 namespace PowerAim.UI.UILibrary
 {
@@ -184,7 +186,7 @@ namespace PowerAim.UI.UILibrary
         {
             void SetColor(bool isChecked)
             {
-                var title = panel.FindChildren<ATitle>().FirstOrDefault();
+                var title = panel.FindDescendants<ATitle>().FirstOrDefault();
                 var themeForActive = ThemePalette.ThemeForActive;
                 if (title != null)
                 {

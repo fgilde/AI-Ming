@@ -19,6 +19,8 @@ using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using Nextended.UI.Native;
+using Nextended.UI.WPF.Extensions;
 using Application = System.Windows.Application;
 using Brushes = System.Windows.Media.Brushes;
 using Button = System.Windows.Controls.Button;
@@ -1031,7 +1033,7 @@ public partial class MainWindow
                     return;
                 }
             }
-            PowerAim.Class.Native.NativeAPIMethods.ApplyCaptureExclusionToAllWindows();
+            PowerAim.Class.Native.CaptureExclusion.ApplyCaptureExclusionToAllWindows();
             AppConfig.Current.Save();
         };
         UISettings.AddSeparator();
@@ -1073,7 +1075,7 @@ public partial class MainWindow
 
         foreach (var v in Enum.GetValues<MouseMovementMethod>())
         {
-            // Glyphs match AKeyChanger.SetContent: mouse = U+F8AF, gamepad = U+E7FC.
+            // Glyphs match the key changer's device icons: mouse = U+F8AF, gamepad = U+E7FC.
             string glyph = v == MouseMovementMethod.Gamepad ? "" : "";
             string label = v.ToDescriptionString();
             bool isGamepad = v == MouseMovementMethod.Gamepad;
@@ -1150,7 +1152,7 @@ public partial class MainWindow
             t.TextWrapping = TextWrapping.Wrap;
             t.FontSize = 12;
             t.Margin = new Thickness(2, 0, 0, 4);
-            t.Foreground = PowerAim.Extensions.UIElementExtensions.LookupBrush("FluentTextSecondary", ApplicationConstants.Foreground);
+            t.Foreground = PowerAim.Extensions.PowerAimUIExtensions.LookupBrush("FluentTextSecondary", ApplicationConstants.Foreground);
         });
         gamepadHint.AddButton(Locale.OpenGamepadSettings, b => b.Reader.Click += (_, _) => _ = NavigateTo(nameof(GamepadSettings)));
 

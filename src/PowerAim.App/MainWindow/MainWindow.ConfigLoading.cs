@@ -10,6 +10,7 @@ using PowerAim.UI.Visuality;
 using System.IO;
 using System.Windows;
 using System.Windows.Forms;
+using Nextended.UI.Input;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 
 namespace PowerAim;
@@ -99,10 +100,9 @@ public partial class MainWindow
         }
     }
 
-    private void AKeyChanger_ConfigOnGlobalKeyPressed(object? sender, EventArgs<(AKeyChanger Sender, string Key, StoredInputBinding KeyBinding)> e)
+    private void AKeyChanger_ConfigOnGlobalKeyPressed(object? sender, EventArgs e)
     {
-        var args = e.Value;
-        var configToLoad = args.Sender.Tag?.ToString();
+        var configToLoad = (sender as FrameworkElement)?.Tag?.ToString();
         if (configToLoad is not null)
         {
             try

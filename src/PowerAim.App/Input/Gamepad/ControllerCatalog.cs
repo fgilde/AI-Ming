@@ -7,6 +7,8 @@ using PowerAim.Config;
 using PowerAim.Input.Contracts;
 using PowerAim.Input.Gamepad.Interaction;
 using PowerAim.Input.HidHide;
+using Nextended.UI.Input.Gamepad;
+using DirectInputGamepadReader = PowerAim.Input.Gamepad.Interaction.DirectInputGamepadReader;
 
 namespace PowerAim.Input.Gamepad;
 

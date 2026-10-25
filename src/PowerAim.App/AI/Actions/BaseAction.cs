@@ -2,6 +2,7 @@ using PowerAim.AI.Contracts;
 using PowerAim.Config;
 using PowerAim.Input;
 using Nextended.Core.Helper;
+using Nextended.UI.Input;
 
 namespace PowerAim.AI.Actions;
 

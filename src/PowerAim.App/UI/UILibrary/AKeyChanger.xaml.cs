@@ -1,136 +1,61 @@
-﻿using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
+﻿using System.Windows;
+using Nextended.UI.Input;
+using Nextended.UI.WPF.Controls;
 using PowerAim.Config;
-using PowerAim.Input;
-using PowerAim.Input.Contracts;
-using PowerAim.Types;
-using Nextended.Core.Extensions;
-using PowerAim.Other;
-using Brush = System.Windows.Media.Brush;
-using Brushes = System.Windows.Media.Brushes;
-using Color = System.Windows.Media.Color;
-using ColorConverter = System.Windows.Media.ColorConverter;
-using KeyEventArgs = System.Windows.Forms.KeyEventArgs;
-using MouseEventArgs = System.Windows.Forms.MouseEventArgs;
 
 namespace PowerAim.UI.UILibrary
 {
     /// <summary>
-    /// Interaction logic for AKeyChanger.xaml
+    ///     The app's key-bind editor: a <see cref="KeyBindChanger"/> plus app policy — user edits are
+    ///     persisted in <see cref="AppConfig.BindingSettings"/> under <see cref="BindingId"/> (and loaded
+    ///     from there when no binding is given), presses honour the "keybinds only while Global Active"
+    ///     gate, and texts/colors follow the app locale and theme.
     /// </summary>
-    public partial class AKeyChanger : INotifyPropertyChanged, IDisposable
+    public partial class AKeyChanger : IDisposable
     {
-        private string _text;
+        private string _text = string.Empty;
+        private string? _keyConfigPrefix;
 
-        public event EventHandler<EventArgs<(AKeyChanger Sender, string Key, StoredInputBinding KeyBinding)>> GlobalKeyPressed;
-        public event EventHandler<EventArgs<(AKeyChanger Sender, StoredInputBinding KeyBinding, StoredInputBinding OldValue)>> KeyBindChanged;
-        public event EventHandler<CancelableEventArgs<(AKeyChanger Sender, StoredInputBinding KeyBinding, StoredInputBinding OldValue)>> BeforeKeyBindChangedByUser;
+        /// <summary>The binding was pressed globally (and passed the Global Active gate).</summary>
+        public event EventHandler? GlobalKeyPressed;
 
-        public bool CanRemoveBinding
+        /// <summary>A user edit is about to be applied; set Cancel to reject it.</summary>
+        public event EventHandler<KeyBindChangingEventArgs>? KeyBindChanging;
+
+        public event EventHandler<KeyBindChangedEventArgs>? KeyBindChanged;
+
+        public AKeyChanger()
         {
-            get => (bool)GetValue(CanRemoveBindingProperty);
-            set => SetValue(CanRemoveBindingProperty, value);
+            InitializeComponent();
+            Changer.EmptyToolTip = Locale.KeyChangerToolTip;
+            Changer.RecordingToolTip = Locale.KeyChangerToolTipRecording;
+            Changer.BoundToolTipFormat = Locale.KeyChangerToolTipWithBinding;
+            Changer.DeviceNameProvider = binding => Locale.GetString(binding.DeviceName);
+            Changer.DeleteBindingText = Locale.DeleteBinding;
+            Changer.MinTimeText = $"{Locale.MinTimeTriggerKey} ({Locale.Seconds})";
+
+            Changer.BindingPressed += OnBindingPressed;
+            Changer.KeyBindChanging += (_, e) => KeyBindChanging?.Invoke(this, e);
+            Changer.KeyBindChanged += OnKeyBindChanged;
         }
 
-        public string InvalidText
+        public AKeyChanger(string text, StoredInputBinding keybind) : this()
         {
-            get => (string)GetValue(InvalidTextProperty);
-            set => SetValue(InvalidTextProperty, value);
+            Text = text;
+            KeyBind = keybind;
         }
 
-        public bool CanEditMinTime
+        public static readonly DependencyProperty KeyBindProperty =
+            DependencyProperty.Register(nameof(KeyBind), typeof(StoredInputBinding), typeof(AKeyChanger), new PropertyMetadata(null));
+
+        public StoredInputBinding? KeyBind
         {
-            get => (bool)GetValue(CanEditMinTimeProperty);
-            set => SetValue(CanEditMinTimeProperty, value);
-        }
-
-        public static readonly DependencyProperty CanEditMinTimeProperty =
-            DependencyProperty.Register(nameof(CanEditMinTime), typeof(bool), typeof(AKeyChanger), new PropertyMetadata(true, CanEditMinTimeChanged));
-
-        private static void CanEditMinTimeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            ((AKeyChanger)d).OnPropertyChanged(nameof(ShowTimeEdit));
-        }
-
-        public static readonly DependencyProperty InvalidTextProperty =
-            DependencyProperty.Register(nameof(InvalidText), typeof(string), typeof(AKeyChanger), new PropertyMetadata("None"));
-
-        public static readonly DependencyProperty CanRemoveBindingProperty =
-            DependencyProperty.Register(nameof(CanRemoveBinding), typeof(bool), typeof(AKeyChanger), new PropertyMetadata(true));
-
-        public static readonly DependencyProperty IgnoreGlobalActiveGateProperty =
-            DependencyProperty.Register(nameof(IgnoreGlobalActiveGate), typeof(bool), typeof(AKeyChanger), new PropertyMetadata(false));
-
-        /// <summary>
-        ///     When true, this key changer always fires its binding, ignoring the
-        ///     <see cref="ToggleState.RequireGlobalActiveForKeybinds"/> gate. Set this on the
-        ///     Global Active toggle's changer so the user can always switch Global Active back on
-        ///     by hotkey even while the gate would otherwise suppress every other keybind.
-        /// </summary>
-        public bool IgnoreGlobalActiveGate
-        {
-            get => (bool)GetValue(IgnoreGlobalActiveGateProperty);
-            set => SetValue(IgnoreGlobalActiveGateProperty, value);
-        }
-
-        public static readonly DependencyProperty BindingManagerProperty =
-            DependencyProperty.Register(nameof(BindingManager), typeof(InputBindingManager), typeof(AKeyChanger),
-                new PropertyMetadata(null));
-
-        public static readonly DependencyProperty KeyConfigNameProperty =
-            DependencyProperty.Register(nameof(KeyConfigName), typeof(string), typeof(AKeyChanger),
-                new PropertyMetadata(null));
-
-        public static readonly DependencyProperty WithBorderProperty =
-            DependencyProperty.Register(nameof(WithBorder), typeof(bool), typeof(AKeyChanger),
-                new PropertyMetadata(true, WithBorderChanged));
-
-        public bool ShowTimeEdit => /*!InUpdateMode &&*/ KeyBind is { IsValid: true } && CanEditMinTime;
-        public bool HasTimeValue => KeyBind is { IsValid: true, MinTime: > 0 };
-
-        public StoredInputBinding KeyBind
-        {
-            get => (StoredInputBinding)GetValue(KeyBindProperty);
+            get => (StoredInputBinding?)GetValue(KeyBindProperty);
             set => SetValue(KeyBindProperty, value);
         }
 
-        // Using a DependencyProperty as the backing store for KeyBind.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty KeyBindProperty =
-            DependencyProperty.Register(nameof(KeyBind), typeof(StoredInputBinding), typeof(AKeyChanger), new PropertyMetadata(new StoredInputBinding(), HandleKeyBindChanged));
-
-        private static void HandleKeyBindChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var newValue = (StoredInputBinding)e.NewValue;
-            var oldValue = (StoredInputBinding)e.OldValue;
-            if (oldValue is { IsValid: true, MinTime: > 0 })
-                newValue.SetMinTime(oldValue.MinTime);
-
-            ((AKeyChanger)d).SetContent(newValue);
-            ((AKeyChanger)d).KeyBindChanged?.Invoke(d, new(((AKeyChanger)d, newValue, oldValue)));
-            ((AKeyChanger)d).OnPropertyChanged(nameof(ShowTimeEdit));
-            ((AKeyChanger)d).OnPropertyChanged(nameof(HasTimeValue));
-        }
-
-
-        private static void WithBorderChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var kc = d as AKeyChanger;
-            if (kc == null)
-                return;
-            kc.MainBorder.BorderThickness = (bool)e.NewValue ? new Thickness(1, 0, 1, 0) : new Thickness(0);
-            kc.Background = new SolidColorBrush(Colors.Transparent);
-        }
-
-        public bool WithBorder
-        {
-            get => (bool)GetValue(WithBorderProperty);
-            set => SetValue(WithBorderProperty, value);
-        }
-
+        public static readonly DependencyProperty BindingManagerProperty =
+            DependencyProperty.Register(nameof(BindingManager), typeof(InputBindingManager), typeof(AKeyChanger), new PropertyMetadata(null));
 
         public InputBindingManager? BindingManager
         {
@@ -138,289 +63,87 @@ namespace PowerAim.UI.UILibrary
             set => SetValue(BindingManagerProperty, value);
         }
 
-        public string KeyConfigName
+        public static readonly DependencyProperty KeyConfigNameProperty =
+            DependencyProperty.Register(nameof(KeyConfigName), typeof(string), typeof(AKeyChanger),
+                new PropertyMetadata(null, (d, _) => ((AKeyChanger)d).UpdateBindingId()));
+
+        /// <summary>Name the binding is stored under (falls back to <see cref="Text"/>); see <see cref="BindingId"/>.</summary>
+        public string? KeyConfigName
         {
-            get
-            {
-                var keyConfigName = (string)GetValue(KeyConfigNameProperty);
-                return GetCode(!string.IsNullOrEmpty(keyConfigName) ? keyConfigName : Text);
-            }
+            get => (string?)GetValue(KeyConfigNameProperty);
             set => SetValue(KeyConfigNameProperty, value);
         }
 
-
-
-        public string KeyConfigPrefix
+        /// <summary>Namespace for <see cref="KeyConfigName"/>, e.g. "AIM_PROFILE" → "AIM_PROFILE_&lt;NAME&gt;".</summary>
+        public string? KeyConfigPrefix
         {
-            get;
-            set => SetField(ref field, value);
+            get => _keyConfigPrefix;
+            set { _keyConfigPrefix = value; UpdateBindingId(); }
         }
 
-
+        /// <summary>Title left of the bind button (hidden while empty).</summary>
         public string Text
         {
             get => _text;
-            set
+            set { _text = value ?? string.Empty; Changer.Text = _text; UpdateBindingId(); }
+        }
+
+        /// <summary>
+        ///     When true, this key changer always fires its binding, ignoring the
+        ///     <see cref="ToggleState.RequireGlobalActiveForKeybinds"/> gate. Set this on the
+        ///     Global Active toggle's changer so the user can always switch Global Active back on
+        ///     by hotkey even while the gate would otherwise suppress every other keybind.
+        /// </summary>
+        public bool IgnoreGlobalActiveGate { get; set; }
+
+        public string InvalidText { get => Changer.InvalidText; set => Changer.InvalidText = value; }
+        public bool CanRemoveBinding { get => Changer.CanRemoveBinding; set => Changer.CanRemoveBinding = value; }
+        public bool CanEditMinTime { get => Changer.CanEditMinTime; set => Changer.CanEditMinTime = value; }
+        public bool WithBorder { get => Changer.WithBorder; set => Changer.WithBorder = value; }
+
+        /// <summary>Settings key / binding-manager id: [prefix_]NAME, empty when neither name nor text is set.</summary>
+        public string BindingId
+        {
+            get
             {
-                if (SetField(ref _text, value))
-                    SetContent(Text, KeyBind);
+                var name = !string.IsNullOrEmpty(KeyConfigName) ? KeyConfigName : Text;
+                return string.IsNullOrWhiteSpace(KeyConfigPrefix) || string.IsNullOrEmpty(name) ? name : CodeFor(name, KeyConfigPrefix);
             }
-        }
-
-        public AKeyChanger()
-        {
-            InitializeComponent();
-        }
-
-        public AKeyChanger(string text, StoredInputBinding keybind) : this()
-        {
-            _text = text;
-            KeyBind = keybind;
-            SetContent(text, keybind);
-        }
-
-        private void AKeyChanger_OnLoaded(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (KeyBind is not { IsValid: true })
-                {
-                    KeyBind = AppConfig.Current.BindingSettings[KeyConfigName];
-                    if (KeyBind is { IsValid: true })
-                        SetContent(KeyBind);
-                }
-
-                if (BindingManager != null)
-                {
-                    BindingManager.SetupDefault(KeyConfigName, KeyBind);
-                    BindingManager.OnBindingPressed += OnGlobalKeyHandler;
-                }
-            }
-            catch (Exception)
-            {
-            }
-        }
-
-        private async void OnGlobalKeyHandler(string key)
-        {
-            if (HasKeySet && key == KeyConfigName && !InUpdateMode)
-            {
-                if (KeyBind.Is<MouseEventArgs>() && (IsMouseOver || KeyContextMenu.IsOpen))
-                    return;
-
-                // Optional "keybinds only while Global Active" gate. Read live (not bound) so the
-                // decision always reflects the current state at press time. The Global Active
-                // toggle's own changer opts out via IgnoreGlobalActiveGate — otherwise the user
-                // could never switch Global Active back on by hotkey.
-                if (!IgnoreGlobalActiveGate
-                    && AppConfig.Current?.ToggleState is { RequireGlobalActiveForKeybinds: true, GlobalActive: false })
-                    return;
-
-                var args = new EventArgs<(AKeyChanger Sender, string Key, StoredInputBinding KeyBinding)>((this, key, KeyBind));
-                GlobalKeyPressed?.Invoke(this, args);
-            }
-        }
-
-        public event EventHandler<EventArgs> KeyDeleted;
-
-        public bool InUpdateMode { get; private set; }
-
-        public void SetContent(string text, StoredInputBinding keybind)
-        {
-            KeyChangerTitle.Content = text;
-            SetContent(keybind);
-        }
-
-        public bool HasKeySet { get; private set; }
-
-        public bool ShowTitle
-        {
-            get => Dispatcher.Invoke(() => KeyChangerTitle.Visibility == Visibility.Visible);
-            set => Dispatcher.Invoke(() =>
-                KeyChangerTitle.Visibility = value ? Visibility.Visible : Visibility.Collapsed);
-        }
-
-        private void SetContent(string text)
-        {
-            KeyNotifierLabel.Content = text;
-        }
-
-        public void SetContent(StoredInputBinding keybind)
-        {
-            ToolTip = Locale.KeyChangerToolTip;
-            HasKeySet = keybind is { IsValid: true };
-            SetDeviceIcon();
-            if (!HasKeySet)
-            {
-                KeyNotifierLabel.Content = InvalidText;
-                return;
-            }
-            if (keybind.IsCombo)
-            {
-                // Chord: pick a device glyph from the components (gamepad > mouse > keyboard) and join
-                // the per-component names. Never feed the synthetic joined Key to ConvertToRegularKey
-                // (it parses a single key via WPF's KeyConverter and would throw on "Ctrl+X").
-                SetDeviceIcon(keybind.Components!.Any(c => c.Is<GamepadEventArgs>()) ? "\uE7FC"
-                    : keybind.Components!.Any(c => c.Is<MouseEventArgs>()) ? "\uF8AF" : "\uE765");
-                var comboName = string.Join(" + ", keybind.Components!.Select(c => KeybindNameManager.ConvertToRegularKey(c.Key)));
-                ToolTip = Locale.KeyChangerToolTipWithBinding.FormatWith(Locale.GetString(keybind.DeviceName), comboName);
-                KeyNotifierLabel.Content = comboName;
-                return;
-            }
-            if (keybind.Is<GamepadEventArgs>())
-            {
-                SetDeviceIcon("\uE7FC");
-            }
-            else if (keybind.Is<MouseEventArgs>())
-            {
-                SetDeviceIcon("\uF8AF");
-            }
-            else if (keybind.Is<KeyEventArgs>())
-            {
-                SetDeviceIcon("\uE765");
-            }
-
-            var keyName = KeybindNameManager.ConvertToRegularKey(keybind.Key);
-            ToolTip = Locale.KeyChangerToolTipWithBinding.FormatWith(Locale.GetString(keybind.DeviceName), keyName);
-            KeyNotifierLabel.Content = keyName;
-        }
-
-        bool ShouldChange(StoredInputBinding newValue)
-        {
-            var args = new CancelableEventArgs<(AKeyChanger Sender, StoredInputBinding KeyBinding, StoredInputBinding OldValue)>((this, newValue, KeyBind));
-            BeforeKeyBindChangedByUser?.Invoke(this, args);
-            return !args.Cancel;
-        }
-
-        private void DeleteBinding_Click(object sender, RoutedEventArgs e)
-        {
-            if (!string.IsNullOrEmpty(KeyConfigName))
-                AppConfig.Current.BindingSettings[KeyConfigName] = StoredInputBinding.Empty;
-            if (ShouldChange(StoredInputBinding.Empty))
-            {
-                KeyBind = StoredInputBinding.Empty;
-                KeyDeleted?.Invoke(this, EventArgs.Empty);
-            }
-        }
-
-        private string GetCode(string keyConfigName)
-        {
-            return string.IsNullOrWhiteSpace(KeyConfigPrefix) ? keyConfigName : CodeFor(keyConfigName, KeyConfigPrefix);
         }
 
         public static string CodeFor(string title, string prefix = "DYN") =>
             $"{prefix}_{title.Replace(" ", "_").ToUpper()}";
 
-        public event PropertyChangedEventHandler? PropertyChanged;
+        public bool InUpdateMode => Changer.InUpdateMode;
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        public void RecordNewBinding() => Changer.RecordNewBinding();
+
+        // An empty id lets the control generate its own (and nothing is persisted).
+        private void UpdateBindingId() => Changer.KeyConfigName = BindingId is { Length: > 0 } id ? id : null;
+
+        private void AKeyChanger_OnLoaded(object sender, RoutedEventArgs e)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            if (KeyBind is not { IsValid: true } && BindingId.Length > 0 && AppConfig.Current?.BindingSettings[BindingId] is { } stored)
+                KeyBind = stored;
         }
 
-        protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+        private void OnKeyBindChanged(object? sender, KeyBindChangedEventArgs e)
         {
-            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-            field = value;
-            OnPropertyChanged(propertyName);
-            return true;
+            if (e.IsUserChange && BindingId.Length > 0 && AppConfig.Current != null)
+                AppConfig.Current.BindingSettings[BindingId] = e.NewValue ?? StoredInputBinding.Empty;
+            KeyBindChanged?.Invoke(this, e);
         }
 
-        private void Reader_OnClick(object sender, RoutedEventArgs e)
+        private void OnBindingPressed(object? sender, EventArgs e)
         {
-            RecordNewBinding();
-        }
-
-        public void RecordNewBinding()
-        {
-            if (InUpdateMode || BindingManager == null)
+            // Optional "keybinds only while Global Active" gate, read live at press time. The Global
+            // Active toggle's own changer opts out via IgnoreGlobalActiveGate.
+            if (!IgnoreGlobalActiveGate
+                && AppConfig.Current?.ToggleState is { RequireGlobalActiveForKeybinds: true, GlobalActive: false })
                 return;
-            InUpdateMode = true;
-            KeyContextMenu.IsOpen = false;
-            OnPropertyChanged(nameof(ShowTimeEdit));
-            MainGrid.ContextMenu = null;
-            SetDeviceIcon("\uEA3B", Brushes.Red);
-            SetContent("...");
-            ToolTip = Locale.KeyChangerToolTipRecording;
-            BindingManager.StartListeningForBinding(KeyConfigName);
-
-            // Event handler for setting the binding
-            Action<string, StoredInputBinding>? bindingSetHandler = null;
-            bindingSetHandler = (bindingId, key) =>
-            {
-                if (bindingId == KeyConfigName)
-                {
-                    bool hasChanged = ShouldChange(key);
-
-                    if (hasChanged)
-                    {
-                        KeyBind = key;
-                        if (!string.IsNullOrEmpty(bindingId))
-                            AppConfig.Current.BindingSettings[bindingId] = KeyBind;
-                    }
-
-                    BindingManager.OnBindingSet -= bindingSetHandler; // Unsubscribe after setting
-                    Task.Delay(hasChanged ? 700 : 10).ContinueWith(_ =>
-                    {
-                        Dispatcher.Invoke(() =>
-                        {
-                            InUpdateMode = false;
-                            OnPropertyChanged(nameof(ShowTimeEdit));
-                            MainGrid.ContextMenu = KeyContextMenu;
-                        });
-                    });
-                }
-            };
-
-            BindingManager.OnBindingSet += bindingSetHandler;
+            GlobalKeyPressed?.Invoke(this, EventArgs.Empty);
         }
 
-        private void SetDeviceIcon(string icon = "", Brush? fg = null)
-        {
-            KeyDeviceInfo.Text = icon;
-            KeyDeviceInfo.FontSize = icon == "\uF8AF" ? 14 : 18;
-            if (fg != null)
-                KeyDeviceInfo.Foreground = fg;
-            else
-                KeyDeviceInfo.SetResourceReference(TextBlock.ForegroundProperty, "FluentTextSecondary");
-            KeyDeviceInfo.Visibility = string.IsNullOrEmpty(icon) ? Visibility.Collapsed : Visibility.Visible;
-        }
-
-        public void Dispose()
-        {
-            if (BindingManager != null)
-            {
-                BindingManager.OnBindingPressed -= OnGlobalKeyHandler;
-            }
-        }
-
-
-        private void ContextMenu_OnOpened(object sender, MouseButtonEventArgs e)
-        {
-            if (!CanRemoveBinding || InUpdateMode || KeyBind is not {IsValid : true})
-            {
-                e.Handled = true;
-                KeyContextMenu.IsOpen = false;
-            }
-        }
-
-        private void ConfigureMinTimeLabel_OnClick(object sender, MouseButtonEventArgs e)
-        {
-            MinTimeSlider.Value = KeyBind.MinTime;
-            MinTimeSlider.Label = Locale.MinTimeTriggerKey;
-            MinTimeSlider.Text = Locale.Seconds;
-            TimeSliderPopup.IsOpen = true;
-        }
-
-
-        private void MinTimeSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            var a = KeyBind;
-            a.MinTime = e.NewValue;
-            KeyBind = a;
-            if (!string.IsNullOrEmpty(KeyConfigName))
-                AppConfig.Current.BindingSettings[KeyConfigName] = KeyBind;
-            OnPropertyChanged(nameof(HasTimeValue));
-        }
+        public void Dispose() => Changer.Dispose();
     }
 }

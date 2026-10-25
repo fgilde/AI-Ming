@@ -4,6 +4,7 @@ using SharpDX.XInput;
 using Nefarius.ViGEm.Client;
 using Nefarius.ViGEm.Client.Targets;
 using Nefarius.ViGEm.Client.Targets.DualShock4;
+using Nextended.UI.Input.Gamepad;
 
 /// <summary>
 ///     Emulates a Sony DualShock 4 through ViGEm — the PlayStation counterpart to

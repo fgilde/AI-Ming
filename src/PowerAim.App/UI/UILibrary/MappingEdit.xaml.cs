@@ -296,7 +296,6 @@ public partial class MappingEdit : UserControl
             BindingManager = bm,
             KeyConfigName = slotKey,
             KeyConfigPrefix = "MAPPING_PICKER",
-            ShowTitle = false,
             CanEditMinTime = false,
             WithBorder = true,
             KeyBind = initial,
@@ -306,7 +305,7 @@ public partial class MappingEdit : UserControl
         };
         picker.KeyBindChanged += (s, e) =>
         {
-            var newBinding = e.Value.KeyBinding;
+            var newBinding = e.NewValue;
             if (newBinding is not { IsValid: true }) return;
             var dec = MappingBindingConverter.FromBinding(newBinding);
             if (dec == null) return;

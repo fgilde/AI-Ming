@@ -8,6 +8,7 @@ using PowerAim.Config;
 using PowerAim.Extensions;
 using PowerAim.Input;
 using PowerAim.UI.UILibrary;
+using Nextended.UI.WPF.Extensions;
 
 namespace PowerAim.UI.Visuality;
 
@@ -157,7 +158,7 @@ public partial class ToolActionEditDialog : BaseDialog
         {
             b.Height = 1;
             b.Margin = new Thickness(0, 16, 0, 4);
-            b.Background = UIElementExtensions.LookupBrush("FluentStroke", Colors.Gray);
+            b.Background = PowerAimUIExtensions.LookupBrush("FluentStroke", Colors.Gray);
         });
         FieldsHost.Add<Label>(l =>
         {
@@ -166,7 +167,7 @@ public partial class ToolActionEditDialog : BaseDialog
             l.FontWeight = FontWeights.SemiBold;
             l.Padding = new Thickness(0);
             l.Margin = new Thickness(2, 2, 0, 0);
-            l.Foreground = UIElementExtensions.LookupBrush("FluentTextPrimary", Colors.White);
+            l.Foreground = PowerAimUIExtensions.LookupBrush("FluentTextPrimary", Colors.White);
         });
         FieldsHost.Add<TextBlock>(t =>
         {
@@ -175,7 +176,7 @@ public partial class ToolActionEditDialog : BaseDialog
             t.FontSize = 11;
             t.Opacity = 0.7;
             t.Margin = new Thickness(2, 0, 0, 2);
-            t.Foreground = UIElementExtensions.LookupBrush("FluentTextPrimary", Colors.White);
+            t.Foreground = PowerAimUIExtensions.LookupBrush("FluentTextPrimary", Colors.White);
         });
 
         var cond = _action.Condition;
@@ -192,7 +193,7 @@ public partial class ToolActionEditDialog : BaseDialog
             l.FontSize = 13;
             l.Padding = new Thickness(0);
             l.Margin = new Thickness(2, 6, 0, 2);
-            l.Foreground = UIElementExtensions.LookupBrush("FluentTextPrimary", Colors.White);
+            l.Foreground = PowerAimUIExtensions.LookupBrush("FluentTextPrimary", Colors.White);
         });
 
         var row = new Grid();
@@ -203,8 +204,8 @@ public partial class ToolActionEditDialog : BaseDialog
             BorderThickness = new Thickness(1),
             Padding = new Thickness(6, 5, 6, 5),
             Background = Brushes.Transparent,
-            BorderBrush = UIElementExtensions.LookupBrush("FluentStroke", Colors.Gray),
-            Foreground = UIElementExtensions.LookupBrush("FluentTextPrimary", Colors.White)
+            BorderBrush = PowerAimUIExtensions.LookupBrush("FluentStroke", Colors.Gray),
+            Foreground = PowerAimUIExtensions.LookupBrush("FluentTextPrimary", Colors.White)
         };
         tb.SetBinding(TextBox.TextProperty, new Binding(prop)
         {

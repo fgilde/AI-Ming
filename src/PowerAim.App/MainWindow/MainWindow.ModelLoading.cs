@@ -15,6 +15,8 @@ using PowerAim.UI.Visuality;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using Nextended.UI.Input;
+using Nextended.UI.WPF.Extensions;
 
 namespace PowerAim;
 
@@ -147,10 +149,9 @@ public partial class MainWindow
             Path.Combine(ApplicationConstants.ModelsBasePath, ApplicationConstants.DefaultModel));
     }
 
-    private void AKeyChanger_ModelOnGlobalKeyPressed(object? sender, EventArgs<(AKeyChanger Sender, string Key, StoredInputBinding KeyBinding)> e)
+    private void AKeyChanger_ModelOnGlobalKeyPressed(object? sender, EventArgs e)
     {
-        var args = e.Value;
-        var modelToLoad = args.Sender.Tag?.ToString();
+        var modelToLoad = (sender as FrameworkElement)?.Tag?.ToString();
         if (modelToLoad is not null)
         {
             try

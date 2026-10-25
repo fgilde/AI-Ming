@@ -1,6 +1,7 @@
 using System.Windows.Forms;
 using PowerAim.Config;
 using PowerAim;
+using Nextended.UI.Input.Gamepad;
 
 namespace PowerAim.Input.Mapping;
 
@@ -269,47 +270,47 @@ public enum XboxButtonId
 /// <summary>
 ///     Bridge between the persistence-stable <see cref="XboxButtonId"/> index (used by
 ///     <see cref="PowerAim.Config.InputMapping"/>) and PowerAim's runtime
-///     <see cref="PowerAim.Input.Contracts.GamepadButton"/> enum. Lives in the same file as
+///     <see cref="GamepadButton"/> enum. Lives in the same file as
 ///     <see cref="XboxButtonId"/> so adding a button only ever touches one place, and
 ///     <c>MappingEngine</c> / <c>MappingBindingConverter</c> no longer need their own copies.
 /// </summary>
 public static class XboxButtonIdExtensions
 {
-    public static PowerAim.Input.Contracts.GamepadButton ToGamepadButton(this XboxButtonId id) => id switch
+    public static GamepadButton ToGamepadButton(this XboxButtonId id) => id switch
     {
-        XboxButtonId.Up            => PowerAim.Input.Contracts.GamepadButton.Up,
-        XboxButtonId.Down          => PowerAim.Input.Contracts.GamepadButton.Down,
-        XboxButtonId.Left          => PowerAim.Input.Contracts.GamepadButton.Left,
-        XboxButtonId.Right         => PowerAim.Input.Contracts.GamepadButton.Right,
-        XboxButtonId.Start         => PowerAim.Input.Contracts.GamepadButton.Start,
-        XboxButtonId.Back          => PowerAim.Input.Contracts.GamepadButton.Back,
-        XboxButtonId.LeftThumb     => PowerAim.Input.Contracts.GamepadButton.LeftThumb,
-        XboxButtonId.RightThumb    => PowerAim.Input.Contracts.GamepadButton.RightThumb,
-        XboxButtonId.LeftShoulder  => PowerAim.Input.Contracts.GamepadButton.LeftShoulder,
-        XboxButtonId.RightShoulder => PowerAim.Input.Contracts.GamepadButton.RightShoulder,
-        XboxButtonId.A             => PowerAim.Input.Contracts.GamepadButton.A,
-        XboxButtonId.B             => PowerAim.Input.Contracts.GamepadButton.B,
-        XboxButtonId.X             => PowerAim.Input.Contracts.GamepadButton.X,
-        XboxButtonId.Y             => PowerAim.Input.Contracts.GamepadButton.Y,
-        _ => PowerAim.Input.Contracts.GamepadButton.A,
+        XboxButtonId.Up            => GamepadButton.Up,
+        XboxButtonId.Down          => GamepadButton.Down,
+        XboxButtonId.Left          => GamepadButton.Left,
+        XboxButtonId.Right         => GamepadButton.Right,
+        XboxButtonId.Start         => GamepadButton.Start,
+        XboxButtonId.Back          => GamepadButton.Back,
+        XboxButtonId.LeftThumb     => GamepadButton.LeftThumb,
+        XboxButtonId.RightThumb    => GamepadButton.RightThumb,
+        XboxButtonId.LeftShoulder  => GamepadButton.LeftShoulder,
+        XboxButtonId.RightShoulder => GamepadButton.RightShoulder,
+        XboxButtonId.A             => GamepadButton.A,
+        XboxButtonId.B             => GamepadButton.B,
+        XboxButtonId.X             => GamepadButton.X,
+        XboxButtonId.Y             => GamepadButton.Y,
+        _ => GamepadButton.A,
     };
 
-    public static XboxButtonId ToXboxButtonId(this PowerAim.Input.Contracts.GamepadButton button) => button switch
+    public static XboxButtonId ToXboxButtonId(this GamepadButton button) => button switch
     {
-        PowerAim.Input.Contracts.GamepadButton.Up            => XboxButtonId.Up,
-        PowerAim.Input.Contracts.GamepadButton.Down          => XboxButtonId.Down,
-        PowerAim.Input.Contracts.GamepadButton.Left          => XboxButtonId.Left,
-        PowerAim.Input.Contracts.GamepadButton.Right         => XboxButtonId.Right,
-        PowerAim.Input.Contracts.GamepadButton.Start         => XboxButtonId.Start,
-        PowerAim.Input.Contracts.GamepadButton.Back          => XboxButtonId.Back,
-        PowerAim.Input.Contracts.GamepadButton.LeftThumb     => XboxButtonId.LeftThumb,
-        PowerAim.Input.Contracts.GamepadButton.RightThumb    => XboxButtonId.RightThumb,
-        PowerAim.Input.Contracts.GamepadButton.LeftShoulder  => XboxButtonId.LeftShoulder,
-        PowerAim.Input.Contracts.GamepadButton.RightShoulder => XboxButtonId.RightShoulder,
-        PowerAim.Input.Contracts.GamepadButton.A             => XboxButtonId.A,
-        PowerAim.Input.Contracts.GamepadButton.B             => XboxButtonId.B,
-        PowerAim.Input.Contracts.GamepadButton.X             => XboxButtonId.X,
-        PowerAim.Input.Contracts.GamepadButton.Y             => XboxButtonId.Y,
+        GamepadButton.Up            => XboxButtonId.Up,
+        GamepadButton.Down          => XboxButtonId.Down,
+        GamepadButton.Left          => XboxButtonId.Left,
+        GamepadButton.Right         => XboxButtonId.Right,
+        GamepadButton.Start         => XboxButtonId.Start,
+        GamepadButton.Back          => XboxButtonId.Back,
+        GamepadButton.LeftThumb     => XboxButtonId.LeftThumb,
+        GamepadButton.RightThumb    => XboxButtonId.RightThumb,
+        GamepadButton.LeftShoulder  => XboxButtonId.LeftShoulder,
+        GamepadButton.RightShoulder => XboxButtonId.RightShoulder,
+        GamepadButton.A             => XboxButtonId.A,
+        GamepadButton.B             => XboxButtonId.B,
+        GamepadButton.X             => XboxButtonId.X,
+        GamepadButton.Y             => XboxButtonId.Y,
         _ => XboxButtonId.A,
     };
 }

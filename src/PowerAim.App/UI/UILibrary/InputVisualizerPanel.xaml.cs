@@ -8,6 +8,7 @@ using System.Windows.Shapes;
 using System.Windows.Threading;
 using PowerAim.Config;
 using PowerAim.Input;
+using Nextended.UI.Input.Gamepad;
 
 namespace PowerAim.UI.UILibrary;
 

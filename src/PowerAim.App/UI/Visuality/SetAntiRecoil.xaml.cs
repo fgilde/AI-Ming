@@ -7,6 +7,7 @@ using PowerAim.Class.Native;
 using PowerAim.Config;
 using PowerAim.Extensions;
 using Nextended.Core.Extensions;
+using Nextended.UI.Input;
 
 namespace PowerAim.UI.Visuality
 {

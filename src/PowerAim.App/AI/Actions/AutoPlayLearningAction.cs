@@ -2,6 +2,7 @@ using System.Windows.Forms;
 using PowerAim.AI;
 using PowerAim.Config;
 using PowerAim.Input;
+using Nextended.UI.Input;
 
 namespace PowerAim.AI.Actions;
 

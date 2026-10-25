@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Media;
+using Nextended.UI.Native;
 using Application = System.Windows.Application;
 
 namespace PowerAim.UI.Visuality;

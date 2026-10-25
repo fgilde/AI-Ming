@@ -2,6 +2,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using PowerAim.Input.Contracts;
 using SharpDX.XInput;
+using Nextended.UI.Input.Gamepad;
 
 /// <summary>
 ///     Sends input to a ConsoleTuner <b>Titan Two</b> (and, being the same API, a classic CronusMax /

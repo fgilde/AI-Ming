@@ -7,6 +7,8 @@ using PowerAim.Config;
 using PowerAim.Input.Contracts;
 using PowerAim;
 using SharpDX.XInput;
+using Nextended.UI.Input.Gamepad;
+using Nextended.UI.Native;
 
 namespace PowerAim.Input.Mapping;
 
@@ -397,7 +399,7 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
     {
         // Accumulator drained by the loop. Read absolute coords via the existing cursor helper
         // because MouseKeyHook only reports absolute positions, not deltas.
-        var p = NativeAPIMethods.GetCursorPosition();
+        var p = NativeMethods.GetCursorPosition();
         if (_lastMouseDeltaTickMs == 0)
         {
             _lastMouseDeltaTickMs = Environment.TickCount64;
@@ -763,7 +765,7 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
             wVk = (ushort)k,
             dwFlags = pressed ? 0u : KEYEVENTF_KEYUP,
         };
-        NativeAPIMethods.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
+        NativeMethods.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
     }
 
     private static void SendMouse(MouseButtons btn, bool pressed)
@@ -779,7 +781,7 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
         var inputs = new MINPUT[1];
         inputs[0].type = (uint)MInputType.INPUT_MOUSE;
         inputs[0].U.mi = new MOUSEINPUT { dwFlags = (uint)flag };
-        NativeAPIMethods.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
+        NativeMethods.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
     }
 
     private static void MouseMoveRelative(int dx, int dy)
@@ -791,7 +793,7 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
             dx = dx, dy = dy,
             dwFlags = (uint)(InputEventFlags.MOUSEEVENTF_MOVE | InputEventFlags.MOUSEEVENTF_MOVE_NOCOALESCE),
         };
-        NativeAPIMethods.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
+        NativeMethods.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
     }
 
 }

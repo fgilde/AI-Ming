@@ -5,6 +5,7 @@ using System.Windows.Media;
 using PowerAim.Config;
 using PowerAim.Extensions;
 using PowerAim.UI.Visuality;
+using Nextended.UI.WPF.Extensions;
 
 namespace PowerAim.UI.UILibrary;
 
@@ -110,8 +111,8 @@ public partial class ToolEdit : UserControl
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(6, 5, 6, 5),
                 Background = Brushes.Transparent,
-                BorderBrush = UIElementExtensions.LookupBrush("FluentStroke", Colors.Gray),
-                Foreground = UIElementExtensions.LookupBrush("FluentTextPrimary", Colors.White)
+                BorderBrush = PowerAimUIExtensions.LookupBrush("FluentStroke", Colors.Gray),
+                Foreground = PowerAimUIExtensions.LookupBrush("FluentTextPrimary", Colors.White)
             };
             choices.TextChanged += (_, _) =>
             {
@@ -136,8 +137,8 @@ public partial class ToolEdit : UserControl
             Margin = new Thickness(0, 0, 0, 8),
             Padding = new Thickness(10),
             CornerRadius = new CornerRadius(6),
-            Background = UIElementExtensions.LookupBrush("FluentSurface2", Colors.Transparent),
-            BorderBrush = UIElementExtensions.LookupBrush("FluentStroke", Colors.Gray),
+            Background = PowerAimUIExtensions.LookupBrush("FluentSurface2", Colors.Transparent),
+            BorderBrush = PowerAimUIExtensions.LookupBrush("FluentStroke", Colors.Gray),
             BorderThickness = new Thickness(1),
             Child = stack
         };
@@ -152,8 +153,8 @@ public partial class ToolEdit : UserControl
             BorderThickness = new Thickness(1),
             Padding = new Thickness(6, 5, 6, 5),
             Background = Brushes.Transparent,
-            BorderBrush = UIElementExtensions.LookupBrush("FluentStroke", Colors.Gray),
-            Foreground = UIElementExtensions.LookupBrush("FluentTextPrimary", Colors.White)
+            BorderBrush = PowerAimUIExtensions.LookupBrush("FluentStroke", Colors.Gray),
+            Foreground = PowerAimUIExtensions.LookupBrush("FluentTextPrimary", Colors.White)
         };
         tb.SetBinding(TextBox.TextProperty, new Binding(prop) { Source = source, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
         cell.Children.Add(tb);
@@ -190,7 +191,7 @@ public partial class ToolEdit : UserControl
         {
             Text = $"{index + 1}. {action.DisplayText}",
             FontFamily = new FontFamily("Segoe UI Variable Text"),
-            Foreground = UIElementExtensions.LookupBrush("FluentTextPrimary", Colors.White),
+            Foreground = PowerAimUIExtensions.LookupBrush("FluentTextPrimary", Colors.White),
             VerticalAlignment = VerticalAlignment.Center
         });
         Grid.SetColumn(text, 0);
@@ -227,8 +228,8 @@ public partial class ToolEdit : UserControl
             Margin = new Thickness(0, 0, 0, 4),
             Padding = new Thickness(10, 6, 6, 6),
             CornerRadius = new CornerRadius(6),
-            Background = UIElementExtensions.LookupBrush("FluentSurface2", Colors.Transparent),
-            BorderBrush = UIElementExtensions.LookupBrush("FluentStroke", Colors.Gray),
+            Background = PowerAimUIExtensions.LookupBrush("FluentSurface2", Colors.Transparent),
+            BorderBrush = PowerAimUIExtensions.LookupBrush("FluentStroke", Colors.Gray),
             BorderThickness = new Thickness(1),
             Child = grid
         };
@@ -253,7 +254,7 @@ public partial class ToolEdit : UserControl
         l.FontSize = 12;
         l.Padding = new Thickness(0);
         l.Margin = new Thickness(2, 6, 0, 2);
-        l.Foreground = UIElementExtensions.LookupBrush("FluentTextSecondary", ApplicationConstants.Foreground);
+        l.Foreground = PowerAimUIExtensions.LookupBrush("FluentTextSecondary", ApplicationConstants.Foreground);
     });
 
     private static TextBox MakeTextBox(object source, string prop, string? placeholder = null)
@@ -264,8 +265,8 @@ public partial class ToolEdit : UserControl
             Padding = new Thickness(6, 5, 6, 5),
             Margin = new Thickness(0, 2, 0, 2),
             Background = Brushes.Transparent,
-            BorderBrush = UIElementExtensions.LookupBrush("FluentStroke", Colors.Gray),
-            Foreground = UIElementExtensions.LookupBrush("FluentTextPrimary", Colors.White)
+            BorderBrush = PowerAimUIExtensions.LookupBrush("FluentStroke", Colors.Gray),
+            Foreground = PowerAimUIExtensions.LookupBrush("FluentTextPrimary", Colors.White)
         };
         if (placeholder != null)
         {
@@ -286,7 +287,7 @@ public partial class ToolEdit : UserControl
             Padding = new Thickness(0),
             FontSize = 16,
             Width = 36,
-            Foreground = UIElementExtensions.LookupBrush("FluentTextPrimary", Colors.White)
+            Foreground = PowerAimUIExtensions.LookupBrush("FluentTextPrimary", Colors.White)
         };
         b.Click += (_, _) => onClick();
         return b;

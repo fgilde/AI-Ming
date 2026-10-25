@@ -2,6 +2,7 @@ using PowerAim.Config;
 using PowerAim.Input.Contracts;
 using SharpDX.DirectInput;
 using SharpDX.XInput;
+using Nextended.UI.Input.Gamepad;
 // The enclosing namespace segment "Gamepad" shadows the SharpDX.XInput.Gamepad type, so alias it.
 using XGamepad = SharpDX.XInput.Gamepad;
 

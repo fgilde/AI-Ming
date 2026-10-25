@@ -36,7 +36,7 @@
                                            CanRemoveBinding="true"
                                            InvalidText="+"
                                            Tag="{Binding}"
-                                           BeforeKeyBindChangedByUser="AKeyChanger_OnKeyBindChanged"
+                                           KeyBindChanging="AKeyChanger_OnKeyBindChanging"
                                            KeyBind="{Binding Path=., Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}" />
                             <Border BorderBrush="{DynamicResource FluentStroke}"
                                 BorderThickness="1"

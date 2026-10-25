@@ -9,6 +9,7 @@ using PowerAim.Core;
 using PowerAim.Localization;
 using PowerAim.Extensions;
 using Nextended.Core.Extensions;
+using Nextended.UI.WPF.Extensions;
 
 namespace PowerAim.Other
 {

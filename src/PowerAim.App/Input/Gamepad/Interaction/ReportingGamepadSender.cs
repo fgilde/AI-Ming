@@ -1,5 +1,6 @@
 using PowerAim.Input.Contracts;
 using SharpDX.XInput;
+using Nextended.UI.Input.Gamepad;
 
 /// <summary>
 ///     Transparent decorator around the active <see cref="IGamepadSender"/> that mirrors every

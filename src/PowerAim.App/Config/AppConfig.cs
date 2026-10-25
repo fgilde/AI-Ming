@@ -8,6 +8,8 @@ using PowerAim.Input;
 using PowerAim.Input.Contracts;
 using PowerAim.Types;
 using Newtonsoft.Json;
+using Nextended.UI.Input;
+using Nextended.UI.Input.Gamepad;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 
@@ -304,7 +306,7 @@ public class AppConfig : BaseSettings
             if (File.Exists(path))
             {
                 SaveLastConfigPath(path);
-                string json = File.ReadAllText(path);
+                string json = LegacyInputBindingMigration.Migrate(File.ReadAllText(path));
 
                 try
                 {

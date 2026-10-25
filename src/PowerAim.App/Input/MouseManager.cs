@@ -12,6 +12,7 @@ using PowerAim.Class.Native;
 using Application = System.Windows.Application;
 using Point = System.Drawing.Point;
 using PowerAim.Input;
+using Nextended.UI.Native;
 
 namespace PowerAim.Input
 {
@@ -63,17 +64,7 @@ namespace PowerAim.Input
         private static bool _leftDown;
         public static void ScrollMouseWheel(int delta)
         {
-            NativeAPIMethods.MouseEvent((uint)InputEventFlags.MOUSEEVENTF_WHEEL, 0, 0, (uint)delta, 0);
-        }
-
-        //public static void SendMouseEvent(MouseEventArgs args)
-        //{
-        //    SendMouseEvent(args.LeftButton, args.X, args.Y, args.Delta);
-        //}
-
-        public static void SendMouseEvent(System.Windows.Forms.MouseEventArgs args, KeyPressState state = KeyPressState.DownAndUp)
-        {
-            SendMouseEvent(args.Button, args.X, args.Y, args.Delta, state);
+            NativeMethods.MouseEvent((uint)InputEventFlags.MOUSEEVENTF_WHEEL, 0, 0, (uint)delta, 0);
         }
 
         public static void SendMouseEvent(MouseButtons button, int x = 0, int y = 0, int wheelDelta = 0, KeyPressState state = KeyPressState.DownAndUp)
@@ -143,7 +134,7 @@ namespace PowerAim.Input
                 inputs[0].u.mi.dwFlags |= (uint)InputEventFlags.MOUSEEVENTF_WHEEL;
             }
 
-            NativeAPIMethods.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
+            NativeMethods.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
         }
 
         public static async Task ScrollMouseWheelUpAndDown()
@@ -177,7 +168,7 @@ namespace PowerAim.Input
                     return;
 
                 default:
-                    NativeAPIMethods.MouseEvent((uint)InputEventFlags.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+                    NativeMethods.MouseEvent((uint)InputEventFlags.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
                     break;
             }
 
@@ -225,7 +216,7 @@ namespace PowerAim.Input
                     return;
 
                 default:
-                    NativeAPIMethods.MouseEvent((uint)InputEventFlags.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+                    NativeMethods.MouseEvent((uint)InputEventFlags.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
                     break;
             }
 
@@ -272,7 +263,7 @@ namespace PowerAim.Input
                     break;
 
                 default:
-                    NativeAPIMethods.MouseEvent((uint)InputEventFlags.MOUSEEVENTF_MOVE, (uint)x, (uint)y, 0, 0);
+                    NativeMethods.MouseEvent((uint)InputEventFlags.MOUSEEVENTF_MOVE, (uint)x, (uint)y, 0, 0);
                     break;
             }
         }

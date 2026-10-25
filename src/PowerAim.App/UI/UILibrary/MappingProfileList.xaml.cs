@@ -7,6 +7,7 @@ using PowerAim.Config;
 using PowerAim.Input;
 using PowerAim.Input.Mapping;
 using PowerAim.Types;
+using Nextended.UI.Input;
 
 namespace PowerAim.UI.UILibrary;
 
@@ -41,9 +42,9 @@ public partial class MappingProfileList : System.Windows.Controls.UserControl
     ///     <see cref="ControllerMappingProfile.Enabled"/> so the per-row binding doubles as a
     ///     mid-game "switch profile" hotkey. Same pattern as <c>TriggerList.ApplyBindingEnabled</c>.
     /// </summary>
-    private void ApplyBindingEnabled(object? sender, EventArgs<(AKeyChanger Sender, string Key, StoredInputBinding KeyBinding)> e)
+    private void ApplyBindingEnabled(object? sender, EventArgs e)
     {
-        if (e.Value.Sender.Tag is ControllerMappingProfile profile)
+        if ((sender as FrameworkElement)?.Tag is ControllerMappingProfile profile)
         {
             // Swallow duplicate events from a double-subscribed keybind control (see KeybindToggleGuard).
             if (!KeybindToggleGuard.ShouldHandle(profile)) return;

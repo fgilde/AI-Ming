@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Forms;
 using PowerAim.Input;
+using Nextended.UI.Input;
 
 namespace PowerAim.Config;
 

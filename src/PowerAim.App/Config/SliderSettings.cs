@@ -1,5 +1,6 @@
 using PowerAim.Input;
 using PowerAim.Types;
+using Nextended.UI.Input;
 
 namespace PowerAim.Config;
 

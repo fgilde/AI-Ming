@@ -14,6 +14,8 @@ using PowerAim.Input;
 using PowerAim.Input.Tools;
 using PowerAim.Types;
 using PowerAim.UI.Visuality;
+using Nextended.UI.Input;
+using Nextended.UI.WPF.Extensions;
 
 namespace PowerAim.UI.UILibrary;
 
@@ -107,9 +109,9 @@ public partial class ToolsList : UserControl
     }
 
     /// <summary>Per-tool start keybind fired globally → run the tool once.</summary>
-    private void StartToolKey(object? sender, EventArgs<(AKeyChanger Sender, string Key, StoredInputBinding KeyBinding)> e)
+    private void StartToolKey(object? sender, EventArgs e)
     {
-        if (e.Value.Sender.Tag is ToolDefinition tool)
+        if ((sender as FrameworkElement)?.Tag is ToolDefinition tool)
         {
             // Swallow duplicate events from a double-subscribed changer (same guard the other lists use).
             if (!KeybindToggleGuard.ShouldHandle(tool)) return;
@@ -181,7 +183,7 @@ public partial class ToolsList : UserControl
                 Text = ex.Message,
                 TextWrapping = TextWrapping.Wrap,
                 FontSize = 11,
-                Foreground = UIElementExtensions.LookupBrush("FluentTextSecondary", ApplicationConstants.Foreground)
+                Foreground = PowerAimUIExtensions.LookupBrush("FluentTextSecondary", ApplicationConstants.Foreground)
             };
         }
     }
@@ -206,7 +208,7 @@ public partial class ToolsList : UserControl
             t.Text = Locale.AntiAfkHelp;
             t.TextWrapping = TextWrapping.Wrap;
             t.FontSize = 11;
-            t.Foreground = UIElementExtensions.LookupBrush("FluentTextSecondary", ApplicationConstants.Foreground);
+            t.Foreground = PowerAimUIExtensions.LookupBrush("FluentTextSecondary", ApplicationConstants.Foreground);
         });
         return p;
     }
@@ -295,7 +297,7 @@ public partial class ToolsList : UserControl
             t.Text = Locale.HwidSpooferHelp;
             t.TextWrapping = TextWrapping.Wrap;
             t.FontSize = 11;
-            t.Foreground = UIElementExtensions.LookupBrush("FluentTextSecondary", ApplicationConstants.Foreground);
+            t.Foreground = PowerAimUIExtensions.LookupBrush("FluentTextSecondary", ApplicationConstants.Foreground);
         });
         return p;
     }
@@ -310,7 +312,7 @@ public partial class ToolsList : UserControl
                 t.Text = Locale.ToolNoOptionsHint;
                 t.TextWrapping = TextWrapping.Wrap;
                 t.FontSize = 11;
-                t.Foreground = UIElementExtensions.LookupBrush("FluentTextSecondary", ApplicationConstants.Foreground);
+                t.Foreground = PowerAimUIExtensions.LookupBrush("FluentTextSecondary", ApplicationConstants.Foreground);
             });
             return p;
         }
@@ -360,7 +362,7 @@ public partial class ToolsList : UserControl
                     l.FontSize = 13;
                     l.Padding = new Thickness(0);
                     l.Margin = new Thickness(2, 4, 0, 2);
-                    l.Foreground = UIElementExtensions.LookupBrush("FluentTextPrimary", Colors.White);
+                    l.Foreground = PowerAimUIExtensions.LookupBrush("FluentTextPrimary", Colors.White);
                 });
 
                 var row = new Grid();
@@ -373,8 +375,8 @@ public partial class ToolsList : UserControl
                     BorderThickness = new Thickness(1),
                     Padding = new Thickness(6, 5, 6, 5),
                     Background = Brushes.Transparent,
-                    BorderBrush = UIElementExtensions.LookupBrush("FluentStroke", Colors.Gray),
-                    Foreground = UIElementExtensions.LookupBrush("FluentTextPrimary", Colors.White)
+                    BorderBrush = PowerAimUIExtensions.LookupBrush("FluentStroke", Colors.Gray),
+                    Foreground = PowerAimUIExtensions.LookupBrush("FluentTextPrimary", Colors.White)
                 };
                 tb.SetBinding(TextBox.TextProperty, new Binding(nameof(ToolOption.Value))
                 {

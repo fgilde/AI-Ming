@@ -13,6 +13,7 @@ using PowerAim.Types;
 using PowerAim.UI.UILibrary;
 using Nextended.Core.Extensions;
 using PowerAim.UI.Visuality;
+using Nextended.UI.Input;
 
 namespace PowerAim.UI.UILibrary
 {
@@ -45,9 +46,9 @@ namespace PowerAim.UI.UILibrary
         ///     enable/disable switch. Same pattern as <c>TriggerList.ApplyBindingEnabled</c> and
         ///     <c>MappingProfileList.ApplyBindingEnabled</c>.
         /// </summary>
-        private void ApplyBindingEnabled(object? sender, EventArgs<(AKeyChanger Sender, string Key, StoredInputBinding KeyBinding)> e)
+        private void ApplyBindingEnabled(object? sender, EventArgs e)
         {
-            if (e.Value.Sender.Tag is AutoPlayProfile profile)
+            if ((sender as FrameworkElement)?.Tag is AutoPlayProfile profile)
             {
                 // Swallow duplicate events from a double-subscribed keybind control (e.g. after
                 // a CreateUI rebuild leaves a stale row subscribed) — same guard the other lists use.

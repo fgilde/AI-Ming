@@ -2,6 +2,8 @@ using System.Windows.Forms;
 using PowerAim.Config;
 using PowerAim.Input.Contracts;
 using PowerAim;
+using Nextended.UI.Input;
+using Nextended.UI.Input.Gamepad;
 
 namespace PowerAim.Input.Mapping;
 
@@ -38,11 +40,11 @@ public static class MappingBindingConverter
         switch (kind)
         {
             case MappingInputKind.KeyboardKey:
-                return new StoredInputBinding(new KeyEventArgs((Keys)code));
+                return new StoredInputBinding((Keys)code);
 
             case MappingInputKind.MouseButton:
                 if (code == MouseMotionSentinel) return StoredInputBinding.Empty; // special
-                return new StoredInputBinding(new MouseEventArgs((MouseButtons)code, 0, 0, 0, 0));
+                return new StoredInputBinding((MouseButtons)code);
 
             case MappingInputKind.GamepadButton:
                 return new StoredInputBinding(((XboxButtonId)code).ToGamepadButton());
@@ -71,15 +73,14 @@ public static class MappingBindingConverter
     {
         if (binding is not { IsValid: true }) return null;
 
-        if (binding.Is<KeyEventArgs>() && binding.KeyEventArgs != null)
-            return (MappingInputKind.KeyboardKey, (int)binding.KeyEventArgs.KeyCode);
+        if (binding.KeyboardKey is { } key)
+            return (MappingInputKind.KeyboardKey, (int)key);
 
-        if (binding.Is<MouseEventArgs>() && binding.MouseEventArgs != null)
-            return (MappingInputKind.MouseButton, (int)binding.MouseEventArgs.Button);
+        if (binding.MouseButton is { } button)
+            return (MappingInputKind.MouseButton, (int)button);
 
-        if (binding.Is<GamepadEventArgs>() && binding.GamepadEventArgs != null)
+        if (binding.ToGamepadEventArgs() is { } gp)
         {
-            var gp = binding.GamepadEventArgs;
             if (gp.GamepadButton is { } gb)
                 return (MappingInputKind.GamepadButton, (int)gb.ToXboxButtonId());
             if (gp.GamepadSlider is { } gs)

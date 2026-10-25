@@ -1,3 +1,4 @@
+using Nextended.UI.Input.Gamepad;
 namespace PowerAim.Input;
 
 /// <summary>Which kind of synthetic input PowerAim just emitted.</summary>

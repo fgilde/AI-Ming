@@ -10,6 +10,8 @@ using PowerAim.Types;
 using PowerAim.UI.UILibrary;
 using Nextended.Core.Extensions;
 using PowerAim.UI.Visuality;
+using Nextended.UI.Input;
+using Nextended.UI.WPF.Extensions;
 
 namespace PowerAim.UI.UILibrary
 {

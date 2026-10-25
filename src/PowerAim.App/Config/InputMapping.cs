@@ -1,3 +1,4 @@
+using Nextended.UI.Input.Gamepad;
 namespace PowerAim.Config;
 
 /// <summary>

@@ -1,4 +1,5 @@
 ﻿using SharpDX.XInput;
+using Nextended.UI.Input.Gamepad;
 
 namespace PowerAim.Input.Contracts;
 

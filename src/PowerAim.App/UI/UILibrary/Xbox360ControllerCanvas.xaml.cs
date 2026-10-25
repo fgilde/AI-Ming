@@ -7,6 +7,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using PowerAim.Config;
 using PowerAim.Input.Mapping;
+using Nextended.UI.Input.Gamepad;
 
 namespace PowerAim.UI.UILibrary;
 

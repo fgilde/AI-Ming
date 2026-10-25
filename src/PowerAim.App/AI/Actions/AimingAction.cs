@@ -3,6 +3,7 @@ using PowerAim.Class;
 using PowerAim.AI.Aiming;
 using PowerAim.AI.Contracts;
 using PowerAim.Config;
+using Nextended.UI.WPF.Extensions;
 using PowerAim.Input; // InputSender (Move/MoveCrosshair) lives here after the MoveInputManager fold-in
 
 namespace PowerAim.AI.Actions;

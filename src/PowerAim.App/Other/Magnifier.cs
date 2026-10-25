@@ -5,6 +5,8 @@ using Microsoft.Win32;
 using PowerAim.Class.Native;
 using PowerAim.Config;
 using PowerAim.Extensions;
+using Nextended.UI.Native;
+using Nextended.UI.WPF.Extensions;
 
 public class Magnifier : IDisposable
 {
@@ -37,11 +39,11 @@ public class Magnifier : IDisposable
         // Native magnifier is used for None (sharp) and SmoothHQ (bilinear); Enhanced uses its own renderer.
         ApplyBitmapSmoothing(AppConfig.Current?.SliderSettings?.MagnifierScaling == MagnifierScalingMode.SmoothHQ);
 
-        initialized = NativeAPIMethods.MagInitialize();
+        initialized = NativeMethods.MagInitialize();
         if (initialized)
         {
             SetupMagnifier();
-            timer.Interval = NativeStruct.USER_TIMER_MINIMUM;
+            timer.Interval = NativeConstants.USER_TIMER_MINIMUM;
             timer.Enabled = true;
         }
     }
@@ -79,9 +81,9 @@ public class Magnifier : IDisposable
     {
         if (initialized && (hwndMag != IntPtr.Zero))
         {
-            NativeAPIMethods.GetClientRect(GetHandle(), ref magWindowRect);
+            NativeMethods.GetClientRect(GetHandle(), ref magWindowRect);
             // Resize the control to fill the window.
-            NativeAPIMethods.SetWindowPos(hwndMag, IntPtr.Zero,
+            NativeMethods.SetWindowPos(hwndMag, IntPtr.Zero,
                 magWindowRect.Left, magWindowRect.Top, magWindowRect.Right, magWindowRect.Bottom, 0);
 
             //
@@ -96,7 +98,7 @@ public class Magnifier : IDisposable
         POINT mousePoint = new POINT();
         RECT sourceRect = new RECT();
 
-        NativeAPIMethods.GetCursorPos(out mousePoint);
+        NativeMethods.GetCursorPos(out mousePoint);
 
         int width = (int)((magWindowRect.Right - magWindowRect.Left) / magnification);
         int height = (int)((magWindowRect.Bottom - magWindowRect.Top) / magnification);
@@ -110,9 +112,9 @@ public class Magnifier : IDisposable
         {
             sourceRect.Left = 0;
         }
-        if (sourceRect.Left > NativeAPIMethods.GetSystemMetrics(NativeStruct.SM_CXSCREEN) - width)
+        if (sourceRect.Left > NativeMethods.GetSystemMetrics(NativeConstants.SM_CXSCREEN) - width)
         {
-            sourceRect.Left = NativeAPIMethods.GetSystemMetrics(NativeStruct.SM_CXSCREEN) - width;
+            sourceRect.Left = NativeMethods.GetSystemMetrics(NativeConstants.SM_CXSCREEN) - width;
         }
         sourceRect.Right = sourceRect.Left + width;
 
@@ -120,9 +122,9 @@ public class Magnifier : IDisposable
         {
             sourceRect.Top = 0;
         }
-        if (sourceRect.Top > NativeAPIMethods.GetSystemMetrics(NativeStruct.SM_CYSCREEN) - height)
+        if (sourceRect.Top > NativeMethods.GetSystemMetrics(NativeConstants.SM_CYSCREEN) - height)
         {
-            sourceRect.Top = NativeAPIMethods.GetSystemMetrics(NativeStruct.SM_CYSCREEN) - height;
+            sourceRect.Top = NativeMethods.GetSystemMetrics(NativeConstants.SM_CYSCREEN) - height;
         }
         sourceRect.Bottom = sourceRect.Top + height;
 
@@ -133,14 +135,14 @@ public class Magnifier : IDisposable
         }
 
         // Set the source rectangle for the magnifier control.
-        NativeAPIMethods.MagSetWindowSource(hwndMag, sourceRect);
+        NativeMethods.MagSetWindowSource(hwndMag, sourceRect);
 
         // Reclaim topmost status, to prevent unmagnified menus from remaining in view. 
-        NativeAPIMethods.SetWindowPos(GetHandle(), NativeStruct.HWND_TOPMOST, 0, 0, 0, 0,
+        NativeMethods.SetWindowPos(GetHandle(), NativeConstants.HWND_TOPMOST, 0, 0, 0, 0,
             (int)SetWindowPosFlags.SWP_NOACTIVATE | (int)SetWindowPosFlags.SWP_NOMOVE | (int)SetWindowPosFlags.SWP_NOSIZE);
 
         // Force redraw.
-        NativeAPIMethods.InvalidateRect(hwndMag, IntPtr.Zero, true);
+        NativeMethods.InvalidateRect(hwndMag, IntPtr.Zero, true);
     }
 
     public float Magnification
@@ -153,7 +155,7 @@ public class Magnifier : IDisposable
                 magnification = value;
                 // Set the magnification factor.
                 Transformation matrix = new Transformation(magnification);
-                NativeAPIMethods.MagSetWindowTransform(hwndMag, ref matrix);
+                NativeMethods.MagSetWindowTransform(hwndMag, ref matrix);
             }
         }
     }
@@ -163,16 +165,16 @@ public class Magnifier : IDisposable
         if (!initialized)
             return;
 
-        var hInst = NativeAPIMethods.GetModuleHandle(null);
+        var hInst = NativeMethods.GetModuleHandle(null);
 
        
         form.Opacity = 255;
 
         // Create a magnifier control that fills the client area.
-        NativeAPIMethods.GetClientRect(GetHandle(), ref magWindowRect);
-        hwndMag = NativeAPIMethods.CreateWindow(
+        NativeMethods.GetClientRect(GetHandle(), ref magWindowRect);
+        hwndMag = NativeMethods.CreateWindow(
              (int)(ExtendedWindowStyles.WS_EX_CLIENTEDGE | ExtendedWindowStyles.WS_EX_TRANSPARENT | ExtendedWindowStyles.WS_EX_TOPMOST | ExtendedWindowStyles.WDA_EXCLUDEFROMCAPTURE), 
-            NativeStruct.WC_MAGNIFIER,
+            NativeConstants.WC_MAGNIFIER,
             "MagnifierWindow", (int)WindowStyles.WS_CHILD 
                                //| (int)MagnifierStyle.MS_SHOWMAGNIFIEDCURSOR
                                | (int)WindowStyles.WS_VISIBLE
@@ -185,8 +187,8 @@ public class Magnifier : IDisposable
         }
         // Set the magnification factor.
         Transformation matrix = new Transformation(magnification);
-        NativeAPIMethods.MagSetWindowTransform(hwndMag, ref matrix);
-        NativeAPIMethods.HideForCapture(hwndMag);
+        NativeMethods.MagSetWindowTransform(hwndMag, ref matrix);
+        NativeMethods.HideForCapture(hwndMag);
 
     }
 
@@ -196,12 +198,12 @@ public class Magnifier : IDisposable
         // leave an orphaned, frozen magnifier control behind the new one.
         if (hwndMag != IntPtr.Zero)
         {
-            NativeAPIMethods.DestroyWindow(hwndMag);
+            NativeMethods.DestroyWindow(hwndMag);
             hwndMag = IntPtr.Zero;
         }
         if (initialized)
         {
-            NativeAPIMethods.MagUninitialize();
+            NativeMethods.MagUninitialize();
             initialized = false;
         }
     }

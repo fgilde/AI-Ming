@@ -7,6 +7,7 @@ using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using PowerAim.Class.Native;
+using Nextended.UI.Native;
 using GdiPixelFormat = System.Drawing.Imaging.PixelFormat;
 using WpfPixelFormats = System.Windows.Media.PixelFormats;
 using WpfImage = System.Windows.Controls.Image;
@@ -79,7 +80,7 @@ public sealed class EnhancedMagnifier : IDisposable
     private void CaptureFrame()
     {
         var cr = new RECT();
-        NativeAPIMethods.GetClientRect(_handle, ref cr);
+        NativeMethods.GetClientRect(_handle, ref cr);
         int dw = cr.Right - cr.Left, dh = cr.Bottom - cr.Top;     // destination = client size (device px)
         if (dw < 2 || dh < 2) return;
 
@@ -87,9 +88,9 @@ public sealed class EnhancedMagnifier : IDisposable
         int sw = Math.Max(1, (int)(dw / m));                      // source = what we sample, in device px
         int sh = Math.Max(1, (int)(dh / m));
 
-        NativeAPIMethods.GetCursorPos(out POINT p);
-        int scrW = NativeAPIMethods.GetSystemMetrics(NativeStruct.SM_CXSCREEN);
-        int scrH = NativeAPIMethods.GetSystemMetrics(NativeStruct.SM_CYSCREEN);
+        NativeMethods.GetCursorPos(out POINT p);
+        int scrW = NativeMethods.GetSystemMetrics(NativeConstants.SM_CXSCREEN);
+        int scrH = NativeMethods.GetSystemMetrics(NativeConstants.SM_CYSCREEN);
         int sx = Math.Clamp(p.X - sw / 2, 0, Math.Max(0, scrW - sw));
         int sy = Math.Clamp(p.Y - sh / 2, 0, Math.Max(0, scrH - sh));
 

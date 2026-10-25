@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using PowerAim;
 using PowerAim.Config;
 using PowerAim.Extensions;
+using Nextended.UI.WPF.Extensions;
 
 namespace PowerAim.UI.UILibrary
 {

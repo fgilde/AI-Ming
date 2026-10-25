@@ -15,6 +15,7 @@ using PowerAim.Input;
 using PowerAim.Types;
 using PowerAim.UI.UILibrary;
 using PowerAim.UI.Visuality;
+using Nextended.UI.Input;
 
 namespace PowerAim.UI.UILibrary
 {
@@ -51,9 +52,9 @@ namespace PowerAim.UI.UILibrary
         ///     active state through <see cref="AntiRecoilProfileManager"/> (radio behaviour:
         ///     same key again on the currently-active profile clears active).
         /// </summary>
-        private void ApplyBindingActive(object? sender, EventArgs<(AKeyChanger Sender, string Key, StoredInputBinding KeyBinding)> e)
+        private void ApplyBindingActive(object? sender, EventArgs e)
         {
-            if (e.Value.Sender.Tag is not AntiRecoilProfile profile) return;
+            if ((sender as FrameworkElement)?.Tag is not AntiRecoilProfile profile) return;
             // Guard duplicates from a double-subscribed keybind control (same shape as Mapping).
             if (!PowerAim.KeybindToggleGuard.ShouldHandle(profile)) return;
 

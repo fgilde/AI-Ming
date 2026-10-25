@@ -8,6 +8,7 @@ using PowerAim.Class;
 using PowerAim.Config;
 using PowerAim.Input;
 using OpenCvSharp;
+using Nextended.UI.Input;
 using Size = OpenCvSharp.Size;
 
 namespace PowerAim.AI.Actions;

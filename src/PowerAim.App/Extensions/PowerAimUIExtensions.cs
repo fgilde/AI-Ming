@@ -1,4 +1,3 @@
-using System.Drawing;
 using PowerAim.UI.UILibrary;
 using System.Windows;
 using System.Windows.Controls;
@@ -6,19 +5,18 @@ using System.Windows.Input;
 using System.Windows.Markup;
 using System.Windows.Media;
 using PowerAim.Config;
-using PowerAim.Input;
 using Nextended.Core.Extensions;
 using Nextended.Core.Helper;
 using Microsoft.Xaml.Behaviors.Core;
 using Nextended.UI.Helper;
-using System.Windows.Interop;
+using Nextended.UI.Input;
+using Nextended.UI.WPF.Extensions;
 using Brushes = System.Windows.Media.Brushes;
 using Color = System.Windows.Media.Color;
-using Size = System.Windows.Size;
 
 namespace PowerAim.Extensions;
 
-public static class UIElementExtensions
+public static class PowerAimUIExtensions
 {
     internal static SolidColorBrush LookupBrush(string key, Color fallback)
     {
@@ -34,33 +32,6 @@ public static class UIElementExtensions
         return new SolidColorBrush(fallback);
     }
 
-    public static IntPtr GetHandleSafe(this Window window)
-    {
-        return !window.CheckAccess() 
-            ? window.Dispatcher.Invoke(() => GetHandleSafe(window)) 
-            : new WindowInteropHelper(window).Handle;
-    }
-
-    public static void EnsureRenderedAndInitialized(this UIElement uiElement)
-    {
-        uiElement.Measure(new Size(Double.PositiveInfinity, Double.PositiveInfinity));
-        uiElement.Arrange(new Rect(uiElement.DesiredSize));
-        uiElement.UpdateLayout();
-
-        // Force WPF to recalculate the layout and sizes
-        uiElement.InvalidateMeasure();
-        uiElement.InvalidateArrange();
-    }
-
-    public static ItemCollection AddRange(this ItemCollection collection, IEnumerable<UIElement> elements)
-    {
-        foreach (var element in elements)
-        {
-            collection.Add(element);
-        }
-
-        return collection;
-    }
     public static ICollection<MenuItem> ToMenuItems(this ListBox listBox, Action<MenuItem> onClick, Func<int, MenuItem, KeyGesture?> keyBindFn = null)
     {
         List<MenuItem> menuItems = [];
@@ -89,139 +60,6 @@ public static class UIElementExtensions
         }
 
         return menuItems;
-    }
-
-    public static void Center(this Window window, System.Windows.Forms.Screen? screen = null)
-    {
-        window.Center(screen?.Bounds ?? System.Windows.Forms.Screen.PrimaryScreen.Bounds);
-    }
-
-    public static void Center(this Window window, System.Drawing.Rectangle r)
-    {
-        if (!window.CheckAccess())
-        {
-            window.Dispatcher.Invoke(() => window.Center(r));
-            return;
-        }
-        var center = r.GetCenter();
-        var rect = new RectangleF((float)(center.X - window.Width / 2), (float)(center.Y - window.Height / 2), (float)window.Width, (float)window.Height);
-        MoveTo(window, rect);
-    }
-
-    public static void MoveTo(this Window window, System.Drawing.RectangleF r, Thickness? padding = null)
-    {
-        if (!window.CheckAccess())
-        {
-            window.Dispatcher.Invoke(() => window.MoveTo(r));
-            return;
-        }
-
-        window.WindowState = WindowState.Normal;
-        window.Left = r.Left;
-        window.Top = r.Top;
-        window.Width = r.Width;
-        window.Height = r.Height;
-        if (padding != null)
-        {
-            window.Left += padding.Value.Left;
-            window.Top += padding.Value.Top;
-            window.Width = Math.Max(window.Width - (padding.Value.Right + padding.Value.Right), 10);
-            window.Height = Math.Max(window.Height - (padding.Value.Top + padding.Value.Bottom), 10);
-        }
-    }
-
-    public static void MoveToScreen(this Window window, System.Windows.Forms.Screen screen)
-    {
-        window.MoveTo(screen.Bounds);
-    }
-
-
-
-    public static T InitWith<T>(this T component, Action<T>? cfg) where T : UIElement
-    {
-        if (cfg != null)
-        {
-            if (component.IsVisible)
-            {
-                cfg.Invoke(component);
-            }
-            else
-            {
-                DependencyPropertyChangedEventHandler visibleChangeHandler = null;
-                visibleChangeHandler = (s, e) => component.Dispatcher.BeginInvoke(() =>
-                {
-                    component.IsVisibleChanged -= visibleChangeHandler;
-                    cfg.Invoke(component);
-                });
-                component.IsVisibleChanged += visibleChangeHandler;
-            }
-        }
-
-        return component;
-    }
-
-    public static T[] FindParents<T>(this UIElement element, Func<T, bool>? predicate = null) where T : UIElement
-    {
-        predicate ??= _ => true;
-        List<T> parents = [];
-
-        DependencyObject current = element;
-        while (current != null)
-        {
-            current = VisualTreeHelper.GetParent(current);
-            if (current is T parent && predicate(parent))
-            {
-                parents.Add(parent);
-            }
-        }
-
-        return parents.ToArray();
-    }
-
-    public static T[] FindChildren<T>(this UIElement element, Func<T, bool>? predicate = null) where T : UIElement
-    {
-        predicate ??= _ => true;
-        List<T> children = [];
-
-        int childCount = VisualTreeHelper.GetChildrenCount(element);
-        for (int i = 0; i < childCount; i++)
-        {
-            var child = VisualTreeHelper.GetChild(element, i);
-            if (child is T typedChild && predicate(typedChild))
-            {
-                children.Add(typedChild);
-            }
-
-            if (child is UIElement uiElement)
-            {
-                children.AddRange(uiElement.FindChildren(predicate));
-            }
-        }
-
-        return children.ToArray();
-    }
-
-
-
-    public static T RemoveAll<T>(this T panel) where T : Panel
-    {
-        panel.Children.Clear();
-        return panel;
-    }
-
-    public static T Add<T>(this IAddChild panel, Func<T> ctor, Action<T>? cfg = null) where T : UIElement => panel.Add<T>(ctor(), cfg);
-
-    public static T Add<T>(this IAddChild panel, Action<T>? cfg = null) where T : UIElement, new() => panel.Add(new T(), cfg);
-
-    public static T Add<T>(this IAddChild panel, T element, Action<T>? cfg = null) where T : UIElement
-    {
-        Application.Current.Dispatcher.Invoke(() =>
-        {
-            panel.AddChild(element);
-        });
-        if (cfg != null)
-            element.InitWith(cfg);
-        return element;
     }
 
     internal static AToggle AddToggleWithKeyBind<T>(this T owner, string title, string key, InputBindingManager bindingManager, Action<AToggle>? cfg = null, Action<Border>? containerCfg = null, Action<AKeyChanger>? changerCfg = null) where T : IAddChild, new()
@@ -269,14 +107,10 @@ public static class UIElementExtensions
 
         var keyCodeValue = AppConfig.Current.BindingSettings[code];
         bool updating = false;
-        var changer = panel.AddKeyChanger(code, () => keyCodeValue, bindingManager);
+        var changer = panel.AddKeyChanger("", code, keyCodeValue, bindingManager);
         changer.WithBorder = false;
-        changer.KeyConfigName = code;
-        changer.KeyBind = keyCodeValue;
-        changer.ShowTitle = false;
-        changer.BindingManager = bindingManager;
         changerCfg?.Invoke(changer);
-        changer.GlobalKeyPressed += (sender, args) =>
+        changer.GlobalKeyPressed += (_, _) =>
         {
             if (!updating && toggle.IsEnabled)
             {
@@ -360,14 +194,9 @@ public static class UIElementExtensions
 
     internal static AKeyChanger AddKeyChanger(this IAddChild panel, string title, string code, StoredInputBinding keybind, InputBindingManager? bindingManager = null, Action<AKeyChanger>? cfg = null)
     {
-        var keyChanger = panel.Add(new AKeyChanger(title, keybind), keyChanger =>
-        {
-            cfg?.Invoke(keyChanger);
-            keyChanger.BindingManager = bindingManager;
-            keyChanger.KeyConfigName = code;
-        });
-
-        return keyChanger;
+        // Id and manager are set up front so the hotkey works before the panel is first shown.
+        var keyChanger = new AKeyChanger(title, keybind) { BindingManager = bindingManager, KeyConfigName = code };
+        return panel.Add(keyChanger, cfg);
     }
 
     internal static AKeyChanger AddKeyChanger(this IAddChild panel, string title, StoredInputBinding keybind, InputBindingManager? bindingManager = null, Action<AKeyChanger>? cfg = null) 

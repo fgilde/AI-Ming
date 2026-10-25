@@ -8,6 +8,8 @@ using PowerAim.Other;
 using PowerAim.Types;
 using Nextended.Core;
 using Nextended.Core.Extensions;
+using Nextended.UI.Input;
+using Nextended.UI.Input.Gamepad;
 
 namespace PowerAim.Config;
 

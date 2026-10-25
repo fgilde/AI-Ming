@@ -90,7 +90,7 @@ public abstract class BaseSettings<T> : INotifyPropertyChanged
         {
             if (File.Exists(path))
             {
-                string json = File.ReadAllText(path);
+                string json = LegacyInputBindingMigration.Migrate(File.ReadAllText(path));
                 var obj = JsonSerializer.Deserialize<TSettings>(json);
                 foreach (var property in GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
                 {

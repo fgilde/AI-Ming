@@ -17,6 +17,8 @@ using PowerAim.UI.UILibrary;
 using Nextended.Core;
 using Nextended.Core.Extensions;
 using static ICSharpCode.AvalonEdit.Document.TextDocumentWeakEventManager;
+using Nextended.UI.Input;
+using Nextended.UI.WPF.Controls;
 
 namespace PowerAim.UI.UILibrary
 {
@@ -136,33 +138,34 @@ namespace PowerAim.UI.UILibrary
         }
 
 
-        private void AKeyChanger_OnKeyBindChanged(object? sender, CancelableEventArgs<(AKeyChanger Sender, StoredInputBinding KeyBinding, StoredInputBinding OldValue)> e)
+        private void AKeyChanger_OnKeyBindChanging(object? sender, KeyBindChangingEventArgs e)
         {
+            var changer = (AKeyChanger)sender!;
             ErrorMessage = string.Empty;
-            if (HasDuplicate(e.Value.KeyBinding))
+            if (HasDuplicate(e.NewValue))
             {
                 e.Cancel = true;
-                if (e.Value.Sender.Tag is StoredInputBinding { IsValid: true } existing && Keys.Contains(existing))
+                if (changer.Tag is StoredInputBinding { IsValid: true } existing && Keys.Contains(existing))
                 {
-                    Keys[Keys.IndexOf(existing)] = e.Value.OldValue;
-                    Task.Delay(100).ContinueWith(_ => e.Value.Sender.Dispatcher.Invoke(() =>
+                    Keys[Keys.IndexOf(existing)] = e.OldValue ?? existing;
+                    Task.Delay(100).ContinueWith(_ => changer.Dispatcher.Invoke(() =>
                     {
-                        e.Value.Sender.RecordNewBinding();
-                        e.Value.Sender.Focus();
+                        changer.RecordNewBinding();
+                        changer.Focus();
                     }));
                 }
 
                 return;
             }
 
-            if (e.Value.Sender.Tag is not StoredInputBinding { IsValid: true } binding)
+            if (changer.Tag is not StoredInputBinding { IsValid: true } binding)
             {
-                Keys.Insert(Keys.Count - 1, e.Value.KeyBinding);
+                Keys.Insert(Keys.Count - 1, e.NewValue);
 
             }
             else
             {
-                Keys[Keys.IndexOf(binding)] = e.Value.KeyBinding;
+                Keys[Keys.IndexOf(binding)] = e.NewValue;
             }
             OnKeysChanged();
         }

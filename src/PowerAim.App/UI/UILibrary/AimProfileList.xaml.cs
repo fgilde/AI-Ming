@@ -13,6 +13,7 @@ using PowerAim.Extensions;
 using PowerAim.Input;
 using PowerAim.Types;
 using PowerAim.UI.UILibrary;
+using Nextended.UI.Input;
 
 namespace PowerAim.UI.UILibrary
 {
@@ -42,9 +43,9 @@ namespace PowerAim.UI.UILibrary
         private void SwallowMouse(object sender, MouseButtonEventArgs e) => e.Handled = true;
 
         /// <summary>Per-profile keybind: press toggles this profile Enabled/disabled (like a trigger's enable key).</summary>
-        private void ApplyBindingEnabled(object? sender, EventArgs<(AKeyChanger Sender, string Key, StoredInputBinding KeyBinding)> e)
+        private void ApplyBindingEnabled(object? sender, EventArgs e)
         {
-            if (e.Value.Sender.Tag is not AimProfile profile) return;
+            if ((sender as FrameworkElement)?.Tag is not AimProfile profile) return;
             // Swallow duplicate events from a double-subscribed keybind control (otherwise it toggles
             // twice = net zero and the notice fires twice).
             if (!PowerAim.KeybindToggleGuard.ShouldHandle(profile)) return;

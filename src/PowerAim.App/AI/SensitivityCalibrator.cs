@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using OpenCvSharp;
 using PowerAim.AI.Contracts;
 using PowerAim.Class.Native;
+using Nextended.UI.Native;
 using Size = OpenCvSharp.Size;
 
 namespace PowerAim.AI;
@@ -157,7 +158,7 @@ public static class SensitivityCalibrator
             dy = dy,
             dwFlags = (uint)(InputEventFlags.MOUSEEVENTF_MOVE | InputEventFlags.MOUSEEVENTF_MOVE_NOCOALESCE)
         };
-        NativeAPIMethods.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
+        NativeMethods.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
     }
 }
 

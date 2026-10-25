@@ -6,6 +6,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using PowerAim.AI;
 using PowerAim.Config;
+using Nextended.UI.Input;
+using Nextended.UI.Native;
 
 namespace PowerAim.Input.Tools;
 
@@ -88,7 +90,7 @@ public static class ToolRunner
             var r = best.TranslatedRectangle;
             var screenX = (int)Math.Round(r.Left + r.Width / 2f);
             var screenY = (int)Math.Round(r.Top + r.Height / 2f);
-            var cursor = PowerAim.Class.Native.NativeAPIMethods.GetCursorPosition();
+            var cursor = Nextended.UI.Native.NativeMethods.GetCursorPosition();
             vars["target.screenX"] = screenX.ToString(ci);
             vars["target.screenY"] = screenY.ToString(ci);
             vars["target.dx"] = (screenX - cursor.X).ToString(ci);

@@ -13,6 +13,7 @@ using PowerAim.Input;
 using PowerAim.Types;
 using Nextended.Core.Extensions;
 using PowerAim.UI.Visuality;
+using Nextended.UI.Input;
 
 namespace PowerAim.UI.UILibrary
 {
@@ -72,10 +73,9 @@ namespace PowerAim.UI.UILibrary
                 Triggers.Remove(trigger);
         }
 
-        private void ApplyBindingEnabled(object? sender, EventArgs<(AKeyChanger Sender, string Key, StoredInputBinding KeyBinding)> e)
+        private void ApplyBindingEnabled(object? sender, EventArgs e)
         {
-            var args = e.Value;
-            if (args.Sender.Tag is ActionTrigger trigger)
+            if ((sender as FrameworkElement)?.Tag is ActionTrigger trigger)
             {
                // Swallow duplicate events from a double-subscribed keybind control (otherwise the
                // trigger toggles twice = net zero, and the notice fires twice off/on).
