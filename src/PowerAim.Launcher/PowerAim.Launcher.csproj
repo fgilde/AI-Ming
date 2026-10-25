@@ -7,7 +7,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    
+    <!-- Shipped and started as Launcher.exe (UpdateManager restarts it by that name). -->
+    <AssemblyName>Launcher</AssemblyName>
+    <!-- Next to the app's output so a local Debug launcher finds the app, as before the src/ move. -->
+    <BaseOutputPath>../PowerAim.App/bin/</BaseOutputPath>
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
     <UseWindowsForms>true</UseWindowsForms>

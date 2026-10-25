@@ -16,7 +16,7 @@ function Check($name, [scriptblock]$body) {
 }
 
 # Load just the signing functions out of build.ps1 - dot-sourcing the file would start a build.
-$ast = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $root 'build.ps1'), [ref]$null, [ref]$null)
+$ast = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $root 'tools/build.ps1'), [ref]$null, [ref]$null)
 $wanted = 'Get-SigningCertificate', 'Invoke-CodeSigning'
 $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $wanted -contains $n.Name }, $true) |
     ForEach-Object { Invoke-Expression $_.Extent.Text }
@@ -25,9 +25,9 @@ $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionD
 # (third-party, must stay untouched).
 $work = Join-Path ([IO.Path]::GetTempPath()) ("signtest_" + [guid]::NewGuid().ToString('N').Substring(0, 8))
 New-Item -ItemType Directory -Force -Path (Join-Path $work 'Resources') | Out-Null
-$sample = Get-ChildItem -Path (Join-Path $root 'PowerAim/bin/Release') -Filter *.exe -Recurse -File -ErrorAction SilentlyContinue |
+$sample = Get-ChildItem -Path (Join-Path $root 'publish') -Filter *.exe -Recurse -File -ErrorAction SilentlyContinue |
           Sort-Object Length | Select-Object -First 1
-if (-not $sample) { Write-Host "No sample .exe under PowerAim/bin/Release - build once, then re-run."; exit 2 }
+if (-not $sample) { Write-Host "No sample .exe under publish - build once, then re-run."; exit 2 }
 Copy-Item $sample.FullName (Join-Path $work 'App.exe')
 Copy-Item $sample.FullName (Join-Path $work 'Launcher.exe')
 Copy-Item $sample.FullName (Join-Path $work 'Resources\ThirdParty.exe')

@@ -144,9 +144,8 @@ function Build-ProjectWithCuda {
         '-c', 'Release',
         '-r', 'win-x64',
         '-p:PublishSingleFile=true',
-        '--self-contained', 'true',
+        '--self-contained', 'false',
         '-p:DebugType=None',
-        '-p:IncludeNativeLibrariesForSelfExtract=true',
         "-p:IsCuda=$isCudaValue",
         '-o', $publishDir
     )

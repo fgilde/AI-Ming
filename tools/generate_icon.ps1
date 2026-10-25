@@ -99,9 +99,10 @@ $sizes = @(256, 128, 64, 48, 32, 24, 16)
 $bitmaps = @()
 foreach ($s in $sizes) { $bitmaps += (Resize-ToSize -src $srcBitmap -size $s) }
 
-$icoPath1 = Join-Path $scriptDir "PowerAim/PowerAim.ico"
-$icoPath2 = Join-Path $scriptDir "Launcher/PowerAim.ico"
-$pngPath  = Join-Path $scriptDir "readme_assets/PowerAim-icon-256.png"
+$repoRoot = Split-Path -Parent $scriptDir
+$icoPath1 = Join-Path $repoRoot "src/PowerAim.App/PowerAim.ico"
+$icoPath2 = Join-Path $repoRoot "src/PowerAim.Launcher/PowerAim.ico"
+$pngPath  = Join-Path $repoRoot "readme_assets/PowerAim-icon-256.png"
 
 Save-Ico -images $bitmaps -path $icoPath1
 Save-Ico -images $bitmaps -path $icoPath2

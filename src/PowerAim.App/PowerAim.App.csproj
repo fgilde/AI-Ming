@@ -32,8 +32,8 @@
     </Product>
     <Title>
     </Title>
-    <AssemblyName>PixelCraft</AssemblyName>
-    <Version>4.0.0.0</Version>
+    <AssemblyName>Targetron</AssemblyName>
+    <Version>2.2.0.4</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>False</SignAssembly>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
@@ -45,7 +45,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <IsCuda>false</IsCuda>
+    <IsCuda>true</IsCuda>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(IsCuda)' == 'true'">
@@ -69,6 +69,11 @@
   <ItemGroup>
     <None Remove="PowerAim.ico" />
     <None Remove="PowerAim.png" />
+    <None Remove="KnownIssues.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Name read by App.ReadEmbeddedResource ("PowerAim." + name), independent of the project name. -->
+    <EmbeddedResource Include="KnownIssues.md" LogicalName="PowerAim.KnownIssues.md" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
