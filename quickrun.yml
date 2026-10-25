@@ -14,6 +14,6 @@ setup:
 tasks:
   - name: app
     run:
-      windows: dotnet run --project Launcher
+      windows: dotnet run --project src/PowerAim.Launcher
       linux: echo "AI-Ming is a WPF application and runs on Windows only."
       macos: echo "AI-Ming is a WPF application and runs on Windows only."

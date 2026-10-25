@@ -3,10 +3,11 @@ param(
     [string]$incVersion
 )
 
-# Call this script with "powershell -ExecutionPolicy Bypass -File .\build.ps1"
+# Call this script with "powershell -ExecutionPolicy Bypass -File .\tools\build.ps1" (works from any folder)
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $repoRoot  = Split-Path -Parent $scriptDir
 $outputDir = Join-Path $repoRoot "publish"
+$solutionPath = Join-Path $repoRoot "PowerAim.sln"
 
 # ---------------------------------------------------------------------------------------------
 # Code signing
@@ -150,7 +151,7 @@ function Build-ProjectWithCuda {
         '-o', $publishDir
     )
 
-    dotnet clean --configuration Release
+    dotnet clean $solutionPath --configuration Release
 
     # Fresh, empty per-variant output folder every run.
     if (Test-Path $publishDir) {
@@ -193,7 +194,7 @@ if (Test-Path $outputDir) {
 }
 
 # Clean the project
-dotnet clean --configuration Release
+dotnet clean $solutionPath --configuration Release
 
 # Get the Assembly name and version from the .csproj file
 $csprojPath = Join-Path $repoRoot "src\PowerAim.App\PowerAim.App.csproj"

@@ -19,9 +19,6 @@ public static class ExecutableManager
     private const int RandomNameLength = 8;
     private const int StateSchemaVersion = 1;
 
-    /// <summary>Sibling project folder names for VS-layout discovery (first match wins).</summary>
-    private static readonly string[] SiblingProjectNames = { "PowerAim", "PowerAim.App" };
-
     /// <summary>AppData root folder name (not the product brand on disk next to the exe).</summary>
     private const string StateFolderName = "PowerAim";
 
@@ -86,7 +83,7 @@ public static class ExecutableManager
 
     /// <summary>
     /// Discovery: AppData state → legacy .launcher-state → brand pool / 8-char / sole exe
-    /// across launcher dir and sibling PowerAim\bin\{Release,Debug}\net*-windows.
+    /// in the launcher's folder.
     /// </summary>
     public static string? FindExecutable()
     {
@@ -108,13 +105,8 @@ public static class ExecutableManager
         var legacy = ReadLegacyState(launcherDir);
         if (legacy is not null) return legacy;
 
-        foreach (var directory in CandidateDirectories(launcherDir))
-        {
-            var found = FindInDirectory(directory, launcherExe);
-            if (!string.IsNullOrEmpty(found)) return found;
-        }
-
-        return null;
+        // Only the launcher's own folder: never pick up some other build further up the tree.
+        return FindInDirectory(launcherDir, launcherExe);
     }
 
     /// <summary>
@@ -299,63 +291,6 @@ public static class ExecutableManager
             if (File.Exists(path)) File.Delete(path);
         }
         catch { /* non-fatal */ }
-    }
-
-    private static IEnumerable<string> CandidateDirectories(string launcherDir)
-    {
-        // 1) Same folder as the launcher (shared publish output).
-        yield return launcherDir;
-
-        // 2) Walk up looking for sibling project outputs (VS / dotnet build layout).
-        var current = launcherDir;
-        for (int depth = 0; depth < 8; depth++)
-        {
-            var parent = Path.GetDirectoryName(current);
-            if (string.IsNullOrEmpty(parent)) break;
-
-            foreach (var siblingName in SiblingProjectNames)
-            {
-                var siblingApp = Path.Combine(parent, siblingName);
-                if (!Directory.Exists(siblingApp)) continue;
-
-                var binDir = Path.Combine(siblingApp, "bin");
-                if (!Directory.Exists(binDir)) continue;
-
-                foreach (var config in new[] { "Release", "Debug" })
-                {
-                    var configDir = Path.Combine(binDir, config);
-                    if (!Directory.Exists(configDir)) continue;
-
-                    IEnumerable<string> tfms;
-                    try
-                    {
-                        tfms = Directory.EnumerateDirectories(configDir, "net*-windows")
-                                        .OrderByDescending(Directory.GetLastWriteTimeUtc);
-                    }
-                    catch { continue; }
-
-                    foreach (var tfmDir in tfms)
-                    {
-                        // Prefer RID-specific output (e.g. win-x64) when present.
-                        string? ridDir = null;
-                        try
-                        {
-                            ridDir = Directory.EnumerateDirectories(tfmDir, "win-*")
-                                              .OrderByDescending(Directory.GetLastWriteTimeUtc)
-                                              .FirstOrDefault();
-                        }
-                        catch { /* ignore */ }
-
-                        if (!string.IsNullOrEmpty(ridDir))
-                            yield return ridDir;
-
-                        yield return tfmDir;
-                    }
-                }
-            }
-
-            current = parent;
-        }
     }
 
     private static string? FindInDirectory(string directory, string launcherExe)
