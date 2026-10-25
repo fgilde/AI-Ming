@@ -284,8 +284,8 @@ namespace PowerAim.Input
             double aspectRatioCorrection = area.Height > 0 ? (double)area.Width / area.Height : 1.0;
             targetY *= aspectRatioCorrection;
 
-            // Wider clamp so long flicks aren't truncated mid-snap (was ±150).
-            const int MaxDelta = 400;
+            // Same per-frame cap as the smart-aim path: a misdetection far away can't yank the view.
+            const int MaxDelta = 150;
             targetX = Math.Clamp(targetX, -MaxDelta, MaxDelta);
             targetY = Math.Clamp(targetY, -MaxDelta, MaxDelta);
 

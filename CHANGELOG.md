@@ -5,6 +5,13 @@ All notable changes to PowerAim are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **Mouse sensitivity with Smart Aim off now means the same as with Smart Aim on: higher =
+  snappier.** It used to be inverted on that path (0.9 moved 10 % of the way per frame, now
+  90 %). If you aim with Smart Aim off, lower the value (e.g. 0.9 → 0.1) to keep your feel.
+
 ## [2.2.0]
 
 > Headline work: **GPU acceleration** (execution-provider choice, FP16, TensorRT with a
