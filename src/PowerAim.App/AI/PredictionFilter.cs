@@ -70,7 +70,9 @@ internal static class PredictionFilter
         int safeN = Math.Min(numDetections > 0 ? numDetections : nFromTensor, nFromTensor);
         if (safeN <= 0) return new List<Prediction>();
 
-        int channels = Math.Max(cFromTensor, 5);
+        // x y w h + at least one score channel, else there is nothing to read.
+        int channels = cFromTensor;
+        if (channels < 5) return new List<Prediction>();
         int safeNc = Math.Min(Math.Max(numClasses, 1), Math.Max(1, channels - 4));
 
         var predictions = new List<Prediction>(Math.Min(safeN, 64));
@@ -89,7 +91,7 @@ internal static class PredictionFilter
                 height = outputTensor[0, i, 3];
                 if (safeNc <= 1)
                 {
-                    bestConfidence = channels > 4 ? outputTensor[0, i, 4] : 0f;
+                    bestConfidence = outputTensor[0, i, 4];
                 }
                 else
                 {
@@ -116,7 +118,7 @@ internal static class PredictionFilter
                 height = outputTensor[0, 3, i];
                 if (safeNc <= 1)
                 {
-                    bestConfidence = channels > 4 ? outputTensor[0, 4, i] : 0f;
+                    bestConfidence = outputTensor[0, 4, i];
                 }
                 else
                 {

@@ -20,4 +20,13 @@ public class OutputLayoutTests
 
     [Fact]
     public void Dynamic_anchor_count() => Assert.Equal((1, 0, false), PredictionLogic.ReadOutputLayout([1, 5, -1]));
+
+    [Fact]
+    public void Small_input_channels_last_head_is_read_via_its_anchor_count()
+        // A 192 px export has 756 anchors, below the generic row threshold.
+        => Assert.Equal((2, 756, true), PredictionLogic.ReadOutputLayout([1, 756, 6], MathUtil.CalculateNumDetections(192)));
+
+    [Fact]
+    public void Nms_fused_export_stays_rejected_with_an_anchor_count()
+        => Assert.Null(PredictionLogic.ReadOutputLayout([1, 300, 6], MathUtil.CalculateNumDetections(640)));
 }

@@ -256,7 +256,7 @@ public class PredictionLogic : IPredictionLogic, IDisposable
 
         foreach (var meta in _onnxModel.OutputMetadata.Values)
         {
-            if (ReadOutputLayout(meta.Dimensions) is not { } layout) continue;
+            if (ReadOutputLayout(meta.Dimensions, _numDetections) is not { } layout) continue;
             _numClasses = layout.NumClasses;
             if (layout.NumDetections > 0) _numDetections = layout.NumDetections;
             _outputTransposed = layout.Transposed;
@@ -272,25 +272,28 @@ public class PredictionLogic : IPredictionLogic, IDisposable
     ///     <c>[1, 4+nc, N]</c> or channels-last <c>[1, N, 4+nc]</c>. NumDetections is 0 when dynamic.
     ///     Null for anything else — including an NMS-fused export (<c>[1, 300, 6]</c> = x1 y1 x2 y2 score
     ///     class), which only looks like a 2-class channels-last head and is left to ValidateOnnxShape.
+    ///     <paramref name="expectedAnchors"/> (the anchor count for the model's input size) also accepts
+    ///     small-input heads below <see cref="MinAnchorRows"/>, e.g. 756 rows at 192 px.
     /// </summary>
-    internal static (int NumClasses, int NumDetections, bool Transposed)? ReadOutputLayout(int[] d)
+    internal static (int NumClasses, int NumDetections, bool Transposed)? ReadOutputLayout(int[] d, int expectedAnchors = 0)
     {
         if (d.Length != 3) return null;
         bool dynamic = d.Any(x => x <= 0);
+        bool AnchorRows(int n) => n >= MinAnchorRows || n == expectedAnchors;
 
         // Fixed channels-first: [1, C, N] with C = 4+nc small, N anchors large (classic YOLOv8).
         if (!dynamic && d[0] == 1 && d[1] > 4 && d[1] < 512 && d[2] > d[1])
             return (Math.Max(1, d[1] - 4), d[2], false);
 
         // Fixed channels-last: [1, N, C]. Anchor heads have thousands of rows (8400 at 640).
-        if (!dynamic && d[0] == 1 && d[2] > 4 && d[2] < 512 && d[1] > d[2] && d[1] >= MinAnchorRows)
+        if (!dynamic && d[0] == 1 && d[2] > 4 && d[2] < 512 && d[1] > d[2] && AnchorRows(d[1]))
             return (Math.Max(1, d[2] - 4), d[1], true);
 
         if (dynamic)
         {
             if (d[1] > 4 && d[1] < 512 && (d[2] <= 0 || d[2] > d[1]))
                 return (Math.Max(1, d[1] - 4), Math.Max(0, d[2]), false);
-            if (d[2] > 4 && d[2] < 512 && (d[1] <= 0 || (d[1] > d[2] && d[1] >= MinAnchorRows)))
+            if (d[2] > 4 && d[2] < 512 && (d[1] <= 0 || (d[1] > d[2] && AnchorRows(d[1]))))
                 return (Math.Max(1, d[2] - 4), Math.Max(0, d[1]), true);
         }
         return null;
