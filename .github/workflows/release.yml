@@ -1,0 +1,92 @@
+name: Create Release ZIP
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    # Secrets are lifted into the job environment because a step-level `if:` cannot read the
+    # `secrets` context - referencing it there makes GitHub reject the whole workflow file and the
+    # release then builds nothing, silently. `env` is readable from `if:`, so the conditions below
+    # test these instead.
+    env:
+      HAS_SIGNING_CERT: ${{ secrets.SIGN_CERT_PFX_BASE64 != '' }}
+
+    steps:
+    - name: Configure Git
+      run: |
+        git config --global user.email "fgilde@gmail.com"
+        git config --global user.name "fgilde"
+
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0  # Stellt sicher, dass alle Branches und Tags vorhanden sind
+
+    - name: Install .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    # Materialize the signing certificate from the repository secret. Without the secret (forks,
+    # test runs) this step is skipped and the build below signs nothing - it only warns, because
+    # SIGN_REQUIRED stays empty. For a cloud signing service (Azure Trusted Signing, DigiCert
+    # KeyLocker, SSL.com eSigner) drop this step and set SIGN_COMMAND on the build step instead.
+    - name: Prepare signing certificate
+      id: cert
+      if: env.HAS_SIGNING_CERT == 'true'
+      shell: pwsh
+      env:
+        PFX_BASE64: ${{ secrets.SIGN_CERT_PFX_BASE64 }}
+      run: |
+        $path = Join-Path $env:RUNNER_TEMP 'codesign.pfx'
+        [IO.File]::WriteAllBytes($path, [Convert]::FromBase64String($env:PFX_BASE64))
+        "path=$path" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+    - name: Run build script
+      env:
+        SIGN_CERT_PFX: ${{ steps.cert.outputs.path }}
+        SIGN_CERT_PASSWORD: ${{ secrets.SIGN_CERT_PASSWORD }}
+        # With a certificate present, a build that cannot sign must fail rather than upload
+        # unsigned binaries to the release.
+        SIGN_REQUIRED: ${{ env.HAS_SIGNING_CERT == 'true' && '1' || '' }}
+      run: powershell -ExecutionPolicy Bypass -File ./build.ps1 -version ${{ github.event.release.tag_name }}
+
+    # Never leave the private key on the runner, not even on a failed build.
+    - name: Remove signing certificate
+      if: ${{ always() }}
+      shell: pwsh
+      run: Remove-Item (Join-Path $env:RUNNER_TEMP 'codesign.pfx') -Force -ErrorAction SilentlyContinue
+
+    - name: Upload release ZIP asset
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./PowerAim/bin/Release/Release_${{ github.event.release.tag_name }}.zip
+        asset_name: ${{ github.event.release.tag_name }}.zip
+        asset_content_type: application/zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload CUDA release ZIP asset
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./PowerAim/bin/Release/Release_${{ github.event.release.tag_name }}_cuda.zip
+        asset_name: ${{ github.event.release.tag_name }}_cuda.zip
+        asset_content_type: application/zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload Installer.exe asset
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./PowerAim/bin/Release/Installer.exe
+        asset_name: Installer.exe
+        asset_content_type: application/octet-stream
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
