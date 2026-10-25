@@ -21,6 +21,13 @@ public class OverlayAction : BaseAction
     /// <summary>Last non-empty set used when a frame has no detections (hold ESP stable).</summary>
     private Prediction[] _lastDrawn = Array.Empty<Prediction>();
     private int _emptyStreak;
+    /// <summary>
+    ///     The WPF overlay window is shown and opaque. It carries the ESP boxes and the captured-area border,
+    ///     so it is shown while either is on — toggled only on change, never per frame.
+    /// </summary>
+    private bool _overlayShown;
+    /// <summary>ESP boxes may still be on the overlay and must be cleared when ESP turns off.</summary>
+    private bool _espDrawn;
     private const int EmptyHoldFrames = 45; // ~0.5–1s depending on FPS before clear
     public OverlayAction()
     {
@@ -35,11 +42,16 @@ public class OverlayAction : BaseAction
     {
         var formActive = _useForm;
         _useForm = false;
-        if (Active)
+        // Show/hide only on change: each call is a blocking UI-thread round trip.
+        if (OverlayWanted != _overlayShown)
         {
-            // Always ensure the WPF overlay is shown and opaque while ESP is on.
-            var overlay = EnsurePlayerOverlay();
-            SetOverlayEnabled(true);
+            if (OverlayWanted) ShowPlayerOverlay();
+            else HidePlayerOverlay();
+        }
+
+        if (Active && _playerOverlay is { } overlay)
+        {
+            _espDrawn = true;
 
             // Hold last non-empty detections so a brief miss does not blank the ESP.
             Prediction[] drawSet;
@@ -79,6 +91,13 @@ public class OverlayAction : BaseAction
                     PredictionDrawer.DrawPredictions(EnsureFormOverlay(), drawSet, targetArea: null, useScreenSpace: false);
                     break;
             }
+        }
+        else if (_espDrawn)
+        {
+            // ESP switched off while running: clear the boxes (the window may stay for the captured-area border).
+            _espDrawn = false;
+            _lastDrawn = Array.Empty<Prediction>();
+            _playerOverlay?.DrawPredictions(Array.Empty<Prediction>(), System.Windows.Rect.Empty);
         }
         if (formActive != _useForm && !_useForm)
         {
@@ -168,17 +187,29 @@ public class OverlayAction : BaseAction
         return _playerOverlay;
     }
 
+    private void ShowPlayerOverlay()
+    {
+        EnsurePlayerOverlay();
+        SetOverlayEnabled(true);
+        _overlayShown = true;
+    }
+
+    private void HidePlayerOverlay()
+    {
+        SetOverlayEnabled(false);
+        _overlayShown = false;
+    }
+
     public override Task OnResume()
     {
+        // The overlay itself is shown by the next frame (ExecuteAsync) when ESP or the captured-area border is on.
         _emptyStreak = 0;
-        SetOverlayEnabled(true);
-        try { EnsurePlayerOverlay(); } catch { /* UI not ready */ }
         return base.OnResume();
     }
 
     public override Task OnPause()
     {
-        SetOverlayEnabled(false);
+        HidePlayerOverlay();
         return base.OnPause();
     }
 
@@ -207,16 +238,16 @@ public class OverlayAction : BaseAction
 
     public override bool Active => base.Active && AppConfig.Current.ToggleState.ShowDetectedPlayer;
 
+    private bool OverlayWanted => base.Active && AppConfig.Current.ToggleState is { } t && (t.ShowDetectedPlayer || t.ShowCapturedArea);
+
 
     private void SetOverlayEnabled(bool enabled)
     {
+        var overlay = _playerOverlay;
+        if (overlay == null) return;
         try
         {
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                if (_playerOverlay != null)
-                    _playerOverlay.Opacity = enabled ? 1 : 0;
-            });
+            overlay.Dispatcher.Invoke(() => overlay.Opacity = enabled ? 1 : 0);
         }
         catch (Exception)
         { }
