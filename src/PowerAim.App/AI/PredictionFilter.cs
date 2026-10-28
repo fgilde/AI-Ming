@@ -167,8 +167,8 @@ internal static class PredictionFilter
                 Confidence = bestConfidence,
                 ClassId = bestClassId,
                 ClassName = modelClasses.TryGetValue(bestClassId, out var n) ? n : $"Class_{bestClassId}",
-                CenterXTranslated = (xCenter - detectionBox.Left) / imageSize,
-                CenterYTranslated = (yCenter - detectionBox.Top) / imageSize
+                CenterXTranslated = xCenter / imageSize,
+                CenterYTranslated = yCenter / imageSize
             });
         }
 

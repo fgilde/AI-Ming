@@ -260,10 +260,10 @@ public class AutoPlayGameAction : BaseAction
 
         ProcessScheduledReleases();
 
-        var screen = Screen.PrimaryScreen;
-        if (screen == null) return Task.CompletedTask;
-        var centerX = screen.Bounds.Width / 2f;
-        var centerY = screen.Bounds.Height / 2f;
+        // The crosshair sits in the middle of the capture area; boxes are in that area's pixels.
+        var area = ImageCapture.CaptureArea;
+        var centerX = area.Width / 2f;
+        var centerY = area.Height / 2f;
 
         StrategicIntent intent;
         lock (_intentLock) intent = _intent;
@@ -313,8 +313,8 @@ public class AutoPlayGameAction : BaseAction
             var d = DistSq(predictions[i], centerX, centerY);
             if (d < bestDistSq) { bestDistSq = d; closest = predictions[i]; }
         }
-        var dx = closest.CenterXTranslated - centerX;
-        var dy = closest.CenterYTranslated - centerY;
+        var dx = closest.ScreenCenter.X - centerX;
+        var dy = closest.ScreenCenter.Y - centerY;
         var dist = Math.Sqrt(bestDistSq);
         _lastNearestDx = dx; _lastNearestDy = dy; _lastNearestDist = dist;
 
@@ -1315,8 +1315,8 @@ public class AutoPlayGameAction : BaseAction
 
     private static double DistSq(Prediction p, float cx, float cy)
     {
-        var dx = p.CenterXTranslated - cx;
-        var dy = p.CenterYTranslated - cy;
+        var dx = p.ScreenCenter.X - cx;
+        var dy = p.ScreenCenter.Y - cy;
         return dx * dx + dy * dy;
     }
 }

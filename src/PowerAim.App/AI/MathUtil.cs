@@ -17,12 +17,12 @@ public static class MathUtil
         return dist;
     };
 
-    /// <summary>Squared screen-space distance between two predictions.</summary>
+    /// <summary>Squared distance between two predictions' centres, in model pixels.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Distance(Prediction a, Prediction b)
     {
-        float dx = a.CenterXTranslated - b.CenterXTranslated;
-        float dy = a.CenterYTranslated - b.CenterYTranslated;
+        float dx = a.Center.X - b.Center.X;
+        float dy = a.Center.Y - b.Center.Y;
         return dx * dx + dy * dy;
     }
 
@@ -40,8 +40,8 @@ public static class MathUtil
         float maxLockScore,
         float threshold)
     {
-        float dx = candidate.CenterXTranslated - predictedX;
-        float dy = candidate.CenterYTranslated - predictedY;
+        float dx = candidate.Center.X - predictedX;
+        float dy = candidate.Center.Y - predictedY;
         float distSq = dx * dx + dy * dy;
 
         float thresholdSq = threshold * threshold;

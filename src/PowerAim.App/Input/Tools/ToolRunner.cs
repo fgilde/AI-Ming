@@ -85,11 +85,12 @@ public static class ToolRunner
 
         if (best != null)
         {
-            // TranslatedRectangle is already in absolute screen pixels (PredictionLogic maps
-            // model-space → capture pixels → screen). Its centre is the on-screen target point.
-            var r = best.TranslatedRectangle;
-            var screenX = (int)Math.Round(r.Left + r.Width / 2f);
-            var screenY = (int)Math.Round(r.Top + r.Height / 2f);
+            // TranslatedRectangle is in capture-area pixels; offset by the area's origin for screen pixels
+            // (they only coincide when the capture area starts at 0,0, e.g. the primary monitor).
+            var origin = AIManager.Instance?.ImageCapture?.CaptureArea.Location ?? System.Drawing.Point.Empty;
+            var center = best.ScreenCenter;
+            var screenX = (int)Math.Round(origin.X + center.X);
+            var screenY = (int)Math.Round(origin.Y + center.Y);
             var cursor = Nextended.UI.Native.NativeMethods.GetCursorPosition();
             vars["target.screenX"] = screenX.ToString(ci);
             vars["target.screenY"] = screenY.ToString(ci);

@@ -32,7 +32,7 @@ public sealed class StickyAimSelector
     ///     or the candidate list is empty.
     /// </param>
     /// <param name="enabled">Master switch — <c>false</c> bypasses the selector entirely.</param>
-    /// <param name="threshold">Score radius in translated-screen pixels (typ. 80).</param>
+    /// <param name="threshold">Score radius in model pixels, the space of <see cref="Prediction.Rectangle"/> (typ. 80).</param>
     /// <param name="maxLockScore">Cap for the running lock-score (typ. 100).</param>
     public Prediction? SelectTarget(
         IReadOnlyList<Prediction> candidates,
@@ -58,8 +58,8 @@ public sealed class StickyAimSelector
         // we score candidates against their own position (delta = 0), which collapses to
         // confidence/size ranking.
         bool hasTarget = _currentTarget != null;
-        float predictedX = hasTarget ? _currentTarget!.CenterXTranslated + _lastTargetVelocityX : 0f;
-        float predictedY = hasTarget ? _currentTarget!.CenterYTranslated + _lastTargetVelocityY : 0f;
+        float predictedX = hasTarget ? _currentTarget!.Center.X + _lastTargetVelocityX : 0f;
+        float predictedY = hasTarget ? _currentTarget!.Center.Y + _lastTargetVelocityY : 0f;
 
         Prediction? best = null;
         float bestScore = float.MinValue;
@@ -70,8 +70,8 @@ public sealed class StickyAimSelector
             float score = MathUtil.CalculateTargetScore(
                 candidate,
                 _currentTarget,
-                hasTarget ? predictedX : candidate.CenterXTranslated,
-                hasTarget ? predictedY : candidate.CenterYTranslated,
+                hasTarget ? predictedX : candidate.Center.X,
+                hasTarget ? predictedY : candidate.Center.Y,
                 _targetLockScore,
                 maxLockScore,
                 threshold);
@@ -129,12 +129,20 @@ public sealed class StickyAimSelector
             // Synthesize a "ghost" prediction at the velocity-projected position so the aim logic
             // can keep tracking through brief detection drops. Confidence is decayed linearly so
             // downstream consumers (overlays) can visualise the fading lock.
+            float shiftX = _lastTargetVelocityX * _consecutiveFramesWithoutTarget;
+            float shiftY = _lastTargetVelocityY * _consecutiveFramesWithoutTarget;
+            var model = _currentTarget.Rectangle;
+            var screen = _currentTarget.TranslatedRectangle;
+            // Velocity is in model pixels; the capture-space box moves by the same fraction of its size.
+            float toScreen = model.Width > 0 ? screen.Width / model.Width : 1f;
+            float size = Math.Max(1, PredictionLogic.CurrentImageSize);
             return new Prediction
             {
-                CenterXTranslated = _currentTarget.CenterXTranslated + _lastTargetVelocityX * _consecutiveFramesWithoutTarget,
-                CenterYTranslated = _currentTarget.CenterYTranslated + _lastTargetVelocityY * _consecutiveFramesWithoutTarget,
-                Rectangle = _currentTarget.Rectangle,
-                TranslatedRectangle = _currentTarget.TranslatedRectangle,
+                CenterXTranslated = _currentTarget.CenterXTranslated + shiftX / size,
+                CenterYTranslated = _currentTarget.CenterYTranslated + shiftY / size,
+                Rectangle = new RectangleF(model.X + shiftX, model.Y + shiftY, model.Width, model.Height),
+                TranslatedRectangle = new RectangleF(screen.X + shiftX * toScreen, screen.Y + shiftY * toScreen,
+                    screen.Width, screen.Height),
                 Confidence = _currentTarget.Confidence * (1f - _consecutiveFramesWithoutTarget * 0.2f),
                 ClassId = _currentTarget.ClassId,
                 ClassName = _currentTarget.ClassName
@@ -168,8 +176,8 @@ public sealed class StickyAimSelector
         float smoothing = Math.Clamp(0.6f + sizeFactor * 0.1f, 0.7f, 0.9f);
         float newWeight = 1f - smoothing;
 
-        float newVelX = newTarget.CenterXTranslated - _currentTarget.CenterXTranslated;
-        float newVelY = newTarget.CenterYTranslated - _currentTarget.CenterYTranslated;
+        float newVelX = newTarget.Center.X - _currentTarget.Center.X;
+        float newVelY = newTarget.Center.Y - _currentTarget.Center.Y;
         _lastTargetVelocityX = _lastTargetVelocityX * smoothing + newVelX * newWeight;
         _lastTargetVelocityY = _lastTargetVelocityY * smoothing + newVelY * newWeight;
     }

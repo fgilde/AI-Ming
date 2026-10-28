@@ -11,8 +11,19 @@ namespace PowerAim.AI;
 public class Prediction
 {
     public float Confidence { get; set; }
+
+    /// <summary>Box centre normalized to 0..1 inside the detection box (what <c>{target.x}</c> exposes).</summary>
     public float CenterXTranslated { get; set; }
+
+    /// <summary>Box centre normalized to 0..1 inside the detection box (what <c>{target.y}</c> exposes).</summary>
     public float CenterYTranslated { get; set; }
+
+    /// <summary>Box centre in model pixels, the space of <see cref="Rectangle"/>.</summary>
+    public PointF Center => new(Rectangle.X + Rectangle.Width / 2f, Rectangle.Y + Rectangle.Height / 2f);
+
+    /// <summary>Box centre in capture-area pixels, the space of <see cref="TranslatedRectangle"/>.</summary>
+    public PointF ScreenCenter => new(TranslatedRectangle.X + TranslatedRectangle.Width / 2f,
+        TranslatedRectangle.Y + TranslatedRectangle.Height / 2f);
 
     /// <summary>
     ///     Index of the winning class within the loaded ONNX model. Defaults to <c>0</c> so legacy

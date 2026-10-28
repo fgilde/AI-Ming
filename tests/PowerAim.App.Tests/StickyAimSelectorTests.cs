@@ -5,12 +5,14 @@ namespace PowerAim.App.Tests;
 
 public class StickyAimSelectorTests
 {
+    // As the pipeline produces them: box in model pixels, centre normalized to 0..1 of the model input.
     private static Prediction At(float x, float y, float size = 40, float confidence = 0.9f) => new()
     {
-        CenterXTranslated = x,
-        CenterYTranslated = y,
+        CenterXTranslated = x / 640f,
+        CenterYTranslated = y / 640f,
         Confidence = confidence,
         Rectangle = new RectangleF(x - size / 2, y - size / 2, size, size),
+        TranslatedRectangle = new RectangleF(x - size / 2, y - size / 2, size, size),
     };
 
     private static Prediction? Select(StickyAimSelector selector, params Prediction[] candidates)
@@ -27,8 +29,21 @@ public class StickyAimSelectorTests
 
         Assert.All(ghosts, g => Assert.NotNull(g));
         Assert.True(ghosts[0]!.Confidence > ghosts[1]!.Confidence && ghosts[1]!.Confidence > ghosts[2]!.Confidence);
-        Assert.Equal(100, held.CenterXTranslated); // the real detection is never moved
+        Assert.Equal(100, held.Center.X); // the real detection is never moved
         Assert.Null(Select(selector));
+    }
+
+    [Fact]
+    public void Coasted_ghost_keeps_moving_with_the_target()
+    {
+        var selector = new StickyAimSelector();
+        for (int x = 100; x <= 160; x += 10) Select(selector, At(x, 100));
+
+        var ghost = Select(selector);
+
+        Assert.NotNull(ghost);
+        Assert.True(ghost!.Center.X > 160, $"ghost at {ghost.Center.X}");
+        Assert.True(ghost.ScreenCenter.X > 160, $"ghost screen box at {ghost.ScreenCenter.X}");
     }
 
     [Fact]
@@ -53,5 +68,19 @@ public class StickyAimSelectorTests
         var rival = At(400, 300, confidence: 0.95f);
 
         Assert.Same(moved, Select(selector, moved, rival));
+    }
+
+    [Fact]
+    public void A_distant_more_confident_box_does_not_steal_a_settled_lock()
+    {
+        // The score radius (80 px) only works when distances are measured in the same pixels as the
+        // boxes. With normalized centres every candidate looked "inside the radius".
+        var selector = new StickyAimSelector();
+        for (int i = 0; i < 5; i++) Select(selector, At(100 + i, 100, confidence: 0.6f));
+
+        var same = At(106, 100, confidence: 0.6f);
+        var rival = At(300, 100, size: 60, confidence: 0.99f);
+
+        Assert.Same(same, Select(selector, same, rival));
     }
 }

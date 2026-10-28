@@ -7,7 +7,8 @@ namespace PowerAim.App.Tests;
 public class PredictionFilterTests
 {
     private static List<Prediction> Parse(DenseTensor<float> tensor, bool transposed) =>
-        PredictionFilter.CreatePredictions(tensor, new Rectangle(0, 0, 640, 640), 640, 8400, 1,
+        // Detection box centred on a 1920x1080 capture area, as AIManager builds it.
+        PredictionFilter.CreatePredictions(tensor, new Rectangle(640, 220, 640, 640), 640, 8400, 1,
             new Dictionary<int, string> { [0] = "Enemy" }, 0.5f, null, 0, 640, 0, 640,
             outputTransposed: transposed);
 
@@ -26,5 +27,8 @@ public class PredictionFilterTests
 
         Assert.Equal(new RectangleF(300, 260, 40, 80), p.Rectangle);
         Assert.Equal(0.9f, p.Confidence);
+        // Normalized to the model input, independent of where the detection box sits on screen.
+        Assert.Equal(0.5f, p.CenterXTranslated, 3);
+        Assert.Equal(300f / 640f, p.CenterYTranslated, 3);
     }
 }
