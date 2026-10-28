@@ -45,7 +45,7 @@ public partial class ControllerManageControl : UserControl
     {
         InitializeComponent();
         _refresh = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
-        _refresh.Tick += (_, _) => Refresh();
+        _refresh.Tick += (_, _) => { if (IsVisible) Refresh(); }; // loaded but hidden (collapsed menu): no polling
         Loaded += (_, _) => { Refresh(); _refresh.Start(); };
         Unloaded += (_, _) => _refresh.Stop();
     }

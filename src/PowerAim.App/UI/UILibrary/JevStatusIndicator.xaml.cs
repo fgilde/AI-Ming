@@ -26,7 +26,8 @@ public partial class JevStatusIndicator : UserControl
     {
         InitializeComponent();
         _poll = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(4) };
-        _poll.Tick += async (_, _) => await RefreshAsync();
+        // Only while visible: the probe below may start processes, and nobody is looking otherwise.
+        _poll.Tick += async (_, _) => { if (IsVisible) await RefreshAsync(); };
         Loaded += async (_, _) => { _poll.Start(); await RefreshAsync(); };
         Unloaded += (_, _) => _poll.Stop();
     }
@@ -64,7 +65,8 @@ public partial class JevStatusIndicator : UserControl
 
         if (!JevServerSetup.IsInstalled)
         {
-            bool hasPython = JevServerSetup.FindPython() != null;
+            // Probing for Python starts processes: never on the UI thread, and not again every poll.
+            bool hasPython = await Task.Run(() => JevServerSetup.FindPythonCached(TimeSpan.FromMinutes(2)) != null);
             Set(Bad, Locale.JevNotInstalled,
                 hasPython ? Locale.JevReadyToSetUp : string.Format(Locale.JevPythonMissing, Core.Jev.PythonVersion.Minimum),
                 null);

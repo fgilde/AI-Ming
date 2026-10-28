@@ -129,6 +129,7 @@ public partial class GamepadTesterPanel : UserControl
 
     private void UpdateTimer_Tick(object? sender, EventArgs e)
     {
+        if (!IsVisible) return; // loaded but hidden (collapsed menu): no 60 Hz XInput polling on the UI thread
         var state = ReadState();
         if (state == null)
         {

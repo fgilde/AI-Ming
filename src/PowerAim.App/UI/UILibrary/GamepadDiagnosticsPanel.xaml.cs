@@ -36,7 +36,7 @@ public partial class GamepadDiagnosticsPanel : UserControl
     {
         InitializeComponent();
         _refresh = new() { Interval = TimeSpan.FromMilliseconds(700) };
-        _refresh.Tick += (_, _) => Refresh();
+        _refresh.Tick += (_, _) => { if (IsVisible) Refresh(); }; // loaded but hidden (collapsed menu): no polling
         Loaded += (_, _) => { Refresh(); _refresh.Start(); };
         Unloaded += (_, _) => _refresh.Stop();
     }

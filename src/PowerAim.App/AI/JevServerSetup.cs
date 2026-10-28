@@ -79,6 +79,24 @@ public static class JevServerSetup
         return null;
     }
 
+    private static (DateTime At, (string Exe, string[] Args, Version Version)? Result)? _pythonProbe;
+    private static readonly object _pythonProbeLock = new();
+
+    /// <summary>
+    ///     <see cref="FindPython"/>, remembered for <paramref name="maxAge"/>. Each probe starts up to five
+    ///     processes; a status display polling every few seconds must not pay that every time.
+    /// </summary>
+    public static (string Exe, string[] Args, Version Version)? FindPythonCached(TimeSpan maxAge)
+    {
+        lock (_pythonProbeLock)
+        {
+            if (_pythonProbe is { } cached && DateTime.UtcNow - cached.At < maxAge) return cached.Result;
+        }
+        var result = FindPython();
+        lock (_pythonProbeLock) _pythonProbe = (DateTime.UtcNow, result);
+        return result;
+    }
+
     /// <summary>
     ///     Explains WHY no interpreter qualified: naming the version that was found ("you have 3.11.9,
     ///     3.12+ is required") is far more actionable than a bare "no Python found" on a machine that

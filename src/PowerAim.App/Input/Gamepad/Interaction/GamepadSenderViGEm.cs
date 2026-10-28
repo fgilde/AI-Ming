@@ -46,7 +46,9 @@ public class GamepadSenderViGEm : IGamepadSender
         try
         {
             _client = new ViGEmClient();
-            _virtualController = _client.CreateXbox360Controller(Xbox360Vid, Xbox360Pid); 
+            _virtualController = _client.CreateXbox360Controller(Xbox360Vid, Xbox360Pid);
+            // Reports are sent explicitly, once per change (see SyncLoop) — not one driver call per field.
+            _virtualController.AutoSubmitReport = false;
             _virtualController.Connect();
             _connected = true;
             _lastError = "";
@@ -195,24 +197,38 @@ public class GamepadSenderViGEm : IGamepadSender
         //   1. Drain the action queue (direct SetButton / SetAxis calls). MUST always run.
         //   2. Mirror the physical controller's state onto the virtual one. Only when a physical
         //      pad is actually connected — falls back gracefully if none / disconnected.
+        // Mirroring used to set every field on every pass with auto-submit on: ~18 driver calls per
+        // millisecond, a CPU core busy and a flood of input reports even with the pad untouched. Now
+        // the virtual pad only gets a report when something changed (physical state or a direct call).
+        Gamepad? lastMirrored = null;
         while (_isRunning)
         {
             // Pump direct-call actions unconditionally.
+            bool dirty = false;
             while (_actions.TryTake(out var action, 0))
             {
                 try { action(); }
                 catch { /* swallow — ViGEm transient failures shouldn't kill the loop */ }
+                dirty = true;
             }
 
             if (_source == null || !_source.IsConnected)
             {
+                if (dirty) Submit();
                 Thread.Sleep(2);
                 continue;
             }
 
             State state;
             try { state = _source.GetState(); }
-            catch { Thread.Sleep(10); continue; }
+            catch { if (dirty) Submit(); Thread.Sleep(10); continue; }
+
+            if (!dirty && lastMirrored is { } last && Same(last, state.Gamepad))
+            {
+                Thread.Sleep(1);
+                continue;
+            }
+            lastMirrored = state.Gamepad;
 
             if (!_pausedButtons.Contains(Xbox360Button.A)) _virtualController?.SetButtonState(Xbox360Button.A, state.Gamepad.Buttons.HasFlag(GamepadButtonFlags.A));
             if (!_pausedButtons.Contains(Xbox360Button.B)) _virtualController?.SetButtonState(Xbox360Button.B, state.Gamepad.Buttons.HasFlag(GamepadButtonFlags.B));
@@ -237,9 +253,21 @@ public class GamepadSenderViGEm : IGamepadSender
             if (!_pausedAxes.Contains(Xbox360Axis.RightThumbX)) _virtualController?.SetAxisValue(Xbox360Axis.RightThumbX, state.Gamepad.RightThumbX);
             if (!_pausedAxes.Contains(Xbox360Axis.RightThumbY)) _virtualController?.SetAxisValue(Xbox360Axis.RightThumbY, state.Gamepad.RightThumbY);
 
+            Submit();
             Thread.Sleep(1);
         }
     }
+
+    private void Submit()
+    {
+        try { _virtualController?.SubmitReport(); }
+        catch { /* transient driver failure: the next change submits again */ }
+    }
+
+    private static bool Same(Gamepad a, Gamepad b) =>
+        a.Buttons == b.Buttons && a.LeftTrigger == b.LeftTrigger && a.RightTrigger == b.RightTrigger &&
+        a.LeftThumbX == b.LeftThumbX && a.LeftThumbY == b.LeftThumbY &&
+        a.RightThumbX == b.RightThumbX && a.RightThumbY == b.RightThumbY;
 
     public void Dispose()
     {
