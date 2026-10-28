@@ -21,4 +21,5 @@ public sealed record JevIntent(
     string? Action,
     double Confidence,
     IReadOnlyDictionary<string, double> ModeProbabilities,
-    double Danger);
+    double Danger,
+    IReadOnlyList<string>? Actions = null);

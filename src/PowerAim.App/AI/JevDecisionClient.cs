@@ -50,13 +50,15 @@ public sealed class JevDecisionClient
     }
 
     /// <summary>Ask the model. Returns null on any failure (see <see cref="LastError"/>) — the caller keeps its previous intent.</summary>
-    public async Task<JevDecision?> DecideAsync(object state, Dictionary<string, object> questions, CancellationToken ct = default)
+    /// <param name="model">Model to ask; null or blank uses <see cref="JevSettings.Model"/>.</param>
+    public async Task<JevDecision?> DecideAsync(object state, Dictionary<string, object> questions, CancellationToken ct = default,
+        string? model = null)
     {
         var s = Settings;
         var sw = System.Diagnostics.Stopwatch.StartNew();
         try
         {
-            var body = JsonSerializer.Serialize(new { model = s.Model, state, questions });
+            var body = JsonSerializer.Serialize(new { model = string.IsNullOrWhiteSpace(model) ? s.Model : model, state, questions });
             using var req = new HttpRequestMessage(HttpMethod.Post, Url("/v1/systemone"))
             {
                 Content = new StringContent(body, Encoding.UTF8, "application/json"),

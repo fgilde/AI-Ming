@@ -76,12 +76,9 @@ public partial class AutoPlayDecisionPanel : UserControl
         _lastShown = d.At;
 
         SourceText.Text = d.Source;
-        SourceBadge.Background = d.Source switch
-        {
-            "Jev" => JevBadge,
-            "Ollama" => OllamaBadge,
-            _ => HeuristicBadge,
-        };
+        SourceBadge.Background = d.Source.StartsWith("Jev") ? JevBadge
+            : d.Source.StartsWith("Ollama") || d.Source == "Learned" ? OllamaBadge
+            : HeuristicBadge;
 
         ModeText.Text = string.IsNullOrEmpty(d.Direction) ? d.Mode : $"{d.Mode} · {d.Direction}";
 
@@ -89,6 +86,7 @@ public partial class AutoPlayDecisionPanel : UserControl
         if (d.Confidence is { } c) parts.Add(string.Format(Locale.AutoPlayDecisionConfidence, c * 100));
         if (d.Danger is { } danger) parts.Add(string.Format(Locale.AutoPlayDecisionDanger, danger * 100));
         if (!string.IsNullOrEmpty(d.Action)) parts.Add(string.Format(Locale.AutoPlayDecisionAbility, d.Action));
+        if (d.Actions is { Count: > 0 } actions) parts.Add(string.Format(Locale.AutoPlayDecisionAbility, string.Join(", ", actions)));
         DetailText.Text = string.Join("   ", parts);
         DetailText.Visibility = parts.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
 

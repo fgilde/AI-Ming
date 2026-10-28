@@ -1,5 +1,6 @@
 using System.Windows.Forms;
 using PowerAim.AI;
+using PowerAim.AI.AutoPlay;
 using PowerAim.Config;
 using PowerAim.Input;
 using Nextended.UI.Input;
@@ -38,7 +39,32 @@ public class AutoPlayLearningAction : BaseAction
         string? action = DiscretizeUserAction();
         if (action != null) AutoPlayLearningModel.Instance.Record(state, action);
 
+        RecordDemonstration(predictions, now);
         return Task.CompletedTask;
+    }
+
+    private DateTime _lastEnemy = DateTime.MinValue;
+
+    /// <summary>
+    ///     Feeds the learned decision model: the situation as <see cref="DecisionFeatures"/> plus the names of
+    ///     the profile actions whose keys you are holding — your actual bindings, not a fixed WASD guess.
+    ///     Uses the first enabled AutoPlay profile (AutoPlay itself is normally off while you record).
+    /// </summary>
+    private void RecordDemonstration(Prediction[] predictions, DateTime now)
+    {
+        var profile = AppConfig.Current.AutoPlayProfiles.FirstOrDefault(p => p.IsValid && p.Enabled && p.ProcessMatchesIfFilterEnabled());
+        if (profile == null) return;
+
+        var seen = AutoPlayPerception.Perceive(predictions, ImageCapture.CaptureArea.Size);
+        if (seen.Nearest != null) _lastEnemy = now;
+        var (ammo, health) = HudReader.Read();
+        var held = profile.Actions
+            .Where(a => a.IsValid && !string.IsNullOrWhiteSpace(a.Name) && a.Keys.Any(k => k.IsValid && InputBindingManager.IsHoldingBinding(k)))
+            .Select(a => a.Name!)
+            .ToArray();
+
+        DemonstrationStore.Instance.Add(new Demonstration(profile.Id,
+            DecisionFeatures.From(seen, Math.Min(10, (now - _lastEnemy).TotalSeconds), ammo, health), held));
     }
 
     /// <summary>

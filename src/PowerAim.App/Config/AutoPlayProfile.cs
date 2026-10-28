@@ -177,6 +177,24 @@ public class AutoPlayProfile : EditableNotificationObject
     }
 
     /// <summary>
+    ///     Id of the <see cref="DecisionModelDefinition"/> this profile runs (see <see cref="DecisionModelRegistry.Resolve"/>).
+    ///     Null in configs written before the model list existed — <see cref="Backend"/> then decides.
+    /// </summary>
+    public string? DecisionModelId
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value))
+                RaisePropertyChanged(nameof(DecisionModelName));
+        }
+    }
+
+    /// <summary>Name of the model this profile runs, for the profile list.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string DecisionModelName => DecisionModelRegistry.Resolve(this, AppConfig.Current?.DecisionModels ?? [])?.Name ?? "";
+
+    /// <summary>
     /// Ollama model to use for vision analysis.
     /// Recommended: "moondream" (fast), "llava:7b" (balanced), "qwen2.5-vl:7b" (quality)
     /// </summary>
@@ -283,7 +301,7 @@ public class AutoPlayProfile : EditableNotificationObject
         AppConfig.Current.ToggleState.AutoPlay &&
         ProcessMatchesIfFilterEnabled();
 
-    private bool ProcessMatchesIfFilterEnabled()
+    internal bool ProcessMatchesIfFilterEnabled()
     {
         var settings = AppConfig.Current.ActiveProcessSettings;
         if (settings == null || !settings.AutoSwitchProfile) return true;
@@ -294,10 +312,7 @@ public class AutoPlayProfile : EditableNotificationObject
     /// <summary>
     /// Display description for UI
     /// </summary>
-    public string Description => $"{Name ?? "New Profile"} ({Actions.Count(a => a.IsValid)} actions, {Backend switch
-    {
-        AutoPlayDecisionBackend.Jev => "Jev",
-        AutoPlayDecisionBackend.Ollama => OllamaModel,
-        _ => "heuristic only",
-    }})";
+    public string Description =>
+        $"{Name ?? "New Profile"} ({Actions.Count(a => a.IsValid)} actions, " +
+        $"{DecisionModelRegistry.Resolve(this, AppConfig.Current?.DecisionModels ?? [])?.Name ?? "heuristic only"})";
 }

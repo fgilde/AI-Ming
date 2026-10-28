@@ -237,6 +237,13 @@ public class AppConfig : BaseSettings
         },
     };
 
+    /// <summary>Decision models AutoPlay profiles can pick from (built-ins seeded on load, see <see cref="DecisionModelRegistry"/>).</summary>
+    public ObservableCollection<DecisionModelDefinition> DecisionModels
+    {
+        get;
+        set => SetField(ref field, value);
+    } = new(DecisionModelRegistry.CreateBuiltIns());
+
     public ObservableCollection<AutoPlayProfile> AutoPlayProfiles
     {
         get;
@@ -353,6 +360,13 @@ public class AppConfig : BaseSettings
         // Seed a Default aim profile from the live aim settings on first load under the profile
         // schema, and repair a dangling/empty active id. Idempotent.
         Current.AimSettings?.MigrateLegacyIfNeeded();
+
+        // Decision models: re-seed any built-in missing from the saved list, and give legacy Ollama
+        // profiles a list entry for the vision model they name. Both idempotent.
+        Current.DecisionModels ??= new();
+        DecisionModelRegistry.EnsureBuiltIns(Current.DecisionModels);
+        if (Current.AutoPlayProfiles != null)
+            DecisionModelRegistry.AdoptLegacyOllamaModels(Current.DecisionModels, Current.AutoPlayProfiles);
 
         // Triggers: migrate the legacy flat OcrConditions list into the new OcrConditionTree
         // (AND group by default). Idempotent — re-running on an already-migrated config is a no-op.

@@ -39,22 +39,21 @@
                     </StackPanel>
                 </Grid>
 
-                <!-- Strategic layer: exactly one of heuristic-only / Ollama / Jev. The reflex layer
-                     (aim, shoot, move) always runs; this only picks who biases it. Items and the
-                     "reachable?" suffix are filled in code-behind (localized + live status). -->
+                <!-- Decision model from the shared list (AutoPlay menu → Decision models). The reflex
+                     (aim, shoot, move) always runs; the model only decides the plan it follows. -->
                 <Label Foreground="{StaticResource Foreground}"
                        FontSize="13"
                        Margin="0,15,0,0"
-                       Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AutoPlayBackend'}"
+                       Content="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AutoPlayDecisionModel'}"
                        FontFamily="Segoe UI Variable Text" />
                 <ComboBox x:Name="BackendCombo"
                           Margin="2,5,2,0"
-                          DisplayMemberPath="Label"
-                          SelectedValuePath="Value"
+                          DisplayMemberPath="Name"
+                          SelectedValuePath="Id"
                           BorderThickness="1"
                           BorderBrush="{DynamicResource FluentStroke}"
                           Padding="3,5,1,5"
-                          ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AutoPlayBackendHint'}"
+                          ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AutoPlayDecisionModelHint'}"
                           FontFamily="Segoe UI Variable Text"
                           Foreground="{StaticResource Foreground}"
                           SelectionChanged="BackendCombo_OnSelectionChanged" />
@@ -63,7 +62,7 @@
                            Margin="2,4,0,4"
                            TextWrapping="Wrap"
                            Visibility="{Binding Converter={StaticResource helpVis}}"
-                           Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AutoPlayBackendHint'}"
+                           Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AutoPlayDecisionModelHint'}"
                            FontFamily="Segoe UI Variable Text" />
 
                 <!-- Ollama Model — editable ComboBox so the user can either pick from the locally
@@ -83,7 +82,7 @@
                         <ComboBox x:Name="ModelCombo"
                                   Grid.Column="0"
                                   IsEditable="True"
-                                  Text="{Binding Profile.OllamaModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                  Text="{Binding SelectedModel.Model, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                   BorderThickness="1"
                                   BorderBrush="{DynamicResource FluentStroke}"
                                   Padding="3,5,1,5"

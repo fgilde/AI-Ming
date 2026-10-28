@@ -39,6 +39,10 @@ public class OllamaClient : IOllamaClient
     /// <summary>Curated vision-model suggestions shown in the AutoPlay profile editor.</summary>
     public static IReadOnlyList<string> RecommendedVisionModels => KnownVisionModels;
 
+    /// <summary>Small, fast text models for the "Ollama text" decision model.</summary>
+    public static IReadOnlyList<string> RecommendedTextModels { get; } =
+        ["qwen2.5:1.5b", "llama3.2:1b", "llama3.2:3b", "gemma2:2b", "phi3:mini"];
+
     /// <summary>URL of the official Ollama download page (Windows installer + docs).</summary>
     public const string DownloadUrl = "https://ollama.com/download";
 
@@ -233,7 +237,18 @@ public class OllamaClient : IOllamaClient
             .ToArray();
     }
 
-    public async Task<string> AnalyzeImageAsync(Bitmap image, string prompt, string model)
+    public Task<string> AnalyzeImageAsync(Bitmap image, string prompt, string model)
+        => GenerateAsync(prompt, model, [CompressAndEncodeImage(image, AppConfig.Current?.OllamaSettings)], asJson: false, maxTokens: null);
+
+    /// <summary>
+    ///     Text-only generation (no image), answered as JSON. Small text models decide in well under a second,
+    ///     far faster than a vision model looking at a frame. Returns "idle" on failure, like
+    ///     <see cref="AnalyzeImageAsync"/> (see <see cref="LastError"/>).
+    /// </summary>
+    public Task<string> GenerateTextAsync(string prompt, string model, int maxTokens = 160)
+        => GenerateAsync(prompt, model, null, asJson: true, maxTokens);
+
+    private async Task<string> GenerateAsync(string prompt, string model, string[]? images, bool asJson, int? maxTokens)
     {
         try
         {
@@ -241,22 +256,18 @@ public class OllamaClient : IOllamaClient
             var baseUrl = settings?.BaseUrl ?? "http://localhost:11434";
             var timeout = settings?.TimeoutSeconds ?? 30;
             var temperature = settings?.Temperature ?? 0.3;
-            var maxTokens = settings?.MaxTokens ?? 100;
 
-            // Compress and encode image
-            var base64Image = CompressAndEncodeImage(image, settings);
-
-            // Build request
             var request = new OllamaGenerateRequest
             {
                 Model = model,
                 Prompt = prompt,
-                Images = [base64Image],
+                Images = images,
+                Format = asJson ? "json" : null,
                 Stream = false,
                 Options = new OllamaOptions
                 {
                     Temperature = temperature,
-                    NumPredict = maxTokens
+                    NumPredict = maxTokens ?? settings?.MaxTokens ?? 100
                 }
             };
 
@@ -388,7 +399,13 @@ internal class OllamaGenerateRequest
     public string Prompt { get; set; } = "";
 
     [JsonPropertyName("images")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string[]? Images { get; set; }
+
+    /// <summary>"json" makes Ollama constrain the answer to valid JSON.</summary>
+    [JsonPropertyName("format")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Format { get; set; }
 
     [JsonPropertyName("stream")]
     public bool Stream { get; set; }

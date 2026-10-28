@@ -44,6 +44,33 @@ public static class JevIntentMapper
         return new JevIntent(modeName, direction, action, mode.Confidence, modeProbs, danger);
     }
 
+    /// <summary>
+    ///     Maps a <see cref="JevQuestionBuilder.BuildPerAction"/> answer: mode and direction as in <see cref="Map"/>,
+    ///     plus every ability whose yes-probability reaches <paramref name="actionThreshold"/>, most likely first.
+    ///     The abilities are wanted even when the mode is too uncertain to switch — then the mode is "default"
+    ///     (the caller keeps moving as before) but the actions still fire.
+    /// </summary>
+    public static JevIntent? MapPerAction(JevDecision decision, IReadOnlyList<JevAbility> abilities,
+        double minConfidence, double actionThreshold)
+    {
+        var usable = JevQuestionBuilder.PerActionOfferable(abilities);
+        var actions = new List<(string Name, double P)>();
+        for (int i = 0; i < usable.Count; i++)
+            if (decision.Nouls.TryGetValue(JevQuestionBuilder.UseQuestionId(i), out var p) && p >= actionThreshold)
+                actions.Add((usable[i].Name, p));
+        var wanted = actions.OrderByDescending(a => a.P).Select(a => a.Name).ToList();
+
+        var intent = Map(decision, [], minConfidence);
+        if (intent == null)
+        {
+            if (wanted.Count == 0) return null;
+            double danger = decision.Nouls.TryGetValue("danger", out var dv) ? dv : 0;
+            return new JevIntent(danger >= DangerThreshold ? "retreat" : "default", null, null, 0,
+                new Dictionary<string, double>(), danger, wanted);
+        }
+        return intent with { Actions = wanted };
+    }
+
     /// <summary>"1".."N" → 0..N-1, else null.</summary>
     private static int? IndexOf(string key, int count)
         => int.TryParse(key, out var n) && n >= 1 && n <= count ? n - 1 : null;

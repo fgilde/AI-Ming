@@ -28,6 +28,36 @@ public static class JevQuestionBuilder
     public static List<JevAbility> Offerable(IReadOnlyList<JevAbility> abilities)
         => abilities.Where(a => !string.IsNullOrWhiteSpace(a.Name)).Take(MaxAbilities).ToList();
 
+    /// <summary>Abilities beyond this are not asked about in <see cref="BuildPerAction"/> (each one is a question).</summary>
+    public const int MaxPerActionAbilities = 24;
+
+    /// <summary>Question id of the per-action yes/no question for the ability at <paramref name="index"/>.</summary>
+    public static string UseQuestionId(int index) => $"use_{index + 1}";
+
+    /// <summary>The abilities <see cref="BuildPerAction"/> asks about — mirror this when mapping answers.</summary>
+    public static List<JevAbility> PerActionOfferable(IReadOnlyList<JevAbility> abilities)
+        => abilities.Where(a => !string.IsNullOrWhiteSpace(a.Name)).Take(MaxPerActionAbilities).ToList();
+
+    /// <summary>
+    ///     Like <see cref="Build"/>, but instead of one "which ability" choice every ability gets its own
+    ///     yes/no question ("use it right now?"). Several abilities can fire at once, there is no nine-option
+    ///     limit, and each answer is a probability the caller thresholds per action.
+    /// </summary>
+    public static Dictionary<string, object> BuildPerAction(IReadOnlyList<JevAbility> abilities)
+    {
+        var q = Build([]);
+        var usable = PerActionOfferable(abilities);
+        for (int i = 0; i < usable.Count; i++)
+        {
+            q[UseQuestionId(i)] = new
+            {
+                type = "noul",
+                instructions = $"The bot can do this: {usable[i].Label}. Should it do it right now, given the state?",
+            };
+        }
+        return q;
+    }
+
     public static Dictionary<string, object> Build(IReadOnlyList<JevAbility> abilities)
     {
         var usable = Offerable(abilities);

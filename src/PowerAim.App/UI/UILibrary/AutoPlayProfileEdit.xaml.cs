@@ -29,8 +29,15 @@ namespace PowerAim.UI.UILibrary
             ((AutoPlayProfileEdit)d).ProfileChanged();
         }
 
-        /// <summary>One dropdown entry: the enum value plus the text the user reads.</summary>
-        private sealed record BackendChoice(AutoPlayDecisionBackend Value, string Label);
+        /// <summary>The decision model the profile runs; the Ollama model field edits its model name.</summary>
+        public DecisionModelDefinition? SelectedModel
+        {
+            get => (DecisionModelDefinition?)GetValue(SelectedModelProperty);
+            set => SetValue(SelectedModelProperty, value);
+        }
+
+        public static readonly DependencyProperty SelectedModelProperty =
+            DependencyProperty.Register(nameof(SelectedModel), typeof(DecisionModelDefinition), typeof(AutoPlayProfileEdit));
 
         private void ProfileChanged()
         {
@@ -44,32 +51,29 @@ namespace PowerAim.UI.UILibrary
         }
 
         /// <summary>
-        ///     Fills the strategic-layer dropdown and selects what the profile currently uses. The
-        ///     Ollama model picker below only makes sense for the Ollama entry, so it follows along.
+        ///     Lists the shared decision models and selects the profile's (legacy profiles resolve through
+        ///     their old backend). The Ollama model picker below only applies to Ollama models.
         /// </summary>
         private void UpdateBackendCombo()
         {
             if (BackendCombo == null) return;
-            BackendCombo.ItemsSource = new[]
-            {
-                new BackendChoice(AutoPlayDecisionBackend.Heuristic, Locale.AutoPlayBackendHeuristic),
-                new BackendChoice(AutoPlayDecisionBackend.Ollama, Locale.AutoPlayBackendOllama),
-                new BackendChoice(AutoPlayDecisionBackend.Jev, Locale.AutoPlayBackendJev),
-            };
-            BackendCombo.SelectedValue = Profile?.Backend ?? AutoPlayDecisionBackend.Heuristic;
+            BackendCombo.ItemsSource = AppConfig.Current.DecisionModels;
+            BackendCombo.SelectedValue = Profile == null ? null
+                : DecisionModelRegistry.Resolve(Profile, AppConfig.Current.DecisionModels)?.Id;
             SyncBackendDependentUi();
         }
 
         private void SyncBackendDependentUi()
         {
+            SelectedModel = BackendCombo?.SelectedItem as DecisionModelDefinition;
             if (OllamaModelPanel != null)
-                OllamaModelPanel.IsEnabled = Profile?.Backend == AutoPlayDecisionBackend.Ollama;
+                OllamaModelPanel.IsEnabled = SelectedModel?.Kind is DecisionModelKind.OllamaVision or DecisionModelKind.OllamaText;
         }
 
         private void BackendCombo_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (Profile == null || BackendCombo.SelectedValue is not AutoPlayDecisionBackend picked) return;
-            if (Profile.Backend != picked) Profile.Backend = picked;
+            if (Profile == null || BackendCombo.SelectedItem is not DecisionModelDefinition picked) return;
+            if (Profile.DecisionModelId != picked.Id) DecisionModelRegistry.Assign(Profile, picked);
             SyncBackendDependentUi();
         }
 
@@ -120,7 +124,7 @@ namespace PowerAim.UI.UILibrary
         {
             if (ModelCombo.SelectedItem is string picked && !string.IsNullOrWhiteSpace(picked))
             {
-                if (Profile != null) Profile.OllamaModel = picked;
+                if (SelectedModel != null) SelectedModel.Model = picked;
                 ModelCombo.Text = picked;
             }
         }
@@ -150,7 +154,7 @@ namespace PowerAim.UI.UILibrary
             catch { /* swallow — combobox just falls back to recommended list */ }
 
             var merged = new List<string>(installed);
-            foreach (var rec in OllamaClient.RecommendedVisionModels)
+            foreach (var rec in OllamaClient.RecommendedVisionModels.Concat(OllamaClient.RecommendedTextModels))
                 if (!installed.Any(m => m.StartsWith(rec, StringComparison.OrdinalIgnoreCase)))
                     merged.Add(rec);
 
@@ -158,15 +162,15 @@ namespace PowerAim.UI.UILibrary
             // the displayed text (and write that null back into Profile.OllamaModel). Read the
             // authoritative value from the source FIRST, populate items, then restore on a Loaded
             // dispatcher tick so the binding has had time to re-sync.
-            var authoritative = Profile?.OllamaModel ?? ModelCombo.Text;
+            var authoritative = SelectedModel?.Model ?? ModelCombo.Text;
             ModelCombo.ItemsSource = merged;
             if (!string.IsNullOrEmpty(authoritative))
             {
                 _ = Dispatcher.BeginInvoke(new Action(() =>
                 {
                     ModelCombo.Text = authoritative;
-                    if (Profile != null && Profile.OllamaModel != authoritative)
-                        Profile.OllamaModel = authoritative;
+                    if (SelectedModel != null && SelectedModel.Model != authoritative)
+                        SelectedModel.Model = authoritative;
                 }), System.Windows.Threading.DispatcherPriority.Loaded);
             }
         }

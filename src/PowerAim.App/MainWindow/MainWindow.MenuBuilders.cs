@@ -813,12 +813,15 @@ public partial class MainWindow
         _learnStatusHandler = (_, _) =>
             Dispatcher.BeginInvoke(new Action(() => UpdateLearnStatus(learnStatus)));
         PowerAim.AI.AutoPlayLearningModel.Instance.PropertyChanged += _learnStatusHandler;
+        PowerAim.AI.AutoPlay.DemonstrationStore.Instance.Changed += (_, _) =>
+            Dispatcher.BeginInvoke(new Action(() => UpdateLearnStatus(learnStatus)));
 
         LearningCard.AddButton(Locale.SaveModel).Reader.Click += (_, _) =>
         {
             try
             {
                 PowerAim.AI.AutoPlayLearningModel.Instance.Save(AppConfig.Current?.AutoPlayLearningSettings?.ModelPath);
+                PowerAim.AI.AutoPlay.DemonstrationStore.Instance.Save(DemonstrationsPath());
                 learnStatus.Content = Locale.SavedSamplesFormat.FormatWith(PowerAim.AI.AutoPlayLearningModel.Instance.TotalSamples);
             }
             catch (Exception ex) { learnStatus.Content = Locale.SaveFailedFormat.FormatWith(ex.Message); }
@@ -826,12 +829,14 @@ public partial class MainWindow
         LearningCard.AddButton(Locale.LoadModel).Reader.Click += (_, _) =>
         {
             bool ok = PowerAim.AI.AutoPlayLearningModel.Instance.Load(AppConfig.Current?.AutoPlayLearningSettings?.ModelPath);
+            ok |= PowerAim.AI.AutoPlay.DemonstrationStore.Instance.Load(DemonstrationsPath());
             learnStatus.Content = ok ? Locale.ModelLoaded : Locale.NoModelFileAtPath;
             UpdateLearnStatus(learnStatus);
         };
         LearningCard.AddButton(Locale.ClearModel).Reader.Click += (_, _) =>
         {
             PowerAim.AI.AutoPlayLearningModel.Instance.Clear();
+            PowerAim.AI.AutoPlay.DemonstrationStore.Instance.Clear();
             UpdateLearnStatus(learnStatus);
         };
         LearningCard.AddSeparator();
@@ -848,7 +853,16 @@ public partial class MainWindow
     private static void UpdateLearnStatus(System.Windows.Controls.Label label)
     {
         var model = PowerAim.AI.AutoPlayLearningModel.Instance;
-        label.Content = string.Format(Locale.LearningStatusFormat, model.TotalSamples, model.StateCount);
+        label.Content = string.Format(Locale.LearningStatusFormat, model.TotalSamples, model.StateCount) + Environment.NewLine +
+                        string.Format(Locale.LearnedSamplesFormat, PowerAim.AI.AutoPlay.DemonstrationStore.Instance.Count);
+    }
+
+    /// <summary>The recorded demonstrations live next to the learning table file.</summary>
+    internal static string DemonstrationsPath()
+    {
+        var modelPath = AppConfig.Current?.AutoPlayLearningSettings?.ModelPath;
+        return PowerAim.AI.AutoPlay.DemonstrationStore.PathNextTo(
+            string.IsNullOrWhiteSpace(modelPath) ? PowerAim.AI.AutoPlayLearningModel.Instance.DefaultModelPath : modelPath);
     }
 
     internal void OpenSpoofer()
@@ -901,6 +915,12 @@ public partial class MainWindow
         AutoPlayConfig.AddSlider(Locale.RequestTimeout, Locale.Seconds, 1, 1, 1, 30).BindTo(() => AppConfig.Current.JevSettings.TimeoutSeconds);
         AutoPlayConfig.AddSlider(Locale.JevMinConfidence, "", 0.05, 0.05, 0.0, 1.0).BindTo(() => AppConfig.Current.JevSettings.MinConfidence);
 
+        AutoPlayConfig.AddSeparator();
+
+        // Decision models: the shared list profiles pick from (Jev, Ollama text/vision, learned, …).
+        AutoPlayConfig.AddTitle(Locale.DecisionModels);
+        AutoPlayConfig.AddCredit("", Locale.DecisionModelsHelp);
+        AutoPlayConfig.Add<DecisionModelList>();
         AutoPlayConfig.AddSeparator();
 
         // Profiles Section

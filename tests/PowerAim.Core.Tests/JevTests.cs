@@ -124,6 +124,23 @@ public class JevQuestionBuilderTests
         Assert.Single(JevQuestionBuilder.Offerable([new JevAbility(" "), new JevAbility("real")]));
     }
 
+    [Fact]
+    public void Per_action_mode_asks_one_yes_no_question_per_ability_without_the_nine_cap()
+    {
+        var many = Enumerable.Range(1, 12).Select(i => new JevAbility($"ability{i}", $"does thing {i}")).ToList();
+        var doc = Serialize(JevQuestionBuilder.BuildPerAction(many));
+        var root = doc.RootElement;
+
+        Assert.False(root.TryGetProperty("ability", out _));
+        Assert.Equal(4, root.GetProperty("mode").GetProperty("criteria").EnumerateObject().Count()); // no "tactical" choice
+        for (int i = 0; i < 12; i++)
+        {
+            var q = root.GetProperty(JevQuestionBuilder.UseQuestionId(i));
+            Assert.Equal("noul", q.GetProperty("type").GetString());
+            Assert.Contains($"does thing {i + 1}", q.GetProperty("instructions").GetString());
+        }
+    }
+
     private static JsonDocument Serialize(object o) => JsonDocument.Parse(JsonSerializer.Serialize(o));
 }
 
