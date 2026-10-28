@@ -46,6 +46,7 @@ namespace PowerAim.UI.UILibrary
             IntersectionBox.RemoveAll();
             ChargeEnterIntersectionBox.RemoveAll();
             TimeSettings.RemoveAll();
+            RulePanel.Children.Clear();
             ModePanel.RemoveAll();
             TriggerKeyOperator.RemoveAll();
             AntiTriggerKeyOperator.RemoveAll();
@@ -60,7 +61,7 @@ namespace PowerAim.UI.UILibrary
             beginDropdown.Margin = new Thickness(0);
             Grid.SetColumn(beginDropdown, 0);
             AddConfigureAreaButton(ChargeEnterIntersectionBox,
-                () => Trigger.ChargeMode && Trigger.BeginIntersectionCheck == TriggerCheck.HeadIntersectingCenter,
+                () => Trigger.ChargeMode && Trigger.BeginIntersectionCheck is TriggerCheck.HeadIntersectingCenter or TriggerCheck.Rule,
                 nameof(Trigger.BeginIntersectionCheck),
                 () => new EditHeadArea(Trigger.BeginIntersectionArea, model => Trigger.BeginIntersectionArea = model.ToRelativeRect()).Show());
 
@@ -72,9 +73,11 @@ namespace PowerAim.UI.UILibrary
             execDropdown.Margin = new Thickness(0);
             Grid.SetColumn(execDropdown, 0);
             AddConfigureAreaButton(IntersectionBox,
-                () => Trigger.ExecutionIntersectionCheck == TriggerCheck.HeadIntersectingCenter,
+                () => Trigger.ExecutionIntersectionCheck is TriggerCheck.HeadIntersectingCenter or TriggerCheck.Rule,
                 nameof(Trigger.ExecutionIntersectionCheck),
                 () => new EditHeadArea(Trigger.ExecutionIntersectionArea, model => Trigger.ExecutionIntersectionArea = model.ToRelativeRect()).Show());
+
+            BuildRulePanel();
 
             TimeSettings.AddSlider(Locale.AutoTriggerDelay, Locale.Seconds, 0.01, 0.1, 0.00, 5).InitWith(slider =>
             {
@@ -197,6 +200,37 @@ namespace PowerAim.UI.UILibrary
             grid.Children.Add(removeBtn);
 
             return grid;
+        }
+
+        /// <summary>Rule editor + shot timing, shown while either check is "Rule / description".</summary>
+        private void BuildRulePanel()
+        {
+            var title = new TextBlock { Text = Locale.RuleTriggerTitle, Margin = new Thickness(0, 0, 0, 4) };
+            title.SetResourceReference(StyleProperty, "FluentCaption");
+            RulePanel.Children.Add(title);
+
+            var editor = new RuleEditor(PowerAim.AI.Rules.RuleKind.TriggerCondition);
+            editor.SetBinding(RuleEditor.RuleProperty, new System.Windows.Data.Binding(nameof(ActionTrigger.HitRule)) { Source = Trigger, Mode = System.Windows.Data.BindingMode.TwoWay });
+            editor.SetBinding(RuleEditor.DescriptionProperty, new System.Windows.Data.Binding(nameof(ActionTrigger.HitRuleDescription)) { Source = Trigger, Mode = System.Windows.Data.BindingMode.TwoWay });
+            RulePanel.Children.Add(editor);
+
+            RulePanel.AddSlider(Locale.RuleShotLatency, Locale.Milliseconds, 5, 10, 0, 250).InitWith(slider =>
+            {
+                slider.BorderBrush = slider.Background = Brushes.Transparent;
+                slider.ToolTip = Locale.RuleShotLatencyTooltip;
+            }).BindTo(() => Trigger.ShotLatencyMs);
+            RulePanel.AddSlider(Locale.RuleAimSpread, Locale.Pixels, 0.5, 1, 0, 30).InitWith(slider =>
+            {
+                slider.BorderBrush = slider.Background = Brushes.Transparent;
+                slider.ToolTip = Locale.RuleAimSpreadTooltip;
+            }).BindTo(() => Trigger.AimSpreadPx);
+
+            void Sync() => RuleCard.Visibility = Trigger.UsesRule ? Visibility.Visible : Visibility.Collapsed;
+            Sync();
+            Trigger.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName is nameof(ActionTrigger.BeginIntersectionCheck) or nameof(ActionTrigger.ExecutionIntersectionCheck)) Sync();
+            };
         }
 
         public TriggerEdit()

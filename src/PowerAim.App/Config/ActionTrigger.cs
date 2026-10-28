@@ -293,6 +293,40 @@ public class ActionTrigger : EditableNotificationObject
         set => SetProperty(ref field, value);
     } = RelativeRect.Default;
 
+    /// <summary>
+    ///     Condition for <see cref="TriggerCheck.Rule"/>, evaluated per target every frame, e.g.
+    ///     <c>head_hit &gt;= 0.8</c>. The head area is this check's intersection area. See <see cref="AI.Rules.TargetScope"/>.
+    /// </summary>
+    public string HitRule
+    {
+        get;
+        set => SetProperty(ref field, value ?? "");
+    } = "head_hit >= 0.8";
+
+    /// <summary>The plain-language description <see cref="HitRule"/> was written from (kept for editing).</summary>
+    public string HitRuleDescription
+    {
+        get;
+        set => SetProperty(ref field, value ?? "");
+    } = "";
+
+    /// <summary>Input lag + game tick in ms: how far ahead a moving target is predicted for head_hit / body_hit.</summary>
+    public double ShotLatencyMs
+    {
+        get;
+        set => SetProperty(ref field, value);
+    } = 60;
+
+    /// <summary>Weapon spread / aim jitter in model pixels, the base error of the hit probability.</summary>
+    public double AimSpreadPx
+    {
+        get;
+        set => SetProperty(ref field, value);
+    } = 4;
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool UsesRule => BeginIntersectionCheck == TriggerCheck.Rule || ExecutionIntersectionCheck == TriggerCheck.Rule;
+
     public bool IsValid => !string.IsNullOrWhiteSpace(Name) && Actions.Any(a => a is { IsValid: true });
     /// <summary>
     ///     Optional process-name pattern (wildcard / pipe-separated) that scopes this trigger

@@ -2,6 +2,8 @@ using System.Collections.Concurrent;
 using System.ComponentModel;
 using PowerAim.AI.Actions;
 using PowerAim.AI;
+using PowerAim.AI.Aiming;
+using PowerAim.AI.Rules;
 using PowerAim.Config;
 using PowerAim.Input;
 using PowerAim.Types;
@@ -54,6 +56,7 @@ public class AutoTriggerAction : BaseAction
     {
 
         _lastPredictions = predictions;
+        UpdateRuleTargets(predictions);
 
         if (AppConfig.Current.ToggleState.AutoTrigger)
         {
@@ -148,15 +151,15 @@ public class AutoTriggerAction : BaseAction
 
         if (trigger.ChargeMode)
         {
-            if (PredictionIsIntersecting(trigger.ExecutionIntersectionCheck, trigger.ExecutionIntersectionArea))
+            if (PredictionIsIntersecting(trigger, trigger.ExecutionIntersectionCheck, trigger.ExecutionIntersectionArea))
                 return KeyPressState.Up;
 
-            if (PredictionIsIntersecting(trigger.BeginIntersectionCheck, trigger.BeginIntersectionArea))
+            if (PredictionIsIntersecting(trigger, trigger.BeginIntersectionCheck, trigger.BeginIntersectionArea))
                 return KeyPressState.Down;
         }
         else
         {
-            if (PredictionIsIntersecting(trigger.ExecutionIntersectionCheck, trigger.ExecutionIntersectionArea))
+            if (PredictionIsIntersecting(trigger, trigger.ExecutionIntersectionCheck, trigger.ExecutionIntersectionArea))
                 return KeyPressState.DownAndUp;
         }
 
@@ -198,10 +201,13 @@ public class AutoTriggerAction : BaseAction
     // Issue #17: scan ALL current detections — fire when ANY target satisfies the check — rather than
     // testing one single (least-confident) prediction. This re-couples the trigger to whatever target
     // is actually under the crosshair, including the one the aim assist just pulled in.
-    private bool PredictionIsIntersecting(TriggerCheck check, RelativeRect area)
+    private bool PredictionIsIntersecting(ActionTrigger trigger, TriggerCheck check, RelativeRect area)
     {
         if (check == TriggerCheck.None)
             return true;
+
+        if (check == TriggerCheck.Rule)
+            return RuleHolds(trigger, area);
 
         foreach (var prediction in _lastPredictions)
         {
@@ -213,6 +219,47 @@ public class AutoTriggerAction : BaseAction
 
         return false;
     }
+
+    // ---- Rule triggers: tracked targets (for motion) + the rule over them --------------------------
+
+    private readonly TargetTracker _tracker = new();
+    private readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew();
+    private double _lastFrameAt;
+    private volatile IReadOnlyList<RuleTarget> _ruleTargets = [];
+
+    /// <summary>
+    ///     Tracks the detections only while some trigger uses a rule: hit probabilities need each target's
+    ///     velocity. Confirmed, currently-seen tracks carry it; detections no confirmed track covers yet
+    ///     (a target that just appeared) count too, with zero velocity, so they aren't a frame late.
+    /// </summary>
+    private void UpdateRuleTargets(Prediction[] predictions)
+    {
+        if (!AppConfig.Current.ToggleState.AutoTrigger || !AppConfig.Current.Triggers.Any(t => t is { Enabled: true, UsesRule: true }))
+        {
+            _ruleTargets = [];
+            return;
+        }
+        double now = _clock.Elapsed.TotalSeconds;
+        double dt = Math.Clamp(now - _lastFrameAt, 0.001, 0.25);
+        _lastFrameAt = now;
+        var seen = _tracker.Update(predictions, dt).Where(t => t.MissedFrames == 0).ToList();
+        var targets = seen.Select(RuleTarget.From).ToList();
+        targets.AddRange(predictions.Where(p => !seen.Exists(t => t.LastDetectionBox == p.Rectangle)).Select(RuleTarget.From));
+        _ruleTargets = targets;
+    }
+
+    private bool RuleHolds(ActionTrigger trigger, RelativeRect headArea)
+    {
+        var (rule, _) = TriggerRules.Compile(trigger.HitRule);
+        if (rule == null) return false;
+        int size = Math.Max(1, global::PowerAim.AI.PredictionLogic.CurrentImageSize);
+        var context = new RuleContext(size, new System.Drawing.PointF(size / 2f, size / 2f), headArea,
+            trigger.ShotLatencyMs / 1000.0, trigger.AimSpreadPx, _lastPredictions.Length, OcrNumber);
+        return TriggerRules.AnyMatch(rule, _ruleTargets, context);
+    }
+
+    internal static double? OcrNumber(string region)
+        => OcrService.Instance.Latest.FirstOrDefault(kv => string.Equals(kv.Key, region, StringComparison.OrdinalIgnoreCase)).Value?.Number;
 
     public override Task OnPause()
     {

@@ -72,6 +72,15 @@ public class AimProfile : EditableNotificationObject
     /// <summary>Use the smart tracking pipeline (vs the legacy single-target path).</summary>
     public bool SmartAim { get; set => SetProperty(ref field, value); } = true;
 
+    /// <summary>Pick targets by <see cref="TargetRule"/> (higher score first) instead of nearest to the crosshair.</summary>
+    public bool UseTargetRule { get; set => SetProperty(ref field, value); }
+
+    /// <summary>Target score, e.g. <c>-distance</c> or <c>head_hit * 2 - distance / 500</c>. See <see cref="AI.Rules.TargetScope"/>.</summary>
+    public string TargetRule { get; set => SetProperty(ref field, value ?? ""); } = "-distance";
+
+    /// <summary>The plain-language description <see cref="TargetRule"/> was written from.</summary>
+    public string TargetRuleDescription { get; set => SetProperty(ref field, value ?? ""); } = "";
+
     /// <summary>
     ///     Per-60Hz-frame approach fraction of the target offset (in FOV-box pixels, resolution-
     ///     independent). Higher = snappier/firmer, lower = smoother. Matches the "Balanced" preset.

@@ -361,12 +361,7 @@ public class AppConfig : BaseSettings
         // schema, and repair a dangling/empty active id. Idempotent.
         Current.AimSettings?.MigrateLegacyIfNeeded();
 
-        // Decision models: re-seed any built-in missing from the saved list, and give legacy Ollama
-        // profiles a list entry for the vision model they name. Both idempotent.
-        Current.DecisionModels ??= new();
-        DecisionModelRegistry.EnsureBuiltIns(Current.DecisionModels);
-        if (Current.AutoPlayProfiles != null)
-            DecisionModelRegistry.AdoptLegacyOllamaModels(Current.DecisionModels, Current.AutoPlayProfiles);
+        Current.MigrateDecisionModels();
 
         // Triggers: migrate the legacy flat OcrConditions list into the new OcrConditionTree
         // (AND group by default). Idempotent — re-running on an already-migrated config is a no-op.
@@ -395,6 +390,18 @@ public class AppConfig : BaseSettings
         ConfigLoaded?.Invoke(null, new EventArgs<AppConfig>(Current));
         Current.RaiseAllPropertiesChanged();
         return Current;
+    }
+
+    /// <summary>
+    ///     Re-seeds any built-in decision model missing from the saved list and gives legacy Ollama profiles
+    ///     a list entry for the vision model they name. Idempotent.
+    /// </summary>
+    internal void MigrateDecisionModels()
+    {
+        DecisionModels ??= new();
+        DecisionModelRegistry.EnsureBuiltIns(DecisionModels);
+        if (AutoPlayProfiles != null)
+            DecisionModelRegistry.AdoptLegacyOllamaModels(DecisionModels, AutoPlayProfiles);
     }
 
     public static void BindToDataContext(FrameworkElement element)

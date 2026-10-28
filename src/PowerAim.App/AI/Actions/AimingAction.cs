@@ -1,6 +1,7 @@
 using System.Drawing;
 using PowerAim.Class;
 using PowerAim.AI.Aiming;
+using PowerAim.AI.Rules;
 using PowerAim.AI.Contracts;
 using PowerAim.Config;
 using Nextended.UI.WPF.Extensions;
@@ -84,10 +85,12 @@ public class AimingAction : BaseAction
         }
 
         // ---- Legacy path ----
-        var fallback = predictions.MaxBy(p => p.Confidence);
+        var rule = TargetRule();
+        var fallback = rule != null ? BestByRule(rule, predictions) : predictions.MaxBy(p => p.Confidence);
         var ai = AppConfig.Current.AISettings;
         var selected = _stickyAim.SelectTarget(
-            predictions, fallback, ai.StickyAimEnabled, ai.StickyAimThreshold, ai.StickyAimMaxLockScore);
+            predictions, fallback, ai.StickyAimEnabled, ai.StickyAimThreshold, ai.StickyAimMaxLockScore,
+            acquireFallback: rule != null);
         if (selected != null) HandleAim(selected);
         return Task.CompletedTask;
     }
@@ -191,7 +194,10 @@ public class AimingAction : BaseAction
         RectangleF box;
         if (ai.UseTargetTracking)
         {
-            var track = _selector.Select(tracks!, center, center, ai.SwitchMarginPct, ai.SwitchFrames, stickyModelPx);
+            var rule = TargetRule();
+            var ctx = rule == null ? null : RuleContextFor(predictions.Length);
+            var track = _selector.Select(tracks!, center, center, ai.SwitchMarginPct, ai.SwitchFrames, stickyModelPx,
+                rule == null ? null : t => rule.Score(new TargetScope(RuleTarget.From(t), ctx!)));
             if (track == null) { Disengage(); return; }
             // RAW detection — never a velocity-extrapolated box: in this closed loop the track's velocity
             // includes our own view movement (no ego-motion compensation), so a lead would overshoot.
@@ -303,14 +309,42 @@ public class AimingAction : BaseAction
     {
         if (predictions.Length == 0) return null;
 
-        double refX = _hasLastTarget ? _lastTargetX : centerX;
-        double refY = _hasLastTarget ? _lastTargetY : centerY;
-        var (best, bestSq) = Nearest(predictions, refX, refY);
+        // Nothing held yet: an aim profile's target rule picks; otherwise the one nearest the crosshair.
+        var rule = TargetRule();
+        if (!_hasLastTarget)
+            return rule != null ? BestByRule(rule, predictions) : Nearest(predictions, centerX, centerY).Best;
+
+        var (best, bestSq) = Nearest(predictions, _lastTargetX, _lastTargetY);
 
         // If we were sticking but the closest detection is no longer near the old target, the enemy is
-        // gone/occluded — re-acquire whatever is nearest the crosshair instead of chasing a ghost.
-        if (_hasLastTarget && Math.Sqrt(bestSq) > stickRadius)
-            (best, _) = Nearest(predictions, centerX, centerY);
+        // gone/occluded — re-acquire instead of chasing a ghost.
+        if (Math.Sqrt(bestSq) > stickRadius)
+            best = rule != null ? BestByRule(rule, predictions) : Nearest(predictions, centerX, centerY).Best;
+        return best;
+    }
+
+    /// <summary>The effective aim profile's target rule ("which enemy first"), when set and valid.</summary>
+    private RuleExpression? TargetRule()
+        => _effectiveProfile is { UseTargetRule: true } p ? TriggerRules.Compile(p.TargetRule).Rule : null;
+
+    /// <summary>Rule signals for aim: crosshair at the model centre, the profile's aim region as "head".</summary>
+    private RuleContext RuleContextFor(int enemyCount)
+    {
+        int size = Math.Max(1, global::PowerAim.AI.PredictionLogic.IMAGE_SIZE);
+        return new RuleContext(size, new PointF(size / 2f, size / 2f), AppConfig.Current.SliderSettings.AimRegion,
+            LatencySec: 0.05, SpreadPx: 4, enemyCount, AutoTriggerAction.OcrNumber);
+    }
+
+    private Prediction? BestByRule(RuleExpression rule, Prediction[] predictions)
+    {
+        var ctx = RuleContextFor(predictions.Length);
+        Prediction? best = null;
+        double bestScore = double.NegativeInfinity;
+        foreach (var p in predictions)
+        {
+            double s = rule.Score(new TargetScope(RuleTarget.From(p), ctx));
+            if (!double.IsNaN(s) && s > bestScore) { bestScore = s; best = p; }
+        }
         return best;
     }
 

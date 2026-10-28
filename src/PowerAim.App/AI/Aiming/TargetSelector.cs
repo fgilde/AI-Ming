@@ -33,7 +33,8 @@ public sealed class TargetSelector
         double centerY,
         double switchMarginPct,
         int switchFrames,
-        double stickyRadiusPx)
+        double stickyRadiusPx,
+        Func<TargetTrack, double>? score = null)
     {
         if (tracks == null || tracks.Count == 0)
         {
@@ -53,9 +54,10 @@ public sealed class TargetSelector
         foreach (var t in tracks)
         {
             if (!t.Confirmed && t.Hits < 2) continue;
-            double score = Score(t, centerX, centerY);
-            if (score > bestScore) { bestScore = score; best = t; }
-            if (t.Id == _currentId) { current = t; currentScore = score; }
+            double s = score?.Invoke(t) ?? Score(t, centerX, centerY);
+            if (double.IsNaN(s)) continue;
+            if (s > bestScore) { bestScore = s; best = t; }
+            if (t.Id == _currentId) { current = t; currentScore = s; }
         }
 
         if (best is null) return null;
@@ -94,7 +96,9 @@ public sealed class TargetSelector
         // Require sustained lead before switching (kills flicker between two nearby targets).
         double margin = Math.Max(0.05, switchMarginPct);
         int needFrames = Math.Max(1, switchFrames);
-        if (bestScore > currentScore * (1.0 + margin))
+        // Lead by a share of the current score (additive, so it also works for negative rule scores;
+        // for the built-in positive score this is the same as best > current * (1 + margin)).
+        if (bestScore - currentScore > Math.Abs(currentScore) * margin)
         {
             if (_challengerId == best.Id) _challengerFrames++;
             else { _challengerId = best.Id; _challengerFrames = 1; }

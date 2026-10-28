@@ -34,12 +34,17 @@ public sealed class StickyAimSelector
     /// <param name="enabled">Master switch — <c>false</c> bypasses the selector entirely.</param>
     /// <param name="threshold">Score radius in model pixels, the space of <see cref="Prediction.Rectangle"/> (typ. 80).</param>
     /// <param name="maxLockScore">Cap for the running lock-score (typ. 100).</param>
+    /// <param name="acquireFallback">
+    ///     Lock onto <paramref name="fallback"/> when nothing is held yet (an aim profile's target rule chose
+    ///     it), instead of the selector's own confidence/size pick.
+    /// </param>
     public Prediction? SelectTarget(
         IReadOnlyList<Prediction> candidates,
         Prediction? fallback,
         bool enabled,
         float threshold,
-        float maxLockScore)
+        float maxLockScore,
+        bool acquireFallback = false)
     {
         if (!enabled)
         {
@@ -90,7 +95,7 @@ public sealed class StickyAimSelector
 
         if (_currentTarget == null)
         {
-            return AcquireNewTarget(best);
+            return AcquireNewTarget(acquireFallback && fallback != null ? fallback : best);
         }
 
         // Decide whether the winning candidate is "the same target" we already track. We use

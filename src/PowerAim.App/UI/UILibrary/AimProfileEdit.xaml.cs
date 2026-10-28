@@ -305,6 +305,15 @@ namespace PowerAim.UI.UILibrary
             }
             // RandomAimPoint lives in the Aim-region section of the XAML (it picks a point INSIDE the
             // region), not here.
+
+            // Which enemy first: an optional target rule, written by hand, from a preset or from a description.
+            TunePanel.AddToggle(Locale.AimUseTargetRule, t => t.ToolTip = Locale.AimUseTargetRuleTooltip)
+                .BindTo(() => Profile!.UseTargetRule);
+            var ruleEditor = new RuleEditor(PowerAim.AI.Rules.RuleKind.AimScore) { Margin = new Thickness(0, 0, 0, 8) };
+            ruleEditor.SetBinding(RuleEditor.RuleProperty, new System.Windows.Data.Binding(nameof(AimProfile.TargetRule)) { Source = Profile, Mode = System.Windows.Data.BindingMode.TwoWay });
+            ruleEditor.SetBinding(RuleEditor.DescriptionProperty, new System.Windows.Data.Binding(nameof(AimProfile.TargetRuleDescription)) { Source = Profile, Mode = System.Windows.Data.BindingMode.TwoWay });
+            ruleEditor.SetBinding(IsEnabledProperty, new System.Windows.Data.Binding(nameof(AimProfile.UseTargetRule)) { Source = Profile });
+            TunePanel.Children.Add(ruleEditor);
             }
             finally
             {

@@ -214,6 +214,18 @@
                             </Grid>
                         </StackPanel>
                     </Border>
+
+                    <!-- Rule / description (only when a check above is "Rule / description"): fire when the
+                         rule holds for any target, e.g. "head_hit >= 0.8". Built in code-behind. -->
+                    <Border x:Name="RuleCard"
+                            Background="{DynamicResource FluentSurface3}"
+                            BorderBrush="{DynamicResource FluentStroke}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="12,8,12,10"
+                            Margin="0,6,0,0">
+                        <StackPanel x:Name="RulePanel" />
+                    </Border>
                 </StackPanel>
             </StackPanel>
         </Border>
