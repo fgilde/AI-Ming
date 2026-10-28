@@ -52,6 +52,8 @@ public class AutoPlayLearningAction : BaseAction
     /// </summary>
     private void RecordDemonstration(Prediction[] predictions, DateTime now)
     {
+        // While AutoPlay runs the held keys are the bot's own — learning from them would teach it itself.
+        if (AppConfig.Current.ToggleState.AutoPlay) return;
         var profile = AppConfig.Current.AutoPlayProfiles.FirstOrDefault(p => p.IsValid && p.Enabled && p.ProcessMatchesIfFilterEnabled());
         if (profile == null) return;
 
