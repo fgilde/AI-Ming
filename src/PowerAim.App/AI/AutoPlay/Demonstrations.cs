@@ -51,6 +51,9 @@ public sealed class DemonstrationStore
 
     public int Count { get { lock (_lock) return _samples.Count; } }
 
+    /// <summary>Changed since the last <see cref="Save"/> / <see cref="Load"/>.</summary>
+    public bool IsDirty { get; private set; }
+
     public void Add(Demonstration sample)
     {
         if (sample.Features.Length != DecisionFeatures.Length) return;
@@ -58,6 +61,7 @@ public sealed class DemonstrationStore
         {
             if (_samples.Count >= Capacity) _samples.RemoveAt(0);
             _samples.Add(sample);
+            IsDirty = true;
         }
         Changed?.Invoke(this, EventArgs.Empty);
     }
@@ -70,12 +74,22 @@ public sealed class DemonstrationStore
 
     public void Clear()
     {
-        lock (_lock) _samples.Clear();
+        lock (_lock) { _samples.Clear(); IsDirty = true; }
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
     public static string PathNextTo(string learningModelPath)
         => Path.Combine(Path.GetDirectoryName(learningModelPath) ?? ".", "autoplay_demonstrations.json");
+
+    /// <summary>Next to the learning table file (its configured path, else its default location).</summary>
+    public static string DefaultPath
+    {
+        get
+        {
+            var modelPath = Config.AppConfig.Current?.AutoPlayLearningSettings?.ModelPath;
+            return PathNextTo(string.IsNullOrWhiteSpace(modelPath) ? AutoPlayLearningModel.Instance.DefaultModelPath : modelPath);
+        }
+    }
 
     private sealed record File(int Version, List<Demonstration> Samples);
 
@@ -84,18 +98,28 @@ public sealed class DemonstrationStore
         List<Demonstration> copy;
         lock (_lock) copy = _samples.ToList();
         System.IO.File.WriteAllText(path, JsonSerializer.Serialize(new File(DecisionFeatures.Version, copy)));
+        IsDirty = false;
     }
 
-    /// <summary>Replaces the samples with the file's. False (store unchanged) when missing or from another feature version.</summary>
+    /// <summary>
+    ///     Replaces the samples with the file's. False (store unchanged) when missing, unreadable or from
+    ///     another feature version.
+    /// </summary>
     public bool Load(string path)
     {
-        if (!System.IO.File.Exists(path)) return false;
-        var file = JsonSerializer.Deserialize<File>(System.IO.File.ReadAllText(path));
+        File? file;
+        try
+        {
+            if (!System.IO.File.Exists(path)) return false;
+            file = JsonSerializer.Deserialize<File>(System.IO.File.ReadAllText(path));
+        }
+        catch (Exception e) when (e is JsonException or IOException or UnauthorizedAccessException) { return false; }
         if (file?.Samples == null || file.Version != DecisionFeatures.Version) return false;
         lock (_lock)
         {
             _samples.Clear();
             _samples.AddRange(file.Samples.Where(s => s.Features?.Length == DecisionFeatures.Length).TakeLast(Capacity));
+            IsDirty = false;
         }
         Changed?.Invoke(this, EventArgs.Empty);
         return true;

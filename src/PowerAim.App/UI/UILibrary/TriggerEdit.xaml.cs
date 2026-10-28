@@ -225,12 +225,19 @@ namespace PowerAim.UI.UILibrary
                 slider.ToolTip = Locale.RuleAimSpreadTooltip;
             }).BindTo(() => Trigger.AimSpreadPx);
 
-            void Sync() => RuleCard.Visibility = Trigger.UsesRule ? Visibility.Visible : Visibility.Collapsed;
-            Sync();
-            Trigger.PropertyChanged += (_, e) =>
-            {
-                if (e.PropertyName is nameof(ActionTrigger.BeginIntersectionCheck) or nameof(ActionTrigger.ExecutionIntersectionCheck)) Sync();
-            };
+            // One handler at a time: a rebuild (or another trigger) replaces the previous subscription.
+            if (_ruleSyncTrigger != null) _ruleSyncTrigger.PropertyChanged -= SyncRuleCard;
+            _ruleSyncTrigger = Trigger;
+            Trigger.PropertyChanged += SyncRuleCard;
+            SyncRuleCard(null, new System.ComponentModel.PropertyChangedEventArgs(nameof(ActionTrigger.ExecutionIntersectionCheck)));
+        }
+
+        private ActionTrigger? _ruleSyncTrigger;
+
+        private void SyncRuleCard(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName is nameof(ActionTrigger.BeginIntersectionCheck) or nameof(ActionTrigger.ExecutionIntersectionCheck) && Trigger != null)
+                RuleCard.Visibility = Trigger.UsesRule ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public TriggerEdit()

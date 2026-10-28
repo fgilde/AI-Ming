@@ -82,7 +82,7 @@
                         <ComboBox x:Name="ModelCombo"
                                   Grid.Column="0"
                                   IsEditable="True"
-                                  Text="{Binding SelectedModel.Model, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                  LostKeyboardFocus="ModelCombo_LostKeyboardFocus"
                                   BorderThickness="1"
                                   BorderBrush="{DynamicResource FluentStroke}"
                                   Padding="3,5,1,5"

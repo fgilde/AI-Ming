@@ -23,6 +23,8 @@ public partial class App : System.Windows.Application
         // the model just starts empty and the recorder fills it over time.
         try { AutoPlayLearningModel.Instance.Load(AppConfig.Current?.AutoPlayLearningSettings?.ModelPath); }
         catch { /* ignored */ }
+        // Same for the recorded demonstrations behind the "learned" decision model.
+        PowerAim.AI.AutoPlay.DemonstrationStore.Instance.Load(PowerAim.AI.AutoPlay.DemonstrationStore.DefaultPath);
         // Controller-mapping engine: KB↔Pad cross-mapping. Self-gates on profile presence,
         // so booting always is cheap. ViGEm bus driver is only required if the user enables
         // a profile with gamepad targets.
@@ -35,6 +37,12 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        // Keep what was recorded this session (or that it was cleared) for the learned decision model.
+        if (PowerAim.AI.AutoPlay.DemonstrationStore.Instance.IsDirty)
+        {
+            try { PowerAim.AI.AutoPlay.DemonstrationStore.Instance.Save(PowerAim.AI.AutoPlay.DemonstrationStore.DefaultPath); }
+            catch { /* best effort on shutdown */ }
+        }
         try { PowerAim.Input.InputSender.Shutdown(); } catch { }
         try { OcrService.Instance.Stop(); } catch { }
         try { PowerAim.Input.Mapping.MappingEngine.Instance.Dispose(); } catch { }

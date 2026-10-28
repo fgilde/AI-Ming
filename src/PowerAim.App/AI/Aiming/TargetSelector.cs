@@ -73,6 +73,7 @@ public sealed class TargetSelector
                 foreach (var t in tracks)
                 {
                     if (!t.Confirmed && t.Hits < 2) continue;
+                    if (score != null && double.IsNaN(score(t))) continue; // the rule rejects it
                     double dx = t.X - _lastX, dy = t.Y - _lastY;
                     double dSq = dx * dx + dy * dy;
                     if (dSq <= adoptSq && dSq < bestSq) { bestSq = dSq; adopt = t; }

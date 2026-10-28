@@ -821,7 +821,7 @@ public partial class MainWindow
             try
             {
                 PowerAim.AI.AutoPlayLearningModel.Instance.Save(AppConfig.Current?.AutoPlayLearningSettings?.ModelPath);
-                PowerAim.AI.AutoPlay.DemonstrationStore.Instance.Save(DemonstrationsPath());
+                PowerAim.AI.AutoPlay.DemonstrationStore.Instance.Save(PowerAim.AI.AutoPlay.DemonstrationStore.DefaultPath);
                 learnStatus.Content = Locale.SavedSamplesFormat.FormatWith(PowerAim.AI.AutoPlayLearningModel.Instance.TotalSamples);
             }
             catch (Exception ex) { learnStatus.Content = Locale.SaveFailedFormat.FormatWith(ex.Message); }
@@ -829,7 +829,7 @@ public partial class MainWindow
         LearningCard.AddButton(Locale.LoadModel).Reader.Click += (_, _) =>
         {
             bool ok = PowerAim.AI.AutoPlayLearningModel.Instance.Load(AppConfig.Current?.AutoPlayLearningSettings?.ModelPath);
-            ok |= PowerAim.AI.AutoPlay.DemonstrationStore.Instance.Load(DemonstrationsPath());
+            ok |= PowerAim.AI.AutoPlay.DemonstrationStore.Instance.Load(PowerAim.AI.AutoPlay.DemonstrationStore.DefaultPath);
             learnStatus.Content = ok ? Locale.ModelLoaded : Locale.NoModelFileAtPath;
             UpdateLearnStatus(learnStatus);
         };
@@ -857,13 +857,6 @@ public partial class MainWindow
                         string.Format(Locale.LearnedSamplesFormat, PowerAim.AI.AutoPlay.DemonstrationStore.Instance.Count);
     }
 
-    /// <summary>The recorded demonstrations live next to the learning table file.</summary>
-    internal static string DemonstrationsPath()
-    {
-        var modelPath = AppConfig.Current?.AutoPlayLearningSettings?.ModelPath;
-        return PowerAim.AI.AutoPlay.DemonstrationStore.PathNextTo(
-            string.IsNullOrWhiteSpace(modelPath) ? PowerAim.AI.AutoPlayLearningModel.Instance.DefaultModelPath : modelPath);
-    }
 
     internal void OpenSpoofer()
     {

@@ -88,12 +88,19 @@ public class AutoPlayGameAction : BaseAction
 
     public override Task ExecuteAsync(Prediction[] predictions)
     {
-        if (!Active) { ReleaseEverything(); return Task.CompletedTask; }
+        if (!Active) { ReleaseEverything(); _strategist.Stop(); return Task.CompletedTask; }
 
         var profile = GetActiveProfile();
-        if (profile == null) return Task.CompletedTask;
+        // No profile (e.g. the game lost focus with per-process profiles): let go of everything we hold.
+        if (profile == null) { ReleaseEverything(); return Task.CompletedTask; }
         EnsureSubscribed(profile);
-        if (_mapDirty || _map == null) { _map = AutoPlayActionMap.Build(profile); _mapDirty = false; }
+        if (_mapDirty || _map == null)
+        {
+            // Profile switched or its actions edited: release first, the old map's keys may not be in the new one.
+            ReleaseEverything();
+            _map = AutoPlayActionMap.Build(profile);
+            _mapDirty = false;
+        }
         var map = _map;
         _strategist.Start();
 

@@ -80,6 +80,27 @@ public static class DecisionModelRegistry
     }
 
     /// <summary>
+    ///     The entry to use when a profile changes <paramref name="current"/>'s model name to <paramref name="name"/>.
+    ///     Own entries are edited in place (and returned). Built-ins are shared defaults, so an own entry for
+    ///     that model is reused or added (named "<paramref name="kindLabel"/>: name") and returned instead.
+    /// </summary>
+    public static DecisionModelDefinition WithModelName(ObservableCollection<DecisionModelDefinition> models,
+        DecisionModelDefinition current, string name, string kindLabel)
+    {
+        if (!current.IsBuiltIn)
+        {
+            current.Model = name;
+            return current;
+        }
+        var own = models.FirstOrDefault(m => !m.IsBuiltIn && m.Kind == current.Kind &&
+                                             string.Equals(m.Model, name, StringComparison.OrdinalIgnoreCase));
+        if (own != null) return own;
+        own = new DecisionModelDefinition { Name = $"{kindLabel}: {name}", Kind = current.Kind, Model = name };
+        models.Add(own);
+        return own;
+    }
+
+    /// <summary>
     ///     Point the profile at <paramref name="model"/>. The legacy backend fields follow along, so a config
     ///     saved here still opens with a sensible strategic layer in an older build.
     /// </summary>

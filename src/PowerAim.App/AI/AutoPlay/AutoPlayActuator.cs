@@ -20,14 +20,18 @@ internal sealed class InputSenderInput : IAutoPlayInput
 /// <summary>
 ///     Turns a <see cref="ReflexCommand"/> into input: presses what should be held, releases what no longer
 ///     is, taps (press + scheduled release) and moves the mouse with the profile's sensitivity scale and
-///     jitter. Every press is tracked, so <see cref="ReleaseAll"/> leaves no key stuck down.
+///     jitter. Nothing can stay down: a release goes to exactly the keys that were pressed (even if the action
+///     was edited since), and a jittered release is queued behind its own press, never ahead of it.
+///     Thread-safe: the AI thread drives it, the UI thread may call <see cref="ReleaseAll"/>.
 /// </summary>
 public sealed class AutoPlayActuator
 {
     private readonly IAutoPlayInput _input;
     private readonly Random _rng;
-    private readonly HashSet<AutoPlayAction> _held = new();
+    private readonly object _gate = new();
+    private readonly Dictionary<AutoPlayAction, StoredInputBinding[]> _held = new();
     private readonly List<(AutoPlayAction Action, DateTime At)> _scheduled = new();
+    private readonly Dictionary<AutoPlayAction, Task> _pending = new(); // jittered sends, per action, in order
 
     public AutoPlayActuator(IAutoPlayInput? input = null, Random? rng = null)
     {
@@ -35,23 +39,25 @@ public sealed class AutoPlayActuator
         _rng = rng ?? new Random();
     }
 
-    public bool IsHeld(AutoPlayAction action) => _held.Contains(action);
+    public bool IsHeld(AutoPlayAction action) { lock (_gate) return _held.ContainsKey(action); }
 
     public void Apply(ReflexCommand cmd, AutoPlayActionMap map, AutoPlayProfile profile, DateTime now)
     {
-        ReleaseDue(now);
-
-        foreach (var role in AutoPlayActionMap.ReflexOwned)
+        lock (_gate)
         {
-            var action = map.Get(role);
-            if (action == null) continue;
-            if (cmd.Hold.Contains(role)) Press(action, profile);
-            else if (!IsScheduled(action)) Release(action, profile);
+            ReleaseDue(now);
+
+            foreach (var role in AutoPlayActionMap.ReflexOwned)
+            {
+                var action = map.Get(role);
+                if (action == null) continue;
+                if (cmd.Hold.Contains(role)) Press(action, profile.KeyDelayJitterMs);
+                else if (!IsScheduled(action)) Release(action, profile.KeyDelayJitterMs);
+            }
+
+            foreach (var role in cmd.Tap)
+                if (map.Get(role) is { } action) TapLocked(action, now);
         }
-
-        foreach (var role in cmd.Tap)
-            if (map.Get(role) is { } action) Tap(action, now);
-
         Move(cmd.MouseDx, cmd.MouseDy, profile);
     }
 
@@ -61,16 +67,24 @@ public sealed class AutoPlayActuator
     /// </summary>
     public void Tap(AutoPlayAction action, DateTime now)
     {
-        if (!action.IsValid || !_held.Add(action)) return;
-        Send(action, KeyPressState.Down);
-        _scheduled.Add((action, now.AddSeconds(Math.Max(action.Duration, 0.05))));
+        lock (_gate) TapLocked(action, now);
     }
 
+    /// <summary>Releases every key AutoPlay pressed, after any press still waiting on its jitter delay.</summary>
     public void ReleaseAll()
     {
-        foreach (var action in _held) Send(action, KeyPressState.Up);
-        _held.Clear();
-        _scheduled.Clear();
+        lock (_gate)
+        {
+            foreach (var action in _held.Keys.ToList()) Release(action, jitterMs: 0);
+            _scheduled.Clear();
+        }
+    }
+
+    private void TapLocked(AutoPlayAction action, DateTime now)
+    {
+        if (!action.IsValid || _held.ContainsKey(action)) return;
+        Press(action, jitterMs: 0);
+        _scheduled.Add((action, now.AddSeconds(Math.Max(action.Duration, 0.05))));
     }
 
     private void ReleaseDue(DateTime now)
@@ -80,38 +94,44 @@ public sealed class AutoPlayActuator
             if (_scheduled[i].At > now) continue;
             var action = _scheduled[i].Action;
             _scheduled.RemoveAt(i);
-            if (_held.Remove(action)) Send(action, KeyPressState.Up);
+            Release(action, jitterMs: 0);
         }
     }
 
     private bool IsScheduled(AutoPlayAction action) => _scheduled.Exists(s => s.Action == action);
 
-    private void Press(AutoPlayAction action, AutoPlayProfile profile)
+    private void Press(AutoPlayAction action, int jitterMs)
     {
-        if (_held.Add(action)) SendJittered(action, KeyPressState.Down, profile);
+        if (_held.ContainsKey(action)) return;
+        var keys = action.Keys.Where(k => k.IsValid).ToArray();
+        if (keys.Length == 0) return;
+        _held[action] = keys;
+        Send(action, keys, KeyPressState.Down, jitterMs);
     }
 
-    private void Release(AutoPlayAction action, AutoPlayProfile profile)
+    private void Release(AutoPlayAction action, int jitterMs)
     {
-        if (_held.Remove(action)) SendJittered(action, KeyPressState.Up, profile);
+        if (_held.Remove(action, out var keys)) Send(action, keys, KeyPressState.Up, jitterMs);
     }
 
-    private void Send(AutoPlayAction action, KeyPressState state)
+    /// <summary>
+    ///     Sends now when nothing for this action is still waiting; otherwise (or with jitter) queues behind
+    ///     the action's previous send, so its Down and Up always arrive in order.
+    /// </summary>
+    private void Send(AutoPlayAction action, StoredInputBinding[] keys, KeyPressState state, int jitterMs)
     {
-        foreach (var key in action.Keys.Where(k => k.IsValid)) _input.Send(key, state);
-    }
-
-    /// <summary>Hold/release with the profile's optional 0..N ms delay, off the tick thread.</summary>
-    private void SendJittered(AutoPlayAction action, KeyPressState state, AutoPlayProfile profile)
-    {
-        int jitter = profile.KeyDelayJitterMs;
-        if (jitter <= 0) { Send(action, state); return; }
-        int delay = _rng.Next(0, jitter + 1);
-        _ = Task.Run(async () =>
+        bool waiting = _pending.TryGetValue(action, out var previous) && !previous.IsCompleted;
+        if (jitterMs <= 0 && !waiting)
+        {
+            foreach (var key in keys) _input.Send(key, state);
+            return;
+        }
+        int delay = jitterMs > 0 ? _rng.Next(0, jitterMs + 1) : 0;
+        _pending[action] = (previous ?? Task.CompletedTask).ContinueWith(async _ =>
         {
             if (delay > 0) await Task.Delay(delay);
-            Send(action, state);
-        });
+            foreach (var key in keys) _input.Send(key, state);
+        }, TaskScheduler.Default).Unwrap();
     }
 
     private void Move(int dx, int dy, AutoPlayProfile profile)

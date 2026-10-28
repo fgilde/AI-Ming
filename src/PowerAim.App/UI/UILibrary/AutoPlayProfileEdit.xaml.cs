@@ -57,22 +57,52 @@ namespace PowerAim.UI.UILibrary
         private void UpdateBackendCombo()
         {
             if (BackendCombo == null) return;
-            BackendCombo.ItemsSource = AppConfig.Current.DecisionModels;
-            BackendCombo.SelectedValue = Profile == null ? null
-                : DecisionModelRegistry.Resolve(Profile, AppConfig.Current.DecisionModels)?.Id;
+            // Showing the profile's current model is not a user choice: don't write it back.
+            _syncing = true;
+            try
+            {
+                BackendCombo.ItemsSource = AppConfig.Current.DecisionModels;
+                BackendCombo.SelectedValue = Profile == null ? null
+                    : DecisionModelRegistry.Resolve(Profile, AppConfig.Current.DecisionModels)?.Id;
+            }
+            finally { _syncing = false; }
             SyncBackendDependentUi();
         }
+
+        private bool _syncing;
 
         private void SyncBackendDependentUi()
         {
             SelectedModel = BackendCombo?.SelectedItem as DecisionModelDefinition;
+            if (ModelCombo != null) ModelCombo.Text = SelectedModel?.Model ?? "";
             if (OllamaModelPanel != null)
                 OllamaModelPanel.IsEnabled = SelectedModel?.Kind is DecisionModelKind.OllamaVision or DecisionModelKind.OllamaText;
         }
 
+        /// <summary>
+        ///     The Ollama model typed or picked here. A built-in entry is a shared default, so changing its
+        ///     model from a profile reuses (or adds) an own list entry for that model and points this profile
+        ///     at it, rather than changing the built-in for every profile.
+        /// </summary>
+        private void ApplyModelName(string? name)
+        {
+            name = name?.Trim();
+            var current = SelectedModel;
+            if (Profile == null || current == null || string.IsNullOrEmpty(name) ||
+                string.Equals(name, current.Model, StringComparison.OrdinalIgnoreCase)) return;
+            string kind = current.Kind == DecisionModelKind.OllamaText ? Locale.DecisionModelKindOllamaText : Locale.DecisionModelKindOllamaVision;
+            var target = DecisionModelRegistry.WithModelName(AppConfig.Current.DecisionModels, current, name, kind);
+            if (target == current) return;
+            DecisionModelRegistry.Assign(Profile, target);
+            UpdateBackendCombo();
+        }
+
+        private void ModelCombo_LostKeyboardFocus(object sender, System.Windows.Input.KeyboardFocusChangedEventArgs e)
+            => ApplyModelName(ModelCombo.Text);
+
         private void BackendCombo_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (Profile == null || BackendCombo.SelectedItem is not DecisionModelDefinition picked) return;
+            if (_syncing || Profile == null || BackendCombo.SelectedItem is not DecisionModelDefinition picked) return;
             if (Profile.DecisionModelId != picked.Id) DecisionModelRegistry.Assign(Profile, picked);
             SyncBackendDependentUi();
         }
@@ -124,8 +154,8 @@ namespace PowerAim.UI.UILibrary
         {
             if (ModelCombo.SelectedItem is string picked && !string.IsNullOrWhiteSpace(picked))
             {
-                if (SelectedModel != null) SelectedModel.Model = picked;
                 ModelCombo.Text = picked;
+                ApplyModelName(picked);
             }
         }
 
@@ -158,10 +188,8 @@ namespace PowerAim.UI.UILibrary
                 if (!installed.Any(m => m.StartsWith(rec, StringComparison.OrdinalIgnoreCase)))
                     merged.Add(rec);
 
-            // Setting ItemsSource on an editable ComboBox with a Text TwoWay binding can null-reset
-            // the displayed text (and write that null back into Profile.OllamaModel). Read the
-            // authoritative value from the source FIRST, populate items, then restore on a Loaded
-            // dispatcher tick so the binding has had time to re-sync.
+            // Setting ItemsSource on an editable ComboBox can reset its text. Remember the model first,
+            // populate the items, then restore it on a Loaded dispatcher tick.
             var authoritative = SelectedModel?.Model ?? ModelCombo.Text;
             ModelCombo.ItemsSource = merged;
             if (!string.IsNullOrEmpty(authoritative))
@@ -169,8 +197,6 @@ namespace PowerAim.UI.UILibrary
                 _ = Dispatcher.BeginInvoke(new Action(() =>
                 {
                     ModelCombo.Text = authoritative;
-                    if (SelectedModel != null && SelectedModel.Model != authoritative)
-                        SelectedModel.Model = authoritative;
                 }), System.Windows.Threading.DispatcherPriority.Loaded);
             }
         }

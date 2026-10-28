@@ -60,16 +60,17 @@ public sealed class AutoPlayStrategist : IDisposable
 
     public void Start()
     {
-        if (IsRunning) return;
-        _cts?.Dispose();
+        if (IsRunning && _cts is { IsCancellationRequested: false }) return;
         _cts = new CancellationTokenSource();
         var token = _cts.Token;
         _loop = Task.Run(() => LoopAsync(token));
     }
 
+    /// <summary>Cancels the loop. An answer still in flight is dropped (checked before it is committed).</summary>
     public void Stop()
     {
-        try { _cts?.Cancel(); } catch { /* already disposed */ }
+        if (_cts == null || _cts.IsCancellationRequested) return; // already stopped
+        try { _cts.Cancel(); } catch { /* already disposed */ }
         _loop = null;
         lock (_lock) _intent = AutoPlayIntent.Default;
         Current = new AutoPlayDecisionSnapshot("Heuristic", "default", null, null, null, null, null, null, DateTime.Now, null);
@@ -104,6 +105,8 @@ public sealed class AutoPlayStrategist : IDisposable
         try { intent = await model.DecideAsync(_request(profile), ct); }
         catch (OperationCanceledException) { throw; }
         catch (Exception e) { _down = true; Fail(model.Source, e.Message); return; }
+        // Some models can't be cancelled mid-request: an answer arriving after Stop must not steer the bot.
+        ct.ThrowIfCancellationRequested();
 
         if (intent == null)
         {
@@ -126,12 +129,15 @@ public sealed class AutoPlayStrategist : IDisposable
 
     private IDecisionModel? ModelFor(DecisionModelDefinition definition)
     {
-        if (_modelSignature != definition.Signature)
+        lock (_lock)
         {
-            _model = _create(definition);
-            _modelSignature = definition.Signature;
+            if (_modelSignature != definition.Signature)
+            {
+                _model = _create(definition);
+                _modelSignature = definition.Signature;
+            }
+            return _model;
         }
-        return _model;
     }
 
     private void Fail(string source, string error)
