@@ -725,6 +725,7 @@ public class PredictionLogic : IPredictionLogic, IDisposable
                 ignoreMinOverlap: (float)((AppConfig.Current?.AISettings?.IgnoreMinOverlapPct ?? 0) / 100.0),
                 circularFov: AppConfig.Current?.AISettings?.CircularFov == true);
 
+            filtered = ApplyTeamColorFilter(modelFrame, filtered);
             if (filtered.Count == 0)
             {
                 return [];
@@ -759,6 +760,33 @@ public class PredictionLogic : IPredictionLogic, IDisposable
 
             return allNearest;
         });
+    }
+
+    /// <summary>Drop teammates (or non-enemies) by the colour sampled next to each box on the model frame.</summary>
+    private static unsafe List<Prediction> ApplyTeamColorFilter(Bitmap modelFrame, List<Prediction> predictions)
+    {
+        var ai = AppConfig.Current?.AISettings;
+        if (ai == null || ai.TeamColorMode == TeamColorMode.Off || predictions.Count == 0) return predictions;
+        var options = new TeamColorOptions(ai.TeamColorMode,
+            new HsvRange(ai.TeamHueMin, ai.TeamHueMax, ai.TeamSatMin, ai.TeamSatMax, ai.TeamValMin, ai.TeamValMax),
+            ai.TeamSampleAbove, ai.TeamSampleBelow, ai.TeamSampleLeft, ai.TeamSampleRight, ai.TeamSampleExtentPct, ai.TeamMatchPct);
+
+        var rect = new Rectangle(0, 0, modelFrame.Width, modelFrame.Height);
+        var data = modelFrame.LockBits(rect, System.Drawing.Imaging.ImageLockMode.ReadOnly,
+            System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+        try
+        {
+            var pixels = new ReadOnlySpan<byte>((void*)data.Scan0, data.Stride * data.Height);
+            var kept = new List<Prediction>(predictions.Count);
+            foreach (var p in predictions)
+                if (!TeamColorFilter.ShouldDrop(pixels, data.Stride, data.Width, data.Height, p.Rectangle, options))
+                    kept.Add(p);
+            return kept;
+        }
+        finally
+        {
+            modelFrame.UnlockBits(data);
+        }
     }
 
     /// <summary>

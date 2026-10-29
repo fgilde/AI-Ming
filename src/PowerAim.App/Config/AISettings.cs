@@ -74,6 +74,24 @@ public class AISettings : BaseSettings
         set => SetField(ref field, value);
     } = new();
 
+    // ---- Team colour filter: a colour next to the box (name tag, outline) marks teammates or enemies ----
+
+    public AI.TeamColorMode TeamColorMode { get; set => SetField(ref field, value); } = AI.TeamColorMode.Off;
+    public double TeamHueMin { get; set => SetField(ref field, Math.Clamp(value, 0, 360)); } = 190;
+    public double TeamHueMax { get; set => SetField(ref field, Math.Clamp(value, 0, 360)); } = 250;
+    public double TeamSatMin { get; set => SetField(ref field, Math.Clamp(value, 0, 100)); } = 40;
+    public double TeamSatMax { get; set => SetField(ref field, Math.Clamp(value, 0, 100)); } = 100;
+    public double TeamValMin { get; set => SetField(ref field, Math.Clamp(value, 0, 100)); } = 40;
+    public double TeamValMax { get; set => SetField(ref field, Math.Clamp(value, 0, 100)); } = 100;
+    public bool TeamSampleAbove { get; set => SetField(ref field, value); } = true;
+    public bool TeamSampleBelow { get; set => SetField(ref field, value); }
+    public bool TeamSampleLeft { get; set => SetField(ref field, value); }
+    public bool TeamSampleRight { get; set => SetField(ref field, value); }
+    /// <summary>How far the sample strips reach out from the box, in % of its height / width.</summary>
+    public double TeamSampleExtentPct { get; set => SetField(ref field, Math.Clamp(value, 1, 200)); } = 30;
+    /// <summary>Share (%) of sampled pixels in range for a box to count as matching.</summary>
+    public double TeamMatchPct { get; set => SetField(ref field, Math.Clamp(value, 1, 100)); } = 15;
+
     /// <summary>Only detections whose centre lies inside the circle inscribed in the FOV square count (matches the round FOV overlay).</summary>
     public bool CircularFov
     {

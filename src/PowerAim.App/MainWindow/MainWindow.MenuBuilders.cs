@@ -186,6 +186,8 @@ public partial class MainWindow
         {
             new DetectionMasksDialog { Owner = this }.ShowDialog();
         };
+        PredictionConfig.AddButton(Locale.TeamColorFilter, b => b.ToolTip = Locale.TeamColorFilterDescription).Reader.Click += (_, _) =>
+            new TeamColorDialog { Owner = this }.ShowDialog();
         PredictionConfig.AddSlider(Locale.IgnoreMinOverlap, "%", 1, 5, 0, 100, false, 0, false)
             .InitWith(s => s.ToolTip = Locale.IgnoreMinOverlapTooltip)
             .BindTo(() => AppConfig.Current.AISettings.IgnoreMinOverlapPct);
