@@ -113,7 +113,8 @@ public partial class DebugOverlay : Window
     {
         var s = SessionStats.Instance;
         FpsText.Text     = s.InstantFps.ToString("0.0");
-        MsText.Text      = s.LastInferenceMs.ToString("0.0") + " ms";
+        MsText.Text      = s.LastInferenceMs.ToString("0.0") + " ms"
+                           + (string.IsNullOrEmpty(s.StageSummary) ? "" : "  (" + s.StageSummary + ")");
         DetText.Text     = s.LastDetectionCount.ToString();
         ShotsText.Text   = s.ShotsFired.ToString();
         IntentText.Text  = string.IsNullOrEmpty(s.LastIntent) ? "—" : s.LastIntent;

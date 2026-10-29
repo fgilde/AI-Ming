@@ -35,6 +35,9 @@ public sealed class SessionStats : INotifyPropertyChanged
     /// <summary>Time the last <c>Predict()</c> call took, in milliseconds.</summary>
     public double LastInferenceMs { get; set => SetField(ref field, value); }
 
+    /// <summary>Median capture / inference / action times and the 95th percentile of the frame total.</summary>
+    public string StageSummary { get; set => SetField(ref field, value ?? ""); } = "";
+
     /// <summary>Rolling-average inference loop FPS over a short window.</summary>
     public double InstantFps { get; set => SetField(ref field, value); }
 

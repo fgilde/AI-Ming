@@ -112,6 +112,10 @@ public class AIManager : IDisposable
         }));
     }
 
+    // Per-stage frame times (capture / inference / actions) for the debug overlay and the slow-frame log.
+    private readonly PowerAim.Class.FrameProfiler _profiler = new();
+    private int _profiledFrames;
+
     private async void AiLoop()
     {
         // async void: any exception that escapes this method becomes UnhandledException and can
@@ -158,6 +162,7 @@ public class AIManager : IDisposable
                 {
                     var sw = System.Diagnostics.Stopwatch.StartNew();
                     var frame = ImageCapture.Capture(detectionBox);
+                    double captureMs = sw.Elapsed.TotalMilliseconds;
                     var predictions = (await PredictionLogic.Predict(frame, detectionBox)).ToArray();
                     sw.Stop();
 
@@ -183,8 +188,15 @@ public class AIManager : IDisposable
                     // ReplaySettings.Enabled so this is a cheap no-op when disabled.
                     PowerAim.AI.ReplayBuffer.Instance.Push(frame, predictions);
 
+                    var actionsSw = System.Diagnostics.Stopwatch.StartNew();
                     await Task.WhenAll(_actions.Select(a => a.Execute(predictions)));
                     _consecutiveLoopErrors = 0;
+
+                    double actionsMs = actionsSw.Elapsed.TotalMilliseconds;
+                    if (_profiler.Add(captureMs, sw.Elapsed.TotalMilliseconds - captureMs, actionsMs))
+                        AppDebugLog.Debug("SlowFrame", $"{sw.Elapsed.TotalMilliseconds + actionsMs:0.0} ms — capture {captureMs:0.0}, " +
+                            $"inference {sw.Elapsed.TotalMilliseconds - captureMs:0.0}, actions {actionsMs:0.0} (recent medians: {_profiler.Summary()})");
+                    if (++_profiledFrames % 30 == 0) stats.StageSummary = _profiler.Summary();
 
                     // Spin guard: an ultra-cheap frame (no model loaded → Predict returns instantly,
                     // or a cached capture) must not busy-loop the thread now that the unconditional
