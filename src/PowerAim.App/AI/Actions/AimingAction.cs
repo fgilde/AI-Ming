@@ -306,7 +306,7 @@ public class AimingAction : BaseAction
         // ratio (if set) converts the pixel error to exact mouse counts → game-independent feel.
         _controller.MoveTo(targetX, targetY, aimArea, dt,
             AppConfig.Current.SliderSettings.MouseSensitivity, ai.AimDeadzonePx, 150, ai.CalibratedPixelsPerCount,
-            ai.AimSpeedMultiplier);
+            ai.AimSpeedMultiplier, ai.LatencyCompensationMs);
     }
 
     /// <summary>

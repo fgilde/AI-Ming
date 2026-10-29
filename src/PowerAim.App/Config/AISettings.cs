@@ -176,6 +176,17 @@ public class AISettings : BaseSettings
         set => SetField(ref field, Math.Clamp(value, 1, 60));
     } = 8;
 
+    /// <summary>
+    ///     Capture-to-output latency (ms) of the smart path. Moves sent within this window are subtracted
+    ///     from the measured error so the aim doesn't correct twice and overshoot. 0 = off. Mirrored from
+    ///     the active <see cref="AimProfile"/>.
+    /// </summary>
+    public double LatencyCompensationMs
+    {
+        get;
+        set => SetField(ref field, Math.Clamp(value, 0.0, 300.0));
+    } = 0.0;
+
     /// <summary>Consecutive frames a new target must be detected before the aim engages on it (filters one-frame false positives). 0 = at once. ~2.</summary>
     public int MinTrackedFrames
     {

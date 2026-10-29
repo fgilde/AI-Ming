@@ -21,16 +21,30 @@ namespace PowerAim.AI.Aiming;
 public sealed class AimController
 {
     private readonly Action<int, int> _move;
+    private readonly Func<double> _clockMs;
     private double _accumX;
     private double _accumY;
+    // Moves sent within the latency window: already turning the view, not yet visible in the analysed frame.
+    private readonly Queue<(double AtMs, int X, int Y)> _inFlight = new();
 
     /// <param name="move">Receives each per-frame move in mouse counts; defaults to <see cref="InputSender.Move"/>.</param>
-    public AimController(Action<int, int>? move = null) => _move = move ?? InputSender.Move;
+    /// <param name="clockMs">Monotonic clock in ms for latency compensation; defaults to a stopwatch.</param>
+    public AimController(Action<int, int>? move = null, Func<double>? clockMs = null)
+    {
+        _move = move ?? InputSender.Move;
+        if (clockMs == null)
+        {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            clockMs = () => sw.Elapsed.TotalMilliseconds;
+        }
+        _clockMs = clockMs;
+    }
 
     public void Reset()
     {
         _accumX = 0;
         _accumY = 0;
+        _inFlight.Clear();
     }
 
     /// <param name="targetX">Target X in capture-box pixels (the box is square + centred on the crosshair).</param>
@@ -50,8 +64,14 @@ public sealed class AimController
     ///     per frame" for setups where even max strength is too slow (high-DPI mouse + low in-game
     ///     sensitivity, so a count barely moves the view). Intentionally allows overshoot in raw counts.
     /// </param>
+    /// <param name="latencyCompensationMs">
+    ///     Capture-to-output latency (ms). Moves sent within this window have already turned the view but
+    ///     are not in the analysed frame yet; their pixel effect is subtracted from the error so the loop
+    ///     doesn't correct twice and overshoot. 0 = off.
+    /// </param>
     public void MoveTo(double targetX, double targetY, Rectangle area, double dt,
-        double strength, double deadzonePx, double maxStepCounts, double pixelsPerCount, double speedMultiplier = 1.0)
+        double strength, double deadzonePx, double maxStepCounts, double pixelsPerCount, double speedMultiplier = 1.0,
+        double latencyCompensationMs = 0)
     {
         if (dt <= 0) dt = 1.0 / 60.0;
 
@@ -61,6 +81,23 @@ public sealed class AimController
         // Error to the target in capture-box pixels (square box → no X/Y aspect skew).
         double errPxX = targetX - centerX;
         double errPxY = targetY - centerY;
+
+        double now = 0;
+        if (latencyCompensationMs > 0)
+        {
+            now = _clockMs();
+            while (_inFlight.Count > 0 && now - _inFlight.Peek().AtMs >= latencyCompensationMs) _inFlight.Dequeue();
+            double pxPerCount = pixelsPerCount > 0 ? pixelsPerCount : 1.0;
+            foreach (var m in _inFlight)
+            {
+                errPxX -= m.X * pxPerCount;
+                errPxY -= m.Y * pxPerCount;
+            }
+        }
+        else
+        {
+            _inFlight.Clear();
+        }
 
         double distPx = Math.Sqrt(errPxX * errPxX + errPxY * errPxY);
         if (distPx <= deadzonePx)
@@ -96,6 +133,7 @@ public sealed class AimController
         outY = Math.Clamp(outY, (int)-maxStepCounts, (int)maxStepCounts);
 
         if (outX == 0 && outY == 0) return;
+        if (latencyCompensationMs > 0) _inFlight.Enqueue((now, outX, outY));
         _move(outX, outY);
     }
 }

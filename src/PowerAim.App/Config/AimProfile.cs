@@ -148,6 +148,9 @@ public class AimProfile : EditableNotificationObject
     /// </summary>
     public double CalibratedPixelsPerCount { get; set => SetProperty(ref field, value); }
 
+    /// <summary>Capture-to-output latency (ms) the smart aim compensates for; raise when the aim overshoots, lower when it lags. 0 = off.</summary>
+    public double LatencyCompensationMs { get; set => SetProperty(ref field, value); }
+
     // ---- Aim point (read directly by AimingAction, not mirrored to globals) ----
 
     /// <summary>Per-class rules: ignore, minimum confidence, priority and anchor. Empty = every class alike.</summary>
@@ -340,6 +343,7 @@ public class AimProfile : EditableNotificationObject
             ai.CalibratedPixelsPerCount = CalibratedPixelsPerCount;
             ai.AimSpeedMultiplier = AimSpeedMultiplier;
             ai.StickyRadiusPx = StickyRadiusPx;
+            ai.LatencyCompensationMs = LatencyCompensationMs;
         }
     }
 
@@ -385,6 +389,7 @@ public class AimProfile : EditableNotificationObject
             CalibratedPixelsPerCount = ai.CalibratedPixelsPerCount;
             AimSpeedMultiplier = ai.AimSpeedMultiplier;
             StickyRadiusPx = ai.StickyRadiusPx;
+            LatencyCompensationMs = ai.LatencyCompensationMs;
         }
     }
 }

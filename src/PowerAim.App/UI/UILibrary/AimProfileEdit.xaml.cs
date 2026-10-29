@@ -238,6 +238,10 @@ namespace PowerAim.UI.UILibrary
                     .InitWith(s => s.ToolTip = Locale.AimDeadzoneTooltip)
                     .BindTo(() => Profile!.DeadzonePx);
 
+                TunePanel.AddSlider(Locale.AimLatencyCompensation, "ms", 5, 5, 0, 200, false, 0, false)
+                    .InitWith(s => s.ToolTip = Locale.AimLatencyCompensationTooltip)
+                    .BindTo(() => Profile!.LatencyCompensationMs);
+
                 // Smoothing mode dropdown (replaces the old boolean that silently ran a fixed EMA).
                 // The combo auto-selects its first item while populating, which synchronously raises the
                 // item's Selected; _buildingTunePanel suppresses that spurious write so it can't clobber

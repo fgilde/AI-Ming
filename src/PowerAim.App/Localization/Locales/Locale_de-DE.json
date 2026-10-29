@@ -1291,5 +1291,7 @@
   "AimMinTrackedFrames": "Frames vor dem Zielen",
   "AimMinTrackedFramesTooltip": "Ein neues Ziel muss so viele Frames in Folge erkannt werden, bevor der Aim darauf einrastet. Filtert Fehlerkennungen, die ein, zwei Frames aufflackern. 0 = sofort, 2 = Standard, bei 120 Inferenz-FPS sind 3 Frames ~25 ms.",
   "AimTrackConfidenceDecay": "Konfidenz-Abfall bei Dropout",
-  "AimTrackConfidenceDecayTooltip": "Solange ein Ziel nicht erkannt wird, fällt seine Konfidenz mit dieser Zeitkonstante; unter dem Minimum wird es verworfen. 0 = aus."
+  "AimTrackConfidenceDecayTooltip": "Solange ein Ziel nicht erkannt wird, fällt seine Konfidenz mit dieser Zeitkonstante; unter dem Minimum wird es verworfen. 0 = aus.",
+  "AimLatencyCompensation": "Latenzkompensation",
+  "AimLatencyCompensationTooltip": "Verzögerung zwischen Bildschirm und dem, was die KI auswertet (Capture + Inferenz + Ausgabe). Bewegungen innerhalb dieses Fensters drehen die Sicht schon, sind aber noch nicht sichtbar – sie werden nicht doppelt korrigiert. Aim überschießt oder pendelt: erhöhen. Aim wirkt träge: senken. 0 = aus; typisch 30–80 ms."
 }
