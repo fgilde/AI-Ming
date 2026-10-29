@@ -36,6 +36,28 @@ public sealed class AntiRecoilProfileManager : IDisposable
 
         AppConfig.ConfigLoaded += OnConfigLoaded;
         if (AppConfig.Current != null) OnConfigLoaded(null, null!);
+        PowerAim.Class.WindowFocusWatcher.Instance.FocusedProcessChanged += OnFocusedProcessChanged;
+    }
+
+    /// <summary>
+    ///     Per-game auto-switch: when the focused process changes and the filter is on, activate the first
+    ///     profile whose MatchProcess names that game. Profiles without a filter never auto-activate.
+    /// </summary>
+    private void OnFocusedProcessChanged(object? sender, PowerAim.Class.WindowFocusWatcher.FocusInfo focus)
+    {
+        try
+        {
+            var cfg = AppConfig.Current;
+            if (cfg?.ActiveProcessSettings?.AutoSwitchProfile != true || cfg.AntiRecoilSettings == null) return;
+            var match = cfg.AntiRecoilSettings.Profiles.FirstOrDefault(p =>
+                !string.IsNullOrWhiteSpace(p.MatchProcess) && PowerAim.Class.ProcessMatcher.Matches(p.MatchProcess, focus.ProcessName));
+            if (match != null && cfg.AntiRecoilSettings.ActiveProfileId != match.Id)
+                SetActiveProfile(match.Id, notify: true);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[AntiRecoilProfileManager] focus switch failed: {ex.Message}");
+        }
     }
 
     public static void EnsureInitialized()

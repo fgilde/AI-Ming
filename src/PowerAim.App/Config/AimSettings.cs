@@ -121,6 +121,7 @@ public class AimSettings : BaseSettings
             foreach (var p in Profiles.ToArray())
             {
                 if (!p.Enabled || !p.OcrConditionMet) continue;
+                if (!PowerAim.Class.ProcessMatcher.FocusedProcessMatches(p.MatchProcess)) continue;
                 var keys = p.AimKeyBindings;
                 if (keys == null) continue;
                 int held = 0;

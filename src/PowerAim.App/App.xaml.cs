@@ -28,6 +28,9 @@ public partial class App : System.Windows.Application
         // Controller-mapping engine: KB↔Pad cross-mapping. Self-gates on profile presence,
         // so booting always is cheap. ViGEm bus driver is only required if the user enables
         // a profile with gamepad targets.
+        // The focus watcher polls on a DispatcherTimer: create it here on the UI thread, before the AI
+        // loop or the mapping engine first ask for the focused process from their own threads.
+        _ = PowerAim.Class.WindowFocusWatcher.Instance;
         PowerAim.Input.Mapping.MappingEngine.Instance.Start();
         // Application debug log: feature flips, model switches, exceptions.
         AppDebugLog.InstallHooks();

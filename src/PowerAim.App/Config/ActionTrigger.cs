@@ -351,13 +351,7 @@ public class ActionTrigger : EditableNotificationObject
         AppConfig.Current.ToggleState.AutoTrigger &&
         ProcessMatchesIfFilterEnabled();
 
-    private bool ProcessMatchesIfFilterEnabled()
-    {
-        var settings = AppConfig.Current.ActiveProcessSettings;
-        if (settings == null || !settings.AutoSwitchProfile) return true;
-        if (string.IsNullOrWhiteSpace(_matchProcess)) return true; // no filter on this entry
-        return PowerAim.Class.ProcessMatcher.Matches(_matchProcess, PowerAim.Class.WindowFocusWatcher.Instance.CurrentProcessName);
-    }
+    private bool ProcessMatchesIfFilterEnabled() => PowerAim.Class.ProcessMatcher.FocusedProcessMatches(_matchProcess);
     public string Description => this.GetDescription();
 
 }

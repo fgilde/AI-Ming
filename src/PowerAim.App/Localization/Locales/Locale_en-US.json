@@ -130,7 +130,7 @@
   "AntiRecoilWeaponMatchHelp": "Case-insensitive substring matched against the OCR region.",
   "AutoPlayToggleTooltip": "Enable AI-controlled gameplay using Ollama vision models",
   "AutoSwitchProfile": "Auto-switch profile by game",
-  "AutoSwitchProfileTooltip": "When a Trigger / AutoPlay profile has a Match-Process pattern, it's only active while the matching game is in the foreground.",
+  "AutoSwitchProfileTooltip": "When a trigger, AutoPlay, aim or anti-recoil profile has a Match-Process pattern, it's only active while the matching game is in the foreground. An anti-recoil profile naming the game you switch to is activated automatically.",
   "AutoTrigger": "Auto Trigger",
   "AutoTriggerBreakTime": "Break Time",
   "AutoTriggerBreakTimeTooltip": "If the trigger was executed, it needs to wait for the break time before it will be executed again",

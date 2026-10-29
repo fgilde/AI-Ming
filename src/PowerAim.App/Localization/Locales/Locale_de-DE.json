@@ -130,7 +130,7 @@
   "AntiRecoilWeaponMatchHelp": "Case-insensitive substring matched against the OCR region.",
   "AutoPlayToggleTooltip": "Aktiviere KI-gesteuertes Gameplay mit Ollama-Vision-Modellen",
   "AutoSwitchProfile": "Profil automatisch nach Spiel wechseln",
-  "AutoSwitchProfileTooltip": "Wenn ein Trigger- / AutoPlay-Profil ein Match-Process-Muster hat, ist es nur aktiv, während das passende Spiel im Vordergrund ist.",
+  "AutoSwitchProfileTooltip": "Wenn ein Trigger-, AutoPlay-, Aim- oder Anti-Recoil-Profil ein Match-Process-Muster hat, ist es nur aktiv, während das passende Spiel im Vordergrund ist. Ein Anti-Recoil-Profil, das das Spiel nennt, zu dem du wechselst, wird automatisch aktiviert.",
   "AutoTrigger": "Automatischer Auslöser",
   "AutoTriggerBreakTime": "Pausenzeit",
   "AutoTriggerBreakTimeTooltip": "Wenn der Auslöser ausgeführt wurde, muss er auf die Pausenzeit warten, bevor er erneut ausgeführt wird",

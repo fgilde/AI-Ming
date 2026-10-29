@@ -133,6 +133,12 @@ public class AntiRecoilSettings : BaseSettings
     }
 
     /// <summary>Returns the currently-active profile, or <c>null</c> when none is active.</summary>
+    /// <summary>The active profile when its game filter (MatchProcess) allows the focused process; otherwise null.</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
+    public AntiRecoilProfile? EffectiveProfile =>
+        ActiveProfile is { } p && PowerAim.Class.ProcessMatcher.FocusedProcessMatches(p.MatchProcess) ? p : null;
+
     public AntiRecoilProfile? ActiveProfile
     {
         get

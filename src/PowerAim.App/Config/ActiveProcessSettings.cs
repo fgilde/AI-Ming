@@ -21,9 +21,9 @@ public class ActiveProcessSettings : BaseSettings
     } = true;
 
     /// <summary>
-    ///     When true, ActionTrigger / AutoPlayProfile entries with a non-empty
-    ///     <c>MatchProcess</c> pattern only become <c>IsActive</c> while the foreground process
-    ///     matches their pattern.
+    ///     When true, ActionTrigger / AutoPlayProfile / AimProfile / AntiRecoilProfile entries with a
+    ///     non-empty <c>MatchProcess</c> pattern only become active while the foreground process
+    ///     matches their pattern, and an anti-recoil profile naming the newly focused game is activated.
     /// </summary>
     public bool AutoSwitchProfile
     {

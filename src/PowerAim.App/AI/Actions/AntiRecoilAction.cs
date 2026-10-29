@@ -35,7 +35,7 @@ public class AntiRecoilAction : BaseAction
         {
             if (!base.Active) return false;
             if (!AppConfig.Current.ToggleState.AntiRecoil) return false;
-            var profile = AppConfig.Current.AntiRecoilSettings?.ActiveProfile;
+            var profile = AppConfig.Current.AntiRecoilSettings?.EffectiveProfile;
             return profile != null
                 && profile.Mode == AntiRecoilMode.Legacy;
         }

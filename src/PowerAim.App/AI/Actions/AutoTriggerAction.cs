@@ -63,7 +63,8 @@ public class AutoTriggerAction : BaseAction
             var token = _cancellation.Token;
             foreach (var trigger in AppConfig.Current.Triggers)
             {
-                if (trigger is { Enabled: true, IsValid: true } && (!trigger.NeedsDetection || _lastPredictions.Length > 0))
+                // IsActive = valid + enabled + the per-trigger game filter (MatchProcess).
+                if (trigger.IsActive && (!trigger.NeedsDetection || _lastPredictions.Length > 0))
                 {
                     // At most one running handler per trigger — skip while the previous one (e.g. still
                     // inside its Delay) hasn't finished; a later frame re-dispatches it fresh.

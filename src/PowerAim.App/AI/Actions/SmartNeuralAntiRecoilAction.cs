@@ -66,7 +66,7 @@ public class SmartNeuralAntiRecoilAction : BaseAction
             if (!AppConfig.Current.ToggleState.AntiRecoil) return false;
             if (!AppConfig.Current.ToggleState.SmartNeuralAntiRecoil) return false;
 
-            var profile = AppConfig.Current.AntiRecoilSettings?.ActiveProfile;
+            var profile = AppConfig.Current.AntiRecoilSettings?.EffectiveProfile;
             if (profile == null) return true;
             return profile.Mode == AntiRecoilMode.SmartNeural;
         }

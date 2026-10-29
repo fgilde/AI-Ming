@@ -23,6 +23,17 @@ public static class ProcessMatcher
     ///     "no filter" as "always active"). An empty current process never matches a non-empty
     ///     pattern.
     /// </summary>
+    public static bool MatchesIfEnabled(bool filterEnabled, string? pattern, string? currentProcessName)
+        => !filterEnabled || Matches(pattern, currentProcessName);
+
+    /// <summary>
+    ///     Per-entry game filter shared by triggers, aim and anti-recoil profiles: only enforced while
+    ///     <see cref="Config.ActiveProcessSettings.AutoSwitchProfile"/> is on; an empty pattern always matches.
+    /// </summary>
+    public static bool FocusedProcessMatches(string? pattern)
+        => MatchesIfEnabled(Config.AppConfig.Current?.ActiveProcessSettings?.AutoSwitchProfile == true,
+            pattern, WindowFocusWatcher.Instance.CurrentProcessName);
+
     public static bool Matches(string? pattern, string? currentProcessName)
     {
         if (string.IsNullOrWhiteSpace(pattern)) return true;
