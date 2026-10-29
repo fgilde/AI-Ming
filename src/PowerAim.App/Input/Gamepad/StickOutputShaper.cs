@@ -148,3 +148,21 @@ public sealed class StickMixer
         }
     }
 }
+
+/// <summary>Stick patterns of the gamepad calibration tools, as functions of the elapsed seconds.</summary>
+public static class StickTestPatterns
+{
+    /// <summary>
+    ///     Holds the right stick exactly at the configured game deadzone. If the view still turns, the game's
+    ///     deadzone is smaller than configured — lower the setting until it stays still.
+    /// </summary>
+    public static (double X, double Y, bool Bumper) DeadzoneCheck(double seconds, double gameDeadzonePct)
+        => (Math.Clamp(gameDeadzonePct, 0, 100) / 100.0, 0, false);
+
+    /// <summary>Half-deflection circle once per two seconds plus a short right-bumper press at the start of each turn.</summary>
+    public static (double X, double Y, bool Bumper) OutputTest(double seconds)
+    {
+        double angle = seconds * Math.PI; // one turn per 2 s
+        return (0.5 * Math.Cos(angle), 0.5 * Math.Sin(angle), seconds % 2 < 0.2);
+    }
+}

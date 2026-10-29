@@ -1337,5 +1337,10 @@
   "TeamMatchTooltip": "Anteil der abgetasteten Pixel, die im Farbbereich liegen müssen, damit die Box als passend gilt.",
   "AimEngineLabel": "Aim-Engine",
   "AimEngineTooltip": "Classic: bewegt pro Frame einen festen Anteil der Distanz (Stärke-Regler). V2: Regelung pro Achse auf einem Modell der Spielsicht – zieht noch nicht sichtbare Bewegungen ab, hält stetig laufenden Zielen vor, bleibt auf dem Ziel ruhig und lernt beim Zielen die echte Empfindlichkeit und Latenz. V2 ignoriert Stärke-Regler und Deadzone; Latenzkompensation einstellen (50 ms, wenn nicht gesetzt).",
-  "PowerPlanWarning": "Windows-Energiesparplan ist „Ausbalanciert“ oder „Energiesparmodus“: Er taktet CPU/GPU zwischen den Frames herunter und kann viel FPS kosten. Für Spielsitzungen „Höchstleistung“ oder „Ultimative Leistung“ wählen."
+  "PowerPlanWarning": "Windows-Energiesparplan ist „Ausbalanciert“ oder „Energiesparmodus“: Er taktet CPU/GPU zwischen den Frames herunter und kann viel FPS kosten. Für Spielsitzungen „Höchstleistung“ oder „Ultimative Leistung“ wählen.",
+  "StickDeadzoneCheck": "Spiel-Deadzone prüfen",
+  "StickDeadzoneCheckTooltip": "15 Sekunden lang wird der rechte Stick genau auf der eingestellten Spiel-Deadzone gehalten. Dreht sich die Sicht im Spiel trotzdem, ist die echte Deadzone kleiner – den Wert um 1 % senken und erneut prüfen, bis die Sicht stillsteht.",
+  "StickOutputTest": "Ausgabe testen",
+  "StickOutputTestTooltip": "10 Sekunden lang dreht der rechte Stick einen Kreis und der rechte Bumper wird alle 2 Sekunden gedrückt – zeigt, dass das virtuelle Pad im Spiel ankommt.",
+  "StickToolRunning": "Läuft…"
 }

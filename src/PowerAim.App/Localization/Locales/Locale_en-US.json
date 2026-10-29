@@ -1337,5 +1337,10 @@
   "TeamMatchTooltip": "Share of sampled pixels that must be in the colour range for the box to count as matching.",
   "AimEngineLabel": "Aim engine",
   "AimEngineTooltip": "Classic: moves a fixed share of the distance per frame (strength slider). V2: per-axis control on a model of the game's view — subtracts moves not yet visible, leads steadily moving targets, holds still once on target and learns the real sensitivity and latency while aiming. V2 ignores the strength slider and the deadzone; set the latency compensation (50 ms if unset).",
-  "PowerPlanWarning": "Windows power plan is 'Balanced' or 'Power saver': it clocks the CPU/GPU down between frames and can cost a lot of sustained FPS. Switch to 'High performance' or 'Ultimate performance' for gaming sessions."
+  "PowerPlanWarning": "Windows power plan is 'Balanced' or 'Power saver': it clocks the CPU/GPU down between frames and can cost a lot of sustained FPS. Switch to 'High performance' or 'Ultimate performance' for gaming sessions.",
+  "StickDeadzoneCheck": "Check game deadzone",
+  "StickDeadzoneCheckTooltip": "For 15 seconds the right stick is held exactly at the configured game deadzone. If the view still turns in the game, the real deadzone is smaller — lower the setting by 1 % and check again until the view stays still.",
+  "StickOutputTest": "Test output",
+  "StickOutputTestTooltip": "For 10 seconds the right stick turns in a circle and the right bumper is pressed every 2 seconds — shows that the virtual pad reaches the game.",
+  "StickToolRunning": "Running…"
 }

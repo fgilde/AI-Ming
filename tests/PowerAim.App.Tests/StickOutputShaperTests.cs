@@ -137,3 +137,27 @@ public class StickOutputShaperTests
         Assert.Equal((0.0, 0.0), last);
     }
 }
+
+public class StickTestPatternTests
+{
+    [Fact]
+    public void Deadzone_check_holds_exactly_the_configured_deadzone_to_the_right()
+    {
+        foreach (var t in new[] { 0.0, 3.2, 14.9 })
+            Assert.Equal((0.05, 0.0, false), StickTestPatterns.DeadzoneCheck(t, gameDeadzonePct: 5));
+    }
+
+    [Fact]
+    public void Output_test_circles_the_stick_and_pulses_the_bumper_every_two_seconds()
+    {
+        var a = StickTestPatterns.OutputTest(0.1);
+        var b = StickTestPatterns.OutputTest(1.0);
+        Assert.Equal(0.5, Math.Sqrt(a.X * a.X + a.Y * a.Y), 6);
+        Assert.Equal(0.5, Math.Sqrt(b.X * b.X + b.Y * b.Y), 6);
+        Assert.NotEqual(Math.Sign(a.X), Math.Sign(b.X)); // half a turn later, the other side
+
+        Assert.True(StickTestPatterns.OutputTest(0.1).Bumper);
+        Assert.False(StickTestPatterns.OutputTest(1.0).Bumper);
+        Assert.True(StickTestPatterns.OutputTest(2.1).Bumper);
+    }
+}

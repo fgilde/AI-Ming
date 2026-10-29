@@ -99,6 +99,14 @@ namespace PowerAim.Input
 
         private static bool _stickAxesPaused;
 
+        private static void ClaimRightStick(IGamepadSender sender)
+        {
+            if (_stickAxesPaused) return;
+            sender.PauseSync(GamepadAxis.RightThumbX);
+            sender.PauseSync(GamepadAxis.RightThumbY);
+            _stickAxesPaused = true;
+        }
+
         private static void DriveRightStick(int dx, int dy)
         {
             var sender = GamepadManager.GamepadSender;
@@ -107,12 +115,7 @@ namespace PowerAim.Input
             // SyncLoop (mirror physical→virtual every 1 ms) overwrites our values back to the
             // physical pad's state (0 if nothing is plugged in) immediately after we write them.
             // Same root cause that broke the mapping engine.
-            if (!_stickAxesPaused)
-            {
-                sender.PauseSync(GamepadAxis.RightThumbX);
-                sender.PauseSync(GamepadAxis.RightThumbY);
-                _stickAxesPaused = true;
-            }
+            ClaimRightStick(sender);
             // ±150 px clipping → roughly full deflection.
             const double scale = 200.0;
             double ax = Math.Clamp(dx * scale, -short.MaxValue, short.MaxValue) / short.MaxValue;
@@ -122,6 +125,40 @@ namespace PowerAim.Input
             _stickMixer.SetAi(sx, sy, _stickClock.Elapsed.TotalMilliseconds);
             PushStick(sender, options); // send now; the mixer thread only keeps it up to date
             EnsureStickThread();
+        }
+
+        /// <summary>
+        ///     Play a calibration pattern on the right stick (and right bumper) for <paramref name="seconds"/>,
+        ///     then return the stick to neutral and the bumper to the physical pad. The values go through the
+        ///     stick mixer unshaped, so the deadzone check sends exactly the configured deadzone.
+        /// </summary>
+        public static async Task<bool> PlayStickPatternAsync(Func<double, (double X, double Y, bool Bumper)> pattern,
+            double seconds, CancellationToken cancellationToken = default)
+        {
+            var sender = GamepadManager.GamepadSender;
+            if (sender == null || !sender.CanWork) return false;
+            ClaimRightStick(sender);
+            sender.PauseSync(GamepadButton.RightShoulder);
+            var started = System.Diagnostics.Stopwatch.StartNew();
+            bool bumper = false;
+            try
+            {
+                EnsureStickThread();
+                while (started.Elapsed.TotalSeconds < seconds && !cancellationToken.IsCancellationRequested)
+                {
+                    var (x, y, b) = pattern(started.Elapsed.TotalSeconds);
+                    _stickMixer.SetAi(x, y, _stickClock.Elapsed.TotalMilliseconds);
+                    if (b != bumper) sender.SetButtonState(GamepadButton.RightShoulder, bumper = b);
+                    try { await Task.Delay(10, cancellationToken); } catch (OperationCanceledException) { break; }
+                }
+            }
+            finally
+            {
+                _stickMixer.SetAi(0, 0, _stickClock.Elapsed.TotalMilliseconds);
+                if (bumper) sender.SetButtonState(GamepadButton.RightShoulder, false);
+                sender.ResumeSync(GamepadButton.RightShoulder);
+            }
+            return true;
         }
 
         private static PowerAim.Input.Gamepad.StickShapeOptions StickOptions()

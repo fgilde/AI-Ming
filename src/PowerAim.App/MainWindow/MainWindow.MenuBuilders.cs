@@ -539,6 +539,33 @@ public partial class MainWindow
                 .BindTo(() => cs.AntiStrafePct);
             GamepadSettingsConfig.AddToggle(Locale.StickInvertAiY, t => t.ToolTip = Locale.StickInvertAiYTooltip)
                 .BindTo(() => cs.InvertAiY);
+
+            // Calibration tools: drive the virtual pad directly for a few seconds.
+            void AddPatternButton(string title, string tooltip, string running, double seconds,
+                Func<double, (double X, double Y, bool Bumper)> pattern)
+            {
+                var button = GamepadSettingsConfig.AddButton(title, b => b.ToolTip = tooltip);
+                button.Reader.Click += async (_, _) =>
+                {
+                    if (!button.IsEnabled) return;
+                    button.IsEnabled = false;
+                    button.Text = running;
+                    try
+                    {
+                        if (!await InputSender.PlayStickPatternAsync(pattern, seconds))
+                            new NoticeBar(Locale.GamepadNotSending, 4000).Show();
+                    }
+                    finally
+                    {
+                        button.Text = title;
+                        button.IsEnabled = true;
+                    }
+                };
+            }
+            AddPatternButton(Locale.StickDeadzoneCheck, Locale.StickDeadzoneCheckTooltip, Locale.StickToolRunning, 15,
+                t => PowerAim.Input.Gamepad.StickTestPatterns.DeadzoneCheck(t, cs.GameDeadzonePct));
+            AddPatternButton(Locale.StickOutputTest, Locale.StickOutputTestTooltip, Locale.StickToolRunning, 10,
+                PowerAim.Input.Gamepad.StickTestPatterns.OutputTest);
         }
 
         // ── Controllers (primary) ─────────────────────────────────────────────────────────────
