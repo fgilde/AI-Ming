@@ -90,6 +90,16 @@ namespace PowerAim.UI.UILibrary
                 if (AppConfig.Current?.ToggleState?.ShowHelpTexts == true)
                     slider.ToolTip = Locale.AutoTriggerBreakTimeTooltip;
             }).BindTo(() => Trigger.BreakTime);
+            TimeSettings.AddSlider(Locale.AutoTriggerDwell, "ms", 5, 5, 0, 500, false, 0, false).InitWith(slider =>
+            {
+                slider.BorderBrush = slider.Background = Brushes.Transparent;
+                slider.ToolTip = Locale.AutoTriggerDwellTooltip;
+            }).BindTo(() => Trigger.DwellMs);
+            TimeSettings.AddToggle(Locale.AutoTriggerHoldWhileTrue, t =>
+            {
+                t.BorderBrush = t.Background = Brushes.Transparent;
+                t.ToolTip = Locale.AutoTriggerHoldWhileTrueTooltip;
+            }).BindTo(() => Trigger.HoldWhileTrue);
 
             ModePanel.AddDropdown("", Trigger.ExecutionMode,
                 mode =>

@@ -1308,5 +1308,9 @@
   "StickInvertAiY": "Invert aim Y",
   "StickInvertAiYTooltip": "Invert only the aim's vertical output, for games with inverted look. Your own stick is not affected.",
   "AimProfileOffGate": "Off-gate (suppresses aim)",
-  "AimProfileOffGateHelp": "While one of these is held this profile does not aim, even with its aim key held — e.g. hipfire, melee, vehicle or ladder buttons. The off-gate wins."
+  "AimProfileOffGateHelp": "While one of these is held this profile does not aim, even with its aim key held — e.g. hipfire, melee, vehicle or ladder buttons. The off-gate wins.",
+  "AutoTriggerDwell": "Dwell time",
+  "AutoTriggerDwellTooltip": "The execution check must hold without interruption for this long before the trigger fires. 30–50 ms prevents accidental shots while sweeping past a target. 0 = fire on the first frame.",
+  "AutoTriggerHoldWhileTrue": "Hold while on target",
+  "AutoTriggerHoldWhileTrueTooltip": "Keep the action keys pressed for as long as the execution check holds and release them on the first frame it doesn't (full-auto). The break time applies after the release."
 }

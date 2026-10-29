@@ -1308,5 +1308,9 @@
   "StickInvertAiY": "Aim-Y invertieren",
   "StickInvertAiYTooltip": "Invertiert nur die vertikale Aim-Ausgabe, für Spiele mit invertierter Sicht. Dein eigener Stick bleibt unverändert.",
   "AimProfileOffGate": "Aus-Taste (unterdrückt Aim)",
-  "AimProfileOffGateHelp": "Solange eine dieser Tasten gehalten wird, zielt dieses Profil nicht – auch wenn seine Aim-Taste gehalten wird, z. B. Hüftfeuer, Nahkampf, Fahrzeug oder Leiter. Die Aus-Taste gewinnt."
+  "AimProfileOffGateHelp": "Solange eine dieser Tasten gehalten wird, zielt dieses Profil nicht – auch wenn seine Aim-Taste gehalten wird, z. B. Hüftfeuer, Nahkampf, Fahrzeug oder Leiter. Die Aus-Taste gewinnt.",
+  "AutoTriggerDwell": "Verweilzeit",
+  "AutoTriggerDwellTooltip": "Die Ausführungsprüfung muss so lange ununterbrochen erfüllt sein, bevor der Trigger auslöst. 30–50 ms verhindern Fehlschüsse beim Vorbeischwenken. 0 = im ersten Frame auslösen.",
+  "AutoTriggerHoldWhileTrue": "Halten solange auf Ziel",
+  "AutoTriggerHoldWhileTrueTooltip": "Hält die Aktionstasten gedrückt, solange die Ausführungsprüfung erfüllt ist, und lässt sie im ersten Frame los, in dem sie es nicht mehr ist (Dauerfeuer). Die Pausenzeit gilt nach dem Loslassen."
 }

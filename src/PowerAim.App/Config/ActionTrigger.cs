@@ -239,6 +239,26 @@ public class ActionTrigger : EditableNotificationObject
     }
 
     /// <summary>
+    /// The execution check must hold without interruption for this long (ms) before the trigger fires —
+    /// stops accidental shots while sweeping past a target. 0 = fire on the first frame.
+    /// </summary>
+    public double DwellMs
+    {
+        get;
+        set => SetProperty(ref field, Math.Max(0, value));
+    }
+
+    /// <summary>
+    /// Keep the action keys pressed for as long as the execution check holds and release them on the
+    /// first frame it doesn't (full-auto fire). The break time then applies after the release.
+    /// </summary>
+    public bool HoldWhileTrue
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
+    /// <summary>
     /// Delay before trigger is executed
     /// </summary>
     public double Delay

@@ -21,6 +21,10 @@ public class AutoTriggerAction : BaseAction
     private readonly ConcurrentDictionary<ActionTrigger, DateTime> _triggerCooldowns = []; // Track cooldowns for each trigger
     private readonly ConcurrentDictionary<ActionTrigger, KeyPressState> _triggerKeyStates = []; // Store current key states for each trigger
     private CancellationTokenSource _cancellation = new();
+    // Per-trigger "check held long enough" state, stepped every frame (dwell + hold-while-true triggers).
+    private readonly ConcurrentDictionary<ActionTrigger, DwellGate> _dwellGates = [];
+    private readonly ConcurrentDictionary<ActionTrigger, bool> _armed = [];
+    private readonly System.Diagnostics.Stopwatch _dwellClock = System.Diagnostics.Stopwatch.StartNew();
 
     public AutoTriggerAction()
     {
@@ -63,6 +67,7 @@ public class AutoTriggerAction : BaseAction
             var token = _cancellation.Token;
             foreach (var trigger in AppConfig.Current.Triggers)
             {
+                if (trigger.DwellMs > 0 || trigger.HoldWhileTrue) StepArmed(trigger);
                 // IsActive = valid + enabled + the per-trigger game filter (MatchProcess).
                 if (trigger.IsActive && (!trigger.NeedsDetection || _lastPredictions.Length > 0))
                 {
@@ -92,6 +97,7 @@ public class AutoTriggerAction : BaseAction
 
             var delay = TimeSpan.FromSeconds(trigger.Delay);
             var breakTime = TimeSpan.FromSeconds(Math.Max(trigger.BreakTime, trigger.ChargeMode ? .2 : 0)); // on chargemode, breaktime should be at least a half second
+            if (trigger.HoldWhileTrue) breakTime = TimeSpan.Zero; // the break follows the release instead
             var keyState = DetermineKeyState(trigger);
 
             if (keyState != null)
@@ -145,10 +151,42 @@ public class AutoTriggerAction : BaseAction
 
 
 
+    /// <summary>
+    ///     Every frame: does the trigger's whole condition (keys, OCR, execution check) hold, and for at
+    ///     least its dwell time? A hold-while-true trigger whose condition lapses is released right here,
+    ///     so it lets go even when the target vanishes and no handler gets dispatched any more.
+    /// </summary>
+    private void StepArmed(ActionTrigger trigger)
+    {
+        bool condition = trigger.IsActive
+                         && (!trigger.NeedsDetection || _lastPredictions.Length > 0)
+                         && TriggerKeysStateCorrect(trigger) && OcrConditionsMet(trigger) && !AntiOcrConditionBlocks(trigger)
+                         && (!trigger.NeedsDetection || PredictionIsIntersecting(trigger, trigger.ExecutionIntersectionCheck, trigger.ExecutionIntersectionArea));
+        bool armed = _dwellGates.GetOrAdd(trigger, _ => new DwellGate())
+            .Update(condition, _dwellClock.Elapsed.TotalMilliseconds, trigger.DwellMs);
+        _armed[trigger] = armed;
+
+        if (trigger.HoldWhileTrue && !armed
+            && _triggerKeyStates.TryGetValue(trigger, out var state) && state == KeyPressState.Down
+            && _triggerKeyStates.TryRemove(trigger, out _))
+        {
+            _ = SendActionsAsync(trigger, KeyPressState.Up, false, TriggerExecutionMode.Simultaneous);
+            SetTriggerCooldown(trigger, TimeSpan.FromSeconds(trigger.BreakTime));
+        }
+    }
+
+    private bool IsArmed(ActionTrigger trigger) => _armed.TryGetValue(trigger, out var armed) && armed;
+
     private KeyPressState? DetermineKeyState(ActionTrigger trigger)
     {
+        if (trigger.HoldWhileTrue)
+        {
+            bool down = _triggerKeyStates.TryGetValue(trigger, out var state) && state == KeyPressState.Down;
+            return IsArmed(trigger) && !down ? KeyPressState.Down : null; // the release happens in StepArmed
+        }
+
         if (!trigger.NeedsDetection)
-            return KeyPressState.DownAndUp;
+            return trigger.DwellMs <= 0 || IsArmed(trigger) ? KeyPressState.DownAndUp : null;
 
         if (trigger.ChargeMode)
         {
@@ -160,7 +198,8 @@ public class AutoTriggerAction : BaseAction
         }
         else
         {
-            if (PredictionIsIntersecting(trigger, trigger.ExecutionIntersectionCheck, trigger.ExecutionIntersectionArea))
+            if (PredictionIsIntersecting(trigger, trigger.ExecutionIntersectionCheck, trigger.ExecutionIntersectionArea)
+                && (trigger.DwellMs <= 0 || IsArmed(trigger)))
                 return KeyPressState.DownAndUp;
         }
 
