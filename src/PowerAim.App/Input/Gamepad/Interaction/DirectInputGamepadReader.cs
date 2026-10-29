@@ -41,8 +41,11 @@ public class DirectInputGamepadReader : IGamepadReader, IGamepadStateSource
     private State _mapped;      // latest mapped snapshot (for IGamepadStateSource.GetState)
     private long _mappedAtMs;   // Environment.TickCount64 of that snapshot
 
-    /// <summary>A snapshot older than this means the poller stalled: report neutral instead of a frozen stick.</summary>
-    internal const long MaxSampleAgeMs = 100;
+    /// <summary>
+    ///     A snapshot older than this means the poller stalled: report neutral instead of a frozen stick. Long
+    ///     enough that a GC pause or thread-pool hiccup doesn't release held buttons in the game.
+    /// </summary>
+    internal const long MaxSampleAgeMs = 250;
 
     internal static bool IsStale(long nowMs, long sampleAtMs) => nowMs - sampleAtMs > MaxSampleAgeMs;
     private AxisPresence _axes = AxisPresence.All;

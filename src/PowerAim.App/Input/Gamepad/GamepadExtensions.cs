@@ -38,7 +38,14 @@ namespace PowerAim.Input
 
             if (pressState == null || pressState == KeyPressState.DownAndUp)
             {
-                Task.Delay(MouseManager.GetRandomDelay()).ContinueWith(task => { sender.ResumeSync(); });
+                // Hand back only what this send paused — a blanket ResumeSync() also released the aim stick and
+                // every control the mapping engine had taken over.
+                Task.Delay(MouseManager.GetRandomDelay()).ContinueWith(task =>
+                {
+                    if (args.GamepadButton is { } button) sender.ResumeSync(button);
+                    else if (args.GamepadSlider is { } slider) sender.ResumeSync(slider);
+                    else if (args.GamepadAxis is { } axis) sender.ResumeSync(axis);
+                });
             }
         }
 

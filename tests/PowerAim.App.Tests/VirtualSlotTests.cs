@@ -38,9 +38,9 @@ public class StaleInputTests
 {
     [Theory]
     [InlineData(1000, 990, false)]
-    [InlineData(1000, 900, false)]
-    [InlineData(1000, 899, true)]
-    public void A_sample_older_than_100_ms_counts_as_stale(long now, long sampledAt, bool stale)
+    [InlineData(1000, 750, false)]  // a GC pause or hiccup keeps the last state
+    [InlineData(1000, 749, true)]
+    public void A_sample_older_than_250_ms_counts_as_stale(long now, long sampledAt, bool stale)
         => Assert.Equal(stale, PowerAim.Input.Gamepad.Interaction.DirectInputGamepadReader.IsStale(now, sampledAt));
 }
 

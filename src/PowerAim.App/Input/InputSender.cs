@@ -203,9 +203,11 @@ namespace PowerAim.Input
                 && GamepadManager.GamepadReader is IGamepadStateSource { IsConnected: true } source)
             {
                 var pad = source.GetState().Gamepad;
-                userX = pad.RightThumbX / (double)short.MaxValue;
-                userY = pad.RightThumbY / (double)short.MaxValue;
-                leftX = pad.LeftThumbX / (double)short.MaxValue;
+                // Southpaw swaps the roles: the left stick aims, the right one moves.
+                bool southpaw = _claimedLeft;
+                userX = (southpaw ? pad.LeftThumbX : pad.RightThumbX) / (double)short.MaxValue;
+                userY = (southpaw ? pad.LeftThumbY : pad.RightThumbY) / (double)short.MaxValue;
+                leftX = (southpaw ? pad.RightThumbX : pad.LeftThumbX) / (double)short.MaxValue;
             }
             var (x, y) = _stickMixer.Next(_stickClock.Elapsed.TotalMilliseconds, userX, userY, leftX, options);
             short sx = (short)Math.Round(Math.Clamp(x, -1, 1) * short.MaxValue);

@@ -39,6 +39,9 @@ public class ProcessCapture : ICapture
         private set => SetField(ref field, value);
     }
 
+    /// <summary>Every frame handed out is a copy; the original stays here for <see cref="CopyLastCaptureCenter"/>.</summary>
+    public bool CallerOwnsFrame => true;
+
     public Bitmap Capture(Rectangle detectionBox)
     {
         IntPtr handle = GetProcessWindowHandle();
@@ -63,14 +66,14 @@ public class ProcessCapture : ICapture
         var frame = new Bitmap(detectionBox.Width, detectionBox.Height, PixelFormat.Format32bppArgb);
         using (Graphics graphics = Graphics.FromImage(frame))
             graphics.CopyFromScreen(detectionBox.Left, detectionBox.Top, 0, 0, detectionBox.Size, CopyPixelOperation.SourceCopy);
-        // Publish only the finished frame. The previous one is done with: the AI loop handles one frame
-        // at a time and anything that keeps a frame longer takes a copy.
+        // Keep the finished frame for CopyLastCaptureCenter and hand out a copy: several threads capture
+        // through this instance (AI loop, calibration, recoil recorder), none may lose a frame it still uses.
         lock (_sync)
         {
             _lastCapture?.Dispose();
             _lastCapture = frame;
+            return (Bitmap)frame.Clone();
         }
-        return frame;
     }
 
     private readonly object _sync = new();
@@ -188,6 +191,11 @@ public class ProcessCapture : ICapture
         {
             RemoveTopMostIf();
         });
+        lock (_sync)
+        {
+            _lastCapture?.Dispose();
+            _lastCapture = null;
+        }
 
     }
 }

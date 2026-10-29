@@ -9,6 +9,8 @@ using PowerAim.UI.Visuality;
 namespace PowerAim.App.Tests;
 
 /// <summary>The new dialogs and tune-panel entries build, bind and show without errors.</summary>
+// Reads and writes the global AppConfig, which other tests replace — never side by side with them.
+[Collection(nameof(TestConfig))]
 public class UiSmokeTests
 {
     private static void EnsureConfig()

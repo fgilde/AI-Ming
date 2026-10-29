@@ -97,15 +97,27 @@ public static class GamepadManager
     /// </summary>
     private static void ExcludeOwnVirtualSlot(List<UserIndex> slotsBefore)
     {
+        // Forget an exclusion from an earlier session: that slot may hold the physical pad now.
         VirtualSlot = null;
-        if (RawSender is not GamepadSenderViGEm { CanWork: true }) return;
-        for (int i = 0; i < 15 && VirtualSlot == null; i++)
+        if (GamepadReader is Gamepad.Interaction.GamepadReader reader) reader.ExcludedSlot = null;
+        if (RawSender is not GamepadSenderViGEm { CanWork: true } sender) return;
+
+        // The slot appears a few ms after connecting — wait for it off the UI thread.
+        Task.Run(async () =>
         {
-            Thread.Sleep(20);
-            VirtualSlot = Gamepad.Interaction.GamepadReader.NewSlot(slotsBefore, Gamepad.Interaction.GamepadReader.ConnectedSlots());
-        }
-        if (GamepadReader is Gamepad.Interaction.GamepadReader xinput) xinput.ExcludedSlot = VirtualSlot;
-        if (VirtualSlot != null) PowerAim.Other.AppDebugLog.Info("Gamepad", $"Own virtual pad on XInput slot {VirtualSlot}; excluded from input.");
+            UserIndex? slot = null;
+            for (int i = 0; i < 25 && slot == null; i++)
+            {
+                await Task.Delay(20);
+                slot = Gamepad.Interaction.GamepadReader.NewSlot(slotsBefore, Gamepad.Interaction.GamepadReader.ConnectedSlots());
+            }
+            if (!ReferenceEquals(RawSender, sender)) return; // re-initialised meanwhile
+            VirtualSlot = slot;
+            if (GamepadReader is Gamepad.Interaction.GamepadReader xinput) xinput.ExcludedSlot = slot;
+            PowerAim.Other.AppDebugLog.Info("Gamepad", slot != null
+                ? $"Own virtual pad on XInput slot {slot}; excluded from input."
+                : "Own virtual pad slot not identified; reader slot choice unchanged.");
+        });
     }
 
     /// <summary>Install a reader, re-pointing the <see cref="ButtonEvent"/> facade at it (detaching the old).</summary>
@@ -243,7 +255,15 @@ public static class GamepadManager
     ///     re-enumerates XInput slots, so it can claim a freed low slot. Uses <see cref="RawSender"/>
     ///     (the unwrapped concrete sender), not the reporting wrapper. No-op for non-ViGEm send modes.
     /// </summary>
-    public static bool ReconnectVirtual() => RawSender is global::GamepadSenderViGEm v && v.Reconnect();
+    public static bool ReconnectVirtual()
+    {
+        if (RawSender is not global::GamepadSenderViGEm v) return false;
+        // The pad may come back on another XInput slot: find it again (slots without our pad as the baseline).
+        var before = Gamepad.Interaction.GamepadReader.ConnectedSlots().Where(s => s != VirtualSlot).ToList();
+        bool ok = v.Reconnect();
+        if (ok) ExcludeOwnVirtualSlot(before);
+        return ok;
+    }
 
     /// <summary>
     ///     If the user previously picked a sync source (persisted by device id), find which XInput slot

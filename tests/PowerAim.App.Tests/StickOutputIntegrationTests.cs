@@ -22,11 +22,18 @@ public class StickOutputIntegrationTests
         public IGamepadSender PauseSync(GamepadButton button) { lock (_gate) Paused.Add(button.ToString()); return this; }
         public IGamepadSender PauseSync(GamepadSlider slider) => this;
         public IGamepadSender PauseSync(GamepadAxis axis) { lock (_gate) Paused.Add(axis.ToString()); return this; }
-        public IGamepadSender ResumeSync() => this;
+        public IGamepadSender ResumeSync() { lock (_gate) Paused.Clear(); return this; }
         public IGamepadSender ResumeSync(GamepadButton button) { lock (_gate) Paused.Remove(button.ToString()); return this; }
         public IGamepadSender ResumeSync(GamepadSlider slider) => this;
         public IGamepadSender ResumeSync(GamepadAxis axis) { lock (_gate) Paused.Remove(axis.ToString()); return this; }
-        public IGamepadSender SetButtonState(GamepadButton button, bool pressed, GamepadSyncState s = GamepadSyncState.None) { lock (_gate) Buttons.Add((button, pressed)); return this; }
+        public IGamepadSender SetButtonState(GamepadButton button, bool pressed, GamepadSyncState s = GamepadSyncState.None)
+        {
+            // Like the real senders: Paused takes the button over, Resume hands it back.
+            if (s == GamepadSyncState.Paused) PauseSync(button);
+            lock (_gate) Buttons.Add((button, pressed));
+            if (s == GamepadSyncState.Resume) ResumeSync(button);
+            return this;
+        }
         public IGamepadSender SetSliderValue(GamepadSlider slider, byte value, GamepadSyncState s = GamepadSyncState.None) => this;
         public IGamepadSender SetAxisValue(GamepadAxis axis, short value, GamepadSyncState s = GamepadSyncState.None) { lock (_gate) Axes.Add((axis, value)); return this; }
         public short Last(GamepadAxis axis) { lock (_gate) return Axes.LastOrDefault(a => a.Axis == axis).Value; }
@@ -128,5 +135,22 @@ public class StickOutputIntegrationTests
             cfg.DropdownState.MouseMovementMethod = method;
             UseSender(null);
         }
+    }
+
+    [Fact]
+    public async Task A_pad_button_tap_hands_back_only_its_button()
+    {
+        TestConfig.Ensure();
+        var pad = new RecordingSender();
+        pad.PauseSync(GamepadAxis.RightThumbX); // e.g. the aim stick, taken over before
+        var tap = new GamepadEventArgs { Button = nameof(GamepadButton.A) };
+        Assert.Equal(GamepadButton.A, tap.GamepadButton);
+
+        pad.Send(tap, KeyPressState.DownAndUp);
+        Assert.Contains(nameof(GamepadButton.A), pad.Paused);
+        for (int waited = 0; pad.Paused.Contains(nameof(GamepadButton.A)) && waited < 3000; waited += 10) await Task.Delay(10);
+
+        Assert.DoesNotContain(nameof(GamepadButton.A), pad.Paused);
+        Assert.Contains(nameof(GamepadAxis.RightThumbX), pad.Paused);
     }
 }

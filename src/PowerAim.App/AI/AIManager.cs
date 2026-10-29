@@ -158,10 +158,11 @@ public class AIManager : IDisposable
                 int maxCapture = Math.Max(16, Math.Min(area.Width, area.Height));
                 int captureSize = Math.Clamp(fov, 16, maxCapture);
                 Rectangle detectionBox = new(targetX - captureSize / 2, targetY - captureSize / 2, captureSize, captureSize);
+                Bitmap? frame = null;
                 try
                 {
                     var sw = System.Diagnostics.Stopwatch.StartNew();
-                    var frame = ImageCapture.Capture(detectionBox);
+                    frame = ImageCapture.Capture(detectionBox);
                     double captureMs = sw.Elapsed.TotalMilliseconds;
                     var predictions = (await PredictionLogic.Predict(frame, detectionBox)).ToArray();
                     sw.Stop();
@@ -191,9 +192,6 @@ public class AIManager : IDisposable
                     var actionsSw = System.Diagnostics.Stopwatch.StartNew();
                     await Task.WhenAll(_actions.Select(a => a.Execute(predictions)));
                     _consecutiveLoopErrors = 0;
-                    // Frames the backend hands out as copies are released here instead of piling up for the
-                    // finalizer (several MB per frame of native memory at full frame rate).
-                    if (ImageCapture.CallerOwnsFrame) frame.Dispose();
 
                     double actionsMs = actionsSw.Elapsed.TotalMilliseconds;
                     if (_profiler.Add(captureMs, sw.Elapsed.TotalMilliseconds - captureMs, actionsMs))
@@ -227,6 +225,12 @@ public class AIManager : IDisposable
                     }
 
                     StopAfterFatalError(e);
+                }
+                finally
+                {
+                    // Frames the backend hands out as copies are released here, also after a failed frame,
+                    // instead of piling up for the finalizer (several MB of native memory per frame).
+                    if (ImageCapture.CallerOwnsFrame) frame?.Dispose();
                 }
 
                 // Optional inference FPS cap — when SliderSettings.MaxInferenceFPS > 0 the helper
