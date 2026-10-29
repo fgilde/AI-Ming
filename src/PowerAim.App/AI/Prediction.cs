@@ -3,6 +3,9 @@ using PowerAim.Types;
 
 namespace PowerAim.AI;
 
+/// <summary>One pose keypoint in model pixels; <see cref="Confidence"/> is 1 when the model emits none.</summary>
+public readonly record struct Keypoint(float X, float Y, float Confidence);
+
 /// <summary>
 ///     A single detection produced by the AI pipeline. Centers are stored in screen-normalized
 ///     coordinates (0..1 over the detection box) so downstream consumers (sticky aim, mouse mover,
@@ -36,6 +39,9 @@ public class Prediction
     ///     <c>"Enemy"</c> to match the prior implicit assumption.
     /// </summary>
     public string ClassName { get; set; } = "Enemy";
+
+    /// <summary>Pose keypoints in model pixels (COCO order for 17-point models); null for non-pose models.</summary>
+    public Keypoint[]? Keypoints { get; set; }
 
     //public RelativeRect HeadRelativeRect { get; set; } = RelativeRect.Default;
     public RectangleF Rectangle { get; set; }

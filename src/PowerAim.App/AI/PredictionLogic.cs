@@ -59,6 +59,7 @@ public class PredictionLogic : IPredictionLogic, IDisposable
     private bool _isDynamicModel;
     /// <summary>True when model output is [1, N, C] (ultralytics export) instead of [1, C, N].</summary>
     private bool _outputTransposed;
+    private OutputFormat _outputFormat = new(ModelOutputKind.YoloV8Raw, 1, 0, 0);
     private readonly Dictionary<int, string> _modelClasses = new() { { 0, "Enemy" } };
 
     public OnnxExecutionProvider ExecutionProvider { get; private set; }
@@ -253,15 +254,83 @@ public class PredictionLogic : IPredictionLogic, IDisposable
     {
         if (_onnxModel == null) return;
         _outputTransposed = false;
+        _outputFormat = new OutputFormat(ModelOutputKind.YoloV8Raw, _numClasses, 0, 0);
 
-        foreach (var meta in _onnxModel.OutputMetadata.Values)
+        var outputs = _onnxModel.OutputMetadata.Values.Select(m => m.Dimensions).ToList();
+        var main = outputs.FirstOrDefault();
+        if (main != null && IsEndToEnd(main))
         {
-            if (ReadOutputLayout(meta.Dimensions, _numDetections) is not { } layout) continue;
-            _numClasses = layout.NumClasses;
-            if (layout.NumDetections > 0) _numDetections = layout.NumDetections;
-            _outputTransposed = layout.Transposed;
+            _numDetections = Math.Max(1, main[1]);
+            _outputTransposed = true;
+            _outputFormat = new OutputFormat(ModelOutputKind.EndToEnd, Math.Max(1, ReadLabelCount()), 0, 0);
+            _numClasses = _outputFormat.NumClasses;
             return;
         }
+
+        foreach (var dims in outputs)
+        {
+            if (ReadOutputLayout(dims, _numDetections) is not { } layout) continue;
+            if (layout.NumDetections > 0) _numDetections = layout.NumDetections;
+            _outputTransposed = layout.Transposed;
+            string? kptShape = null;
+            _onnxModel.ModelMetadata?.CustomMetadataMap?.TryGetValue("kpt_shape", out kptShape);
+            _outputFormat = ResolveOutputFormat(layout.NumClasses + 4, ReadLabelCount(), kptShape,
+                outputs.FirstOrDefault(d => d.Length == 4));
+            _numClasses = _outputFormat.NumClasses;
+            return;
+        }
+    }
+
+    /// <summary>
+    ///     True for an NMS-fused export: rows of <c>x1 y1 x2 y2 score class</c>, <c>[1, N, 6]</c> with
+    ///     at most a few hundred rows (YOLOv10 / YOLO26 end-to-end heads).
+    /// </summary>
+    internal static bool IsEndToEnd(int[] d)
+        => d.Length == 3 && d[0] <= 1 && d[2] == 6 && d[1] > 0 && d[1] < MinAnchorRows;
+
+    /// <summary>
+    ///     Tell the raw head variants apart. <paramref name="channels"/> = C of the main output,
+    ///     <paramref name="labelCount"/> = class names the model declares (0 = unknown),
+    ///     <paramref name="kptShape"/> = Ultralytics <c>kpt_shape</c> metadata (e.g. <c>[17, 3]</c>),
+    ///     <paramref name="protoDims"/> = the 4-D mask-prototype output of a segmentation model.
+    /// </summary>
+    internal static OutputFormat ResolveOutputFormat(int channels, int labelCount, string? kptShape, int[]? protoDims)
+    {
+        if (protoDims is { Length: 4 } && protoDims[1] > 0 && channels - 4 - protoDims[1] >= 1)
+            return new OutputFormat(ModelOutputKind.Segment, channels - 4 - protoDims[1], 0, 0);
+
+        var kpt = (kptShape ?? "").Trim('[', ']', ' ').Split(',', StringSplitOptions.TrimEntries);
+        if (kpt.Length == 2 && int.TryParse(kpt[0], out int k) && int.TryParse(kpt[1], out int kd)
+            && k > 0 && kd is 2 or 3 && channels - 4 - k * kd >= 1)
+            return new OutputFormat(ModelOutputKind.Pose, channels - 4 - k * kd, k, kd);
+
+        if (labelCount > 0 && channels - 5 == labelCount)
+            return new OutputFormat(ModelOutputKind.YoloV5Raw, labelCount, 0, 0);
+
+        return new OutputFormat(ModelOutputKind.YoloV8Raw, Math.Max(1, channels - 4), 0, 0);
+    }
+
+    /// <summary>Number of class names declared by the model's <c>names</c> metadata or a labels file; 0 if none.</summary>
+    private int ReadLabelCount()
+    {
+        try
+        {
+            if (_onnxModel?.ModelMetadata?.CustomMetadataMap?.TryGetValue("names", out string? value) == true
+                && !string.IsNullOrWhiteSpace(value))
+            {
+                value = value.Trim();
+                if (value.StartsWith('{')) return JObject.Parse(value).Count;
+                if (value.StartsWith('[')) return JArray.Parse(value).Count;
+            }
+            var labels = LabelsFileCandidates().FirstOrDefault(File.Exists);
+            if (labels != null)
+                return File.ReadAllLines(labels).Count(l => l.Trim().Length > 0 && !l.TrimStart().StartsWith('#'));
+        }
+        catch
+        {
+            // Unknown label count only disables the objectness heuristic.
+        }
+        return 0;
     }
 
     /// <summary>Fewer output rows than this is not an anchor grid (e.g. an NMS-fused export).</summary>
@@ -418,6 +487,32 @@ public class PredictionLogic : IPredictionLogic, IDisposable
         }
     }
 
+    private List<string> LabelsFileCandidates()
+    {
+        var candidates = new List<string>
+        {
+            // Canonical location requested by the app layout.
+            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "bin", "labels", "labels.txt")),
+            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "bin", "labels", "classes.txt")),
+        };
+
+        // Optional model-local sidecars (secondary).
+        if (!string.IsNullOrWhiteSpace(_modelPath))
+        {
+            string? dir = Path.GetDirectoryName(_modelPath);
+            string stem = Path.GetFileNameWithoutExtension(_modelPath);
+            if (!string.IsNullOrEmpty(dir))
+            {
+                candidates.Add(Path.Combine(dir, "labels.txt"));
+                candidates.Add(Path.Combine(dir, stem + ".txt"));
+                candidates.Add(Path.Combine(dir, stem + "_labels.txt"));
+                candidates.Add(Path.Combine(dir, "classes.txt"));
+            }
+        }
+
+        return candidates;
+    }
+
     /// <summary>
     ///     Load class names from the app labels directory first:
     ///     <c>{BaseDirectory}/bin/labels/labels.txt</c> (one name per line; line index = class id).
@@ -427,28 +522,7 @@ public class PredictionLogic : IPredictionLogic, IDisposable
     {
         try
         {
-            var candidates = new List<string>
-            {
-                // Canonical location requested by the app layout.
-                Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "bin", "labels", "labels.txt")),
-                Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "bin", "labels", "classes.txt")),
-            };
-
-            // Optional model-local sidecars (secondary).
-            if (!string.IsNullOrWhiteSpace(_modelPath))
-            {
-                string? dir = Path.GetDirectoryName(_modelPath);
-                string stem = Path.GetFileNameWithoutExtension(_modelPath);
-                if (!string.IsNullOrEmpty(dir))
-                {
-                    candidates.Add(Path.Combine(dir, "labels.txt"));
-                    candidates.Add(Path.Combine(dir, stem + ".txt"));
-                    candidates.Add(Path.Combine(dir, stem + "_labels.txt"));
-                    candidates.Add(Path.Combine(dir, "classes.txt"));
-                }
-            }
-
-            string? labelsPath = candidates.FirstOrDefault(File.Exists);
+            string? labelsPath = LabelsFileCandidates().FirstOrDefault(File.Exists);
             if (labelsPath == null) return;
 
             var lines = File.ReadAllLines(labelsPath)
@@ -475,6 +549,8 @@ public class PredictionLogic : IPredictionLogic, IDisposable
 
         // Dynamic / symbolic outputs: nothing fixed to validate; runtime tensor drives the parser.
         if (_isDynamicModel) return;
+        // End-to-end / objectness / pose / segment heads were recognised explicitly — their shape differs by design.
+        if (_outputFormat.Kind != ModelOutputKind.YoloV8Raw) return;
 
         int[] expectedCf = [1, 4 + _numClasses, _numDetections];
         int[] expectedCl = [1, _numDetections, 4 + _numClasses];
@@ -642,7 +718,10 @@ public class PredictionLogic : IPredictionLogic, IDisposable
                 allowedClassIds,
                 fovMinX, fovMaxX, fovMinY, fovMaxY,
                 ignoreRegions,
-                outputTransposed: _outputTransposed);
+                outputTransposed: _outputTransposed,
+                kind: _outputFormat.Kind,
+                keypointCount: _outputFormat.KeypointCount,
+                keypointDims: _outputFormat.KeypointDims);
 
             if (filtered.Count == 0)
             {

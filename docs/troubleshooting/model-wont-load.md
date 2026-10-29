@@ -32,7 +32,10 @@ PowerAim looks in `<install dir>\bin\models\`. If the file is anywhere else, it 
 
 PowerAim is built around **YOLOv8** ONNX (anchor-free, NCHW input, 1×3×H×W). Other architectures may fail to load. Specifically:
 
-- YOLOv5 ONNX usually works (PowerAim handles both anchor-based and anchor-free output)
+- YOLOv8 / YOLO11 detection heads (`[1, 4+classes, anchors]` or transposed) work
+- YOLOv5 ONNX works when the model declares its class names (ONNX `names` metadata or a `labels.txt`) — that is how PowerAim recognises the extra objectness channel
+- End-to-end exports with NMS built in (YOLOv10, YOLO26, output `[1, 300, 6]`) work
+- Pose models (`kpt_shape` metadata) and segmentation models work; keypoints are read, masks are ignored
 - YOLOv7 *should* work but isn't officially tested
 - Non-YOLO ONNX (custom architectures) — likely fails
 

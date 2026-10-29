@@ -4,6 +4,24 @@ using PowerAim.Config;
 
 namespace PowerAim.AI;
 
+/// <summary>How a detection model lays out its main output tensor.</summary>
+internal enum ModelOutputKind
+{
+    /// <summary><c>[1, 4+nc, N]</c> box + class scores (YOLOv8/11 style).</summary>
+    YoloV8Raw,
+    /// <summary><c>[1, N, 5+nc]</c> box + objectness + class scores.</summary>
+    YoloV5Raw,
+    /// <summary><c>[1, N, 6]</c> x1 y1 x2 y2 score class, NMS already in the graph.</summary>
+    EndToEnd,
+    /// <summary>Box + class scores + keypoints (x, y[, conf]) per anchor.</summary>
+    Pose,
+    /// <summary>Box + class scores + mask coefficients; protos in a second output.</summary>
+    Segment,
+}
+
+/// <summary>Resolved output format: kind, class count and keypoint shape.</summary>
+internal readonly record struct OutputFormat(ModelOutputKind Kind, int NumClasses, int KeypointCount, int KeypointDims);
+
 /// <summary>
 ///     Pure parser for YOLOv8 ONNX output tensors. Supports both channels-first
 ///     <c>[1, 4+nc, N]</c> and ultralytics channels-last <c>[1, N, 4+nc]</c> layouts.
@@ -29,7 +47,10 @@ internal static class PredictionFilter
         float fovMinY,
         float fovMaxY,
         IReadOnlyList<DetectionMaskRegion>? ignoreRegions = null,
-        bool outputTransposed = false)
+        bool outputTransposed = false,
+        ModelOutputKind kind = ModelOutputKind.YoloV8Raw,
+        int keypointCount = 0,
+        int keypointDims = 3)
     {
         bool classFilter = allowedClassIds != null && allowedClassIds.Count > 0;
         bool maskFilter = ignoreRegions != null && ignoreRegions.Count > 0;
@@ -56,15 +77,19 @@ internal static class PredictionFilter
             return new List<Prediction>();
         }
 
+        bool endToEnd = kind == ModelOutputKind.EndToEnd;
+        if (endToEnd)
+        {
+            // End-to-end exports are always rows of x1 y1 x2 y2 score class: [1, N, 6].
+            outputTransposed = true;
+            nFromTensor = dims[1];
+            cFromTensor = dims[2];
+        }
         // Auto-correct layout if the caller guessed wrong but the shape is unambiguous.
-        if (!outputTransposed && cFromTensor > nFromTensor && nFromTensor > 4 && nFromTensor < 512)
+        else if (!outputTransposed && cFromTensor > nFromTensor && nFromTensor > 4 && nFromTensor < 512)
         {
             outputTransposed = true;
             (nFromTensor, cFromTensor) = (cFromTensor, nFromTensor);
-        }
-        else if (outputTransposed && cFromTensor > nFromTensor && nFromTensor > 4 && nFromTensor < 512)
-        {
-            // Already consistent.
         }
 
         int safeN = Math.Min(numDetections > 0 ? numDetections : nFromTensor, nFromTensor);
@@ -73,7 +98,17 @@ internal static class PredictionFilter
         // x y w h + at least one score channel, else there is nothing to read.
         int channels = cFromTensor;
         if (channels < 5) return new List<Prediction>();
-        int safeNc = Math.Min(Math.Max(numClasses, 1), Math.Max(1, channels - 4));
+        // YOLOv5 heads carry an objectness channel before the class scores.
+        int scoreStart = kind == ModelOutputKind.YoloV5Raw ? 5 : 4;
+        int safeNc = Math.Min(Math.Max(numClasses, 1), Math.Max(1, channels - scoreStart));
+        // Pose heads append keypointCount * keypointDims values after the class scores.
+        int kpStart = scoreStart + safeNc;
+        int kpCount = kind == ModelOutputKind.Pose && keypointDims >= 2
+                      && kpStart + keypointCount * keypointDims <= channels ? keypointCount : 0;
+
+        float At(int anchor, int channel) => outputTransposed
+            ? outputTensor[0, anchor, channel]   // [batch, anchor, channel]
+            : outputTensor[0, channel, anchor];  // [batch, channel, anchor]
 
         var predictions = new List<Prediction>(Math.Min(safeN, 64));
 
@@ -82,52 +117,33 @@ internal static class PredictionFilter
             float xCenter, yCenter, width, height, bestConfidence;
             int bestClassId = 0;
 
-            if (outputTransposed)
+            if (endToEnd)
             {
-                // [batch, anchor, channel]
-                xCenter = outputTensor[0, i, 0];
-                yCenter = outputTensor[0, i, 1];
-                width = outputTensor[0, i, 2];
-                height = outputTensor[0, i, 3];
-                if (safeNc <= 1)
-                {
-                    bestConfidence = outputTensor[0, i, 4];
-                }
-                else
-                {
-                    bestConfidence = 0f;
-                    for (int classId = 0; classId < safeNc; classId++)
-                    {
-                        int ch = 4 + classId;
-                        if (ch >= channels) break;
-                        float c = outputTensor[0, i, ch];
-                        if (c > bestConfidence)
-                        {
-                            bestConfidence = c;
-                            bestClassId = classId;
-                        }
-                    }
-                }
+                float x1 = At(i, 0), y1 = At(i, 1), x2 = At(i, 2), y2 = At(i, 3);
+                width = x2 - x1;
+                height = y2 - y1;
+                if (width <= 0 || height <= 0) continue; // padding rows
+                xCenter = x1 + width / 2f;
+                yCenter = y1 + height / 2f;
+                bestConfidence = At(i, 4);
+                bestClassId = Math.Max(0, (int)MathF.Round(At(i, 5)));
             }
             else
             {
-                // [batch, channel, anchor]
-                xCenter = outputTensor[0, 0, i];
-                yCenter = outputTensor[0, 1, i];
-                width = outputTensor[0, 2, i];
-                height = outputTensor[0, 3, i];
+                xCenter = At(i, 0);
+                yCenter = At(i, 1);
+                width = At(i, 2);
+                height = At(i, 3);
                 if (safeNc <= 1)
                 {
-                    bestConfidence = outputTensor[0, 4, i];
+                    bestConfidence = At(i, scoreStart);
                 }
                 else
                 {
                     bestConfidence = 0f;
                     for (int classId = 0; classId < safeNc; classId++)
                     {
-                        int ch = 4 + classId;
-                        if (ch >= channels) break;
-                        float c = outputTensor[0, ch, i];
+                        float c = At(i, scoreStart + classId);
                         if (c > bestConfidence)
                         {
                             bestConfidence = c;
@@ -135,6 +151,7 @@ internal static class PredictionFilter
                         }
                     }
                 }
+                if (scoreStart == 5) bestConfidence *= At(i, 4);
             }
 
             if (bestConfidence < minConfidence) continue;
@@ -161,8 +178,20 @@ internal static class PredictionFilter
                 if (masked) continue;
             }
 
+            Keypoint[]? keypoints = null;
+            if (kpCount > 0)
+            {
+                keypoints = new Keypoint[kpCount];
+                for (int k = 0; k < kpCount; k++)
+                {
+                    int ch = kpStart + k * keypointDims;
+                    keypoints[k] = new Keypoint(At(i, ch), At(i, ch + 1), keypointDims >= 3 ? At(i, ch + 2) : 1f);
+                }
+            }
+
             predictions.Add(new Prediction
             {
+                Keypoints = keypoints,
                 Rectangle = new RectangleF(xMin, yMin, width, height),
                 Confidence = bestConfidence,
                 ClassId = bestClassId,
@@ -173,7 +202,8 @@ internal static class PredictionFilter
         }
 
         // Class-aware NMS: suppress overlapping duplicates so aim/tracker see one box per object.
-        return NonMaxSuppression(predictions, iouThreshold: 0.45f);
+        // End-to-end models already ran NMS in the graph.
+        return endToEnd ? predictions : NonMaxSuppression(predictions, iouThreshold: 0.45f);
     }
 
     /// <summary>
