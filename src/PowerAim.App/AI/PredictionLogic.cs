@@ -173,6 +173,10 @@ public class PredictionLogic : IPredictionLogic, IDisposable
         string effectiveModelPath = ResolveModelPath(modelPath, useFp16Model);
         string cacheDir = System.IO.Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PowerAim", "trt-cache");
+        // One engine folder per model content, so an updated model never loads an engine built for its old weights.
+        if (provider == OnnxExecutionProvider.TensorRT)
+            try { cacheDir = TensorRtCache.ResolveDir(cacheDir, effectiveModelPath); }
+            catch (Exception ex) { AppDebugLog.Debug("ONNX", "TensorRT cache folder fallback: " + ex.Message); }
 
         // Heads-up before the (potentially long, silent) TensorRT engine build, so the user doesn't
         // think the app froze — the first build for a given model can take a couple of minutes; it's
