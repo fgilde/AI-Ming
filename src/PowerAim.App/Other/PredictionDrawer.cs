@@ -125,6 +125,12 @@ namespace PowerAim.Other
 
             Draw(graphics, rect, (float)config.SliderSettings.CornerRadius, color, (float)borderThickness);
 
+            // Pose models: the skeleton inside the box.
+            float skeletonDx = targetArea?.Left ?? 0, skeletonDy = targetArea?.Top ?? 0;
+            foreach (var (from, to) in PoseSkeleton.Segments(prediction, 0.5f))
+                Draw(graphics, new PointF(from.X + skeletonDx, from.Y + skeletonDy), new PointF(to.X + skeletonDx, to.Y + skeletonDy),
+                    color, Math.Max(1f, (float)borderThickness / 2));
+
             if (config.ToggleState.ShowAIConfidence)
             {
                 var confidenceText = $"{Math.Round((prediction.Confidence * 100), 2)}%";
@@ -193,6 +199,12 @@ namespace PowerAim.Other
             }
 
             Draw(graphics, rect, (float)config.SliderSettings.CornerRadius, color, (float)borderThickness);
+
+            // Pose models: the skeleton inside the box.
+            float skeletonDx = targetArea?.Left ?? 0, skeletonDy = targetArea?.Top ?? 0;
+            foreach (var (from, to) in PoseSkeleton.Segments(prediction, 0.5f))
+                Draw(graphics, new PointF(from.X + skeletonDx, from.Y + skeletonDy), new PointF(to.X + skeletonDx, to.Y + skeletonDy),
+                    color, Math.Max(1f, (float)borderThickness / 2));
 
             if (config.ToggleState.ShowAIConfidence)
             {

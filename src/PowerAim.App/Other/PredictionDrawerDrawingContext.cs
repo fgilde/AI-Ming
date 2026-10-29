@@ -32,6 +32,11 @@ namespace PowerAim.Other
             // Draw the main rectangle with rounded corners
             DrawRoundedRectangle(dc, rect, cornerRadius, color, borderThickness);
 
+            // Pose models: the skeleton inside the box.
+            double dx = targetArea?.Left ?? 0, dy = targetArea?.Top ?? 0;
+            foreach (var (a, b) in PoseSkeleton.Segments(prediction, 0.5f))
+                DrawLine(dc, new Point(a.X + dx, a.Y + dy), new Point(b.X + dx, b.Y + dy), color, Math.Max(1, borderThickness / 2));
+
             // Draw AI confidence text if enabled
             if (config.ToggleState.ShowAIConfidence)
             {
