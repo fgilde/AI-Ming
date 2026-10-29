@@ -65,4 +65,14 @@ public class DetectionMaskRegion : BaseSettings
         double bottom = top + Height * imageSize;
         return x >= left && x <= right && y >= top && y <= bottom;
     }
+
+    /// <summary>Share (0..1) of the box (image-space pixels) that lies inside the region.</summary>
+    public float OverlapFraction(System.Drawing.RectangleF box, int imageSize)
+    {
+        if (!Enabled || imageSize <= 0 || box.Width <= 0 || box.Height <= 0) return 0;
+        var zone = new System.Drawing.RectangleF((float)(X * imageSize), (float)(Y * imageSize),
+            (float)(Width * imageSize), (float)(Height * imageSize));
+        var inter = System.Drawing.RectangleF.Intersect(zone, box);
+        return inter.Width <= 0 || inter.Height <= 0 ? 0 : inter.Width * inter.Height / (box.Width * box.Height);
+    }
 }

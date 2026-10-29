@@ -74,6 +74,23 @@ public class AISettings : BaseSettings
         set => SetField(ref field, value);
     } = new();
 
+    /// <summary>Only detections whose centre lies inside the circle inscribed in the FOV square count (matches the round FOV overlay).</summary>
+    public bool CircularFov
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    /// <summary>
+    ///     A detection whose centre is inside an ignore region is always dropped. Above 0 a detection is
+    ///     also dropped when at least this share (%) of its box overlaps a region. 0 = centre only.
+    /// </summary>
+    public double IgnoreMinOverlapPct
+    {
+        get;
+        set => SetField(ref field, Math.Clamp(value, 0.0, 100.0));
+    } = 0.0;
+
     // ============================================================ Smart aim ====
     // Layered aim path. Always-on core: pick the nearest detection, move a proportional fraction of
     // the remaining offset each frame (frame-rate-independent, optionally ratio-calibrated). On top

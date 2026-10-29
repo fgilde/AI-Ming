@@ -50,7 +50,9 @@ internal static class PredictionFilter
         bool outputTransposed = false,
         ModelOutputKind kind = ModelOutputKind.YoloV8Raw,
         int keypointCount = 0,
-        int keypointDims = 3)
+        int keypointDims = 3,
+        float ignoreMinOverlap = 0,
+        bool circularFov = false)
     {
         bool classFilter = allowedClassIds != null && allowedClassIds.Count > 0;
         bool maskFilter = ignoreRegions != null && ignoreRegions.Count > 0;
@@ -162,14 +164,34 @@ internal static class PredictionFilter
             float xMax = xCenter + width / 2f;
             float yMax = yCenter + height / 2f;
 
-            if (xMin < fovMinX || xMax > fovMaxX || yMin < fovMinY || yMax > fovMaxY) continue;
+            // Clip to the field of view instead of dropping: a target at the frame edge stays visible.
+            xMin = Math.Max(xMin, fovMinX);
+            yMin = Math.Max(yMin, fovMinY);
+            xMax = Math.Min(xMax, fovMaxX);
+            yMax = Math.Min(yMax, fovMaxY);
+            if (xMax - xMin < 1 || yMax - yMin < 1) continue;
+            xCenter = (xMin + xMax) / 2f;
+            yCenter = (yMin + yMax) / 2f;
+            width = xMax - xMin;
+            height = yMax - yMin;
+
+            if (circularFov)
+            {
+                // Only detections whose centre lies inside the circle inscribed in the frame.
+                float r = Math.Min(fovMaxX - fovMinX, fovMaxY - fovMinY) / 2f;
+                float dx = xCenter - (fovMinX + fovMaxX) / 2f, dy = yCenter - (fovMinY + fovMaxY) / 2f;
+                if (dx * dx + dy * dy > r * r) continue;
+            }
 
             if (maskFilter)
             {
                 bool masked = false;
                 for (int m = 0; m < ignoreRegions!.Count; m++)
                 {
-                    if (ignoreRegions[m].Contains(xCenter, yCenter, imageSize))
+                    // The centre inside a zone always suppresses; with a minimum overlap set, enough overlap does too.
+                    if (ignoreRegions[m].Contains(xCenter, yCenter, imageSize)
+                        || (ignoreMinOverlap > 0
+                            && ignoreRegions[m].OverlapFraction(new RectangleF(xMin, yMin, width, height), imageSize) >= ignoreMinOverlap))
                     {
                         masked = true;
                         break;

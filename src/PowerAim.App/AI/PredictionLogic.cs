@@ -721,7 +721,9 @@ public class PredictionLogic : IPredictionLogic, IDisposable
                 outputTransposed: _outputTransposed,
                 kind: _outputFormat.Kind,
                 keypointCount: _outputFormat.KeypointCount,
-                keypointDims: _outputFormat.KeypointDims);
+                keypointDims: _outputFormat.KeypointDims,
+                ignoreMinOverlap: (float)((AppConfig.Current?.AISettings?.IgnoreMinOverlapPct ?? 0) / 100.0),
+                circularFov: AppConfig.Current?.AISettings?.CircularFov == true);
 
             if (filtered.Count == 0)
             {

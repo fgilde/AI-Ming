@@ -186,6 +186,11 @@ public partial class MainWindow
         {
             new DetectionMasksDialog { Owner = this }.ShowDialog();
         };
+        PredictionConfig.AddSlider(Locale.IgnoreMinOverlap, "%", 1, 5, 0, 100, false, 0, false)
+            .InitWith(s => s.ToolTip = Locale.IgnoreMinOverlapTooltip)
+            .BindTo(() => AppConfig.Current.AISettings.IgnoreMinOverlapPct);
+        PredictionConfig.AddToggle(Locale.CircularFov, t => t.ToolTip = Locale.CircularFovTooltip)
+            .BindTo(() => AppConfig.Current.AISettings.CircularFov);
         PredictionConfig.AddSeparator();
         PredictionConfig.Visibility = GetVisibilityFor(nameof(PredictionConfig));
 

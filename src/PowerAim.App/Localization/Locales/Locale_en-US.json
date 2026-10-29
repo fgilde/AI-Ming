@@ -1312,5 +1312,9 @@
   "AutoTriggerDwell": "Dwell time",
   "AutoTriggerDwellTooltip": "The execution check must hold without interruption for this long before the trigger fires. 30–50 ms prevents accidental shots while sweeping past a target. 0 = fire on the first frame.",
   "AutoTriggerHoldWhileTrue": "Hold while on target",
-  "AutoTriggerHoldWhileTrueTooltip": "Keep the action keys pressed for as long as the execution check holds and release them on the first frame it doesn't (full-auto). The break time applies after the release."
+  "AutoTriggerHoldWhileTrueTooltip": "Keep the action keys pressed for as long as the execution check holds and release them on the first frame it doesn't (full-auto). The break time applies after the release.",
+  "IgnoreMinOverlap": "Mask overlap to ignore",
+  "IgnoreMinOverlapTooltip": "A detection whose centre is inside a detection mask is always ignored. Above 0 it is also ignored when at least this share of its box overlaps a mask. 0 = centre only.",
+  "CircularFov": "Round FOV",
+  "CircularFovTooltip": "Only count detections whose centre lies inside the circle of the FOV, not in its corners."
 }

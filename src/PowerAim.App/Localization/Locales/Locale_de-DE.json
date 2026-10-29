@@ -1312,5 +1312,9 @@
   "AutoTriggerDwell": "Verweilzeit",
   "AutoTriggerDwellTooltip": "Die Ausführungsprüfung muss so lange ununterbrochen erfüllt sein, bevor der Trigger auslöst. 30–50 ms verhindern Fehlschüsse beim Vorbeischwenken. 0 = im ersten Frame auslösen.",
   "AutoTriggerHoldWhileTrue": "Halten solange auf Ziel",
-  "AutoTriggerHoldWhileTrueTooltip": "Hält die Aktionstasten gedrückt, solange die Ausführungsprüfung erfüllt ist, und lässt sie im ersten Frame los, in dem sie es nicht mehr ist (Dauerfeuer). Die Pausenzeit gilt nach dem Loslassen."
+  "AutoTriggerHoldWhileTrueTooltip": "Hält die Aktionstasten gedrückt, solange die Ausführungsprüfung erfüllt ist, und lässt sie im ersten Frame los, in dem sie es nicht mehr ist (Dauerfeuer). Die Pausenzeit gilt nach dem Loslassen.",
+  "IgnoreMinOverlap": "Masken-Überlappung zum Ignorieren",
+  "IgnoreMinOverlapTooltip": "Eine Erkennung, deren Mitte in einer Erkennungsmaske liegt, wird immer ignoriert. Über 0 wird sie auch ignoriert, wenn mindestens dieser Anteil ihrer Box eine Maske überlappt. 0 = nur Mitte.",
+  "CircularFov": "Runde FOV",
+  "CircularFovTooltip": "Nur Erkennungen zählen, deren Mitte im Kreis der FOV liegt, nicht in ihren Ecken."
 }
