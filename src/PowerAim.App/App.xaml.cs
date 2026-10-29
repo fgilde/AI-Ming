@@ -16,6 +16,11 @@ public partial class App : System.Windows.Application
     {
         base.OnStartup(e);
         ThemeManager.Initialize();
+        // Before anything creates the virtual pad: the controller order decides which pad games read.
+        ShutdownMode = ShutdownMode.OnExplicitShutdown; // the hint is the only window yet — closing it must not end the app
+        PowerAim.UI.Visuality.GamepadOrderHintDialog.ShowIfWanted();
+        MainWindow = null; // let the real main window claim it
+        ShutdownMode = ShutdownMode.OnLastWindowClose;
         // Boot the OCR sampler — it ticks whenever OcrSettings.Enabled is true and
         // gracefully no-ops when no regions are configured or eng.traineddata is missing.
         OcrService.Instance.Start();

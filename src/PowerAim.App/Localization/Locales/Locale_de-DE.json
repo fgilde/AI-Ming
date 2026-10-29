@@ -1362,5 +1362,8 @@
   "AimClassRulesTitle": "Klassen-Regeln",
   "TeamColorFilterTitle": "Team-Farbfilter",
   "LiveTuningTitle": "Live-Tuning",
-  "CaptureDeviceNotFound": "Capture-Gerät „{0}“ nicht gefunden — ist es angeschlossen?"
+  "CaptureDeviceNotFound": "Capture-Gerät „{0}“ nicht gefunden — ist es angeschlossen?",
+  "GamepadOrderHintTitle": "Spielst du mit Controller?",
+  "Continue": "Weiter",
+  "GamepadOrderHint": "**Nur wichtig, wenn du mit Controller spielst.** Kein Controller? Einfach weiter.\n\nDie meisten Spiele lesen nur den **ersten** Controller (XInput-Slot 1), und Windows vergibt die Slots in der Reihenfolge, in der Controller auftauchen. Damit das Spiel das virtuelle Pad von PowerAim liest und nicht dein echtes, muss das virtuelle Pad zuerst da sein:\n\n1. **Trenne jetzt deinen echten Controller** (Kabel ab bzw. Bluetooth aus) — *bevor* du auf Weiter klickst.\n2. Gamepad-Sendemodus **ViGEm** (Standard, braucht den ViGEmBus-Treiber): PowerAim legt das virtuelle Pad beim Start an, es bekommt Slot 1. Steht er auf etwas anderem? Dann jetzt in den **Gamepad-Einstellungen** umstellen — der echte Controller bleibt so lange getrennt.\n3. **Erst danach den echten Controller wieder verbinden.** Er bekommt Slot 2; PowerAim liest ihn und spiegelt deine Eingaben ins virtuelle Pad.\n4. In den **Gamepad-Einstellungen** prüfen, dass dein echter Controller das **Sync**-Tag trägt (sonst dort *Für Sync nutzen* wählen).\n5. Spiel starten.\n\nWechselst du den Sendemodus später, trenne den echten Controller auch vor dem Umstellen.\n\n**Ohne Abstecken:** Mit installiertem HidHide (oder PowerAim als Administrator) versteckt *Spiele sollen den virtuellen Pad nutzen* in der Controller-Liste das echte Pad vor Spielen und verbindet das virtuelle neu — dann ist die Reihenfolge egal."
 }

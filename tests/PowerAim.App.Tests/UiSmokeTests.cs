@@ -77,6 +77,21 @@ public class UiSmokeTests
     });
 
     [Fact]
+    public void Startup_controller_hint_works_without_a_loaded_config() => Sta.Run(() =>
+    {
+        // Shown before the main window loads the config.
+        var dialog = new GamepadOrderHintDialog();
+        try
+        {
+            ShowOffScreen(dialog);
+            Assert.Equal(Locale.GamepadOrderHintTitle, dialog.Header);
+            Assert.Equal(Locale.Continue, dialog.ApplyButton.Content);
+            Assert.Contains("ViGEm", dialog.Markdown);
+        }
+        finally { dialog.Close(); }
+    });
+
+    [Fact]
     public void Team_colour_dialog_offers_every_setting_and_writes_through() => Sta.Run(() =>
     {
         EnsureConfig();

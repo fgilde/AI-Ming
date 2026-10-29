@@ -1362,5 +1362,8 @@
   "AimClassRulesTitle": "Class rules",
   "TeamColorFilterTitle": "Team colour filter",
   "LiveTuningTitle": "Live tuning",
-  "CaptureDeviceNotFound": "Capture device \"{0}\" not found — is it plugged in?"
+  "CaptureDeviceNotFound": "Capture device \"{0}\" not found — is it plugged in?",
+  "GamepadOrderHintTitle": "Playing with a controller?",
+  "Continue": "Continue",
+  "GamepadOrderHint": "**Only matters if you play with a controller.** No controller? Just continue.\n\nMost games only read the **first** controller (XInput slot 1), and Windows hands out slots in the order controllers appear. For the game to read PowerAim's virtual pad instead of your real one, the virtual pad has to be there first:\n\n1. **Disconnect your real controller now** (unplug the cable or switch Bluetooth off) — *before* you click Continue.\n2. Gamepad send mode **ViGEm** (the default, needs the ViGEmBus driver): PowerAim creates the virtual pad while starting, and it takes slot 1. Set to something else? Switch it under **Gamepad Settings** now, with the real controller still disconnected.\n3. **Only then reconnect your real controller.** It gets slot 2; PowerAim reads it and mirrors your input into the virtual pad.\n4. Under **Gamepad Settings** check that your real controller carries the **Sync** tag (otherwise pick *Use for sync* there).\n5. Start the game.\n\nIf you switch the send mode later, disconnect the real controller before switching, too.\n\n**Without unplugging:** with HidHide installed (or PowerAim run as administrator), *Make games use the virtual pad* in the controller list hides the real pad from games and reconnects the virtual one — then the order doesn't matter."
 }

@@ -40,6 +40,13 @@ namespace PowerAim.UI.Visuality
             }
         }
 
+        public string Header
+        {
+            get => _header;
+            set => SetField(ref _header, value);
+        }
+        private string _header = Locale.KnownIssues;
+
         public string Markdown
         {
             get => _markdown;
