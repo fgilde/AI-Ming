@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using PowerAim.Input.Gamepad;
 
 namespace PowerAim.Config;
 
@@ -31,4 +32,48 @@ public class ControllerSettings : BaseSettings
         get;
         set => SetField(ref field, value);
     } = new();
+
+    // ---- Aim output on the right stick (gamepad movement method) ----
+
+    /// <summary>The game's stick deadzone (%). Aim corrections are remapped above it so small ones still turn the view. 0 = off.</summary>
+    public double GameDeadzonePct
+    {
+        get;
+        set => SetField(ref field, Math.Clamp(value, 0, 50));
+    }
+
+    /// <summary>Ceiling of the aim's stick deflection (%).</summary>
+    public double MaxOutputPct
+    {
+        get;
+        set => SetField(ref field, Math.Clamp(value, 5, 100));
+    } = 100;
+
+    /// <summary>The game's stick response curve; the aim compensates with its inverse.</summary>
+    public StickResponseCurve ResponseCurve
+    {
+        get;
+        set => SetField(ref field, value);
+    } = StickResponseCurve.Linear;
+
+    /// <summary>How much the physical right stick takes over while aiming: blend = this % · stick deflection. 0 = aim only.</summary>
+    public double ManualOverridePct
+    {
+        get;
+        set => SetField(ref field, Math.Clamp(value, 0, 100));
+    }
+
+    /// <summary>0–50: counter the crosshair drift from strafing with the left stick, toward the target only.</summary>
+    public double AntiStrafePct
+    {
+        get;
+        set => SetField(ref field, Math.Clamp(value, 0, 50));
+    }
+
+    /// <summary>Invert only the aim's vertical stick output (games with inverted look).</summary>
+    public bool InvertAiY
+    {
+        get;
+        set => SetField(ref field, value);
+    }
 }

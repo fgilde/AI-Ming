@@ -511,6 +511,29 @@ public partial class MainWindow
             }
         }
 
+        // ── Aim output on the right stick ─────────────────────────────────────────────────────
+        // Only used when the movement method is "Gamepad": how the aim's correction becomes stick deflection.
+        {
+            var cs = AppConfig.Current.ControllerSettings;
+            GamepadSettingsConfig.AddTitle(Locale.StickOutputTitle, false);
+            GamepadSettingsConfig.AddSlider(Locale.StickGameDeadzone, "%", 1, 1, 0, 50, false, 0, false)
+                .InitWith(s => s.ToolTip = Locale.StickGameDeadzoneTooltip)
+                .BindTo(() => cs.GameDeadzonePct);
+            GamepadSettingsConfig.AddSlider(Locale.StickMaxOutput, "%", 1, 1, 5, 100, false, 0, false)
+                .InitWith(s => s.ToolTip = Locale.StickMaxOutputTooltip)
+                .BindTo(() => cs.MaxOutputPct);
+            GamepadSettingsConfig.AddDropdown(Locale.StickResponseCurve, cs.ResponseCurve, v => cs.ResponseCurve = v,
+                d => d.ToolTip = Locale.StickResponseCurveTooltip);
+            GamepadSettingsConfig.AddSlider(Locale.StickManualOverride, "%", 1, 1, 0, 100, false, 0, false)
+                .InitWith(s => s.ToolTip = Locale.StickManualOverrideTooltip)
+                .BindTo(() => cs.ManualOverridePct);
+            GamepadSettingsConfig.AddSlider(Locale.StickAntiStrafe, Locale.Amount, 1, 1, 0, 50, false, 0, false)
+                .InitWith(s => s.ToolTip = Locale.StickAntiStrafeTooltip)
+                .BindTo(() => cs.AntiStrafePct);
+            GamepadSettingsConfig.AddToggle(Locale.StickInvertAiY, t => t.ToolTip = Locale.StickInvertAiYTooltip)
+                .BindTo(() => cs.InvertAiY);
+        }
+
         // ── Controllers (primary) ─────────────────────────────────────────────────────────────
         // All detected pads + the virtual one in one tidy list, the current sync source tagged, with
         // per-row actions (use for sync / hide).

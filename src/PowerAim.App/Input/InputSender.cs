@@ -29,9 +29,14 @@ namespace PowerAim.Input
         //  one "send input" entry-point.
         // ===========================================================================
 
-        private const int StickReleaseAfterMs = 80;
-        private static DateTime _lastStickPush = DateTime.MinValue;
-        private static System.Threading.Timer? _releaseTimer;
+        // Latest aim vector for the right stick; the mixer thread keeps sending it (blended with the
+        // physical stick when configured) and releases it to neutral once it is older than 80 ms.
+        private static readonly PowerAim.Input.Gamepad.StickMixer _stickMixer = new();
+        private static readonly System.Diagnostics.Stopwatch _stickClock = System.Diagnostics.Stopwatch.StartNew();
+        private static readonly object _stickSendGate = new();
+        private static short _sentStickX, _sentStickY;
+        private static System.Threading.Thread? _stickThread;
+        private static volatile bool _stickThreadRun = true;
 
         /// <summary>
         ///     True if a working gamepad sender exists. When false, all aim-via-gamepad calls
@@ -110,33 +115,75 @@ namespace PowerAim.Input
             }
             // ±150 px clipping → roughly full deflection.
             const double scale = 200.0;
-            short sx = (short)Math.Clamp(dx * scale, short.MinValue, short.MaxValue);
-            short sy = (short)Math.Clamp(-dy * scale, short.MinValue, short.MaxValue);
-            sender.SetAxisValue(GamepadAxis.RightThumbX, sx);
-            sender.SetAxisValue(GamepadAxis.RightThumbY, sy);
-            _lastStickPush = DateTime.UtcNow;
-            EnsureReleaseTimer();
+            double ax = Math.Clamp(dx * scale, -short.MaxValue, short.MaxValue) / short.MaxValue;
+            double ay = Math.Clamp(-dy * scale, -short.MaxValue, short.MaxValue) / short.MaxValue;
+            var options = StickOptions();
+            var (sx, sy) = PowerAim.Input.Gamepad.StickOutputShaper.ShapeAi(ax, ay, options);
+            _stickMixer.SetAi(sx, sy, _stickClock.Elapsed.TotalMilliseconds);
+            PushStick(sender, options); // send now; the mixer thread only keeps it up to date
+            EnsureStickThread();
+        }
+
+        private static PowerAim.Input.Gamepad.StickShapeOptions StickOptions()
+        {
+            var c = AppConfig.Current?.ControllerSettings;
+            return c == null
+                ? PowerAim.Input.Gamepad.StickShapeOptions.Default
+                : new(c.GameDeadzonePct, c.MaxOutputPct, c.ResponseCurve, c.ManualOverridePct, c.AntiStrafePct, c.InvertAiY);
+        }
+
+        /// <summary>Send the mixer's current right-stick value when it changed.</summary>
+        private static void PushStick(IGamepadSender sender, PowerAim.Input.Gamepad.StickShapeOptions options)
+        {
+            double userX = 0, userY = 0, leftX = 0;
+            if ((options.ManualOverridePct > 0 || options.AntiStrafePct > 0)
+                && GamepadManager.GamepadReader is IGamepadStateSource { IsConnected: true } source)
+            {
+                var pad = source.GetState().Gamepad;
+                userX = pad.RightThumbX / (double)short.MaxValue;
+                userY = pad.RightThumbY / (double)short.MaxValue;
+                leftX = pad.LeftThumbX / (double)short.MaxValue;
+            }
+            var (x, y) = _stickMixer.Next(_stickClock.Elapsed.TotalMilliseconds, userX, userY, leftX, options);
+            short sx = (short)Math.Round(Math.Clamp(x, -1, 1) * short.MaxValue);
+            short sy = (short)Math.Round(Math.Clamp(y, -1, 1) * short.MaxValue);
+            lock (_stickSendGate)
+            {
+                if (sx == _sentStickX && sy == _sentStickY) return;
+                sender.SetAxisValue(GamepadAxis.RightThumbX, sx);
+                sender.SetAxisValue(GamepadAxis.RightThumbY, sy);
+                _sentStickX = sx;
+                _sentStickY = sy;
+            }
         }
 
         /// <summary>
-        ///     Auto-release the right-stick to neutral after <see cref="StickReleaseAfterMs"/> ms
-        ///     of inactivity so the in-game view doesn't keep panning once we lose the target.
+        ///     Keeps the right stick current between aim frames (blend with the physical stick, anti-strafe)
+        ///     and releases it to neutral after 80 ms without a new aim vector, so the in-game view doesn't
+        ///     keep panning once we lose the target.
         /// </summary>
-        private static void EnsureReleaseTimer()
+        private static void EnsureStickThread()
         {
-            if (_releaseTimer != null) return;
-            _releaseTimer = new System.Threading.Timer(_ =>
+            if (_stickThread != null) return;
+            _stickThread = new System.Threading.Thread(() =>
             {
-                try
+                while (_stickThreadRun)
                 {
-                    if ((DateTime.UtcNow - _lastStickPush).TotalMilliseconds < StickReleaseAfterMs) return;
-                    var sender = GamepadManager.GamepadSender;
-                    if (sender == null || !sender.CanWork) return;
-                    sender.SetAxisValue(GamepadAxis.RightThumbX, 0);
-                    sender.SetAxisValue(GamepadAxis.RightThumbY, 0);
+                    try
+                    {
+                        var sender = GamepadManager.GamepadSender;
+                        if (sender is { CanWork: true } && GamepadAimActive) PushStick(sender, StickOptions());
+                    }
+                    catch { /* ignored */ }
+                    System.Threading.Thread.Sleep(2);
                 }
-                catch { /* ignored */ }
-            }, null, 30, 30);
+            })
+            {
+                IsBackground = true,
+                Name = "PowerAim stick mixer",
+                Priority = System.Threading.ThreadPriority.AboveNormal,
+            };
+            _stickThread.Start();
         }
 
         // ===========================================================================
@@ -341,8 +388,7 @@ namespace PowerAim.Input
         {
             try
             {
-                _releaseTimer?.Dispose();
-                _releaseTimer = null;
+                _stickThreadRun = false;
             }
             catch { }
         }

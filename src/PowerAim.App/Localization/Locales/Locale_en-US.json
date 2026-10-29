@@ -1293,5 +1293,18 @@
   "AimTrackConfidenceDecay": "Confidence fade on dropout",
   "AimTrackConfidenceDecayTooltip": "While a target is not detected its confidence fades with this time constant; it is dropped once it falls below the minimum. 0 = off.",
   "AimLatencyCompensation": "Latency compensation",
-  "AimLatencyCompensationTooltip": "Delay between the screen and what the AI analyses (capture + inference + output). Moves made within this window are already turning the view but aren't visible yet, so they are not corrected twice. Aim overshoots or swings: increase. Aim feels sluggish: decrease. 0 = off; typical 30–80 ms."
+  "AimLatencyCompensationTooltip": "Delay between the screen and what the AI analyses (capture + inference + output). Moves made within this window are already turning the view but aren't visible yet, so they are not corrected twice. Aim overshoots or swings: increase. Aim feels sluggish: decrease. 0 = off; typical 30–80 ms.",
+  "StickOutputTitle": "Aim output on the right stick",
+  "StickGameDeadzone": "Game deadzone",
+  "StickGameDeadzoneTooltip": "The game's own stick deadzone. Aim corrections are remapped just above it so even small ones turn the view. 0 = off; typical 5 %.",
+  "StickMaxOutput": "Max output",
+  "StickMaxOutputTooltip": "Ceiling of the stick deflection the aim may use.",
+  "StickResponseCurve": "Game response curve",
+  "StickResponseCurveTooltip": "How the game turns stick deflection into view speed. The aim deflects by the inverse so its corrections stay proportional. Linear if unsure.",
+  "StickManualOverride": "Manual override",
+  "StickManualOverrideTooltip": "How much your physical right stick takes over while the aim is active: blend = this % × your stick deflection. Also hands your right stick back between aim corrections. 0 = aim only.",
+  "StickAntiStrafe": "Anti-strafe",
+  "StickAntiStrafeTooltip": "Counters the crosshair drift from strafing with the left stick, only in the direction of the target. 10–30 light, 50 strong. 0 = off.",
+  "StickInvertAiY": "Invert aim Y",
+  "StickInvertAiYTooltip": "Invert only the aim's vertical output, for games with inverted look. Your own stick is not affected."
 }
