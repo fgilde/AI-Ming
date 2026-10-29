@@ -12,7 +12,7 @@ public class ConfigRoundTripTests
     // and records nothing.
     public ConfigRoundTripTests()
     {
-        if (AppConfig.Current == null) AppConfig.Load(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "poweraim-tests-missing.cfg"));
+        TestConfig.Ensure();
     }
 
     private static AppConfig Reload(string json)

@@ -7,6 +7,8 @@ using PowerAim.Config;
 namespace PowerAim.App.Tests;
 
 /// <summary>The shipped default model loads, is recognised as a plain detection head and runs end to end on the CPU.</summary>
+// Shares the global AppConfig with tests that replace it — never run side by side.
+[Collection(nameof(TestConfig))]
 public class PredictionLogicIntegrationTests
 {
     private static string DefaultModel()
@@ -22,7 +24,7 @@ public class PredictionLogicIntegrationTests
     [Fact]
     public void Default_model_runs_through_the_whole_parse_path()
     {
-        if (AppConfig.Current == null) AppConfig.Load(Path.Combine(Path.GetTempPath(), "poweraim-tests-missing.cfg"));
+        TestConfig.Ensure();
         var ai = AppConfig.Current!.AISettings;
         var (provider, precision) = (ai.PreferredExecutionProvider, ai.Precision);
         ai.PreferredExecutionProvider = ExecutionProviderPreference.Cpu;

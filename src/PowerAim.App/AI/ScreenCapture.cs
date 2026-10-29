@@ -70,6 +70,8 @@ public class ScreenCapture : ICapture
 
     public Bitmap Capture(Rectangle detectionBox) => _inner.Capture(detectionBox);
 
+    public bool CallerOwnsFrame => _inner.CallerOwnsFrame;
+
     public Task OnPause() => _inner.OnPause();
 
     public Task OnResume() => _inner.OnResume();

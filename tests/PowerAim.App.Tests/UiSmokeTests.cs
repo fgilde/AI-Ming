@@ -13,7 +13,7 @@ public class UiSmokeTests
 {
     private static void EnsureConfig()
     {
-        if (AppConfig.Current == null) AppConfig.Load(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "poweraim-tests-missing.cfg"));
+        TestConfig.Ensure();
     }
 
     private static IEnumerable<DependencyObject> Tree(DependencyObject root)

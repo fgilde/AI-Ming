@@ -827,6 +827,8 @@ public class PredictionLogic : IPredictionLogic, IDisposable
             {
                 lastSavedTime = DateTime.Now;
                 string uuid = Guid.NewGuid().ToString();
+                // The capture frame is released once the AI loop moves on — save from a copy.
+                frame = (Bitmap)frame.Clone();
 
                 try
                 {
@@ -864,6 +866,10 @@ public class PredictionLogic : IPredictionLogic, IDisposable
                 {
                     Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
                         new NoticeBar(string.Format(Locale.CollectDataFailedFormat, e.Message), 6000).Show()));
+                }
+                finally
+                {
+                    frame.Dispose();
                 }
             }
         }

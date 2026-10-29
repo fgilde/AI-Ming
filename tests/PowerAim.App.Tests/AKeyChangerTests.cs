@@ -6,6 +6,7 @@ using PowerAim.UI.UILibrary;
 
 namespace PowerAim.App.Tests;
 
+[Collection(nameof(TestConfig))]
 public class AKeyChangerTests
 {
     private static FakeHook Load(AKeyChanger changer)

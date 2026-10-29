@@ -191,6 +191,9 @@ public class AIManager : IDisposable
                     var actionsSw = System.Diagnostics.Stopwatch.StartNew();
                     await Task.WhenAll(_actions.Select(a => a.Execute(predictions)));
                     _consecutiveLoopErrors = 0;
+                    // Frames the backend hands out as copies are released here instead of piling up for the
+                    // finalizer (several MB per frame of native memory at full frame rate).
+                    if (ImageCapture.CallerOwnsFrame) frame.Dispose();
 
                     double actionsMs = actionsSw.Elapsed.TotalMilliseconds;
                     if (_profiler.Add(captureMs, sw.Elapsed.TotalMilliseconds - captureMs, actionsMs))

@@ -63,9 +63,13 @@ public class ProcessCapture : ICapture
         var frame = new Bitmap(detectionBox.Width, detectionBox.Height, PixelFormat.Format32bppArgb);
         using (Graphics graphics = Graphics.FromImage(frame))
             graphics.CopyFromScreen(detectionBox.Left, detectionBox.Top, 0, 0, detectionBox.Size, CopyPixelOperation.SourceCopy);
-        // Publish only the finished frame.
+        // Publish only the finished frame. The previous one is done with: the AI loop handles one frame
+        // at a time and anything that keeps a frame longer takes a copy.
         lock (_sync)
+        {
+            _lastCapture?.Dispose();
             _lastCapture = frame;
+        }
         return frame;
     }
 

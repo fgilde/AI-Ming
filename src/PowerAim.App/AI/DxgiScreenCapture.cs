@@ -86,6 +86,9 @@ public sealed class DxgiScreenCapture : ICapture
         }
     }
 
+    /// <summary>Every frame handed out is a clone of the internal cache.</summary>
+    public bool CallerOwnsFrame => true;
+
     public Bitmap Capture(Rectangle detectionBox)
     {
         if (detectionBox == Rectangle.Empty)

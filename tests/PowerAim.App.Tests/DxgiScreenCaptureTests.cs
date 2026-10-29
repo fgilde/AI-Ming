@@ -90,4 +90,22 @@ public class DxgiScreenCaptureTests
 
     private static bool Near(System.Drawing.Color a, System.Drawing.Color b)
         => Math.Abs(a.R - b.R) + Math.Abs(a.G - b.G) + Math.Abs(a.B - b.B) <= 6;
+
+    [Fact]
+    public void Handed_out_frames_belong_to_the_caller()
+    {
+        if (!DxgiScreenCapture.IsSupported())
+            return;
+
+        using var capture = new DxgiScreenCapture();
+        Assert.True(capture.CallerOwnsFrame);
+        var box = new Rectangle(0, 0, 64, 64);
+
+        capture.Capture(box).Dispose(); // the AI loop releases each frame it is done with
+        using var center = capture.CopyLastCaptureCenter(32);
+        Assert.NotNull(center);
+        Thread.Sleep(20);
+        using var next = capture.Capture(box);
+        Assert.Equal(64, next.Width);
+    }
 }
