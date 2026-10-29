@@ -286,8 +286,6 @@ public sealed class DxgiScreenCapture : ICapture
             int srcWidth = (int)srcDesc.Width;
             int srcHeight = (int)srcDesc.Height;
 
-            EnsureStagingTexture(srcWidth, srcHeight);
-
             // Compute the clipped capture region in screen-local coordinates.
             int srcLeft = Math.Max(0, Math.Min(detectionBox.Left, srcWidth));
             int srcTop = Math.Max(0, Math.Min(detectionBox.Top, srcHeight));
@@ -299,10 +297,13 @@ public sealed class DxgiScreenCapture : ICapture
             if (copyWidth <= 0 || copyHeight <= 0)
                 return _lastCapture;
 
-            // Copy the full desktop into our staging texture (GPU-side copy is cheap),
-            // then crop on the CPU side when blitting into the managed Bitmap. This avoids
-            // having to wire the D3D11_BOX type from Vortice (whose name varies by version).
-            _context!.CopyResource(_stagingTexture!, acquiredTexture);
+            // Copy only the detection box into a box-sized staging texture: at 1440p/4K that is a
+            // fraction of the bytes the full desktop would move over the bus. The staging texture keeps
+            // the unclipped box size so a box sliding along the screen edge doesn't re-create it.
+            EnsureStagingTexture(Math.Min(Math.Max(copyWidth, detectionBox.Width), srcWidth),
+                                 Math.Min(Math.Max(copyHeight, detectionBox.Height), srcHeight));
+            _context!.CopySubresourceRegion(_stagingTexture!, 0, 0, 0, 0, acquiredTexture, 0,
+                new Vortice.Mathematics.Box(srcLeft, srcTop, 0, srcRight, srcBottom, 1));
 
             var mapped = _context.Map(_stagingTexture!, 0, MapMode.Read, Vortice.Direct3D11.MapFlags.None);
             try
@@ -316,10 +317,9 @@ public sealed class DxgiScreenCapture : ICapture
                     byte* src = (byte*)mapped.DataPointer.ToPointer();
                     byte* dst = (byte*)bmpData.Scan0.ToPointer();
                     int srcStride = (int)mapped.RowPitch;
-                    int srcByteOffset = srcLeft * 4;
                     for (int y = 0; y < copyHeight; y++)
                     {
-                        Buffer.MemoryCopy(src + (srcTop + y) * srcStride + srcByteOffset,
+                        Buffer.MemoryCopy(src + y * srcStride,
                                           dst + y * bmpData.Stride,
                                           bytesPerRow,
                                           bytesPerRow);
