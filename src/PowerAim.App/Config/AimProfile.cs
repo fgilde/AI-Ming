@@ -142,6 +142,36 @@ public class AimProfile : EditableNotificationObject
     /// </summary>
     public double CalibratedPixelsPerCount { get; set => SetProperty(ref field, value); }
 
+    // ---- Aim point (read directly by AimingAction, not mirrored to globals) ----
+
+    /// <summary>Per-class rules: ignore, minimum confidence, priority and anchor. Empty = every class alike.</summary>
+    public ObservableCollection<ClassTargetSpec> ClassSpecs
+    {
+        get;
+        set => SetProperty(ref field, value ?? new());
+    } = new();
+
+    /// <summary>Pull the aim point toward the box centre for small (distant) boxes, so far targets aren't overshot above the head.</summary>
+    public bool DynamicOffset { get; set => SetProperty(ref field, value); }
+
+    /// <summary>Box area in % of the FOV at or below which the box centre is aimed at.</summary>
+    public double DynamicMinAreaPct { get; set => SetProperty(ref field, Math.Max(0, value)); } = 0.05;
+
+    /// <summary>Box area in % of the FOV from which the full aim region / anchor applies.</summary>
+    public double DynamicMaxAreaPct { get; set => SetProperty(ref field, Math.Max(0, value)); } = 1.5;
+
+    /// <summary>Fixed shift of the aim point in FOV pixels, applied last (e.g. models that detect a name tag above the body).</summary>
+    public int AdditionalOffsetX { get; set => SetProperty(ref field, value); }
+
+    /// <summary>Fixed shift of the aim point in FOV pixels, applied last.</summary>
+    public int AdditionalOffsetY { get; set => SetProperty(ref field, value); }
+
+    /// <summary>With a pose model: aim at the head (nose/eyes) or chest (shoulders) keypoints.</summary>
+    public PoseAimTarget PoseTarget { get; set => SetProperty(ref field, value); } = PoseAimTarget.Off;
+
+    /// <summary>Keypoints below this confidence are ignored (the box is used instead).</summary>
+    public double KeypointMinConfidence { get; set => SetProperty(ref field, Math.Clamp(value, 0, 1)); } = 0.5;
+
     // ---- Legacy-path feel (only used when SmartAim is off; mirrored to globals by Apply) ----
 
     /// <summary>Apply the legacy EMA smoothing to the mouse path (legacy path only). Mirrors <see cref="ToggleState.EMASmoothening"/>.</summary>

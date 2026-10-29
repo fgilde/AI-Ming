@@ -7,6 +7,14 @@ namespace PowerAim.App.Tests;
 // Deserialize + migrate directly: AppConfig.Load would also record the file as the user's "last config".
 public class ConfigRoundTripTests
 {
+    // Serialising reads computed properties that consult AppConfig.Current; without this the tests
+    // only passed when another test happened to load a config first. A missing path loads defaults
+    // and records nothing.
+    public ConfigRoundTripTests()
+    {
+        if (AppConfig.Current == null) AppConfig.Load(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "poweraim-tests-missing.cfg"));
+    }
+
     private static AppConfig Reload(string json)
     {
         var cfg = JsonSerializer.Deserialize<AppConfig>(json)!;
@@ -32,6 +40,23 @@ public class ConfigRoundTripTests
         Assert.Equal(TriggerCheck.Rule, loaded.Triggers[0].ExecutionIntersectionCheck);
         Assert.Equal("head_hit >= 0.9", loaded.Triggers[0].HitRule);
         Assert.Equal(80, loaded.Triggers[0].ShotLatencyMs);
+    }
+
+    [Fact]
+    public void Aim_point_settings_survive_save_and_load()
+    {
+        var cfg = new AppConfig();
+        var profile = new AimProfile { Name = "p", DynamicOffset = true, AdditionalOffsetY = -6, PoseTarget = PoseAimTarget.Chest };
+        profile.ClassSpecs.Add(new ClassTargetSpec { ClassId = 2, Priority = 0, UseAnchor = true, AnchorY = 0.25f, Ignored = false });
+        cfg.AimSettings.Profiles.Add(profile);
+
+        var loaded = Reload(JsonSerializer.Serialize(cfg)).AimSettings.Profiles.Single(p => p.Name == "p");
+
+        Assert.True(loaded.DynamicOffset);
+        Assert.Equal(-6, loaded.AdditionalOffsetY);
+        Assert.Equal(PoseAimTarget.Chest, loaded.PoseTarget);
+        var spec = Assert.Single(loaded.ClassSpecs);
+        Assert.Equal((2, 0, true, 0.25f), (spec.ClassId, spec.Priority, spec.UseAnchor, spec.AnchorY));
     }
 
     [Fact]

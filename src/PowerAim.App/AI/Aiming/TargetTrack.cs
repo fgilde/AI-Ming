@@ -32,6 +32,9 @@ public sealed class TargetTrack
     /// <summary>Raw last matched detection box (aim prefers this over filtered centre).</summary>
     public RectangleF LastDetectionBox { get; private set; }
 
+    /// <summary>Keypoints of the last matched detection (pose models only).</summary>
+    public Keypoint[]? LastKeypoints { get; private set; }
+
     // Kalman state (cx, cy, a, h, vx, vy, va, vh)
     internal float[] Mean = new float[8];
     internal float[,] Covariance = new float[8, 8];
@@ -47,6 +50,7 @@ public sealed class TargetTrack
         kf.Initiate(meas, out Mean, out Covariance);
         SyncFromMean();
         LastDetectionBox = det.Rectangle;
+        LastKeypoints = det.Keypoints;
         Confidence = det.Confidence;
         ClassId = det.ClassId;
         ClassName = det.ClassName ?? "Enemy";
@@ -93,6 +97,7 @@ public sealed class TargetTrack
         kf.Update(ref Mean, ref Covariance, meas, det.Confidence);
         SyncFromMean();
         LastDetectionBox = det.Rectangle;
+        LastKeypoints = det.Keypoints;
         Confidence = det.Confidence;
         ClassId = det.ClassId;
         ClassName = det.ClassName ?? ClassName;

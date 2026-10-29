@@ -52,7 +52,9 @@ namespace PowerAim.UI.UILibrary
             {
                 if (ev.PropertyName is nameof(AimProfile.SmartAim)
                     or nameof(AimProfile.UseTargetTracking)
-                    or nameof(AimProfile.SmoothingMode))
+                    or nameof(AimProfile.SmoothingMode)
+                    or nameof(AimProfile.DynamicOffset)
+                    or nameof(AimProfile.PoseTarget))
                 {
                     self.Dispatcher.BeginInvoke(new Action(() =>
                     {
@@ -305,6 +307,37 @@ namespace PowerAim.UI.UILibrary
             }
             // RandomAimPoint lives in the Aim-region section of the XAML (it picks a point INSIDE the
             // region), not here.
+
+            // Aim point on top of the region: per-class rules, distance-dependent and fixed offset,
+            // pose keypoints. Applies to both aim paths.
+            TunePanel.AddButton(Locale.AimClassRules, b => b.ToolTip = Locale.AimClassRulesTooltip).Reader.Click += (_, _) =>
+                PowerAim.UI.Visuality.ClassRulesDialog.ShowFor(Profile!, Window.GetWindow(this));
+            TunePanel.AddToggle(Locale.AimDynamicOffset, t => t.ToolTip = Locale.AimDynamicOffsetTooltip)
+                .BindTo(() => Profile!.DynamicOffset);
+            if (Profile!.DynamicOffset)
+            {
+                TunePanel.AddSlider(Locale.AimDynamicMinArea, "%", 0.01, 0.01, 0, 5, false, 2, false)
+                    .InitWith(s => s.ToolTip = Locale.AimDynamicMinAreaTooltip)
+                    .BindTo(() => Profile!.DynamicMinAreaPct);
+                TunePanel.AddSlider(Locale.AimDynamicMaxArea, "%", 0.1, 0.1, 0.1, 50, false, 1, false)
+                    .InitWith(s => s.ToolTip = Locale.AimDynamicMaxAreaTooltip)
+                    .BindTo(() => Profile!.DynamicMaxAreaPct);
+            }
+            TunePanel.AddSlider(Locale.AimAdditionalOffsetX, Locale.Pixels, 1, 1, -100, 100, false, 0, false)
+                .InitWith(s => s.ToolTip = Locale.AimAdditionalOffsetTooltip)
+                .BindTo(() => Profile!.AdditionalOffsetX);
+            TunePanel.AddSlider(Locale.AimAdditionalOffsetY, Locale.Pixels, 1, 1, -100, 100, false, 0, false)
+                .InitWith(s => s.ToolTip = Locale.AimAdditionalOffsetTooltip)
+                .BindTo(() => Profile!.AdditionalOffsetY);
+            _buildingTunePanel = true;
+            TunePanel.AddDropdown(Locale.AimPoseTarget, Profile!.PoseTarget,
+                v => { if (!_buildingTunePanel) Profile!.PoseTarget = v; }, d => d.ToolTip = Locale.AimPoseTargetTooltip);
+            if (Profile!.PoseTarget != PoseAimTarget.Off)
+            {
+                TunePanel.AddSlider(Locale.AimKeypointConfidence, Locale.Amount, 0.05, 0.05, 0, 1, false, 2, false)
+                    .InitWith(s => s.ToolTip = Locale.AimKeypointConfidenceTooltip)
+                    .BindTo(() => Profile!.KeypointMinConfidence);
+            }
 
             // Which enemy first: an optional target rule, written by hand, from a preset or from a description.
             TunePanel.AddToggle(Locale.AimUseTargetRule, t => t.ToolTip = Locale.AimUseTargetRuleTooltip)

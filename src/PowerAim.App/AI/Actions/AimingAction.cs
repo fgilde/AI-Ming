@@ -78,6 +78,9 @@ public class AimingAction : BaseAction
             AimProfileManager.Instance.UpdateEffective(_effectiveProfile);
         }
 
+        // Per-class rules of the engaged profile: ignored classes, class confidence floors, priority.
+        predictions = ClassTargeting.Filter(predictions, _effectiveProfile?.ClassSpecs);
+
         if (AppConfig.Current.AISettings.SmartAimEnabled)
         {
             ExecuteSmart(predictions, dt);
@@ -192,6 +195,8 @@ public class AimingAction : BaseAction
         double stickyModelPx = Math.Max(8.0, ai.StickyRadiusPx * (modelSize / capSize));
 
         RectangleF box;
+        int aimClass;
+        Keypoint[]? aimKeypoints;
         if (ai.UseTargetTracking)
         {
             var rule = TargetRule();
@@ -202,6 +207,8 @@ public class AimingAction : BaseAction
             // RAW detection — never a velocity-extrapolated box: in this closed loop the track's velocity
             // includes our own view movement (no ego-motion compensation), so a lead would overshoot.
             box = track.LastDetectionBox;
+            aimClass = track.ClassId;
+            aimKeypoints = track.LastKeypoints;
             _lastTargetConf = track.Confidence;
             _lastAimBox = box;
         }
@@ -210,6 +217,8 @@ public class AimingAction : BaseAction
             var target = SelectNearestSticky(predictions, center, center, stickyModelPx);
             if (target == null) { Disengage(); return; }
             box = target.Rectangle;
+            aimClass = target.ClassId;
+            aimKeypoints = target.Keypoints;
             _lastTargetConf = target.Confidence;
             _lastAimBox = box;
         }
@@ -237,8 +246,8 @@ public class AimingAction : BaseAction
         _wasAiming = true;
 
         // Aim point = the configured region (head area) inside the chosen detection — where the target
-        // actually IS this frame, exactly like the user (and simple tools like RootKit) would aim.
-        var (px, py) = RegionPoint(box);
+        // actually IS this frame — or the class anchor / pose keypoint the profile asks for.
+        var (px, py) = AimPointFor(box, aimClass, aimKeypoints);
 
         // Optional aim-point smoothing. All modes act on POSITION only (never extrapolate), so none
         // have closed-loop ego-motion coupling. The proportional move below is itself a low-pass too.
@@ -362,22 +371,34 @@ public class AimingAction : BaseAction
         return (best, bestSq);
     }
 
-    /// <summary>Compute the aim point (model space) inside <paramref name="box"/> from the configured aim region + frac.</summary>
-    private (double X, double Y) RegionPoint(RectangleF box)
+    /// <summary>
+    ///     Aim point (model space) inside <paramref name="box"/>: the configured aim region + frac, or what
+    ///     the effective profile adds on top (class anchor, pose keypoints, dynamic and additional offset).
+    /// </summary>
+    private (double X, double Y) AimPointFor(RectangleF box, int classId, Keypoint[]? keypoints)
     {
         var region = AppConfig.Current.SliderSettings.AimRegion;
-        double subX = box.X + box.Width * region.LeftMarginPercentage;
-        double subY = box.Y + box.Height * region.TopMarginPercentage;
-        double subW = box.Width * region.WidthPercentage;
-        double subH = box.Height * region.HeightPercentage;
-        return (subX + subW * _aimFracX, subY + subH * _aimFracY);
+        float modelSize = Math.Max(1, global::PowerAim.AI.PredictionLogic.IMAGE_SIZE);
+        var p = _effectiveProfile;
+        if (p == null)
+            return AimPoint.Compute(box, classId, null, null, AimPointOptions.None, region, _aimFracX, _aimFracY, modelSize);
+
+        // The additional offset is set in FOV pixels; detections live in model space.
+        var area = ImageCapture.CaptureArea;
+        double capSize = Math.Clamp(Math.Round(AppConfig.Current.SliderSettings.ActualFovSize), 16.0,
+            Math.Max(16.0, Math.Min(area.Width, area.Height)));
+        double toModel = modelSize / capSize;
+        var options = new AimPointOptions(p.DynamicOffset, p.DynamicMinAreaPct, p.DynamicMaxAreaPct,
+            p.AdditionalOffsetX * toModel, p.AdditionalOffsetY * toModel, p.PoseTarget, (float)p.KeypointMinConfidence);
+        var spec = p.ClassSpecs.FirstOrDefault(s => s.ClassId == classId);
+        return AimPoint.Compute(box, classId, keypoints, spec, options, region, _aimFracX, _aimFracY, modelSize);
     }
 
     // ============================================================================ LEGACY PATH ====
 
     private void CalculateCoordinates(Prediction closestPrediction, float scaleX, float scaleY)
     {
-        var (px, py) = RegionPoint(closestPrediction.Rectangle);
+        var (px, py) = AimPointFor(closestPrediction.Rectangle, closestPrediction.ClassId, closestPrediction.Keypoints);
         detectedX = (int)(px * scaleX);
         detectedY = (int)(py * scaleY);
     }
