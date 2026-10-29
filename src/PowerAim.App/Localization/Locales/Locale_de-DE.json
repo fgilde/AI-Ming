@@ -1342,5 +1342,9 @@
   "StickDeadzoneCheckTooltip": "15 Sekunden lang wird der rechte Stick genau auf der eingestellten Spiel-Deadzone gehalten. Dreht sich die Sicht im Spiel trotzdem, ist die echte Deadzone kleiner – den Wert um 1 % senken und erneut prüfen, bis die Sicht stillsteht.",
   "StickOutputTest": "Ausgabe testen",
   "StickOutputTestTooltip": "10 Sekunden lang dreht der rechte Stick einen Kreis und der rechte Bumper wird alle 2 Sekunden gedrückt – zeigt, dass das virtuelle Pad im Spiel ankommt.",
-  "StickToolRunning": "Läuft…"
+  "StickToolRunning": "Läuft…",
+  "AimReactionDelay": "Reaktionszeit",
+  "AimReactionDelayTooltip": "Nachdem ein Ziel auftaucht, wartet der Aim so lange, bevor er sich bewegt – wie eine menschliche Reaktion. Geht das Ziel verloren, beginnt sie neu. 0 = sofort.",
+  "StickAimLeft": "Mit dem linken Stick zielen (Southpaw)",
+  "StickAimLeftTooltip": "Der Aim steuert den linken statt des rechten Sticks – für Spiele oder Belegungen mit getauschten Sticks. Der rechte Stick bleibt dann bei deinem Controller."
 }

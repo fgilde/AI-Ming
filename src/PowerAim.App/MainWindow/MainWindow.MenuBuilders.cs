@@ -539,6 +539,8 @@ public partial class MainWindow
                 .BindTo(() => cs.AntiStrafePct);
             GamepadSettingsConfig.AddToggle(Locale.StickInvertAiY, t => t.ToolTip = Locale.StickInvertAiYTooltip)
                 .BindTo(() => cs.InvertAiY);
+            GamepadSettingsConfig.AddToggle(Locale.StickAimLeft, t => t.ToolTip = Locale.StickAimLeftTooltip)
+                .BindTo(() => cs.AimStickLeft);
 
             // Calibration tools: drive the virtual pad directly for a few seconds.
             void AddPatternButton(string title, string tooltip, string running, double seconds,

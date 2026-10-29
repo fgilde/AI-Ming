@@ -148,6 +148,9 @@ public class AimProfile : EditableNotificationObject
     /// </summary>
     public double CalibratedPixelsPerCount { get; set => SetProperty(ref field, value); }
 
+    /// <summary>Reaction time (ms): after a target appears the aim waits this long before it moves. 0 = at once.</summary>
+    public double ReactionDelayMs { get; set => SetProperty(ref field, Math.Clamp(value, 0, 1000)); }
+
     /// <summary>Smart-path controller: classic proportional approach or the model-based V2 engine.</summary>
     public AI.Aiming.AimEngine AimEngine { get; set => SetProperty(ref field, value); } = AI.Aiming.AimEngine.Classic;
 

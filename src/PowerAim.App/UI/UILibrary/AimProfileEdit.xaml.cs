@@ -323,6 +323,10 @@ namespace PowerAim.UI.UILibrary
             // RandomAimPoint lives in the Aim-region section of the XAML (it picks a point INSIDE the
             // region), not here.
 
+            TunePanel.AddSlider(Locale.AimReactionDelay, "ms", 10, 10, 0, 500, false, 0, false)
+                .InitWith(s => s.ToolTip = Locale.AimReactionDelayTooltip)
+                .BindTo(() => Profile!.ReactionDelayMs);
+
             // Aim point on top of the region: per-class rules, distance-dependent and fixed offset,
             // pose keypoints. Applies to both aim paths.
             TunePanel.AddButton(Locale.AimClassRules, b => b.ToolTip = Locale.AimClassRulesTooltip).Reader.Click += (_, _) =>

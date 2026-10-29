@@ -96,4 +96,37 @@ public class StickOutputIntegrationTests
             UseSender(null);
         }
     }
+
+    [Fact]
+    public async Task Southpaw_aims_with_the_left_stick()
+    {
+        TestConfig.Ensure();
+        var cfg = AppConfig.Current;
+        var method = cfg.DropdownState.MouseMovementMethod;
+        var pad = new RecordingSender();
+        UseSender(pad);
+        try
+        {
+            cfg.DropdownState.MouseMovementMethod = MouseMovementMethod.Gamepad;
+            cfg.ControllerSettings.AimStickLeft = true;
+            InputSender.Move(0, -10); // up
+
+            Assert.Equal(2000, pad.Last(GamepadAxis.LeftThumbY));
+            Assert.Contains(nameof(GamepadAxis.LeftThumbY), pad.Paused);
+            Assert.DoesNotContain(pad.All(GamepadAxis.RightThumbY), v => v != 0);
+
+            cfg.ControllerSettings.AimStickLeft = false; // switching back hands the left stick to the pad
+            InputSender.Move(0, -10);
+            await Task.Delay(30);
+            Assert.Equal(0, pad.Last(GamepadAxis.LeftThumbY));
+            Assert.DoesNotContain(nameof(GamepadAxis.LeftThumbY), pad.Paused);
+            Assert.Equal(2000, pad.Last(GamepadAxis.RightThumbY));
+        }
+        finally
+        {
+            cfg.ControllerSettings.AimStickLeft = false;
+            cfg.DropdownState.MouseMovementMethod = method;
+            UseSender(null);
+        }
+    }
 }

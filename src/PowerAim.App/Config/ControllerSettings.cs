@@ -70,6 +70,13 @@ public class ControllerSettings : BaseSettings
         set => SetField(ref field, Math.Clamp(value, 0, 50));
     }
 
+    /// <summary>Southpaw: the aim drives the left stick (games with swapped sticks).</summary>
+    public bool AimStickLeft
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
     /// <summary>Invert only the aim's vertical stick output (games with inverted look).</summary>
     public bool InvertAiY
     {

@@ -35,6 +35,11 @@ namespace PowerAim.Input
         private static readonly System.Diagnostics.Stopwatch _stickClock = System.Diagnostics.Stopwatch.StartNew();
         private static readonly object _stickSendGate = new();
         private static short _sentStickX, _sentStickY;
+        private static bool _sentValid;
+        // The sender whose aim-stick axes we took over (and on which side): a re-created sender (send mode
+        // changed) or a southpaw switch claims again instead of writing into axes its sync loop still owns.
+        private static IGamepadSender? _claimedBy;
+        private static bool _claimedLeft;
         private static System.Threading.Thread? _stickThread;
         private static volatile bool _stickThreadRun = true;
 
@@ -97,14 +102,35 @@ namespace PowerAim.Input
             DriveRightStick(stepX, stepY);
         }
 
-        private static bool _stickAxesPaused;
+        private static (GamepadAxis X, GamepadAxis Y) AimAxes(bool left)
+            => left ? (GamepadAxis.LeftThumbX, GamepadAxis.LeftThumbY) : (GamepadAxis.RightThumbX, GamepadAxis.RightThumbY);
 
-        private static void ClaimRightStick(IGamepadSender sender)
+        /// <summary>
+        ///     Take over the aim stick's axes on <paramref name="sender"/> (right stick, or left for southpaw):
+        ///     otherwise the sender's sync loop mirrors the physical pad over our values every millisecond.
+        ///     Switching sides hands the previous stick back to the pad.
+        /// </summary>
+        private static void ClaimAimStick(IGamepadSender sender)
         {
-            if (_stickAxesPaused) return;
-            sender.PauseSync(GamepadAxis.RightThumbX);
-            sender.PauseSync(GamepadAxis.RightThumbY);
-            _stickAxesPaused = true;
+            bool left = AppConfig.Current?.ControllerSettings?.AimStickLeft == true;
+            if (ReferenceEquals(sender, _claimedBy) && left == _claimedLeft) return;
+            lock (_stickSendGate)
+            {
+                if (ReferenceEquals(sender, _claimedBy))
+                {
+                    var (oldX, oldY) = AimAxes(_claimedLeft);
+                    sender.SetAxisValue(oldX, 0);
+                    sender.SetAxisValue(oldY, 0);
+                    sender.ResumeSync(oldX);
+                    sender.ResumeSync(oldY);
+                }
+                var (x, y) = AimAxes(left);
+                sender.PauseSync(x);
+                sender.PauseSync(y);
+                _claimedBy = sender;
+                _claimedLeft = left;
+                _sentValid = false;
+            }
         }
 
         private static void DriveRightStick(int dx, int dy)
@@ -115,7 +141,7 @@ namespace PowerAim.Input
             // SyncLoop (mirror physical→virtual every 1 ms) overwrites our values back to the
             // physical pad's state (0 if nothing is plugged in) immediately after we write them.
             // Same root cause that broke the mapping engine.
-            ClaimRightStick(sender);
+            ClaimAimStick(sender);
             // ±150 px clipping → roughly full deflection.
             const double scale = 200.0;
             double ax = Math.Clamp(dx * scale, -short.MaxValue, short.MaxValue) / short.MaxValue;
@@ -137,7 +163,7 @@ namespace PowerAim.Input
         {
             var sender = GamepadManager.GamepadSender;
             if (sender == null || !sender.CanWork) return false;
-            ClaimRightStick(sender);
+            ClaimAimStick(sender);
             sender.PauseSync(GamepadButton.RightShoulder);
             var started = System.Diagnostics.Stopwatch.StartNew();
             bool bumper = false;
@@ -186,11 +212,14 @@ namespace PowerAim.Input
             short sy = (short)Math.Round(Math.Clamp(y, -1, 1) * short.MaxValue);
             lock (_stickSendGate)
             {
-                if (sx == _sentStickX && sy == _sentStickY) return;
-                sender.SetAxisValue(GamepadAxis.RightThumbX, sx);
-                sender.SetAxisValue(GamepadAxis.RightThumbY, sy);
+                if (!ReferenceEquals(sender, _claimedBy)) return; // not ours (yet): its sync loop owns the sticks
+                if (_sentValid && sx == _sentStickX && sy == _sentStickY) return;
+                var (axisX, axisY) = AimAxes(_claimedLeft);
+                sender.SetAxisValue(axisX, sx);
+                sender.SetAxisValue(axisY, sy);
                 _sentStickX = sx;
                 _sentStickY = sy;
+                _sentValid = true;
             }
         }
 

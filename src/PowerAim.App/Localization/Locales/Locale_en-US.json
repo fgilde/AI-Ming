@@ -1342,5 +1342,9 @@
   "StickDeadzoneCheckTooltip": "For 15 seconds the right stick is held exactly at the configured game deadzone. If the view still turns in the game, the real deadzone is smaller — lower the setting by 1 % and check again until the view stays still.",
   "StickOutputTest": "Test output",
   "StickOutputTestTooltip": "For 10 seconds the right stick turns in a circle and the right bumper is pressed every 2 seconds — shows that the virtual pad reaches the game.",
-  "StickToolRunning": "Running…"
+  "StickToolRunning": "Running…",
+  "AimReactionDelay": "Reaction time",
+  "AimReactionDelayTooltip": "After a target appears the aim waits this long before it moves, like a human reaction. Losing the target restarts it. 0 = at once.",
+  "StickAimLeft": "Aim with the left stick (southpaw)",
+  "StickAimLeftTooltip": "The aim drives the left stick instead of the right one — for games or layouts with swapped sticks. The right stick then stays with your controller."
 }

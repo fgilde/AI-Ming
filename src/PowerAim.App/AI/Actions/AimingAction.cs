@@ -33,6 +33,12 @@ public class AimingAction : BaseAction
     // ---- Smart aim (SmartAimEnabled): aim at a detection, move proportionally toward it ----
     private readonly AimController _controller = new();
     private readonly AimControllerV2 _controllerV2 = new();
+    private readonly ReactionDelay _reaction = new();
+    private readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew();
+
+    /// <summary>False while the profile's reaction time after a new target is still running.</summary>
+    private bool ReactionReady(bool hasTarget)
+        => _reaction.Ready(hasTarget, _clock.Elapsed.TotalMilliseconds, _effectiveProfile?.ReactionDelayMs ?? 0);
     private DateTime _lastTickUtc = DateTime.MinValue;
     // Sticky-nearest target (model space) — keeps the aim on the same enemy across frames instead of
     // snapping to whoever happens to be nearest the crosshair. Used when target tracking is OFF.
@@ -96,7 +102,8 @@ public class AimingAction : BaseAction
             predictions, fallback, ai.StickyAimEnabled, ai.StickyAimThreshold, ai.StickyAimMaxLockScore,
             acquireFallback: rule != null);
         if (selected != null) HandleAim(selected);
-        else SetStatus(!IsAiming() ? AimStatus.Idle : predictions.Length > 0 ? AimStatus.NoTarget : AimStatus.NoDetections);
+        else ReactionReady(false);
+        if (selected == null) SetStatus(!IsAiming() ? AimStatus.Idle : predictions.Length > 0 ? AimStatus.NoTarget : AimStatus.NoDetections);
         return Task.CompletedTask;
     }
 
@@ -157,6 +164,7 @@ public class AimingAction : BaseAction
         _pid.Reset();
             _controller.Reset();
             _controllerV2.Reset();
+            _reaction.Reset();
         }
 
         // Mid-session mode flips must not resume a smoother/tracker on stale state: re-seed the
@@ -299,6 +307,7 @@ public class AimingAction : BaseAction
         double targetX = px * scale;
         double targetY = py * scale;
         var aimArea = new Rectangle(0, 0, (int)captureSize, (int)captureSize);
+        if (!ReactionReady(true)) { SetStatus(AimStatus.Pulling); return; }
         double offX = targetX - captureSize / 2.0, offY = targetY - captureSize / 2.0;
         SetStatus(Math.Sqrt(offX * offX + offY * offY) <= Math.Max(1.0, ai.AimDeadzonePx) ? AimStatus.OnTarget : AimStatus.Pulling);
 
@@ -431,10 +440,12 @@ public class AimingAction : BaseAction
         if (!IsAiming())
         {
             SetStatus(AimStatus.Idle);
+            ReactionReady(false);
             _wasAiming = false;
             return;
         }
         SetStatus(AimStatus.Pulling);
+        if (!ReactionReady(true)) return;
 
         if (!_wasAiming)
         {
