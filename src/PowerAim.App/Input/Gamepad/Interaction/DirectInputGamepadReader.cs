@@ -45,6 +45,40 @@ public class DirectInputGamepadReader : IGamepadReader, IGamepadStateSource
     internal const long MaxSampleAgeMs = 100;
 
     internal static bool IsStale(long nowMs, long sampleAtMs) => nowMs - sampleAtMs > MaxSampleAgeMs;
+    private AxisPresence _axes = AxisPresence.All;
+
+    /// <summary>Which of the axes the mapping reads the device actually has.</summary>
+    public readonly record struct AxisPresence(bool X, bool Y, bool Z, bool Rz, bool Rx, bool Ry)
+    {
+        public static AxisPresence All => new(true, true, true, true, true, true);
+
+        /// <summary>Both sticks present (X/Y left, Z/Rz right — the DualSense/DS4 layout the mapping expects).</summary>
+        public bool DualStick => X && Y && Z && Rz;
+    }
+
+    /// <summary>The axes <paramref name="joystick"/> reports; all of them when it can't be asked.</summary>
+    internal static AxisPresence ReadAxes(Joystick joystick)
+    {
+        try
+        {
+            var types = joystick.GetObjects(DeviceObjectTypeFlags.AbsoluteAxis).Select(o => o.ObjectType).ToHashSet();
+            return new AxisPresence(types.Contains(ObjectGuid.XAxis), types.Contains(ObjectGuid.YAxis),
+                types.Contains(ObjectGuid.ZAxis), types.Contains(ObjectGuid.RzAxis),
+                types.Contains(ObjectGuid.RxAxis), types.Contains(ObjectGuid.RyAxis));
+        }
+        catch
+        {
+            return AxisPresence.All;
+        }
+    }
+
+    /// <summary>The first device with both sticks, otherwise the first device; null when there is none.</summary>
+    internal static Guid? PickDevice(IReadOnlyList<(Guid Guid, bool DualStick)> devices)
+    {
+        foreach (var d in devices) if (d.DualStick) return d.Guid;
+        return devices.Count > 0 ? devices[0].Guid : null;
+    }
+
     private XGamepad _prev;     // previous mapped gamepad (for edge-detected ButtonEvents)
     private bool _havePrev;
 
@@ -86,8 +120,26 @@ public class DirectInputGamepadReader : IGamepadReader, IGamepadStateSource
     /// <summary>First attached DirectInput controller, or null. Used when no specific device was chosen.</summary>
     public static Guid? FindFirstDevice()
     {
-        var devices = EnumerateDevices();
-        return devices.Count > 0 ? devices[0].Guid : null;
+        // Some systems list generic 2-axis or button-only "gamepads" first; a pad with both sticks is the one
+        // whose right stick can be mirrored without inventing a deflection.
+        var devices = new List<(Guid, bool)>();
+        try
+        {
+            using var di = new DirectInput();
+            foreach (var (guid, _) in EnumerateDevices())
+            {
+                bool dual = false;
+                try
+                {
+                    using var joystick = new Joystick(di, guid);
+                    dual = ReadAxes(joystick).DualStick;
+                }
+                catch { /* can't open: keep it as a last resort */ }
+                devices.Add((guid, dual));
+            }
+        }
+        catch { /* DirectInput unavailable */ }
+        return PickDevice(devices);
     }
 
     /// <summary>
@@ -129,6 +181,7 @@ public class DirectInputGamepadReader : IGamepadReader, IGamepadStateSource
             if (hwnd != IntPtr.Zero)
                 _joystick.SetCooperativeLevel(hwnd, CooperativeLevel.NonExclusive | CooperativeLevel.Background);
             _joystick.Acquire();
+            _axes = ReadAxes(_joystick);
             _acquired = true;
             return true;
         }
@@ -165,7 +218,7 @@ public class DirectInputGamepadReader : IGamepadReader, IGamepadStateSource
     private void Poll()
     {
         _joystick!.Poll();
-        var gp = MapToGamepad(_joystick.GetCurrentState());
+        var gp = MapToGamepad(_joystick.GetCurrentState(), _axes);
 
         if (_havePrev)
         {
@@ -203,7 +256,7 @@ public class DirectInputGamepadReader : IGamepadReader, IGamepadStateSource
     }
 
     /// <summary>DualSense/DS4 DirectInput state → the XInput <see cref="Gamepad"/> shape the rest of the app speaks.</summary>
-    private static XGamepad MapToGamepad(JoystickState js)
+    internal static XGamepad MapToGamepad(JoystickState js, AxisPresence axes)
     {
         GamepadButtonFlags flags = 0;
         var b = js.Buttons;
@@ -235,12 +288,13 @@ public class DirectInputGamepadReader : IGamepadReader, IGamepadStateSource
         return new XGamepad
         {
             Buttons = flags,
-            LeftThumbX = ToAxis(js.X),
-            LeftThumbY = ToAxisInverted(js.Y),        // DirectInput Y is +down; XInput is +up
-            RightThumbX = ToAxis(js.Z),
-            RightThumbY = ToAxisInverted(js.RotationZ),
-            LeftTrigger = ToTrigger(js.RotationX),
-            RightTrigger = ToTrigger(js.RotationY),
+            // An axis the device doesn't have reads raw 0 — that is full deflection, not centre.
+            LeftThumbX = axes.X ? ToAxis(js.X) : (short)0,
+            LeftThumbY = axes.Y ? ToAxisInverted(js.Y) : (short)0,        // DirectInput Y is +down; XInput is +up
+            RightThumbX = axes.Z ? ToAxis(js.Z) : (short)0,
+            RightThumbY = axes.Rz ? ToAxisInverted(js.RotationZ) : (short)0,
+            LeftTrigger = axes.Rx ? ToTrigger(js.RotationX) : (byte)0,
+            RightTrigger = axes.Ry ? ToTrigger(js.RotationY) : (byte)0,
         };
     }
 
