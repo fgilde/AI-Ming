@@ -1334,5 +1334,7 @@
   "TeamSampleExtent": "Sample reach",
   "TeamSampleExtentTooltip": "How far the sample strips reach out from the box, in % of its height (above/below) or width (left/right).",
   "TeamMatch": "Match share",
-  "TeamMatchTooltip": "Share of sampled pixels that must be in the colour range for the box to count as matching."
+  "TeamMatchTooltip": "Share of sampled pixels that must be in the colour range for the box to count as matching.",
+  "AimEngineLabel": "Aim engine",
+  "AimEngineTooltip": "Classic: moves a fixed share of the distance per frame (strength slider). V2: per-axis control on a model of the game's view — subtracts moves not yet visible, leads steadily moving targets, holds still once on target and learns the real sensitivity and latency while aiming. V2 ignores the strength slider and the deadzone; set the latency compensation (50 ms if unset)."
 }

@@ -211,6 +211,13 @@ public class AISettings : BaseSettings
         set => SetField(ref field, Math.Clamp(value, 1, 60));
     } = 8;
 
+    /// <summary>Controller of the smart path. Mirrored from the active <see cref="AimProfile"/>.</summary>
+    public AI.Aiming.AimEngine AimEngine
+    {
+        get;
+        set => SetField(ref field, value);
+    } = AI.Aiming.AimEngine.Classic;
+
     /// <summary>
     ///     Capture-to-output latency (ms) of the smart path. Moves sent within this window are subtracted
     ///     from the measured error so the aim doesn't correct twice and overshoot. 0 = off. Mirrored from

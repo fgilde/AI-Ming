@@ -32,6 +32,7 @@ public class AimingAction : BaseAction
 
     // ---- Smart aim (SmartAimEnabled): aim at a detection, move proportionally toward it ----
     private readonly AimController _controller = new();
+    private readonly AimControllerV2 _controllerV2 = new();
     private DateTime _lastTickUtc = DateTime.MinValue;
     // Sticky-nearest target (model space) — keeps the aim on the same enemy across frames instead of
     // snapping to whoever happens to be nearest the crosshair. Used when target tracking is OFF.
@@ -108,6 +109,7 @@ public class AimingAction : BaseAction
         _oneEuro.Reset();
         _pid.Reset();
         _controller.Reset();
+        _controllerV2.Reset();
         _wasAiming = false;
         _hasLastTarget = false;
         _hasEma = false;
@@ -150,6 +152,7 @@ public class AimingAction : BaseAction
             _oneEuro.Reset();
         _pid.Reset();
             _controller.Reset();
+            _controllerV2.Reset();
         }
 
         // Mid-session mode flips must not resume a smoother/tracker on stale state: re-seed the
@@ -301,6 +304,17 @@ public class AimingAction : BaseAction
         int jitterMs = HumanTiming.JitterMs();
         if (jitterMs > 0)
             System.Threading.Thread.Sleep(jitterMs);
+
+        if (ai.AimEngine == AimEngine.V2)
+        {
+            // Model-based engine: needs the capture-to-output latency (50 ms until configured — it learns
+            // the rest) and the aim region's width for its settle zone. Strength/deadzone don't apply.
+            var region = AppConfig.Current.SliderSettings.AimRegion;
+            double regionWidthPx = box.Width * Math.Max(0.05, region.WidthPercentage) * scale;
+            _controllerV2.Step(targetX - captureSize / 2.0, targetY - captureSize / 2.0, regionWidthPx,
+                ai.CalibratedPixelsPerCount, ai.LatencyCompensationMs > 0 ? ai.LatencyCompensationMs : 50);
+            return;
+        }
 
         // Proportional move toward the target. Strength = approach fraction per frame; the calibration
         // ratio (if set) converts the pixel error to exact mouse counts → game-independent feel.

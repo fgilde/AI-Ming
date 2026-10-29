@@ -240,6 +240,9 @@ namespace PowerAim.UI.UILibrary
                     .InitWith(s => s.ToolTip = Locale.AimDeadzoneTooltip)
                     .BindTo(() => Profile!.DeadzonePx);
 
+                _buildingTunePanel = true;
+                TunePanel.AddDropdown(Locale.AimEngineLabel, Profile!.AimEngine,
+                    v => { if (!_buildingTunePanel) Profile!.AimEngine = v; }, d => d.ToolTip = Locale.AimEngineTooltip);
                 TunePanel.AddSlider(Locale.AimLatencyCompensation, "ms", 5, 5, 0, 200, false, 0, false)
                     .InitWith(s => s.ToolTip = Locale.AimLatencyCompensationTooltip)
                     .BindTo(() => Profile!.LatencyCompensationMs);

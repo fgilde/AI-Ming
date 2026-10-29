@@ -148,6 +148,9 @@ public class AimProfile : EditableNotificationObject
     /// </summary>
     public double CalibratedPixelsPerCount { get; set => SetProperty(ref field, value); }
 
+    /// <summary>Smart-path controller: classic proportional approach or the model-based V2 engine.</summary>
+    public AI.Aiming.AimEngine AimEngine { get; set => SetProperty(ref field, value); } = AI.Aiming.AimEngine.Classic;
+
     /// <summary>Capture-to-output latency (ms) the smart aim compensates for; raise when the aim overshoots, lower when it lags. 0 = off.</summary>
     public double LatencyCompensationMs { get; set => SetProperty(ref field, value); }
 
@@ -354,6 +357,7 @@ public class AimProfile : EditableNotificationObject
             ai.AimSpeedMultiplier = AimSpeedMultiplier;
             ai.StickyRadiusPx = StickyRadiusPx;
             ai.LatencyCompensationMs = LatencyCompensationMs;
+            ai.AimEngine = AimEngine;
         }
     }
 
@@ -400,6 +404,7 @@ public class AimProfile : EditableNotificationObject
             AimSpeedMultiplier = ai.AimSpeedMultiplier;
             StickyRadiusPx = ai.StickyRadiusPx;
             LatencyCompensationMs = ai.LatencyCompensationMs;
+            AimEngine = ai.AimEngine;
         }
     }
 }
