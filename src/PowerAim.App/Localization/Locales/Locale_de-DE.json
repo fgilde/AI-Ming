@@ -1358,5 +1358,8 @@
   "NoCaptureDevices": "Keine Videoeingänge gefunden.",
   "LiveTuning": "Live-Tuning…",
   "LiveTuningDescription": "Ein kleines Fenster, das im Vordergrund bleibt, mit den Reaktions-Reglern des aktiven Aim-Profils und der Gamepad-Ausgabe – zum Einstellen während das Spiel läuft.",
-  "ResetResponseDefaults": "Reaktions-Standardwerte wiederherstellen"
+  "ResetResponseDefaults": "Reaktions-Standardwerte wiederherstellen",
+  "AimClassRulesTitle": "Klassen-Regeln",
+  "TeamColorFilterTitle": "Team-Farbfilter",
+  "LiveTuningTitle": "Live-Tuning"
 }

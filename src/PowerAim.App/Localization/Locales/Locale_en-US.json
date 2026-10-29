@@ -1358,5 +1358,8 @@
   "NoCaptureDevices": "No video input devices found.",
   "LiveTuning": "Live tuning…",
   "LiveTuningDescription": "A small window that stays on top with the response sliders of the aim profile in use and of the gamepad output — tune while the game runs.",
-  "ResetResponseDefaults": "Reset response defaults"
+  "ResetResponseDefaults": "Reset response defaults",
+  "AimClassRulesTitle": "Class rules",
+  "TeamColorFilterTitle": "Team colour filter",
+  "LiveTuningTitle": "Live tuning"
 }

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:visuality="clr-namespace:PowerAim.UI.Visuality"
         mc:Ignorable="d"
-        Title="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimClassRules'}"
+        Title="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimClassRulesTitle'}"
         Height="520"
         Width="760"
         WindowStyle="None"
@@ -35,7 +35,7 @@
                            FontFamily="Segoe UI Variable Display"
                            FontWeight="SemiBold"
                            FontSize="13"
-                           Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimClassRules'}" />
+                           Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='AimClassRulesTitle'}" />
             </StackPanel>
             <Button HorizontalAlignment="Right"
                     Background="Transparent" BorderBrush="Transparent" BorderThickness="0"
@@ -77,7 +77,36 @@
                   CanUserAddRows="False"
                   CanUserDeleteRows="True"
                   HeadersVisibility="Column"
-                  AutoGeneratingColumn="Grid_AutoGeneratingColumn" />
+                  GridLinesVisibility="Horizontal"
+                  Background="{DynamicResource FluentSurface2}"
+                  RowBackground="{DynamicResource FluentSurface2}"
+                  AlternatingRowBackground="{DynamicResource FluentSurface3}"
+                  Foreground="{DynamicResource FluentTextPrimary}"
+                  BorderBrush="{DynamicResource FluentStroke}"
+                  HorizontalGridLinesBrush="{DynamicResource FluentStroke}"
+                  AutoGeneratingColumn="Grid_AutoGeneratingColumn">
+            <DataGrid.ColumnHeaderStyle>
+                <Style TargetType="DataGridColumnHeader">
+                    <Setter Property="Background" Value="{DynamicResource FluentSurface3}" />
+                    <Setter Property="Foreground" Value="{DynamicResource FluentTextPrimary}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource FluentStroke}" />
+                    <Setter Property="BorderThickness" Value="0,0,1,1" />
+                    <Setter Property="Padding" Value="8,6" />
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
+            <DataGrid.CellStyle>
+                <Style TargetType="DataGridCell">
+                    <Setter Property="BorderThickness" Value="0" />
+                    <Setter Property="Padding" Value="6,4" />
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource FluentAccent}" />
+                            <Setter Property="Foreground" Value="White" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.CellStyle>
+        </DataGrid>
 
         <Grid Grid.Row="3" Margin="16,12,16,16">
             <Button HorizontalAlignment="Right"

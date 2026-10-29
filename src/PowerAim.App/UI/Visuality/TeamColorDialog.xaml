@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:visuality="clr-namespace:PowerAim.UI.Visuality"
         mc:Ignorable="d"
-        Title="{Binding Converter={StaticResource localeConverter}, ConverterParameter='TeamColorFilter'}"
+        Title="{Binding Converter={StaticResource localeConverter}, ConverterParameter='TeamColorFilterTitle'}"
         Height="640"
         Width="520"
         WindowStyle="None"
@@ -35,7 +35,7 @@
                            FontFamily="Segoe UI Variable Display"
                            FontWeight="SemiBold"
                            FontSize="13"
-                           Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='TeamColorFilter'}" />
+                           Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='TeamColorFilterTitle'}" />
             </StackPanel>
             <Button HorizontalAlignment="Right"
                     Background="Transparent" BorderBrush="Transparent" BorderThickness="0"

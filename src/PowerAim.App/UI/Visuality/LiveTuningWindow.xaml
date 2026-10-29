@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:visuality="clr-namespace:PowerAim.UI.Visuality"
         mc:Ignorable="d"
-        Title="{Binding Converter={StaticResource localeConverter}, ConverterParameter='LiveTuning'}"
+        Title="{Binding Converter={StaticResource localeConverter}, ConverterParameter='LiveTuningTitle'}"
         Height="720"
         Width="460"
         WindowStyle="None"
@@ -36,7 +36,7 @@
                            FontFamily="Segoe UI Variable Display"
                            FontWeight="SemiBold"
                            FontSize="13"
-                           Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='LiveTuning'}" />
+                           Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='LiveTuningTitle'}" />
             </StackPanel>
             <Button HorizontalAlignment="Right"
                     Background="Transparent" BorderBrush="Transparent" BorderThickness="0"
