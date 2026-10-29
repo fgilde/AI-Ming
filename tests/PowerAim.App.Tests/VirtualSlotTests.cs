@@ -33,3 +33,13 @@ public class VirtualSlotTests
     public void Without_a_physical_pad_the_reader_waits_on_a_non_virtual_slot()
         => Assert.NotEqual(UserIndex.One, GamepadReader.ChooseSlot(UserIndex.One, Connected(UserIndex.One), UserIndex.One));
 }
+
+public class StaleInputTests
+{
+    [Theory]
+    [InlineData(1000, 990, false)]
+    [InlineData(1000, 900, false)]
+    [InlineData(1000, 899, true)]
+    public void A_sample_older_than_100_ms_counts_as_stale(long now, long sampledAt, bool stale)
+        => Assert.Equal(stale, PowerAim.Input.Gamepad.Interaction.DirectInputGamepadReader.IsStale(now, sampledAt));
+}

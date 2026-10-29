@@ -39,6 +39,12 @@ public class DirectInputGamepadReader : IGamepadReader, IGamepadStateSource
 
     private readonly object _stateLock = new();
     private State _mapped;      // latest mapped snapshot (for IGamepadStateSource.GetState)
+    private long _mappedAtMs;   // Environment.TickCount64 of that snapshot
+
+    /// <summary>A snapshot older than this means the poller stalled: report neutral instead of a frozen stick.</summary>
+    internal const long MaxSampleAgeMs = 100;
+
+    internal static bool IsStale(long nowMs, long sampleAtMs) => nowMs - sampleAtMs > MaxSampleAgeMs;
     private XGamepad _prev;     // previous mapped gamepad (for edge-detected ButtonEvents)
     private bool _havePrev;
 
@@ -189,7 +195,11 @@ public class DirectInputGamepadReader : IGamepadReader, IGamepadStateSource
 
         _prev = gp;
         _havePrev = true;
-        lock (_stateLock) _mapped = new State { Gamepad = gp };
+        lock (_stateLock)
+        {
+            _mapped = new State { Gamepad = gp };
+            _mappedAtMs = Environment.TickCount64;
+        }
     }
 
     /// <summary>DualSense/DS4 DirectInput state → the XInput <see cref="Gamepad"/> shape the rest of the app speaks.</summary>
@@ -265,7 +275,7 @@ public class DirectInputGamepadReader : IGamepadReader, IGamepadStateSource
 
     public State GetState()
     {
-        lock (_stateLock) return IsConnected ? _mapped : default;
+        lock (_stateLock) return IsConnected && !IsStale(Environment.TickCount64, _mappedAtMs) ? _mapped : default;
     }
 
     public bool IsPressed(string button)
