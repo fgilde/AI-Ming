@@ -1361,5 +1361,6 @@
   "ResetResponseDefaults": "Reset response defaults",
   "AimClassRulesTitle": "Class rules",
   "TeamColorFilterTitle": "Team colour filter",
-  "LiveTuningTitle": "Live tuning"
+  "LiveTuningTitle": "Live tuning",
+  "CaptureDeviceNotFound": "Capture device \"{0}\" not found — is it plugged in?"
 }

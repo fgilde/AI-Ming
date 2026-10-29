@@ -41,10 +41,13 @@ public class CaptureSource
     public static CaptureSource Device(int index, string name, bool flipVertical = false)
         => new(CaptureTargetType.CaptureDevice, name, index) { FlipVertical = flipVertical };
 
+    /// <summary>One still frame (preview). Not for capture devices: opening the card here would race the running capture.</summary>
     public Bitmap Capture()
     {
-        var capture = AIManager.CreateScreenCapture(this);
-        return capture.Capture(Rectangle.Empty);
+        if (TargetType == CaptureTargetType.CaptureDevice) throw new NotSupportedException("No still frame from a capture device.");
+        using var capture = AIManager.CreateScreenCapture(this);
+        var frame = capture.Capture(Rectangle.Empty);
+        return capture.CallerOwnsFrame ? frame : new Bitmap(frame);
     }
 
     public override string ToString() => $"{TargetType} {Title} ({ProcessOrScreenId})";

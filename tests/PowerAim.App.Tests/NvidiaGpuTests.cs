@@ -29,4 +29,12 @@ public class NvidiaGpuLiveTests
         if (cap == null) return; // no NVIDIA driver on this machine
         Assert.InRange(cap.Value, 3.0, 20.0);
     }
+
+    [Fact]
+    public void Mixed_generations_assume_the_oldest_card()
+    {
+        Assert.Equal(8.6, NvidiaGpu.Pick([8.6, 8.6], 1));
+        Assert.Equal(6.1, NvidiaGpu.Pick([8.6, 6.1], 0)); // PCI and CUDA order may differ
+        Assert.Null(NvidiaGpu.Pick([8.6], 3));
+    }
 }

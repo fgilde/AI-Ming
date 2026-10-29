@@ -1361,5 +1361,6 @@
   "ResetResponseDefaults": "Reaktions-Standardwerte wiederherstellen",
   "AimClassRulesTitle": "Klassen-Regeln",
   "TeamColorFilterTitle": "Team-Farbfilter",
-  "LiveTuningTitle": "Live-Tuning"
+  "LiveTuningTitle": "Live-Tuning",
+  "CaptureDeviceNotFound": "Capture-Gerät „{0}“ nicht gefunden — ist es angeschlossen?"
 }

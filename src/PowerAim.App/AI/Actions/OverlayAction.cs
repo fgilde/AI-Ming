@@ -30,6 +30,7 @@ public class OverlayAction : BaseAction
     private bool _overlayShown;
     /// <summary>ESP boxes may still be on the overlay and must be cleared when ESP turns off.</summary>
     private bool _espDrawn;
+    private bool _aimPointLayer;
     public OverlayAction()
     {
         EnsureFormOverlay();
@@ -74,6 +75,10 @@ public class OverlayAction : BaseAction
             {
                 case OverlayDrawingMethod.WpfWindowCanvas:
                     overlay.DrawPredictionCanvas(best);
+                    // The canvas only has the box: the aim point goes on the drawing layer (cleared once after switching off).
+                    bool aimPoint = AppConfig.Current.ToggleState.ShowPredictedAim;
+                    if (aimPoint || _aimPointLayer) overlay.DrawAimPointLayer(local.ToRect());
+                    _aimPointLayer = aimPoint;
                     break;
                 case OverlayDrawingMethod.DrawingContextVisualHost:
                     overlay.DrawPredictions(drawSet, local.ToRect());

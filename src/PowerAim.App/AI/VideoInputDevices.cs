@@ -15,30 +15,50 @@ public static class VideoInputDevices
     public static List<string> Names()
     {
         var names = new List<string>();
+        object? devEnum = null;
+        IEnumMoniker? monikers = null;
         try
         {
             var type = Type.GetTypeFromCLSID(SystemDeviceEnum);
-            if (type == null || Activator.CreateInstance(type) is not ICreateDevEnum devEnum) return names;
+            devEnum = type == null ? null : Activator.CreateInstance(type);
+            if (devEnum is not ICreateDevEnum create) return names;
             var category = VideoInputCategory;
-            if (devEnum.CreateClassEnumerator(ref category, out var monikers, 0) != 0 || monikers == null) return names;
+            if (create.CreateClassEnumerator(ref category, out monikers, 0) != 0 || monikers == null) return names;
             var one = new IMoniker[1];
             while (monikers.Next(1, one, IntPtr.Zero) == 0)
             {
-                var bagId = typeof(IPropertyBag).GUID;
-                one[0].BindToStorage(null!, null!, ref bagId, out var bagObject);
-                string name = "Video device";
-                if (bagObject is IPropertyBag bag && bag.Read("FriendlyName", out var value, IntPtr.Zero) == 0 && value is string s)
-                    name = s;
-                names.Add(name);
-                Marshal.ReleaseComObject(one[0]);
+                object? bagObject = null;
+                try
+                {
+                    var bagId = typeof(IPropertyBag).GUID;
+                    one[0].BindToStorage(null!, null!, ref bagId, out bagObject);
+                    string name = "Video device";
+                    if (bagObject is IPropertyBag bag && bag.Read("FriendlyName", out var value, IntPtr.Zero) == 0 && value is string s)
+                        name = s;
+                    names.Add(name);
+                }
+                finally
+                {
+                    Release(bagObject);
+                    Release(one[0]);
+                }
             }
-            Marshal.ReleaseComObject(monikers);
         }
         catch
         {
             // No DirectShow — no devices to offer.
         }
+        finally
+        {
+            Release(monikers);
+            Release(devEnum);
+        }
         return names;
+    }
+
+    private static void Release(object? com)
+    {
+        if (com != null && Marshal.IsComObject(com)) Marshal.ReleaseComObject(com);
     }
 
     /// <summary>Index of the device called <paramref name="name"/> right now, or null (unplugged / renamed).</summary>

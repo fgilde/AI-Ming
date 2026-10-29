@@ -8,7 +8,7 @@ namespace PowerAim.AI.Aiming;
 ///     for a share of <paramref name="TurnSpeedPxPerMs"/> (the game's speed at full deflection) and
 ///     <paramref name="Send"/> receives that share per axis (screen coordinates, −1..1) for shaping.
 /// </summary>
-public sealed record StickModel(double TurnSpeedPxPerMs, StickShapeOptions Options, Action<double, double> Send);
+public sealed record StickModel(double TurnSpeedPxPerMs, StickShapeOptions Options, Func<double, double, bool> Send);
 
 /// <summary>Which controller turns the smart path's aim point into mouse moves.</summary>
 public enum AimEngine
@@ -84,6 +84,7 @@ public sealed class AimControllerV2
         _lastStepMs = double.NaN;
         _prevMs = double.NaN;
         _accX = _accY = 0;
+        LastInFlightPx = default;
         _x.Reset();
         _y.Reset();
     }
@@ -146,20 +147,26 @@ public sealed class AimControllerV2
 
     /// <summary>
     ///     The wanted view movement over the next frame as a share of the full turn speed. The stick holds that
-    ///     speed until the next frame, so the move is recorded as speed · frame time (in the uncorrected model
+    ///     speed until the next frame (at most the pad's hold time), so the move is recorded as speed · that time (in the uncorrected model
     ///     units, like mouse moves). Sent every frame — including zero — because a held stick keeps turning.
     /// </summary>
     private void SendStick(StickModel stick, double now, double outX, double outY)
     {
         double turn = Math.Max(1e-6, stick.TurnSpeedPxPerMs);
-        double fx = outX / GainCorrection / _frameMs / turn;
-        double fy = outY / GainCorrection / _frameMs / turn;
+        // Below ~12 FPS the pad lets go of the stick before the next frame refreshes it.
+        double hold = Math.Min(_frameMs, StickMixer.ReleaseAfterMs);
+        double fx = outX / GainCorrection / hold / turn;
+        double fy = outY / GainCorrection / hold / turn;
         double f = Math.Sqrt(fx * fx + fy * fy);
         double cap = StickOutputShaper.MaxSpeedFraction(stick.Options);
         if (f > cap) { fx *= cap / f; fy *= cap / f; }
-        stick.Send(fx, fy);
-        // The view turns over the whole next frame: book it at the frame's middle, not as a jump at its start.
-        if (fx != 0 || fy != 0) _sent.Add((now + _frameMs / 2, fx * turn * _frameMs, fy * turn * _frameMs));
+        // Nothing reached the pad (no sender / not ready): the view doesn't turn, so nothing is booked.
+        if (!stick.Send(fx, fy)) return;
+        // The view turns while the stick is held: book it at the hold's middle, not as a jump at its start.
+        if (fx == 0 && fy == 0) return;
+        double fs = Math.Sqrt(fx * fx + fy * fy);
+        double real = StickOutputShaper.GameSpeedFraction(fs, stick.Options) / fs;
+        _sent.Add((now + hold / 2, fx * real * turn * hold, fy * real * turn * hold));
     }
 
     private (double X, double Y) Cam(double t)

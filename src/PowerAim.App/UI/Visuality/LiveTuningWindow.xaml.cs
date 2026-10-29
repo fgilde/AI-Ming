@@ -23,7 +23,12 @@ public partial class LiveTuningWindow
         InitializeComponent();
         DataContext = this;
         Build();
+        // Another config replaces the profile and pad objects bound here: edits would go nowhere.
+        AppConfig.ConfigLoaded += OnConfigLoaded;
+        Closed += (_, _) => AppConfig.ConfigLoaded -= OnConfigLoaded;
     }
+
+    private void OnConfigLoaded(object? sender, EventArgs e) => Dispatcher.BeginInvoke(Close);
 
     /// <summary>Open (or bring forward) the window for the profile driving the aim, else the selected or first one.</summary>
     public static void Open(Window? owner)

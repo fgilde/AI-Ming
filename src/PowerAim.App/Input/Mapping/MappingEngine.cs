@@ -89,9 +89,8 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
     private void SetActiveProfile(ControllerMappingProfile? p)
     {
         if (ReferenceEquals(_activeProfile, p)) return;
-        if (_activeProfile != null) ResumeOwnedChannels(_activeProfile);
         _activeProfile = p;
-        if (p != null) PauseOwnedChannels(p);
+        SyncOwnedChannels(p);
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ActiveProfile)));
     }
 
@@ -131,37 +130,40 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
         return channels;
     }
 
+    private static readonly HashSet<object> PausedChannels = new();
+
     /// <summary>
-    ///     Pause every virtual-pad channel that <paramref name="profile"/> owns. Once paused, the shared
-    ///     sender's <c>SyncLoop</c> no longer mirrors the physical pad onto that channel — meaning our
+    ///     Pause every virtual-pad channel that <paramref name="profile"/> owns and resume the ones it no longer
+    ///     owns (mapping deleted or switched off, other profile, none). Once paused, the shared sender's
+    ///     <c>SyncLoop</c> no longer mirrors the physical pad onto that channel — meaning our
     ///     <c>SetButton/Slider/Axis</c> writes survive instead of being instantly overwritten.
     /// </summary>
-    private static void PauseOwnedChannels(ControllerMappingProfile profile)
+    internal static void SyncOwnedChannels(ControllerMappingProfile? profile)
     {
         if (!VirtualReady) return;
         var sender = GamepadManager.GamepadSender!;
-        foreach (var channel in OwnedChannels(profile))
+        var owned = profile == null ? new List<object>() : OwnedChannels(profile);
+        lock (PausedChannels)
         {
-            switch (channel)
+            foreach (var channel in PausedChannels.Where(c => !owned.Contains(c)).ToList())
             {
-                case GamepadButton b: sender.PauseSync(b); break;
-                case GamepadSlider sl: sender.PauseSync(sl); break;
-                case GamepadAxis ax: sender.PauseSync(ax); break;
+                switch (channel)
+                {
+                    case GamepadButton b: sender.ResumeSync(b); break;
+                    case GamepadSlider sl: sender.ResumeSync(sl); break;
+                    case GamepadAxis ax: sender.ResumeSync(ax); break;
+                }
+                PausedChannels.Remove(channel);
             }
-        }
-    }
-
-    private static void ResumeOwnedChannels(ControllerMappingProfile profile)
-    {
-        if (!VirtualReady) return;
-        var sender = GamepadManager.GamepadSender!;
-        foreach (var channel in OwnedChannels(profile))
-        {
-            switch (channel)
+            foreach (var channel in owned)
             {
-                case GamepadButton b: sender.ResumeSync(b); break;
-                case GamepadSlider sl: sender.ResumeSync(sl); break;
-                case GamepadAxis ax: sender.ResumeSync(ax); break;
+                switch (channel)
+                {
+                    case GamepadButton b: sender.PauseSync(b); break;
+                    case GamepadSlider sl: sender.PauseSync(sl); break;
+                    case GamepadAxis ax: sender.PauseSync(ax); break;
+                }
+                PausedChannels.Add(channel);
             }
         }
     }
@@ -309,10 +311,10 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
             // Long-press / pulse follow-up tick.
             TickActivators();
 
-            // Re-pause owned channels every tick (cheap — internal HashSet.Add). Necessary because
+            // Re-sync owned channels every tick (cheap — internal HashSet.Add). Necessary because
             // the user can add/remove mappings while a profile is active and the sender doesn't
             // know about those topology changes.
-            PauseOwnedChannels(_activeProfile);
+            SyncOwnedChannels(_activeProfile);
 
             try { await Task.Delay(8, ct); } catch { break; }
         }

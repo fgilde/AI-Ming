@@ -3,6 +3,7 @@ using PowerAim.Config;
 using PowerAim.Input;
 using PowerAim.Input.Contracts;
 using PowerAim.Input.Gamepad;
+using PowerAim.Input.Mapping;
 
 namespace PowerAim.App.Tests;
 
@@ -61,6 +62,35 @@ public class StickOutputIntegrationTests
             Assert.DoesNotContain(nameof(GamepadButton.RightShoulder), pad.Paused); // the bumper goes back to the pad
         }
         finally { UseSender(null); }
+    }
+
+    [Fact]
+    public void A_removed_pad_to_pad_mapping_hands_its_buttons_back_to_the_pad()
+    {
+        var pad = new RecordingSender();
+        UseSender(pad);
+        try
+        {
+            var profile = new ControllerMappingProfile();
+            profile.Mappings.Add(new InputMapping
+            {
+                SourceKind = MappingInputKind.GamepadButton, SourceCode = (int)GamepadButton.A.ToXboxButtonId(),
+                TargetKind = MappingInputKind.GamepadButton, TargetCode = (int)GamepadButton.B.ToXboxButtonId(),
+                Enabled = true,
+            });
+            MappingEngine.SyncOwnedChannels(profile);
+            Assert.Contains(nameof(GamepadButton.A), pad.Paused);
+
+            profile.Mappings.Clear();
+            MappingEngine.SyncOwnedChannels(profile);
+
+            Assert.Empty(pad.Paused);
+        }
+        finally
+        {
+            MappingEngine.SyncOwnedChannels(null);
+            UseSender(null);
+        }
     }
 
     [Fact]

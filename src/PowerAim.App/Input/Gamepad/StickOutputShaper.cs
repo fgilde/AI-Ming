@@ -76,6 +76,19 @@ public static class StickOutputShaper
         return (x / r * m, y / r * m);
     }
 
+    /// <summary>
+    ///     Share of the game's full turn speed the shaped stick really produces for a wanted share <paramref name="f"/>,
+    ///     taking the game's deadzone as configured: the +2 % safety margin turns it a bit more than wanted.
+    /// </summary>
+    public static double GameSpeedFraction(double f, StickShapeOptions o)
+    {
+        f = Math.Abs(f);
+        if (f <= 0) return 0;
+        var (m, _) = ShapeAi(f, 0, o with { InvertAiY = false });
+        double g = Math.Clamp(o.GameDeadzonePct, 0, 99) / 100.0;
+        return m <= g ? 0 : Curve(Math.Min(1, (m - g) / (1 - g)), o.Curve);
+    }
+
     /// <summary>Highest share of the game's full turn speed the aim can reach under the output ceiling.</summary>
     public static double MaxSpeedFraction(StickShapeOptions o)
     {

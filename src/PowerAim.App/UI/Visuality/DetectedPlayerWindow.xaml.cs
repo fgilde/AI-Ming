@@ -198,5 +198,17 @@ namespace PowerAim.UI.Visuality
             PredictionHost.Visibility = Visibility.Visible;
             PredictionHost.DrawPredictions(predictions, toRect);
         }
+
+        /// <summary>Canvas mode: the aim point marker on the drawing layer, next to the canvas box.</summary>
+        public void DrawAimPointLayer(Rect toRect)
+        {
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.Invoke(() => DrawAimPointLayer(toRect));
+                return;
+            }
+            PredictionHost.Visibility = Visibility.Visible;
+            PredictionHost.DrawPredictions([], toRect);
+        }
     }
 }

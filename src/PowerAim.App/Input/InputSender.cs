@@ -191,16 +191,18 @@ namespace PowerAim.Input
         ///     Drive the aim stick with a share of the game's full turn speed per axis (screen coordinates,
         ///     −1..1) — the V2 engine's gamepad output. Deadzone remap, response curve and ceiling are applied here.
         /// </summary>
-        public static void SetAimStick(double speedX, double speedY)
+        /// <returns>False when no virtual pad is ready, so nothing was sent.</returns>
+        public static bool SetAimStick(double speedX, double speedY)
         {
             var sender = GamepadManager.GamepadSender;
-            if (sender == null || !sender.CanWork) return;
+            if (sender == null || !sender.CanWork) return false;
             ClaimAimStick(sender);
             var options = StickOptions();
             var (sx, sy) = PowerAim.Input.Gamepad.StickOutputShaper.ShapeAi(speedX, -speedY, options); // stick Y is up
             _stickMixer.SetAi(sx, sy, _stickClock.Elapsed.TotalMilliseconds);
             PushStick(sender, options);
             EnsureStickThread();
+            return true;
         }
 
         public static PowerAim.Input.Gamepad.StickShapeOptions CurrentStickOptions => StickOptions();

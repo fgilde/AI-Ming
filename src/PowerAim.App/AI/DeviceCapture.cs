@@ -73,15 +73,11 @@ public sealed class DeviceCapture : ICapture
     public Task OnPause() => Task.CompletedTask;
     public Task OnResume() => Task.CompletedTask;
 
+    /// <summary>Stops the reader; it releases the device and the frames itself, even when it is stuck in a read.</summary>
     public void Dispose()
     {
         _running = false;
-        _reader.Join(2000);
-        lock (_gate)
-        {
-            _latest?.Dispose();
-            _latest = null;
-        }
+        _reader.Join(500);
     }
 
     /// <summary>The first of <see cref="Modes"/> the card reports back as set (same size, at least 90 % of the rate).</summary>
@@ -101,11 +97,14 @@ public sealed class DeviceCapture : ICapture
         var area = Rectangle.Intersect(box, new Rectangle(0, 0, frame.Width, frame.Height));
         if (area.Width <= 0 || area.Height <= 0) return new Bitmap(Math.Max(1, box.Width), Math.Max(1, box.Height), PixelFormat.Format32bppArgb);
 
-        using var source = flipVertical ? frame.Flip(FlipMode.X) : null;
-        using var roi = new Mat(source ?? frame, new OpenCvSharp.Rect(area.X, area.Y, area.Width, area.Height));
+        // Box in the upright picture; flipped, its rows sit mirrored in the frame — flip only that part.
+        int sourceY = flipVertical ? frame.Height - area.Y - area.Height : area.Y;
+        using var roi = new Mat(frame, new OpenCvSharp.Rect(area.X, sourceY, area.Width, area.Height));
+        using var flipped = flipVertical ? roi.Flip(FlipMode.X) : null;
+        var part = flipped ?? roi;
         using var bgra = new Mat();
-        if (frame.Channels() == 4) roi.CopyTo(bgra);
-        else Cv2.CvtColor(roi, bgra, ColorConversionCodes.BGR2BGRA);
+        if (frame.Channels() == 4) part.CopyTo(bgra);
+        else Cv2.CvtColor(part, bgra, ColorConversionCodes.BGR2BGRA);
 
         var bmp = new Bitmap(area.Width, area.Height, PixelFormat.Format32bppArgb);
         var data = bmp.LockBits(new Rectangle(0, 0, area.Width, area.Height), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
@@ -144,11 +143,11 @@ public sealed class DeviceCapture : ICapture
     private void ReadLoop(Func<VideoCapture> open, bool throttle)
     {
         VideoCapture? device = null;
+        var mat = new Mat();
         try
         {
             device = open();
             double frameMs = throttle && device.Fps > 0 ? 1000.0 / device.Fps : 0;
-            var mat = new Mat();
             while (_running)
             {
                 if (!device.IsOpened() || !device.Read(mat) || mat.Empty())
@@ -160,6 +159,7 @@ public sealed class DeviceCapture : ICapture
                 bool sizeChanged;
                 lock (_gate)
                 {
+                    if (!_running) break; // disposed while reading
                     (_latest, mat) = (mat, _latest ?? new Mat()); // swap buffers: the next read refills the old one
                     sizeChanged = _area.Width != _latest.Width || _area.Height != _latest.Height;
                     if (sizeChanged) _area = new Rectangle(0, 0, _latest.Width, _latest.Height);
@@ -171,7 +171,6 @@ public sealed class DeviceCapture : ICapture
                 }
                 if (frameMs > 0) Thread.Sleep((int)frameMs);
             }
-            mat.Dispose();
         }
         catch (Exception ex)
         {
@@ -179,7 +178,13 @@ public sealed class DeviceCapture : ICapture
         }
         finally
         {
+            mat.Dispose();
             device?.Dispose();
+            lock (_gate)
+            {
+                _latest?.Dispose();
+                _latest = null;
+            }
         }
     }
 }

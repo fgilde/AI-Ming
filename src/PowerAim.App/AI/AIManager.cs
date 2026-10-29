@@ -64,7 +64,11 @@ public class AIManager : IDisposable
                 CaptureTargetType.Screen => target.ProcessOrScreenId.HasValue ? new ScreenCapture(target.ProcessOrScreenId.Value) : new ScreenCapture(),
                 CaptureTargetType.Process => new ProcessCapture(ProcessModel.FindProcessById(target.ProcessOrScreenId ?? 0) ?? ProcessModel.FindProcessByTitle(target.Title)),
                 // Devices are found by name: the DirectShow order changes when cards are plugged in or out.
-                CaptureTargetType.CaptureDevice => new DeviceCapture(VideoInputDevices.IndexOf(target.Title) ?? target.ProcessOrScreenId ?? 0, target.FlipVertical),
+                // An unplugged card must not silently fall back to whatever device now has its old index (a webcam).
+                CaptureTargetType.CaptureDevice => new DeviceCapture(
+                    string.IsNullOrWhiteSpace(target.Title) ? target.ProcessOrScreenId ?? 0
+                        : VideoInputDevices.IndexOf(target.Title) ?? throw new InvalidOperationException(string.Format(Locale.CaptureDeviceNotFound, target.Title)),
+                    target.FlipVertical),
                 _ => throw new ArgumentException("Unsupported RecordTargetType"),
             };
         }
