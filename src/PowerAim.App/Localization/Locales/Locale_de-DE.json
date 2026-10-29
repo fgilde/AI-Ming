@@ -1347,5 +1347,7 @@
   "AimReactionDelayTooltip": "Nachdem ein Ziel auftaucht, wartet der Aim so lange, bevor er sich bewegt – wie eine menschliche Reaktion. Geht das Ziel verloren, beginnt sie neu. 0 = sofort.",
   "StickAimLeft": "Mit dem linken Stick zielen (Southpaw)",
   "StickAimLeftTooltip": "Der Aim steuert den linken statt des rechten Sticks – für Spiele oder Belegungen mit getauschten Sticks. Der rechte Stick bleibt dann bei deinem Controller.",
-  "AimClassModelNotes": "Hinweise zum Modell:"
+  "AimClassModelNotes": "Hinweise zum Modell:",
+  "StickTurnSpeed": "Drehrate bei vollem Ausschlag",
+  "StickTurnSpeedTooltip": "Wie weit sich die Sicht pro Sekunde bei voll ausgelenktem Stick dreht, in Bildschirmpixeln. Die Aim-Engine V2 plant daraus den Stick-Ausschlag und lernt den Rest beim Zielen. Zu hoch: der Aim kommt zu kurz; zu niedrig: er schießt anfangs über. Nur für Aim-Engine V2 mit der Gamepad-Methode."
 }

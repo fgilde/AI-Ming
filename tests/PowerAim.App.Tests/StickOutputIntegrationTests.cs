@@ -153,4 +153,20 @@ public class StickOutputIntegrationTests
         Assert.DoesNotContain(nameof(GamepadButton.A), pad.Paused);
         Assert.Contains(nameof(GamepadAxis.RightThumbX), pad.Paused);
     }
+
+    [Fact]
+    public void Turn_speed_share_becomes_stick_deflection_with_screen_y_flipped()
+    {
+        TestConfig.Ensure();
+        var pad = new RecordingSender();
+        UseSender(pad);
+        try
+        {
+            InputSender.SetAimStick(0.5, 0.25); // right and down on screen
+
+            Assert.Equal((short)Math.Round(0.5 * short.MaxValue), pad.Last(GamepadAxis.RightThumbX));
+            Assert.Equal((short)Math.Round(-0.25 * short.MaxValue), pad.Last(GamepadAxis.RightThumbY));
+        }
+        finally { UseSender(null); }
+    }
 }

@@ -70,6 +70,16 @@ public class ControllerSettings : BaseSettings
         set => SetField(ref field, Math.Clamp(value, 0, 50));
     }
 
+    /// <summary>
+    ///     How fast the game turns the view at full stick deflection, in screen pixels per second. The V2 aim
+    ///     engine plans stick deflection from it and learns the remaining difference while aiming.
+    /// </summary>
+    public double StickTurnSpeedPxPerSec
+    {
+        get;
+        set => SetField(ref field, Math.Clamp(value, 100, 30000));
+    } = 3000;
+
     /// <summary>Southpaw: the aim drives the left stick (games with swapped sticks).</summary>
     public bool AimStickLeft
     {

@@ -526,6 +526,9 @@ public partial class MainWindow
             GamepadSettingsConfig.AddSlider(Locale.StickGameDeadzone, "%", 1, 1, 0, 50, false, 0, false)
                 .InitWith(s => s.ToolTip = Locale.StickGameDeadzoneTooltip)
                 .BindTo(() => cs.GameDeadzonePct);
+            GamepadSettingsConfig.AddSlider(Locale.StickTurnSpeed, "px/s", 50, 100, 100, 20000, false, 0, false)
+                .InitWith(s => s.ToolTip = Locale.StickTurnSpeedTooltip)
+                .BindTo(() => cs.StickTurnSpeedPxPerSec);
             GamepadSettingsConfig.AddSlider(Locale.StickMaxOutput, "%", 1, 1, 5, 100, false, 0, false)
                 .InitWith(s => s.ToolTip = Locale.StickMaxOutputTooltip)
                 .BindTo(() => cs.MaxOutputPct);

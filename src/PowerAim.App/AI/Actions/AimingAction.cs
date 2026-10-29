@@ -327,8 +327,12 @@ public class AimingAction : BaseAction
             // the rest) and the aim region's width for its settle zone. Strength/deadzone don't apply.
             var region = AppConfig.Current.SliderSettings.AimRegion;
             double regionWidthPx = box.Width * Math.Max(0.05, region.WidthPercentage) * scale;
+            // With the gamepad method the stick sets the turn SPEED: V2 plans deflection from the game's turn speed.
+            var stick = InputSender.GamepadAimActive && AppConfig.Current.ControllerSettings is { } pad
+                ? new StickModel(pad.StickTurnSpeedPxPerSec / 1000.0, InputSender.CurrentStickOptions, InputSender.SetAimStick)
+                : null;
             _controllerV2.Step(targetX - captureSize / 2.0, targetY - captureSize / 2.0, regionWidthPx,
-                ai.CalibratedPixelsPerCount, ai.LatencyCompensationMs > 0 ? ai.LatencyCompensationMs : 50);
+                ai.CalibratedPixelsPerCount, ai.LatencyCompensationMs > 0 ? ai.LatencyCompensationMs : 50, stick);
             return;
         }
 

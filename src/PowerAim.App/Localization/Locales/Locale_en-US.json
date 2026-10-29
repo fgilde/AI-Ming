@@ -1347,5 +1347,7 @@
   "AimReactionDelayTooltip": "After a target appears the aim waits this long before it moves, like a human reaction. Losing the target restarts it. 0 = at once.",
   "StickAimLeft": "Aim with the left stick (southpaw)",
   "StickAimLeftTooltip": "The aim drives the left stick instead of the right one — for games or layouts with swapped sticks. The right stick then stays with your controller.",
-  "AimClassModelNotes": "Model notes:"
+  "AimClassModelNotes": "Model notes:",
+  "StickTurnSpeed": "Turn speed at full stick",
+  "StickTurnSpeedTooltip": "How far the view turns per second with the stick fully deflected, in screen pixels. The aim engine V2 plans the stick deflection from it and learns the remaining difference while aiming. Too high: the aim falls short; too low: it overshoots at first. Only used by aim engine V2 with the gamepad method."
 }

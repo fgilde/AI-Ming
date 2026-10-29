@@ -76,6 +76,15 @@ public static class StickOutputShaper
         return (x / r * m, y / r * m);
     }
 
+    /// <summary>Highest share of the game's full turn speed the aim can reach under the output ceiling.</summary>
+    public static double MaxSpeedFraction(StickShapeOptions o)
+    {
+        double dz = o.GameDeadzonePct > 0 ? Math.Min(o.GameDeadzonePct + 2, 99) / 100.0 : 0;
+        double max = Math.Clamp(o.MaxOutputPct, 0, 100) / 100.0;
+        if (max >= 1) return 1;
+        return Curve(Math.Clamp((max - dz) / (1 - dz), 0, 1), o.Curve);
+    }
+
     /// <summary>
     ///     Blend the shaped aim vector with the physical right stick (manual override), add the anti-strafe
     ///     push and keep the result inside the unit circle.

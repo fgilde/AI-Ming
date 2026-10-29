@@ -1,6 +1,14 @@
 using PowerAim.Input;
+using PowerAim.Input.Gamepad;
 
 namespace PowerAim.AI.Aiming;
+
+/// <summary>
+///     Gamepad output for <see cref="AimControllerV2"/>: the stick sets the view's turn SPEED, so the engine asks
+///     for a share of <paramref name="TurnSpeedPxPerMs"/> (the game's speed at full deflection) and
+///     <paramref name="Send"/> receives that share per axis (screen coordinates, −1..1) for shaping.
+/// </summary>
+public sealed record StickModel(double TurnSpeedPxPerMs, StickShapeOptions Options, Action<double, double> Send);
 
 /// <summary>Which controller turns the smart path's aim point into mouse moves.</summary>
 public enum AimEngine
@@ -82,7 +90,8 @@ public sealed class AimControllerV2
     /// <param name="boxWidthPx">Width of the target box (screen px); sets the settle zone.</param>
     /// <param name="pixelsPerCount">Calibrated px per mouse count; 0 = 1:1.</param>
     /// <param name="latencyMs">Configured capture-to-output latency.</param>
-    public void Step(double errX, double errY, double boxWidthPx, double pixelsPerCount, double latencyMs)
+    /// <param name="stick">Drive a gamepad stick (turn speed) instead of the mouse (displacement).</param>
+    public void Step(double errX, double errY, double boxWidthPx, double pixelsPerCount, double latencyMs, StickModel? stick = null)
     {
         double now = _clockMs();
         double dt = double.IsNaN(_lastStepMs) ? _frameMs : Math.Clamp(now - _lastStepMs, 0.5, 200);
@@ -113,6 +122,12 @@ public sealed class AimControllerV2
         double outY = _y.Control(errY, (camNowY - camCapY) * GainCorrection, camCapY * GainCorrection, camNowY * GainCorrection,
             now, dt, latency, _frameMs, boxWidthPx);
 
+        if (stick != null)
+        {
+            SendStick(stick, now, outX, outY);
+            return;
+        }
+
         double cx = outX / (ppc * GainCorrection) + _accX;
         double cy = outY / (ppc * GainCorrection) + _accY;
         int ix = (int)Math.Round(cx), iy = (int)Math.Round(cy);
@@ -123,6 +138,24 @@ public sealed class AimControllerV2
         if (ix == 0 && iy == 0) return;
         _sent.Add((now, ix * ppc, iy * ppc));
         _move(ix, iy);
+    }
+
+    /// <summary>
+    ///     The wanted view movement over the next frame as a share of the full turn speed. The stick holds that
+    ///     speed until the next frame, so the move is recorded as speed · frame time (in the uncorrected model
+    ///     units, like mouse moves). Sent every frame — including zero — because a held stick keeps turning.
+    /// </summary>
+    private void SendStick(StickModel stick, double now, double outX, double outY)
+    {
+        double turn = Math.Max(1e-6, stick.TurnSpeedPxPerMs);
+        double fx = outX / GainCorrection / _frameMs / turn;
+        double fy = outY / GainCorrection / _frameMs / turn;
+        double f = Math.Sqrt(fx * fx + fy * fy);
+        double cap = StickOutputShaper.MaxSpeedFraction(stick.Options);
+        if (f > cap) { fx *= cap / f; fy *= cap / f; }
+        stick.Send(fx, fy);
+        // The view turns over the whole next frame: book it at the frame's middle, not as a jump at its start.
+        if (fx != 0 || fy != 0) _sent.Add((now + _frameMs / 2, fx * turn * _frameMs, fy * turn * _frameMs));
     }
 
     private (double X, double Y) Cam(double t)
