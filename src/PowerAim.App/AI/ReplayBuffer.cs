@@ -128,6 +128,10 @@ public sealed class ReplayBuffer : INotifyPropertyChanged
             File.WriteAllText(Path.Combine(folder, "annotations.json"),
                 JsonConvert.SerializeObject(meta, Formatting.Indented));
 
+            // A playable video next to the frames when ffmpeg is installed.
+            double span = (snapshot[^1].CapturedAt - snapshot[0].CapturedAt).TotalSeconds;
+            ReplayVideo.TryEncode(folder, ReplayVideo.FrameRate(snapshot.Length, span), snapshot[0].Width, snapshot[0].Height);
+
             _droppedSinceLastExport = 0;
             return folder;
         });

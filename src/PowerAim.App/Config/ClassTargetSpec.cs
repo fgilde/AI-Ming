@@ -32,6 +32,8 @@ public class ClassTargetSpec
     public int FlatOffsetX { get; set; }
 
     public int FlatOffsetY { get; set; }
+
+    public ClassTargetSpec Copy() => (ClassTargetSpec)MemberwiseClone();
 }
 
 /// <summary>Which body part a pose model's keypoints aim at.</summary>

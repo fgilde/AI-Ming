@@ -1346,5 +1346,6 @@
   "AimReactionDelay": "Reaktionszeit",
   "AimReactionDelayTooltip": "Nachdem ein Ziel auftaucht, wartet der Aim so lange, bevor er sich bewegt – wie eine menschliche Reaktion. Geht das Ziel verloren, beginnt sie neu. 0 = sofort.",
   "StickAimLeft": "Mit dem linken Stick zielen (Southpaw)",
-  "StickAimLeftTooltip": "Der Aim steuert den linken statt des rechten Sticks – für Spiele oder Belegungen mit getauschten Sticks. Der rechte Stick bleibt dann bei deinem Controller."
+  "StickAimLeftTooltip": "Der Aim steuert den linken statt des rechten Sticks – für Spiele oder Belegungen mit getauschten Sticks. Der rechte Stick bleibt dann bei deinem Controller.",
+  "AimClassModelNotes": "Hinweise zum Modell:"
 }

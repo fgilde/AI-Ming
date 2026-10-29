@@ -67,6 +67,9 @@ public class PredictionLogic : IPredictionLogic, IDisposable
     /// <inheritdoc />
     public bool IsLoaded => _onnxModel != null;
 
+    /// <summary>Path of the loaded model file (for its sidecar).</summary>
+    public string? ModelPath => _modelPath;
+
     /// <inheritdoc />
     public string? LoadError { get; private set; }
 

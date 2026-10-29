@@ -1346,5 +1346,6 @@
   "AimReactionDelay": "Reaction time",
   "AimReactionDelayTooltip": "After a target appears the aim waits this long before it moves, like a human reaction. Losing the target restarts it. 0 = at once.",
   "StickAimLeft": "Aim with the left stick (southpaw)",
-  "StickAimLeftTooltip": "The aim drives the left stick instead of the right one — for games or layouts with swapped sticks. The right stick then stays with your controller."
+  "StickAimLeftTooltip": "The aim drives the left stick instead of the right one — for games or layouts with swapped sticks. The right stick then stays with your controller.",
+  "AimClassModelNotes": "Model notes:"
 }

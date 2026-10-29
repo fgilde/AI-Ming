@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using PowerAim.AI;
 using PowerAim.Class.Native;
 using PowerAim.Config;
 using PowerAim.Other;
@@ -35,15 +36,32 @@ public partial class ClassRulesDialog
 
     public static void ShowFor(AimProfile profile, Window? owner)
     {
-        var classes = FileManager.AIManager?.PredictionLogic?.ModelClasses;
-        if (classes != null)
-            foreach (var (id, name) in classes.OrderBy(c => c.Key))
-                if (profile.ClassSpecs.All(s => s.ClassId != id))
-                    profile.ClassSpecs.Add(new ClassTargetSpec { ClassId = id, Name = name });
+        var logic = FileManager.AIManager?.PredictionLogic;
+        var sidecar = ModelSidecar.Load((logic as PredictionLogic)?.ModelPath);
+        AddMissingRows(profile, logic?.ModelClasses, sidecar);
 
         var dialog = new ClassRulesDialog { Owner = owner };
         dialog.Grid.ItemsSource = profile.ClassSpecs;
+        if (!string.IsNullOrWhiteSpace(sidecar?.Notes))
+            dialog.DescriptionText.Text += Environment.NewLine + Environment.NewLine + Locale.AimClassModelNotes + " " + sidecar!.Notes;
         dialog.ShowDialog();
+    }
+
+    /// <summary>
+    ///     One row per model class the profile has no rule for yet: the model's recommended rule from its
+    ///     sidecar when there is one, otherwise a neutral row.
+    /// </summary>
+    internal static void AddMissingRows(AimProfile profile, IReadOnlyDictionary<int, string>? classes, ModelSidecar? sidecar)
+    {
+        if (classes == null) return;
+        foreach (var (id, name) in classes.OrderBy(c => c.Key))
+        {
+            if (profile.ClassSpecs.Any(s => s.ClassId == id)) continue;
+            var recommended = sidecar?.ClassSpecs?.FirstOrDefault(s => s.ClassId == id);
+            var row = recommended == null ? new ClassTargetSpec { ClassId = id } : recommended.Copy();
+            row.Name = name;
+            profile.ClassSpecs.Add(row);
+        }
     }
 
     protected override void OnSourceInitialized(EventArgs e)
