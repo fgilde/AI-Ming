@@ -104,6 +104,14 @@ public class PredictionLogic : IPredictionLogic, IDisposable
         try
         {
             LoadModel(sessionOptions, modelPath, preferred);
+            // TensorRT 10 can't run a fused end-to-end NMS model on Pascal: use CUDA there.
+            if (ExecutionProvider == OnnxExecutionProvider.TensorRT
+                && NvidiaGpu.TensorRtUnsuitable(NvidiaGpu.ComputeCapability(GpuAdapterEnumerator.DxgiIndexToCudaOrdinal(
+                    AppConfig.Current?.AISettings?.InferenceGpuDeviceId ?? 0)), _outputFormat.Kind))
+            {
+                AppDebugLog.Info("ONNX", "End-to-end model on a pre-Volta GPU: TensorRT skipped, using CUDA.");
+                LoadModel(sessionOptions, modelPath, OnnxExecutionProvider.Cuda);
+            }
             LoadError = null;
         }
         catch (Exception firstEx)
