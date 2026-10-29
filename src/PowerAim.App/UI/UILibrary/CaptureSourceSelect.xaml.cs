@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.CompilerServices;
@@ -57,6 +57,7 @@ namespace PowerAim.UI.UILibrary
         public Brush ScreenForeground => CaptureSource.TargetType == CaptureTargetType.Screen ? Brushes.Green : Brushes.White;
         public Brush ProcessForeground => IsProcess ? IsValidProcess ? Brushes.Green : Brushes.Red : Brushes.White;
 
+        public Brush DeviceForeground => CaptureSource?.TargetType == CaptureTargetType.CaptureDevice ? Brushes.Green : Brushes.White;
         public bool IsProcess => CaptureSource?.TargetType == CaptureTargetType.Process;
         public bool IsScreen => CaptureSource?.TargetType == CaptureTargetType.Screen;
         public bool IsValidProcess => IsProcess && (ProcessModel.FindProcessById(CaptureSource.ProcessOrScreenId ?? 0) ?? ProcessModel.FindProcessByTitle(CaptureSource.Title)) != null;
@@ -104,6 +105,13 @@ namespace PowerAim.UI.UILibrary
                 // Use the same reliable thumbnail path that the picker tiles use — CaptureSource.Capture()
                 // sometimes returns null/garbage when invoked outside of an active inference loop.
                 if (CaptureSource == null)
+                {
+                    CapturePreview = null!;
+                    return;
+                }
+
+                // No preview for a capture device: opening it here would compete with the running capture.
+                if (CaptureSource.TargetType == CaptureTargetType.CaptureDevice)
                 {
                     CapturePreview = null!;
                     return;
@@ -718,6 +726,94 @@ namespace PowerAim.UI.UILibrary
             OnPropertyChanged(nameof(ScreenForeground));
         }
 
+        private Popup? _devicePopup;
+
+        /// <summary>Lists the video input devices (capture cards); picking one makes it the capture source.</summary>
+        private void DeviceBtnClick(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button btn) return;
+            _devicePopup?.SetCurrentValue(Popup.IsOpenProperty, false);
+
+            var list = new StackPanel { MinWidth = 240 };
+            var header = new TextBlock
+            {
+                Text = Locale.SelectCaptureDevice,
+                FontFamily = new System.Windows.Media.FontFamily("Segoe UI Variable Display"),
+                FontWeight = FontWeights.SemiBold,
+                FontSize = 13,
+                Margin = new Thickness(2, 0, 0, 8)
+            };
+            header.SetResourceReference(TextBlock.ForegroundProperty, "FluentTextPrimary");
+            list.Children.Add(header);
+
+            bool current = CaptureSource?.TargetType == CaptureTargetType.CaptureDevice;
+            var flip = new System.Windows.Controls.CheckBox { Content = Locale.CaptureDeviceFlip, IsChecked = current && CaptureSource!.FlipVertical, Margin = new Thickness(2, 0, 0, 8) };
+            flip.SetResourceReference(ForegroundProperty, "FluentTextPrimary");
+            flip.Click += (_, _) =>
+            {
+                if (CaptureSource?.TargetType == CaptureTargetType.CaptureDevice)
+                    OnSelect(AI.CaptureSource.Device(CaptureSource.ProcessOrScreenId ?? 0, CaptureSource.Title, flip.IsChecked == true));
+            };
+            list.Children.Add(flip);
+
+            var names = VideoInputDevices.Names();
+            if (names.Count == 0)
+            {
+                var none = new TextBlock { Text = Locale.NoCaptureDevices, Margin = new Thickness(2, 0, 0, 4), TextWrapping = TextWrapping.Wrap };
+                none.SetResourceReference(TextBlock.ForegroundProperty, "FluentTextSecondary");
+                list.Children.Add(none);
+            }
+            for (int i = 0; i < names.Count; i++)
+            {
+                int index = i;
+                string name = names[i];
+                var item = new Button { Content = name, Margin = new Thickness(0, 0, 0, 4), Padding = new Thickness(10, 4, 10, 4), HorizontalContentAlignment = System.Windows.HorizontalAlignment.Left };
+                item.SetResourceReference(StyleProperty, "FluentStandardButton");
+                if (current && string.Equals(CaptureSource!.Title, name, StringComparison.OrdinalIgnoreCase)) item.FontWeight = FontWeights.SemiBold;
+                item.Click += (_, _) =>
+                {
+                    OnSelect(AI.CaptureSource.Device(index, name, flip.IsChecked == true));
+                    if (_devicePopup != null) _devicePopup.IsOpen = false;
+                };
+                list.Children.Add(item);
+            }
+
+            var card = new Border
+            {
+                CornerRadius = new CornerRadius(10),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(12),
+                Margin = new Thickness(0, 6, 0, 0),
+                Child = list,
+            };
+            card.SetResourceReference(Border.BackgroundProperty, "FluentSurface2");
+            card.SetResourceReference(Border.BorderBrushProperty, "FluentStroke");
+            card.Effect = new DropShadowEffect { BlurRadius = 18, ShadowDepth = 3, Opacity = 0.3 };
+
+            _devicePopup = new Popup
+            {
+                Placement = PlacementMode.Bottom,
+                PlacementTarget = btn,
+                StaysOpen = false,
+                AllowsTransparency = true,
+                Child = card,
+                IsOpen = true
+            };
+            _devicePopup.Closed += (_, _) => _devicePopup = null;
+        }
+
+        private void OnSelect(CaptureSource device)
+        {
+            _processWatcher?.Stop();
+            _processWatcher = null;
+            CaptureSource = device;
+            AppConfig.Current.CaptureSource = CaptureSource;
+            Selected?.Invoke(this, CaptureSource);
+            OnPropertyChanged(nameof(ProcessForeground));
+            OnPropertyChanged(nameof(ScreenForeground));
+            OnPropertyChanged(nameof(DeviceForeground));
+        }
+
         private void OnSelect(Screen monitor)
         {
             _processWatcher?.Stop();
@@ -727,6 +823,7 @@ namespace PowerAim.UI.UILibrary
             Selected?.Invoke(this, CaptureSource);
             OnPropertyChanged(nameof(ProcessForeground));
             OnPropertyChanged(nameof(ScreenForeground));
+            OnPropertyChanged(nameof(DeviceForeground));
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

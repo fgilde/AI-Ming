@@ -1351,5 +1351,9 @@
   "StickTurnSpeed": "Drehrate bei vollem Ausschlag",
   "StickTurnSpeedTooltip": "Wie weit sich die Sicht pro Sekunde bei voll ausgelenktem Stick dreht, in Bildschirmpixeln. Die Aim-Engine V2 plant daraus den Stick-Ausschlag und lernt den Rest beim Zielen. Zu hoch: der Aim kommt zu kurz; zu niedrig: er schießt anfangs über. Nur für Aim-Engine V2 mit der Gamepad-Methode.",
   "ShowPredictedAim": "Zielpunkt anzeigen",
-  "ShowPredictedAimTooltip": "Overlay: ein Kreuz auf dem Punkt, den der Aim ansteuert, und ein oranger Ring, wo er landet, sobald die noch laufenden Bewegungen die Sicht gedreht haben. Hilft beim Einstellen der Latenzkompensation."
+  "ShowPredictedAimTooltip": "Overlay: ein Kreuz auf dem Punkt, den der Aim ansteuert, und ein oranger Ring, wo er landet, sobald die noch laufenden Bewegungen die Sicht gedreht haben. Hilft beim Einstellen der Latenzkompensation.",
+  "CaptureDevice": "Capture-Karte",
+  "SelectCaptureDevice": "Von einem Videoeingang aufnehmen (Capture-Karte)",
+  "CaptureDeviceFlip": "Vertikal spiegeln",
+  "NoCaptureDevices": "Keine Videoeingänge gefunden."
 }

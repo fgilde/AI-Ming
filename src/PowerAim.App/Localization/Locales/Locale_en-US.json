@@ -1351,5 +1351,9 @@
   "StickTurnSpeed": "Turn speed at full stick",
   "StickTurnSpeedTooltip": "How far the view turns per second with the stick fully deflected, in screen pixels. The aim engine V2 plans the stick deflection from it and learns the remaining difference while aiming. Too high: the aim falls short; too low: it overshoots at first. Only used by aim engine V2 with the gamepad method.",
   "ShowPredictedAim": "Show aim point",
-  "ShowPredictedAimTooltip": "Overlay: a cross on the point the aim steers at and an orange ring where it lands once the moves still in flight have turned the view. Helps tuning the latency compensation."
+  "ShowPredictedAimTooltip": "Overlay: a cross on the point the aim steers at and an orange ring where it lands once the moves still in flight have turned the view. Helps tuning the latency compensation.",
+  "CaptureDevice": "Capture card",
+  "SelectCaptureDevice": "Capture from a video input (capture card)",
+  "CaptureDeviceFlip": "Flip vertically",
+  "NoCaptureDevices": "No video input devices found."
 }

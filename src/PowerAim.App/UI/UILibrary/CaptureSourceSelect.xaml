@@ -11,6 +11,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />
                 <ColumnDefinition />
+                <ColumnDefinition />
             </Grid.ColumnDefinitions>
 
             <Button Margin="0,0,4,0"
@@ -119,6 +120,42 @@
                                VerticalAlignment="Center" />
                     <TextBlock FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
                                Foreground="{Binding ProcessForeground}"
+                               Text="&#xE70D;"
+                               FontSize="8"
+                               Margin="4,0,0,0"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+
+            <Button Grid.Column="2"
+                    Margin="4,0,0,0"
+                    Background="{DynamicResource FluentSurface3}"
+                    BorderBrush="{DynamicResource FluentStroke}"
+                    BorderThickness="1"
+                    Foreground="{DynamicResource FluentTextPrimary}"
+                    Padding="10,4,12,4"
+                    Cursor="Hand"
+                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='SelectCaptureDevice'}"
+                    Click="DeviceBtnClick">
+                <Button.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="14" />
+                    </Style>
+                </Button.Resources>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                               Foreground="{Binding DeviceForeground}"
+                               Text="&#xE714;"
+                               FontSize="14"
+                               VerticalAlignment="Center" />
+                    <TextBlock Margin="6,0,2,0"
+                               Foreground="{Binding DeviceForeground}"
+                               FontFamily="Segoe UI Variable Small"
+                               FontSize="12"
+                               Text="{Binding Converter={StaticResource localeConverter}, ConverterParameter='CaptureDevice'}"
+                               VerticalAlignment="Center" />
+                    <TextBlock FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets"
+                               Foreground="{Binding DeviceForeground}"
                                Text="&#xE70D;"
                                FontSize="8"
                                Margin="4,0,0,0"

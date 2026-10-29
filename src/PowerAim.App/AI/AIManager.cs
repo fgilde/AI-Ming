@@ -63,6 +63,8 @@ public class AIManager : IDisposable
             {
                 CaptureTargetType.Screen => target.ProcessOrScreenId.HasValue ? new ScreenCapture(target.ProcessOrScreenId.Value) : new ScreenCapture(),
                 CaptureTargetType.Process => new ProcessCapture(ProcessModel.FindProcessById(target.ProcessOrScreenId ?? 0) ?? ProcessModel.FindProcessByTitle(target.Title)),
+                // Devices are found by name: the DirectShow order changes when cards are plugged in or out.
+                CaptureTargetType.CaptureDevice => new DeviceCapture(VideoInputDevices.IndexOf(target.Title) ?? target.ProcessOrScreenId ?? 0, target.FlipVertical),
                 _ => throw new ArgumentException("Unsupported RecordTargetType"),
             };
         }

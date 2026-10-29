@@ -13,6 +13,9 @@ public class CaptureSource
     public int? ProcessOrScreenId { get; set; }
     public string Title { get; set; }
 
+    /// <summary>Capture device only: the card delivers the picture upside down.</summary>
+    public bool FlipVertical { get; set; }
+
     public CaptureSource()
     {}
 
@@ -34,6 +37,10 @@ public class CaptureSource
 
     public static CaptureSource Process(Process process) => new(CaptureTargetType.Process, process.MainWindowTitle, process.Id);
 
+    /// <summary>A video input device (capture card) by its DirectShow name; the index is the fallback when the name isn't found.</summary>
+    public static CaptureSource Device(int index, string name, bool flipVertical = false)
+        => new(CaptureTargetType.CaptureDevice, name, index) { FlipVertical = flipVertical };
+
     public Bitmap Capture()
     {
         var capture = AIManager.CreateScreenCapture(this);
@@ -46,5 +53,6 @@ public class CaptureSource
 public enum CaptureTargetType
 {
     Screen,
-    Process
+    Process,
+    CaptureDevice
 }
