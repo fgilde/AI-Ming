@@ -66,6 +66,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="FPS"        Style="{StaticResource DebugLabel}" />
@@ -88,6 +89,9 @@
 
                     <TextBlock Grid.Row="6" Grid.Column="0" Text="Process"    Style="{StaticResource DebugLabel}" />
                     <TextBlock Grid.Row="6" Grid.Column="1" x:Name="ProcessText" Style="{StaticResource DebugValue}" />
+
+                    <TextBlock Grid.Row="7" Grid.Column="0" Text="Aim"        Style="{StaticResource DebugLabel}" />
+                    <TextBlock Grid.Row="7" Grid.Column="1" x:Name="AimStatusText" Style="{StaticResource DebugValue}" />
                 </Grid>
 
                 <!-- OCR readout — populated on the tick when at least one enabled region exists. -->

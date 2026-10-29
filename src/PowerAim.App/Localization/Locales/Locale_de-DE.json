@@ -1336,5 +1336,6 @@
   "TeamMatch": "Trefferanteil",
   "TeamMatchTooltip": "Anteil der abgetasteten Pixel, die im Farbbereich liegen müssen, damit die Box als passend gilt.",
   "AimEngineLabel": "Aim-Engine",
-  "AimEngineTooltip": "Classic: bewegt pro Frame einen festen Anteil der Distanz (Stärke-Regler). V2: Regelung pro Achse auf einem Modell der Spielsicht – zieht noch nicht sichtbare Bewegungen ab, hält stetig laufenden Zielen vor, bleibt auf dem Ziel ruhig und lernt beim Zielen die echte Empfindlichkeit und Latenz. V2 ignoriert Stärke-Regler und Deadzone; Latenzkompensation einstellen (50 ms, wenn nicht gesetzt)."
+  "AimEngineTooltip": "Classic: bewegt pro Frame einen festen Anteil der Distanz (Stärke-Regler). V2: Regelung pro Achse auf einem Modell der Spielsicht – zieht noch nicht sichtbare Bewegungen ab, hält stetig laufenden Zielen vor, bleibt auf dem Ziel ruhig und lernt beim Zielen die echte Empfindlichkeit und Latenz. V2 ignoriert Stärke-Regler und Deadzone; Latenzkompensation einstellen (50 ms, wenn nicht gesetzt).",
+  "PowerPlanWarning": "Windows-Energiesparplan ist „Ausbalanciert“ oder „Energiesparmodus“: Er taktet CPU/GPU zwischen den Frames herunter und kann viel FPS kosten. Für Spielsitzungen „Höchstleistung“ oder „Ultimative Leistung“ wählen."
 }

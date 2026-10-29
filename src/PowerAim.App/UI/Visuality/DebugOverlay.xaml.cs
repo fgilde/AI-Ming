@@ -123,6 +123,15 @@ public partial class DebugOverlay : Window
             ? "—"
             : WindowFocusWatcher.Instance.CurrentProcessName;
 
+        AimStatusText.Text = s.AimStatus switch
+        {
+            AimStatus.NoDetections => "no detections",
+            AimStatus.NoTarget => "no target locked — detections present, none selected",
+            AimStatus.Pulling => "pulling",
+            AimStatus.OnTarget => "on target — aim point reached",
+            _ => "—",
+        };
+
         UpdateOcrSection();
         UpdateAutoPlaySection();
 

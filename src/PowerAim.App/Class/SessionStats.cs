@@ -35,6 +35,9 @@ public sealed class SessionStats : INotifyPropertyChanged
     /// <summary>Time the last <c>Predict()</c> call took, in milliseconds.</summary>
     public double LastInferenceMs { get; set => SetField(ref field, value); }
 
+    /// <summary>What the aim is doing this frame (debug overlay readout).</summary>
+    public AimStatus AimStatus { get; set => SetField(ref field, value); } = AimStatus.Idle;
+
     /// <summary>Median capture / inference / action times and the 95th percentile of the frame total.</summary>
     public string StageSummary { get; set => SetField(ref field, value ?? ""); } = "";
 
@@ -103,4 +106,19 @@ public sealed class SessionStats : INotifyPropertyChanged
         field = value;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
+}
+
+/// <summary>What the aim is doing right now.</summary>
+public enum AimStatus
+{
+    /// <summary>No aim key held / assist off.</summary>
+    Idle,
+    /// <summary>Aiming, but the model sees nothing.</summary>
+    NoDetections,
+    /// <summary>Detections present, none selected (filtered by class rules, tracking not confirmed yet, …).</summary>
+    NoTarget,
+    /// <summary>Moving toward the aim point.</summary>
+    Pulling,
+    /// <summary>The aim point is reached; no pull needed.</summary>
+    OnTarget,
 }

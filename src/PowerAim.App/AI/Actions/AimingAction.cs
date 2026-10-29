@@ -96,11 +96,15 @@ public class AimingAction : BaseAction
             predictions, fallback, ai.StickyAimEnabled, ai.StickyAimThreshold, ai.StickyAimMaxLockScore,
             acquireFallback: rule != null);
         if (selected != null) HandleAim(selected);
+        else SetStatus(!IsAiming() ? AimStatus.Idle : predictions.Length > 0 ? AimStatus.NoTarget : AimStatus.NoDetections);
         return Task.CompletedTask;
     }
 
+    private static void SetStatus(AimStatus status) => PowerAim.Class.SessionStats.Instance.AimStatus = status;
+
     public override Task OnPause()
     {
+        SetStatus(AimStatus.Idle);
         // Don't carry a stale lock across pause/resume — the player might re-aim somewhere else
         // before turning the assist back on.
         _stickyAim.Reset();
@@ -187,6 +191,7 @@ public class AimingAction : BaseAction
 
         if (!IsAiming())
         {
+            SetStatus(AimStatus.Idle);
             Disengage();
             return;
         }
@@ -208,7 +213,7 @@ public class AimingAction : BaseAction
             var ctx = rule == null ? null : RuleContextFor(predictions.Length);
             var track = _selector.Select(tracks!, center, center, ai.SwitchMarginPct, ai.SwitchFrames, stickyModelPx,
                 rule == null ? null : t => rule.Score(new TargetScope(RuleTarget.From(t), ctx!)));
-            if (track == null) { Disengage(); return; }
+            if (track == null) { SetStatus(predictions.Length > 0 ? AimStatus.NoTarget : AimStatus.NoDetections); Disengage(); return; }
             // RAW detection — never a velocity-extrapolated box: in this closed loop the track's velocity
             // includes our own view movement (no ego-motion compensation), so a lead would overshoot.
             box = track.LastDetectionBox;
@@ -220,7 +225,7 @@ public class AimingAction : BaseAction
         else
         {
             var target = SelectNearestSticky(predictions, center, center, stickyModelPx);
-            if (target == null) { Disengage(); return; }
+            if (target == null) { SetStatus(predictions.Length > 0 ? AimStatus.NoTarget : AimStatus.NoDetections); Disengage(); return; }
             box = target.Rectangle;
             aimClass = target.ClassId;
             aimKeypoints = target.Keypoints;
@@ -294,6 +299,8 @@ public class AimingAction : BaseAction
         double targetX = px * scale;
         double targetY = py * scale;
         var aimArea = new Rectangle(0, 0, (int)captureSize, (int)captureSize);
+        double offX = targetX - captureSize / 2.0, offY = targetY - captureSize / 2.0;
+        SetStatus(Math.Sqrt(offX * offX + offY * offY) <= Math.Max(1.0, ai.AimDeadzonePx) ? AimStatus.OnTarget : AimStatus.Pulling);
 
         // Feed the debug input visualiser the coarse aim direction (mouse path only).
         if (!InputSender.GamepadAimActive)
@@ -423,9 +430,11 @@ public class AimingAction : BaseAction
     {
         if (!IsAiming())
         {
+            SetStatus(AimStatus.Idle);
             _wasAiming = false;
             return;
         }
+        SetStatus(AimStatus.Pulling);
 
         if (!_wasAiming)
         {

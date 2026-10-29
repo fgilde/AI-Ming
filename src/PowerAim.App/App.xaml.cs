@@ -34,6 +34,13 @@ public partial class App : System.Windows.Application
         PowerAim.Input.Mapping.MappingEngine.Instance.Start();
         // Application debug log: feature flips, model switches, exceptions.
         AppDebugLog.InstallHooks();
+        // Balanced / power-saver plans clock the hardware down between frames — a common cause of low FPS.
+        if (PowerAim.Class.SystemChecks.ActivePowerPlan() is { } plan && PowerAim.Class.SystemChecks.IsThrottlingPowerPlan(plan))
+        {
+            AppDebugLog.Info("Startup", "Power plan throttles: " + plan);
+            Dispatcher.BeginInvoke(new Action(() => new PowerAim.UI.Visuality.NoticeBar(Locale.PowerPlanWarning, 12000).Show()),
+                System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+        }
         if (AppConfig.Current?.ToggleState?.EnableDebugLogging == true)
             AppDebugLog.Enable(true, "startup");
     }

@@ -1336,5 +1336,6 @@
   "TeamMatch": "Match share",
   "TeamMatchTooltip": "Share of sampled pixels that must be in the colour range for the box to count as matching.",
   "AimEngineLabel": "Aim engine",
-  "AimEngineTooltip": "Classic: moves a fixed share of the distance per frame (strength slider). V2: per-axis control on a model of the game's view — subtracts moves not yet visible, leads steadily moving targets, holds still once on target and learns the real sensitivity and latency while aiming. V2 ignores the strength slider and the deadzone; set the latency compensation (50 ms if unset)."
+  "AimEngineTooltip": "Classic: moves a fixed share of the distance per frame (strength slider). V2: per-axis control on a model of the game's view — subtracts moves not yet visible, leads steadily moving targets, holds still once on target and learns the real sensitivity and latency while aiming. V2 ignores the strength slider and the deadzone; set the latency compensation (50 ms if unset).",
+  "PowerPlanWarning": "Windows power plan is 'Balanced' or 'Power saver': it clocks the CPU/GPU down between frames and can cost a lot of sustained FPS. Switch to 'High performance' or 'Ultimate performance' for gaming sessions."
 }

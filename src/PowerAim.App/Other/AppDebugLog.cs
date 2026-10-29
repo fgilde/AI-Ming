@@ -396,6 +396,20 @@ public static class AppDebugLog
     // Hooks
     // -------------------------------------------------------------------------
 
+    /// <summary>Dump the dying process for diagnosis; only the newest five dumps are kept.</summary>
+    private static void WriteCrashDump()
+    {
+        var dir = PowerAim.Class.SystemChecks.CrashDumpDirectory;
+        var path = PowerAim.Class.SystemChecks.WriteMiniDump(dir);
+        if (path != null) Error("Unhandled", "crash dump written", path);
+        try
+        {
+            foreach (var old in new DirectoryInfo(dir).GetFiles("*.dmp").OrderByDescending(f => f.CreationTimeUtc).Skip(5))
+                old.Delete();
+        }
+        catch { /* best effort */ }
+    }
+
     public static void InstallHooks()
     {
         lock (_hookGate)
@@ -413,6 +427,7 @@ public static class AppDebugLog
                     Exception("Unhandled", ex, e.IsTerminating ? "terminating" : "non-terminating");
                 else
                     Error("Unhandled", e.ExceptionObject?.ToString() ?? "unknown");
+                if (e.IsTerminating) WriteCrashDump();
                 Flush();
             };
 
