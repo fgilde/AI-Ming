@@ -43,7 +43,11 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
     // AI loop, trigger pipeline and mapping engine all push to the SAME virtual pad. Two
     // parallel ViGEm clients competing for slots is the root cause of the games-don't-see-it
     // problem we kept chasing.
-    private Controller? _physicalPad;
+    /// <summary>
+    ///     The physical pad, read through the app's gamepad reader: the XInput slot it chose (never our own
+    ///     virtual pad) or the DirectInput pad it fell back to — not a hard-wired XInput slot one.
+    /// </summary>
+    private static IGamepadStateSource? PhysicalPad => GamepadManager.GamepadReader as IGamepadStateSource;
     private ControllerMappingProfile? _activeProfile;
 
     // Pressed state tracking — sources that are currently held. Used to fire press / release pairs.
@@ -194,8 +198,6 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
             return;
         }
 
-        try { _physicalPad = new Controller(UserIndex.One); if (!_physicalPad.IsConnected) _physicalPad = null; }
-        catch { _physicalPad = null; }
 
         _loopTask = Task.Run(() => Loop(_cts.Token));
         Status = Locale.MappingStatusRunning;
@@ -295,12 +297,7 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
             // Pad→KB: poll physical controller state, fire mappings whose source is a gamepad.
             if (NeedsPhysicalPad(_activeProfile))
             {
-                if (_physicalPad == null || !_physicalPad.IsConnected)
-                {
-                    try { _physicalPad = new Controller(UserIndex.One); if (!_physicalPad.IsConnected) _physicalPad = null; }
-                    catch { _physicalPad = null; }
-                }
-                if (_physicalPad != null) PollPhysicalPad(_activeProfile);
+                if (PhysicalPad is { IsConnected: true }) PollPhysicalPad(_activeProfile);
             }
 
             // KB→Pad mouse-to-stick: drain accumulated delta and feed into virtual stick.
@@ -649,9 +646,10 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
 
     private void PollPhysicalPad(ControllerMappingProfile profile)
     {
-        if (_physicalPad == null) return;
+        var pad = PhysicalPad;
+        if (pad == null) return;
         State state;
-        try { state = _physicalPad.GetState(); }
+        try { state = pad.GetState(); }
         catch { return; }
         var flags = state.Gamepad.Buttons;
         // Buttons. CRITICAL: profiles persist gamepad source codes as XboxButtonId indices
