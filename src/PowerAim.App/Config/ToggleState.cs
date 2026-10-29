@@ -231,6 +231,13 @@ public class ToggleState : BaseSettings
         set => SetField(ref field, value);
     } = true;
 
+    /// <summary>Overlay: mark the aim point and where it is expected once the moves in flight have landed.</summary>
+    public bool ShowPredictedAim
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
     public bool CollectDataWhilePlaying
     {
         get;

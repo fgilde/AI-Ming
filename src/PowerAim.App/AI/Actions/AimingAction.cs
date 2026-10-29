@@ -109,6 +109,15 @@ public class AimingAction : BaseAction
 
     private static void SetStatus(AimStatus status) => PowerAim.Class.SessionStats.Instance.AimStatus = status;
 
+    /// <summary>For the overlay's aim-point marker: the aim point and where it lands after the moves in flight.</summary>
+    private void PublishAimPoint(double modelX, double modelY, Prediction[] predictions, AimEngine engine)
+    {
+        if (AppConfig.Current.ToggleState.ShowPredictedAim != true || predictions.Length == 0) return;
+        var aim = AimOverlay.ToScreen(modelX, modelY, predictions[0]);
+        var (ix, iy) = engine == AimEngine.V2 ? _controllerV2.LastInFlightPx : _controller.LastInFlightPx;
+        AimOverlay.Publish(aim, new PointF((float)(aim.X - ix), (float)(aim.Y - iy)), Environment.TickCount64);
+    }
+
     public override Task OnPause()
     {
         SetStatus(AimStatus.Idle);
@@ -307,6 +316,7 @@ public class AimingAction : BaseAction
         double targetX = px * scale;
         double targetY = py * scale;
         var aimArea = new Rectangle(0, 0, (int)captureSize, (int)captureSize);
+        PublishAimPoint(px, py, predictions, ai.AimEngine);
         if (!ReactionReady(true)) { SetStatus(AimStatus.Pulling); return; }
         double offX = targetX - captureSize / 2.0, offY = targetY - captureSize / 2.0;
         SetStatus(Math.Sqrt(offX * offX + offY * offY) <= Math.Max(1.0, ai.AimDeadzonePx) ? AimStatus.OnTarget : AimStatus.Pulling);

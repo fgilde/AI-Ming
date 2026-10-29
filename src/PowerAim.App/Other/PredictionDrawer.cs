@@ -50,6 +50,21 @@ namespace PowerAim.Other
         {
             foreach (var prediction in predictions)
                 DrawPrediction(graphics, prediction, targetArea);
+            DrawAimPoint(graphics, targetArea);
+        }
+
+        /// <summary>A cross on the aim point and a ring where it lands once the moves in flight have turned the view.</summary>
+        private static void DrawAimPoint(Graphics graphics, Rectangle? targetArea)
+        {
+            if (AppConfig.Current?.ToggleState?.ShowPredictedAim != true
+                || !AimOverlay.TryGet(Environment.TickCount64, out var aim, out var predicted)) return;
+            float dx = targetArea?.Left ?? 0, dy = targetArea?.Top ?? 0;
+            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            using var cross = new Pen(AppConfig.Current.ColorState.DetectedPlayerColor.ToDrawingColor(), 2);
+            graphics.DrawLine(cross, aim.X + dx - 6, aim.Y + dy, aim.X + dx + 6, aim.Y + dy);
+            graphics.DrawLine(cross, aim.X + dx, aim.Y + dy - 6, aim.X + dx, aim.Y + dy + 6);
+            using var ring = new Pen(Color.Orange, 2);
+            graphics.DrawEllipse(ring, predicted.X + dx - 5, predicted.Y + dy - 5, 10, 10);
         }
 
 

@@ -51,35 +51,53 @@ public class DxgiScreenCaptureTests
 
         var colour = System.Drawing.Color.FromArgb(12, 200, 90);
         Bitmap? shot = null;
+        bool placed = false;
+        System.Drawing.Color seen = default;
         var thread = new Thread(() =>
         {
             using var form = new System.Windows.Forms.Form
             {
                 FormBorderStyle = System.Windows.Forms.FormBorderStyle.None,
                 StartPosition = System.Windows.Forms.FormStartPosition.Manual,
-                Bounds = new Rectangle(200, 200, 200, 150),
                 BackColor = colour,
                 TopMost = true,
                 ShowInTaskbar = false,
             };
             form.Show();
+            // Other always-on-top windows of a live desktop may cover a spot: use one where ours is on top.
+            var screen = System.Windows.Forms.Screen.PrimaryScreen!.Bounds;
+            var spots = from fy in new[] { 0.15, 0.45, 0.75 }
+                        from fx in new[] { 0.05, 0.25, 0.45, 0.65, 0.85 }
+                        select new Point(screen.Left + (int)(screen.Width * fx), screen.Top + (int)(screen.Height * fy));
+            foreach (var at in spots)
+            {
+                form.Bounds = new Rectangle(at.X, at.Y, 200, 150);
+                for (int settle = 0; settle < 3; settle++) { System.Windows.Forms.Application.DoEvents(); Thread.Sleep(10); }
+                if (WindowFromPoint(new Point(at.X + 20, at.Y + 60)) == form.Handle
+                    && WindowFromPoint(new Point(at.X + 39, at.Y + 79)) == form.Handle) { placed = true; break; }
+            }
+            if (!placed) return;
+
             using var capture = new DxgiScreenCapture();
             // Straddles the window's left edge: 40 px of desktop, then 40 px of the window.
-            var box = new Rectangle(160, 240, 80, 40);
+            var box = new Rectangle(form.Left - 40, form.Top + 40, 80, 40);
             for (int i = 0; i < 30 && shot == null; i++)
             {
                 form.BackColor = i % 2 == 0 ? colour : System.Drawing.Color.FromArgb(13, 200, 90); // forces a new frame
                 System.Windows.Forms.Application.DoEvents();
                 Thread.Sleep(40);
                 var bmp = capture.Capture(box);
-                if (Near(bmp.GetPixel(60, 20), colour)) shot = bmp; else bmp.Dispose();
+                seen = bmp.GetPixel(60, 20);
+                if (Near(seen, colour)) shot = bmp; else bmp.Dispose();
             }
         });
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();
         thread.Join();
 
-        Assert.NotNull(shot);
+        if (!placed) return; // no uncovered spot on this desktop right now — nothing to check
+
+        Assert.True(shot != null, $"window colour never captured, last pixel {seen}");
         using (shot)
         {
             Assert.True(Near(shot!.GetPixel(79, 0), colour));   // right half: inside the window
@@ -87,6 +105,9 @@ public class DxgiScreenCaptureTests
             Assert.False(Near(shot.GetPixel(10, 20), colour));  // left half: the desktop next to it
         }
     }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern IntPtr WindowFromPoint(Point point);
 
     private static bool Near(System.Drawing.Color a, System.Drawing.Color b)
         => Math.Abs(a.R - b.R) + Math.Abs(a.G - b.G) + Math.Abs(a.B - b.B) <= 6;

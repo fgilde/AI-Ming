@@ -40,8 +40,12 @@ public sealed class AimController
         _clockMs = clockMs;
     }
 
+    /// <summary>Pixel effect of the moves still in flight at the last step (0 without latency compensation).</summary>
+    public (double X, double Y) LastInFlightPx { get; private set; }
+
     public void Reset()
     {
+        LastInFlightPx = default;
         _accumX = 0;
         _accumY = 0;
         _inFlight.Clear();
@@ -83,6 +87,7 @@ public sealed class AimController
         double errPxY = targetY - centerY;
 
         double now = 0;
+        double rawErrX = errPxX, rawErrY = errPxY;
         if (latencyCompensationMs > 0)
         {
             now = _clockMs();
@@ -98,6 +103,7 @@ public sealed class AimController
         {
             _inFlight.Clear();
         }
+        LastInFlightPx = (rawErrX - errPxX, rawErrY - errPxY);
 
         double distPx = Math.Sqrt(errPxX * errPxX + errPxY * errPxY);
         if (distPx <= deadzonePx)

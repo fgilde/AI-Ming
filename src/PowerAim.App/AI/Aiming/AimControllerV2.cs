@@ -56,6 +56,9 @@ public sealed class AimControllerV2
     private readonly double[] _latSxx = new double[5], _latSxy = new double[5];
     private double _latencyPauseUntil;
 
+    /// <summary>Pixel effect of the moves still in flight at the last step.</summary>
+    public (double X, double Y) LastInFlightPx { get; private set; }
+
     /// <summary>Learned real / assumed view gain (0.6–2.2).</summary>
     public double GainCorrection { get; private set; } = 1.0;
 
@@ -117,6 +120,7 @@ public sealed class AimControllerV2
         double capture = now - latency;
         var (camNowX, camNowY) = Cam(now);
         var (camCapX, camCapY) = Cam(capture);
+        LastInFlightPx = ((camNowX - camCapX) * GainCorrection, (camNowY - camCapY) * GainCorrection);
         double outX = _x.Control(errX, (camNowX - camCapX) * GainCorrection, camCapX * GainCorrection, camNowX * GainCorrection,
             now, dt, latency, _frameMs, boxWidthPx);
         double outY = _y.Control(errY, (camNowY - camCapY) * GainCorrection, camCapY * GainCorrection, camNowY * GainCorrection,

@@ -291,6 +291,9 @@ public partial class MainWindow
         ESPConfig.AddToggleWithKeyBind(Locale.ShowTriggerHeadArea, nameof(Locale.ShowTriggerHeadArea), BindingManager).BindTo(() => AppConfig.Current.ToggleState.ShowTriggerHeadArea);
         ESPConfig.AddToggleWithKeyBind(Locale.ShowAIConfidence, nameof(Locale.ShowAIConfidence), BindingManager).BindTo(() => AppConfig.Current.ToggleState.ShowAIConfidence);
         ESPConfig.AddToggleWithKeyBind(Locale.ShowTracers, nameof(Locale.ShowTracers), BindingManager).BindTo(() => AppConfig.Current.ToggleState.ShowTracers);
+        ESPConfig.AddToggleWithKeyBind(Locale.ShowPredictedAim, nameof(Locale.ShowPredictedAim), BindingManager,
+                t => t.ToolTip = Locale.ShowPredictedAimTooltip)
+            .BindTo(() => AppConfig.Current.ToggleState.ShowPredictedAim);
         var sizeToggle = ESPConfig.AddToggleWithKeyBind(Locale.ShowSizes, nameof(Locale.ShowSizes), BindingManager).BindTo(() => AppConfig.Current.ToggleState.ShowSizes);
 
         NoticeBar w1 = null;
