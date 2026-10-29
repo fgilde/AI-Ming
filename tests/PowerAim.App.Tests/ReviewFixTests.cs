@@ -35,7 +35,8 @@ public class ActuatorReleaseTests
 
             actuator.Apply(Holding(ControlRole.Shoot), map, profile, T0);
             actuator.Apply(new ReflexCommand(), map, profile, T0.AddMilliseconds(16));
-            await Task.Delay(120);
+            // The jittered sends run on the thread pool; under a busy test run 120 ms was not always enough.
+            for (int waited = 0; input.Keys.Count < 2 && waited < 2000; waited += 10) await Task.Delay(10);
 
             Assert.Equal([("K", KeyPressState.Down), ("K", KeyPressState.Up)], input.Keys);
         }
@@ -52,7 +53,7 @@ public class ActuatorReleaseTests
 
         actuator.Apply(Holding(ControlRole.MoveForward), map, profile, T0);
         actuator.ReleaseAll();
-        await Task.Delay(120);
+        for (int waited = 0; input.Keys.Count < 2 && waited < 2000; waited += 10) await Task.Delay(10);
 
         Assert.Equal(KeyPressState.Up, input.Keys.Last().State);
         Assert.Equal(2, input.Keys.Count);
