@@ -177,6 +177,8 @@ public class AimingAction : BaseAction
         if (ai.UseTargetTracking)
         {
             _tracker.MaxAgeFrames = ai.TrackMaxAgeFrames;
+            _tracker.MinHits = ai.MinTrackedFrames;
+            _tracker.ConfidenceDecayMs = ai.TrackConfidenceDecayMs;
             tracks = _tracker.Update(predictions, dt);
         }
 

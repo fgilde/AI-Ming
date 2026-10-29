@@ -1287,5 +1287,9 @@
   "AimPoseTarget": "Pose aim point",
   "AimPoseTargetTooltip": "With a pose model: aim at the head (nose, then eyes) or the chest (shoulders). Without confident keypoints the box is used.",
   "AimKeypointConfidence": "Keypoint confidence",
-  "AimKeypointConfidenceTooltip": "Lower = use keypoints more often (may be inaccurate). Higher = only confident keypoints, otherwise the box."
+  "AimKeypointConfidenceTooltip": "Lower = use keypoints more often (may be inaccurate). Higher = only confident keypoints, otherwise the box.",
+  "AimMinTrackedFrames": "Frames before aiming",
+  "AimMinTrackedFramesTooltip": "A new target must be detected this many frames in a row before the aim engages on it. Filters model false positives that flicker for a frame or two. 0 = at once, 2 = default, at 120 inference FPS 3 frames are ~25 ms.",
+  "AimTrackConfidenceDecay": "Confidence fade on dropout",
+  "AimTrackConfidenceDecayTooltip": "While a target is not detected its confidence fades with this time constant; it is dropped once it falls below the minimum. 0 = off."
 }

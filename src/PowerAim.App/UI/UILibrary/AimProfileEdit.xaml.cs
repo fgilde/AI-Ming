@@ -287,6 +287,12 @@ namespace PowerAim.UI.UILibrary
                     TunePanel.AddSlider(Locale.AimCoastFrames, Locale.Amount, 1, 1, 1, 20)
                         .InitWith(s => s.ToolTip = Locale.AimCoastFramesTooltip)
                         .BindTo(() => Profile!.CoastFrames);
+                    TunePanel.AddSlider(Locale.AimMinTrackedFrames, Locale.Amount, 1, 1, 0, 10)
+                        .InitWith(s => s.ToolTip = Locale.AimMinTrackedFramesTooltip)
+                        .BindTo(() => Profile!.MinTrackedFrames);
+                    TunePanel.AddSlider(Locale.AimTrackConfidenceDecay, "ms", 10, 10, 0, 1000, false, 0, false)
+                        .InitWith(s => s.ToolTip = Locale.AimTrackConfidenceDecayTooltip)
+                        .BindTo(() => Profile!.TrackConfidenceDecayMs);
                     TunePanel.AddSlider(Locale.AimSwitchDelay, Locale.Amount, 1, 1, 1, 20)
                         .InitWith(s => s.ToolTip = Locale.AimSwitchDelayTooltip)
                         .BindTo(() => Profile!.SwitchFrames);

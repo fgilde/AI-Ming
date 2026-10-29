@@ -53,7 +53,6 @@ public sealed class TargetSelector
 
         foreach (var t in tracks)
         {
-            if (!t.Confirmed && t.Hits < 2) continue;
             double s = score?.Invoke(t) ?? Score(t, centerX, centerY);
             if (double.IsNaN(s)) continue;
             if (s > bestScore) { bestScore = s; best = t; }
@@ -72,7 +71,6 @@ public sealed class TargetSelector
                 double bestSq = double.MaxValue;
                 foreach (var t in tracks)
                 {
-                    if (!t.Confirmed && t.Hits < 2) continue;
                     if (score != null && double.IsNaN(score(t))) continue; // the rule rejects it
                     double dx = t.X - _lastX, dy = t.Y - _lastY;
                     double dSq = dx * dx + dy * dy;

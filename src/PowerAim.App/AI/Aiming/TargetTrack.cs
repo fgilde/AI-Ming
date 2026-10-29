@@ -23,6 +23,14 @@ public sealed class TargetTrack
     public string ClassName { get; private set; } = "Enemy";
 
     public int Hits { get; private set; }
+
+    /// <summary>Hits in a row without a missed frame; resets after a dropout.</summary>
+    public int ConsecutiveHits { get; private set; }
+
+    /// <summary>Seconds since the last matched detection (0 while seen).</summary>
+    public double MissedSeconds { get; private set; }
+
+    private float _detectionConfidence;
     public int MissedFrames { get; private set; }
     public bool Confirmed { get; private set; }
 
@@ -51,10 +59,11 @@ public sealed class TargetTrack
         SyncFromMean();
         LastDetectionBox = det.Rectangle;
         LastKeypoints = det.Keypoints;
-        Confidence = det.Confidence;
+        Confidence = _detectionConfidence = det.Confidence;
         ClassId = det.ClassId;
         ClassName = det.ClassName ?? "Enemy";
         Hits = 1;
+        ConsecutiveHits = 1;
         MissedFrames = 0;
     }
 
@@ -85,6 +94,7 @@ public sealed class TargetTrack
         }
         SyncFromMean();
         MissedFrames++; // will be reset to 0 on Update
+        MissedSeconds += Math.Max(0, dt);
     }
 
     public void Update(NsaKalmanFilter kf, Prediction det, int minHits)
@@ -98,18 +108,25 @@ public sealed class TargetTrack
         SyncFromMean();
         LastDetectionBox = det.Rectangle;
         LastKeypoints = det.Keypoints;
-        Confidence = det.Confidence;
+        Confidence = _detectionConfidence = det.Confidence;
         ClassId = det.ClassId;
         ClassName = det.ClassName ?? ClassName;
         Hits++;
+        // Predict already counted this frame as missed: 1 = seen last frame too.
+        ConsecutiveHits = MissedFrames <= 1 ? ConsecutiveHits + 1 : 1;
         MissedFrames = 0;
-        if (Hits >= minHits) Confirmed = true;
+        MissedSeconds = 0;
+        if (ConsecutiveHits >= minHits) Confirmed = true;
     }
 
     public void MarkMissed()
     {
         // MissedFrames already bumped in Predict; keep API.
     }
+
+    /// <summary>Fade the confidence of a coasting track: last detection confidence · e^(−missed / decay).</summary>
+    internal void DecayConfidence(double decayMs)
+        => Confidence = (float)(_detectionConfidence * Math.Exp(-MissedSeconds * 1000.0 / decayMs));
 
     internal float[] MeasurementXyah(Prediction det)
     {

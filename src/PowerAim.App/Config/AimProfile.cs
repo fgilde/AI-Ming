@@ -129,6 +129,12 @@ public class AimProfile : EditableNotificationObject
     /// <summary>Frames a track may coast through dropped detections before it's dropped (tracking only).</summary>
     public int CoastFrames { get; set => SetProperty(ref field, value); } = 8;
 
+    /// <summary>Consecutive frames a new target must be seen before the aim engages (tracking only). 0 = at once.</summary>
+    public int MinTrackedFrames { get; set => SetProperty(ref field, value); } = 2;
+
+    /// <summary>Time constant (ms) with which a coasting track's confidence fades (tracking only). 0 = off.</summary>
+    public double TrackConfidenceDecayMs { get; set => SetProperty(ref field, value); }
+
     /// <summary>Consecutive frames a challenger must stay better before the aim switches targets (tracking only).</summary>
     public int SwitchFrames { get; set => SetProperty(ref field, value); } = 6;
 
@@ -327,6 +333,8 @@ public class AimProfile : EditableNotificationObject
             ai.PidKd = PidKd;
             ai.UseTargetTracking = UseTargetTracking;
             ai.TrackMaxAgeFrames = CoastFrames;
+            ai.MinTrackedFrames = MinTrackedFrames;
+            ai.TrackConfidenceDecayMs = TrackConfidenceDecayMs;
             ai.SwitchFrames = SwitchFrames;
             ai.SwitchMarginPct = SwitchMarginPct;
             ai.CalibratedPixelsPerCount = CalibratedPixelsPerCount;
@@ -370,6 +378,8 @@ public class AimProfile : EditableNotificationObject
             PidKd = ai.PidKd;
             UseTargetTracking = ai.UseTargetTracking;
             CoastFrames = ai.TrackMaxAgeFrames;
+            MinTrackedFrames = ai.MinTrackedFrames;
+            TrackConfidenceDecayMs = ai.TrackConfidenceDecayMs;
             SwitchFrames = ai.SwitchFrames;
             SwitchMarginPct = ai.SwitchMarginPct;
             CalibratedPixelsPerCount = ai.CalibratedPixelsPerCount;

@@ -20,7 +20,13 @@ public sealed class TargetTracker
 
     // Tunables (AimingAction can still overwrite each frame from config).
     public int MaxAgeFrames { get; set; } = 30;
+    /// <summary>Consecutive frames a new track must be detected before it is returned (aimable). 0/1 = at once.</summary>
     public int MinHits { get; set; } = 2;
+    /// <summary>
+    ///     While a track coasts its confidence fades with this time constant (ms); it is dropped once it
+    ///     falls below <see cref="MinConfidence"/>. 0 = off (a coasting track keeps its last confidence).
+    /// </summary>
+    public double ConfidenceDecayMs { get; set; }
     public double IoUThreshold { get; set; } = 0.25;
     /// <summary>Legacy alpha — unused by Kalman path; kept so callers compile.</summary>
     public double Alpha { get; set; } = 0.5;
@@ -139,19 +145,23 @@ public sealed class TargetTracker
             _tracks[ti].Update(_kf, dets[di], MinHits);
 
         foreach (int ti in unmatchedTracks)
+        {
             _tracks[ti].MarkMissed();
+            if (ConfidenceDecayMs > 0) _tracks[ti].DecayConfidence(ConfidenceDecayMs);
+        }
 
         foreach (int di in unmatchedDets)
             _tracks.Add(new TargetTrack(_nextId++, dets[di], _kf));
 
         _tracks.RemoveAll(t =>
             t.MissedFrames > MaxAgeFrames
-            || (!t.Confirmed && t.MissedFrames > 5 && t.Hits <= 1));
+            || (!t.Confirmed && t.MissedFrames > 5 && t.Hits <= 1)
+            || (ConfidenceDecayMs > 0 && t.MissedFrames > 0 && t.Confidence < MinConfidence));
 
         var result = new List<TargetTrack>(_tracks.Count);
         foreach (var t in _tracks)
         {
-            if (!t.Confirmed && t.Hits < MinHits) continue;
+            if (!t.Confirmed && (t.ConsecutiveHits < MinHits || t.MissedFrames > 0)) continue;
             result.Add(t);
         }
         return result;

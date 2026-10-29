@@ -176,6 +176,20 @@ public class AISettings : BaseSettings
         set => SetField(ref field, Math.Clamp(value, 1, 60));
     } = 8;
 
+    /// <summary>Consecutive frames a new target must be detected before the aim engages on it (filters one-frame false positives). 0 = at once. ~2.</summary>
+    public int MinTrackedFrames
+    {
+        get;
+        set => SetField(ref field, Math.Clamp(value, 0, 10));
+    } = 2;
+
+    /// <summary>Time constant (ms) with which a coasting track's confidence fades; 0 = off.</summary>
+    public double TrackConfidenceDecayMs
+    {
+        get;
+        set => SetField(ref field, Math.Clamp(value, 0.0, 5000.0));
+    } = 0.0;
+
     /// <summary>Consecutive frames a challenger must stay clearly better before the aim switches targets. ~6.</summary>
     public int SwitchFrames
     {
