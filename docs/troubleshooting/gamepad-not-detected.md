@@ -19,11 +19,11 @@ Symptoms:
 
 **Gamepad** sidebar → **Send Command Mode** dropdown.
 
-- **ViGEm** (default) — needs ViGEmBus driver
-- **vJoy** — needs vJoy driver
-- **Internal** — pure C# fallback, lower compatibility
-- **XInput Hook** — process-specific hook (advanced)
-- **None** — disabled
+- **ViGEm** (default): needs ViGEmBus driver
+- **vJoy**: needs vJoy driver
+- **Internal**: pure C# fallback, lower compatibility
+- **XInput Hook**: process-specific hook (advanced)
+- **None**: disabled
 
 Start with **ViGEm**. The other modes are mostly for special cases.
 
@@ -55,7 +55,7 @@ If the virtual controller row is missing, ViGEm didn't load. If a physical contr
 
 **Gamepad page → Open Gamepad Tester** (also accessible from the Mapping page).
 
-The tester shows the physical and virtual controller side by side. Press a button on your physical controller — both panels should light up. Press a mapped key on your keyboard — only the virtual panel should light up.
+The tester shows the physical and virtual controller side by side. Press a button on your physical controller: both panels should light up. Press a mapped key on your keyboard: only the virtual panel should light up.
 
 If the virtual panel never reacts:
 
@@ -66,8 +66,8 @@ If the virtual panel never reacts:
 
 The game is probably reading **both** your real and virtual controller. Two fixes:
 
-- **HidHide** — cloak the real controller. See [Hidden Controllers]({{ '/features/hidden-controllers' | relative_url }}).
-- **Device disable** — disable the real device temporarily. Also in Hidden Controllers.
+- **HidHide**: cloak the real controller. See [Hidden Controllers]({{ '/features/hidden-controllers' | relative_url }}).
+- **Device disable**: disable the real device temporarily. Also in Hidden Controllers.
 
 ### 6. ViGEmBus install succeeded but PowerAim still says "not ready"
 
@@ -90,14 +90,14 @@ If you want PowerAim to launch elevated automatically:
 If ViGEm absolutely refuses to install:
 
 1. **Gamepad page → Send Mode → vJoy**
-2. Click **Install vJoy** — PowerAim ships the installer
+2. Click **Install vJoy** (PowerAim ships the installer)
 3. Reboot
 
 vJoy is less compatible than ViGEm (some games don't recognize it as a controller) but works as a fallback.
 
 ## Related pages
 
-- [Controller Mapping]({{ '/features/controller-mapping' | relative_url }}) — the mapping engine itself
-- [Hidden Controllers]({{ '/features/hidden-controllers' | relative_url }}) — HidHide + device disable
-- [Gamepad Aim]({{ '/features/gamepad-aim' | relative_url }}) — "Use Controller for Aim" toggle
-- [Controller Aim Has No Effect]({{ '/troubleshooting/controller-aim-no-effect' | relative_url }}) — if gamepad is detected but aim doesn't move the camera
+- [Controller Mapping]({{ '/features/controller-mapping' | relative_url }}): the mapping engine itself
+- [Hidden Controllers]({{ '/features/hidden-controllers' | relative_url }}): HidHide + device disable
+- [Gamepad Aim]({{ '/features/gamepad-aim' | relative_url }}): "Use Controller for Aim" toggle
+- [Controller Aim Has No Effect]({{ '/troubleshooting/controller-aim-no-effect' | relative_url }}): if gamepad is detected but aim doesn't move the camera

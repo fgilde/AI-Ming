@@ -6,9 +6,11 @@ nav_order: 1
 
 # Settings Overview
 
+<video controls preload="none" playsinline poster="/videos/settings.jpg" src="/videos/settings.mp4" style="width:100%;border-radius:8px;margin:4px 0 16px"></video>
+
 Every option on PowerAim's **Settings** sidebar page, organized by card.
 
-The Settings page has 9 cards. Some controls are also exposed on the relevant feature page (e.g. crosshair settings appear both here and on the Overlays card) — this page is the authoritative list.
+The Settings page has 9 cards. Some controls are also exposed on the relevant feature page (e.g. crosshair settings appear both here and on the Overlays card). This page is the authoritative list.
 
 ![Settings page with all cards visible](../images/settings-page.png)
 
@@ -16,7 +18,7 @@ The Settings page has 9 cards. Some controls are also exposed on the relevant fe
 
 | Setting | What it does | Default |
 |:--------|:-------------|:--------|
-| **Switch to DirectML / CUDA** | One-click switch between the DirectML and CUDA release builds | — |
+| **Switch to DirectML / CUDA** | One-click switch between the DirectML and CUDA release builds | - |
 | **Language** | UI language. 9 options: en, de, es, fr, it, ru, tr, uk, zh | System |
 | **Accent color** | Free color picker for the UI accent while idle (Global Active off) | Purple |
 | **Accent color when active** | A separate accent used while **Global Active** is on | Green |
@@ -27,14 +29,14 @@ The Settings page has 9 cards. Some controls are also exposed on the relevant fe
 | **Hide UI from Capture** | Use Win32 capture exclusion so OBS / NVIDIA ShadowPlay can't see PowerAim's window | On |
 
 {: .note }
-The old **Theme** / **Theme when Active** palette dropdowns have been replaced by free **accent-color** pickers. The 6 former palettes (Purple, Green, etc.) survive as quick-fill swatches inside the picker, so you can still pick them with one click — or choose any custom color. Light / Dark / System mode is unchanged.
+The old **Theme** / **Theme when Active** palette dropdowns have been replaced by free **accent-color** pickers. The 6 former palettes (Purple, Green, etc.) survive as quick-fill swatches inside the picker, so you can still pick them with one click, or choose any custom color. Light / Dark / System mode is unchanged.
 
 ### In-app color picker
 
-Everywhere PowerAim asks for a color — the two accent colors above, the FOV ring color, the captured-area border color, the detected-player box color, and the crosshair fill / outline colors — it now opens its own **HSV color picker** instead of the old Windows color dialog. The picker has a saturation/value spectrum, a hue slider, a hex input, and a row of quick-fill swatches.
+Everywhere PowerAim asks for a color (the two accent colors above, the FOV ring color, the captured-area border color, the detected-player box color, and the crosshair fill / outline colors), it now opens its own **HSV color picker** instead of the old Windows color dialog. The picker has a saturation/value spectrum, a hue slider, a hex input, and a row of quick-fill swatches.
 
 {: .important }
-Disabling **Hide UI from Capture** is irreversible during the session — PowerAim warns you and asks for confirmation. The default protects you from inadvertently broadcasting PowerAim during a stream.
+Disabling **Hide UI from Capture** is irreversible during the session. PowerAim warns you and asks for confirmation. The default protects you from inadvertently broadcasting PowerAim during a stream.
 
 ## Capture Settings
 
@@ -87,8 +89,8 @@ See [Crosshair Overlay]({{ '/features/crosshair-overlay' | relative_url }}) and 
 
 See [Session Stats]({{ '/features/session-stats' | relative_url }}). Shows live FPS / inference time / detections / shots / frames / tactical actions / session duration. Includes:
 
-- **Reset Stats** — clears session counters
-- **Adaptive Kalman Lead** — auto-adapt the Kalman lead time to measured target velocity
+- **Reset Stats**: clears session counters
+- **Adaptive Kalman Lead**: auto-adapt the Kalman lead time to measured target velocity
 
 ## HUD OCR
 
@@ -98,7 +100,7 @@ See [OCR]({{ '/features/ocr' | relative_url }}).
 |:--------|:-------------|:--------|
 | **Enable HUD OCR** | Master toggle | Off |
 | **OCR Interval** | 100–5000 ms | 500 |
-| **Configure OCR Regions** | Opens the per-region editor | — |
+| **Configure OCR Regions** | Opens the per-region editor | - |
 
 ## Replay Buffer
 
@@ -109,8 +111,8 @@ See [Replay Buffer]({{ '/features/replay-buffer' | relative_url }}).
 | **Record Rolling Buffer** | Master toggle | Off |
 | **Buffer Length** | 1–30 seconds | 3 |
 | **JPEG Quality** | 10–100 | 70 |
-| **Save Replay Buffer** | Flush to `%LocalAppData%\PowerAim\replays\<timestamp>\` | — |
-| **Clear Buffer** | Drop everything | — |
+| **Save Replay Buffer** | Flush to `%LocalAppData%\PowerAim\replays\<timestamp>\` | - |
+| **Clear Buffer** | Drop everything | - |
 
 ## AutoPlay Learning
 
@@ -122,11 +124,11 @@ See [AutoPlay]({{ '/features/autoplay#learning-mode' | relative_url }}).
 | **Apply Learned Bias** | Bias AutoPlay's selector toward the recorded preference | Off |
 | **Bias Strength** | 0 (ignore) – 1 (dominate) | 0.5 |
 | **Sample Interval** | 50–1000 ms | 150 |
-| **Save / Load / Clear Model** | Persist or reset the JSON state | — |
+| **Save / Load / Clear Model** | Persist or reset the JSON state | - |
 
 ## Customizing the layout
 
-The cards on every page can be rearranged and pruned to fit how you work — the layout is saved per page and restored on next launch.
+The cards on every page can be rearranged and pruned to fit how you work. The layout is saved per page and restored on next launch.
 
 - **Drag to reorder.** Each card shows a small drag handle near its top-right corner. Drag it to move the card within its column; on two-column pages you can also drag a card across to the other column.
 - **Hide a card.** Next to the drag handle is a small **×** that hides the card.
@@ -134,7 +136,7 @@ The cards on every page can be rearranged and pruned to fit how you work — the
 
 ## Instant search
 
-Press **Ctrl+F** anywhere in the app to open a search box. It indexes the labels of settings and section headers across the whole window — toggles, sliders, keybinds, color pickers, buttons, and section titles, plus their help/tooltip text — and matches as you type.
+Press **Ctrl+F** anywhere in the app to open a search box. It indexes the labels of settings and section headers across the whole window (toggles, sliders, keybinds, color pickers, buttons, and section titles, plus their help/tooltip text) and matches as you type.
 
 Pick a result (click it or press **Enter** for the first match) and PowerAim switches to the right page, scrolls the control into view, and briefly **flashes** its border so your eye lands on it.
 
@@ -153,8 +155,8 @@ A few inference-related controls live elsewhere in the app rather than on the Se
 
 | Control | Where | What it does |
 |:--------|:------|:-------------|
-| **Image Size Override** | Models page | Slider (192–1280 px) that sets the runtime square input size. Only meaningful for dynamic-shape ONNX models — fixed-size models snap to their declared dimension. Bound to `SliderSettings.ImageSize`. See [Training Your Own]({{ '/models/training-your-own' | relative_url }}). |
+| **Image Size Override** | Models page | Slider (192–1280 px) that sets the runtime square input size. Only meaningful for dynamic-shape ONNX models; fixed-size models snap to their declared dimension. Bound to `SliderSettings.ImageSize`. See [Training Your Own]({{ '/models/training-your-own' | relative_url }}). |
 | **GPU device picker** | Title-bar pill ("GPU") | Lists the DXGI adapters PowerAim detects and lets you pick which one runs ONNX inference (`AISettings.InferenceGpuDeviceId`). Lets you keep inference off the GPU the game runs on. The model reloads on the new device when you switch. |
 
 {: .note }
-The **Switch to DirectML / CUDA** button (UI Settings, above) swaps the whole app between the two release builds from inside it: it finds the matching release, downloads the other build, and updates in place via the same [updater]({{ '/getting-started/installation#updating' | relative_url }}) — your config is preserved.
+The **Switch to DirectML / CUDA** button (UI Settings, above) swaps the whole app between the two release builds from inside it: it finds the matching release, downloads the other build, and updates in place via the same [updater]({{ '/getting-started/installation#updating' | relative_url }}), and your config is preserved.

@@ -27,7 +27,7 @@ Both toggles are on the **Settings → Active Processes** card.
 | **Auto Switch Profile** | Honor each entry's `MatchProcess` pattern | On |
 | **Game Process Patterns** | Whitelist of process names that count as "games" | empty |
 
-If both toggles are off, every trigger / mapping / autoplay profile fires whenever its other conditions are satisfied — no process gating.
+If both toggles are off, every trigger / mapping / autoplay profile fires whenever its other conditions are satisfied. There is no process gating.
 
 ## Match patterns
 
@@ -82,7 +82,7 @@ If the whitelist is empty, PowerAim uses a built-in fallback list of common non-
 
 ## Troubleshooting
 
-- **Trigger doesn't fire even though I'm in the game** — verify the process name. Open Task Manager and check the exact executable name; remove any `.exe` for the pattern.
-- **Multiple profiles fire at once** — that's by design. Per-feature, only one is active *for that feature*. So one Trigger + one Mapping + one AutoPlay all active at once is normal.
-- **Auto-Pause never engages** — check Game Process Patterns. If your game is in the list, PowerAim treats it as a game (never pauses). Either remove it or rely on the foreground change to non-game windows.
-- **PowerAim itself causes Auto-Pause** — PowerAim's process is on the built-in non-game list. When PowerAim is the foreground window, the AI loop pauses; that's intentional.
+- **Trigger doesn't fire even though I'm in the game**: verify the process name. Open Task Manager and check the exact executable name; remove any `.exe` for the pattern.
+- **Multiple profiles fire at once**: that's by design. Per-feature, only one is active *for that feature*. So one Trigger + one Mapping + one AutoPlay all active at once is normal.
+- **Auto-Pause never engages**: check Game Process Patterns. If your game is in the list, PowerAim treats it as a game (never pauses). Either remove it or rely on the foreground change to non-game windows.
+- **PowerAim itself causes Auto-Pause**: PowerAim's process is on the built-in non-game list. When PowerAim is the foreground window, the AI loop pauses; that's intentional.

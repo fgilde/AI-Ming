@@ -6,7 +6,7 @@ nav_order: 8
 
 # Replay Buffer
 
-A rolling in-memory buffer of the last N seconds of captured frames and their detections. One click exports the buffer to disk as a PNG sequence plus a JSON sidecar — useful for clipping that one play, debugging a model that misses targets, or building a training dataset.
+A rolling in-memory buffer of the last N seconds of captured frames and their detections. One click exports the buffer to disk as a PNG sequence plus a JSON sidecar. Useful for clipping that one play, debugging a model that misses targets, or building a training dataset.
 
 ![Replay Buffer card](../images/replay-card.png)
 
@@ -50,6 +50,6 @@ A live status line under the sliders shows the current frame count: `Frames buff
 
 ## Troubleshooting
 
-- **"Frames buffered: 0" — toggle is on but nothing accumulates** — Global Active must also be on; the AI loop doesn't run otherwise.
-- **Export fails / produces no folder** — check disk space and that the export folder is writable.
-- **Frames are dropped** — the buffer tracks `DroppedSinceLastExport` internally; if the AI loop runs much faster than the encoder, some frames get dropped to keep memory bounded. Lower JPEG quality or reduce buffer length.
+- **"Frames buffered: 0" even though the toggle is on**: Global Active must also be on; the AI loop doesn't run otherwise.
+- **Export fails / produces no folder**: check disk space and that the export folder is writable.
+- **Frames are dropped**: the buffer tracks `DroppedSinceLastExport` internally; if the AI loop runs much faster than the encoder, some frames get dropped to keep memory bounded. Lower JPEG quality or reduce buffer length.

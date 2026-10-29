@@ -63,18 +63,18 @@ The format is the standard `System.Text.Json` JSON representation of `AppConfig`
 
 ### SliderSettings
 
-Holds every numeric tuning parameter — image size, FOV size, mouse sensitivity, jitter, EMA, Y/X offsets, sticky-aim thresholds, magnifier dimensions, etc. See [Settings Overview]({{ '/configuration/settings-overview' | relative_url }}) for the list.
+Holds every numeric tuning parameter: image size, FOV size, mouse sensitivity, jitter, EMA, Y/X offsets, sticky-aim thresholds, magnifier dimensions, etc. See [Settings Overview]({{ '/configuration/settings-overview' | relative_url }}) for the list.
 
 ### ToggleState
 
 Holds every boolean. Notably:
 
-- `GlobalActive` — master kill switch
+- `GlobalActive`: master kill switch
 - `AimAssist`, `AutoTrigger`, `AntiRecoil`, `FOV`, etc.
-- `MappingActive` — Controller Mapping master toggle
-- `HideUIFromCapture` — Win32 capture exclusion
+- `MappingActive`: Controller Mapping master toggle
+- `HideUIFromCapture`: Win32 capture exclusion
 
-`UseControllerForAim` no longer exists as a runtime toggle — its successor is `DropdownState.MouseMovementMethod == Gamepad`. The legacy field persists for backward-compat: on first load, a `true` value is migrated into the Gamepad movement method and the bool is cleared. See [Movement Methods]({{ '/features/mouse-input-methods' | relative_url }}).
+`UseControllerForAim` no longer exists as a runtime toggle. Its successor is `DropdownState.MouseMovementMethod == Gamepad`. The legacy field persists for backward-compat: on first load, a `true` value is migrated into the Gamepad movement method and the bool is cleared. See [Movement Methods]({{ '/features/mouse-input-methods' | relative_url }}).
 
 ### BindingSettings
 
@@ -183,7 +183,7 @@ An array of `ControllerMappingProfile`:
 }
 ```
 
-`UseOllama = false` skips the strategic LLM layer entirely (no HTTP polling, no screenshot capture for the LLM). `MouseSensScale`, `MouseJitterPx` and `KeyDelayJitterMs` are per-profile anti-detection / per-game tuning knobs — see [AutoPlay]({{ '/features/autoplay' | relative_url }}).
+`UseOllama = false` skips the strategic LLM layer entirely (no HTTP polling, no screenshot capture for the LLM). `MouseSensScale`, `MouseJitterPx` and `KeyDelayJitterMs` are per-profile anti-detection / per-game tuning knobs. See [AutoPlay]({{ '/features/autoplay' | relative_url }}).
 
 ### AntiRecoilSettings
 
@@ -221,15 +221,15 @@ An array of `ControllerMappingProfile`:
 
 ### AISettings
 
-Multi-class filter, sticky aim, detection masks — plus:
+Multi-class filter, sticky aim and detection masks, plus:
 
-- `InferenceGpuDeviceId` (int, default `0`) — DXGI adapter index for ONNX inference. The title-bar GPU picker writes this. On multi-GPU systems, set it to a secondary card to keep inference off the GPU running the game. Setting it reloads the active model.
+- `InferenceGpuDeviceId` (int, default `0`): DXGI adapter index for ONNX inference. The title-bar GPU picker writes this. On multi-GPU systems, set it to a secondary card to keep inference off the GPU running the game. Setting it reloads the active model.
 
 ### CrosshairSettings
 
 Standard shape / size / colour fields, plus:
 
-- `DetectionFlashEnabled` (bool, default `false`) — tint the crosshair when the current frame has any detections.
+- `DetectionFlashEnabled` (bool, default `false`): tint the crosshair when the current frame has any detections.
 - `DetectionFlashColorHex` (ARGB hex, default `#FFFF3030`).
 - `DetectionFlashMs` (int, 50–1000, default `200`).
 
@@ -237,16 +237,16 @@ Standard shape / size / colour fields, plus:
 
 The cogwheel button in PowerAim's title bar offers:
 
-- **Save as Quick Config** — overwrites the currently loaded config
-- **Save Config as...** — file-save dialog, choose a new filename
-- **Open Quick Config** — re-load the currently loaded config (discards unsaved changes)
-- **Open Other Config** — file-open dialog, pick another `.cfg`
+- **Save as Quick Config**: overwrites the currently loaded config
+- **Save Config as...**: file-save dialog, choose a new filename
+- **Open Quick Config**: re-load the currently loaded config (discards unsaved changes)
+- **Open Other Config**: file-open dialog, pick another `.cfg`
 
 After loading, the entire UI rebuilds with the new values.
 
 ## Manual editing
 
-PowerAim **must be closed** before editing the file — otherwise the in-memory config will overwrite your changes on exit.
+PowerAim **must be closed** before editing the file. Otherwise the in-memory config will overwrite your changes on exit.
 
 Steps:
 
@@ -254,7 +254,7 @@ Steps:
 2. Open `<install dir>\bin\configs\Default.cfg` in your text editor
 3. Edit any field. Make sure JSON stays valid (commas, quotes, braces).
 4. Save
-5. Launch PowerAim — it loads from your edited file
+5. Launch PowerAim; it loads from your edited file
 
 If PowerAim refuses to load a config, it falls back to defaults and writes a console message. Check the in-app log (sidebar → Logs).
 

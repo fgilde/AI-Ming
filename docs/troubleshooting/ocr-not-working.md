@@ -74,7 +74,7 @@ Tesseract is CPU-bound. Costs:
 - ~5 ms per small region (e.g. an ammo counter)
 - ~50 ms for a large region with lots of text
 
-If you have 5 regions × 50 ms each, that's 250 ms per tick — close to your interval. Lower the count or shrink the regions.
+If you have 5 regions × 50 ms each, that's 250 ms per tick, close to your interval. Lower the count or shrink the regions.
 
 **OCR Interval** (Settings → HUD OCR) controls polling frequency. 500 ms is the default; 1000 ms is fine for health/ammo; below 200 ms you'll feel the CPU load.
 

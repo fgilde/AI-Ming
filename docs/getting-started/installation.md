@@ -6,18 +6,18 @@ nav_order: 2
 
 # Installation
 
-PowerAim is a portable Windows desktop app. There is no required installer — you can run it from any folder, including a USB stick. An optional installer is provided that creates Start-menu shortcuts and a Programs-and-Features entry.
+PowerAim is a portable Windows desktop app. There is no required installer; you can run it from any folder, including a USB stick. An optional installer is provided that creates Start-menu shortcuts and a Programs-and-Features entry.
 
 ## 1. Install the prerequisites
 
 Both are one-time installs. Skip whichever you already have.
 
-1. **.NET Runtime 10 (x64)** — [download here](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
+1. **.NET Runtime 10 (x64)**: [download here](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
    - Pick the *Desktop Runtime* (not the SDK) unless you plan to build PowerAim from source.
-2. **Visual C++ 2015-2022 Redistributable (x64)** — [download here](https://aka.ms/vs/17/release/vc_redist.x64.exe)
+2. **Visual C++ 2015-2022 Redistributable (x64)**: [download here](https://aka.ms/vs/17/release/vc_redist.x64.exe)
 
 {: .warning }
-Both must be **x64** — PowerAim does not work with the x86 / ARM variants. If you accidentally install x86, uninstall it and grab x64.
+Both must be **x64**. PowerAim does not work with the x86 / ARM variants. If you accidentally install x86, uninstall it and grab x64.
 
 ## 2. Pick a build: DirectML or CUDA
 
@@ -45,16 +45,16 @@ PowerAim-x.y.z_cuda-Installer.exe   # CUDA, with installer
 
 ## 4. Install
 
-### Option A — Installer (recommended)
+### Option A: Installer (recommended)
 
 Run `PowerAim-*-Installer.exe`. It places PowerAim into `%LocalAppData%\Programs\PowerAim`, adds a Start-menu shortcut, and registers an uninstaller. No admin rights required.
 
-### Option B — Portable
+### Option B: Portable
 
-Extract the `.zip` to a folder of your choice (e.g. `C:\Tools\PowerAim`). Run `Launcher.exe` from inside — it starts the app for you (see [Smart launcher](#smart-launcher) below).
+Extract the `.zip` to a folder of your choice (e.g. `C:\Tools\PowerAim`). Run `Launcher.exe` from inside. It starts the app for you (see [Smart launcher](#smart-launcher) below).
 
 {: .note }
-The first launch is slower than subsequent ones — PowerAim probes DXGI support, loads ONNX models, and initializes the binding hook. After that, cold start is under 2 seconds on most machines.
+The first launch is slower than subsequent ones: PowerAim probes DXGI support, loads ONNX models, and initializes the binding hook. After that, cold start is under 2 seconds on most machines.
 
 ## Smart launcher
 
@@ -62,40 +62,40 @@ You always start PowerAim through **`Launcher.exe`** (the installer shortcut and
 
 1. It locates the app executable next to itself.
 2. It renames that executable to a random 8-character name (e.g. `aB3xK9pQ.exe`).
-3. It starts the renamed executable and then exits — so the running PowerAim process has a different name on every launch.
+3. It starts the renamed executable and then exits, so the running PowerAim process has a different name on every launch.
 
 If no app executable is present yet, the launcher switches into installer mode instead (see below).
 
 {: .note }
-Because the executable name changes every run, don't pin or whitelist PowerAim by a fixed `.exe` name — pin `Launcher.exe` (or the Start-menu shortcut) instead.
+Because the executable name changes every run, don't pin or whitelist PowerAim by a fixed `.exe` name. Pin `Launcher.exe` (or the Start-menu shortcut) instead.
 
 ### Installer mode
 
 When the launcher finds **no app build** alongside itself, it turns into a small installer:
 
-- **Version picker** — it fetches the available releases from GitHub and lets you choose which version to install.
-- **CUDA build checkbox** — shown only when the selected release ships a `*_cuda.zip` asset. Tick it to install the CUDA build instead of DirectML; leave it unticked for DirectML.
-- **Custom install directory** — defaults to the launcher's own folder, with a *Browse* button to install somewhere else.
+- **Version picker**: it fetches the available releases from GitHub and lets you choose which version to install.
+- **CUDA build checkbox**: shown only when the selected release ships a `*_cuda.zip` asset. Tick it to install the CUDA build instead of DirectML; leave it unticked for DirectML.
+- **Custom install directory**: defaults to the launcher's own folder, with a *Browse* button to install somewhere else.
 
 Click install and it downloads the chosen build, extracts it into the install directory, and from then on the launcher runs in [smart-launcher](#smart-launcher) mode.
 
 ## 5. (Optional) Install ViGEmBus
 
-If you plan to use any gamepad feature — controller mapping, AutoPlay with gamepad output, or "Use controller for aim" — install ViGEmBus.
+If you plan to use any gamepad feature (controller mapping, AutoPlay with gamepad output, or "Use controller for aim"), install ViGEmBus.
 
 Easiest path:
 
 1. Launch PowerAim
 2. Open **Gamepad** in the sidebar
-3. Click **"Get ViGEmBus driver"** — it opens [vigembusdriver.com](https://vigembusdriver.com) in your browser
+3. Click **"Get ViGEmBus driver"**. It opens [vigembusdriver.com](https://vigembusdriver.com) in your browser
 4. Download and run `ViGEmBus_Setup_x.x.xx_x64.exe`
-5. Back in PowerAim, click any other sidebar item then click **Gamepad** again — the status line should now say "PowerAim is ready to send Gamepad signals"
+5. Back in PowerAim, click any other sidebar item then click **Gamepad** again. The status line should now say "PowerAim is ready to send Gamepad signals"
 
 ![Gamepad settings page with ViGEm OK status](../images/gamepad-settings-vigem-ok.png)
 
 ## 6. (Optional) Install HidHide
 
-Only needed if you want to **cloak your physical controller** from games while a mapping profile is active. PowerAim ships the installer — on the Gamepad settings page, click **"Install HidHide"** and follow the prompts. A reboot is required.
+Only needed if you want to **cloak your physical controller** from games while a mapping profile is active. PowerAim ships the installer: on the Gamepad settings page, click **"Install HidHide"** and follow the prompts. A reboot is required.
 
 See [Hidden Controllers]({{ '/features/hidden-controllers' | relative_url }}) for what HidHide does and when you need it.
 
@@ -111,7 +111,7 @@ See [Hidden Controllers]({{ '/features/hidden-controllers' | relative_url }}) fo
 | `%LocalAppData%\PowerAim\replays\` | Replay-buffer export folder (default) |
 | `%LocalAppData%\PowerAim\autoplay_model.json` | Recorded AutoPlay learning model (default) |
 
-The whole app is portable — copying the install directory to another machine preserves all bundled assets. Per-user state lives under `%LocalAppData%` and `%AppData%` and is not copied.
+The whole app is portable. Copying the install directory to another machine preserves all bundled assets. Per-user state lives under `%LocalAppData%` and `%AppData%` and is not copied.
 
 ## Uninstalling
 
@@ -127,6 +127,6 @@ PowerAim ships with a **built-in updater**. It checks GitHub for a newer release
 The updater replaces the program files but **preserves your config**: the default config files (`Default.cfg`, `Default Gamepad.cfg`, `Default Keyboard.cfg` under `bin\configs\`) are skipped during the copy, and any other config you've saved is left untouched. After the files are swapped, the launcher restarts the app for you.
 
 {: .note }
-The updater honors the build you're on — a DirectML install updates to the next DirectML release, a CUDA install to the next CUDA release. To switch between builds, use **Switch to DirectML / CUDA** on the Settings page instead.
+The updater honors the build you're on: a DirectML install updates to the next DirectML release, a CUDA install to the next CUDA release. To switch between builds, use **Switch to DirectML / CUDA** on the Settings page instead.
 
 If you'd rather update manually, just download a fresh release and overwrite the install directory. Your config (under `bin\configs\` and `%AppData%\AI-M\`) is preserved.

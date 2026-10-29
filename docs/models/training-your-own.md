@@ -20,19 +20,19 @@ Capture frames  →  Auto-label / hand-label  →  Train YOLOv8  →  Export to 
 
 PowerAim ships built-in capture for training data:
 
-- **Settings → Collect Data While Playing** — saves capture frames to disk while you play
-- **Settings → Auto-Label Data** — additionally writes a YOLO `.txt` label file from the current model's detections (the "auto-label" trick)
+- **Settings → Collect Data While Playing**: saves capture frames to disk while you play
+- **Settings → Auto-Label Data**: additionally writes a YOLO `.txt` label file from the current model's detections (the "auto-label" trick)
 
 For a fresh class with no existing model, just capture frames manually. The [Replay Buffer]({{ '/features/replay-buffer' | relative_url }}) is also a quick way to grab clean frames.
 
 ### In-app training-data capture
 
-Together these two toggles bootstrap a dataset you can curate and retrain on — no separate recorder needed.
+Together these two toggles bootstrap a dataset you can curate and retrain on, with no separate recorder needed.
 
 - **`Collect Data While Playing`** saves capture frames as JPEGs to `bin\images\` while the AI loop runs. Frames are throttled to roughly a couple per second (the save is rate-limited to at most one frame every 500 ms), so a play session yields a steady trickle of varied images rather than a flood of near-duplicates.
 - **`Auto-Label Data`** (in addition to `Collect Data While Playing`) writes a matching YOLO-format label file to `bin\labels\` for each saved frame, named to match its image. The label is derived from the primary (nearest-to-centre) detection of the model that is currently loaded.
 
-Each label file holds one line in the standard YOLO format — `<class-id> <x-center> <y-center> <width> <height>` — with the box coordinates normalized to the frame size.
+Each label file holds one line in the standard YOLO format, `<class-id> <x-center> <y-center> <width> <height>`, with the box coordinates normalized to the frame size.
 
 {: .note }
 Auto-labels are only as good as the model that produced them. Treat them as a head start: load the captured `bin\images\` and `bin\labels\` into a labelling tool, fix the misses, and add classes the current model can't see yet before you retrain.
@@ -46,7 +46,7 @@ The repo includes a TFJS export under `Universalv3_web_model/` specifically for 
 3. Pick **Object Detection** as the task
 4. Choose **AI / YOLOv5 (TensorFlow.js)** under the AI assistant
 5. Upload the `Universalv3_web_model/` files
-6. Run the model — most of your frames get auto-labelled
+6. Run the model; most of your frames get auto-labelled
 7. Hand-correct the obvious misses
 
 Export labels in **YOLO** format.
@@ -92,17 +92,17 @@ model.export(format="onnx", dynamic=True, simplify=True)
 
 Key flags:
 
-- `dynamic=True` — exports with dynamic axis. PowerAim respects this and lets users pick image size at runtime.
-- `simplify=True` — strips redundant ops. Smaller file, faster load.
-- `opset=12` or higher — matches what ONNX Runtime expects.
+- `dynamic=True`: exports with dynamic axis. PowerAim respects this and lets users pick image size at runtime.
+- `simplify=True`: strips redundant ops. Smaller file, faster load.
+- `opset=12` or higher: matches what ONNX Runtime expects.
 
 The exported file lands as `runs/detect/poweraim-model/weights/best.onnx`.
 
 ## 5. Drop into PowerAim
 
-Copy `best.onnx` into `<PowerAim install>\bin\models\` (rename to something descriptive — `MyGame_v1.onnx`).
+Copy `best.onnx` into `<PowerAim install>\bin\models\` (rename to something descriptive, e.g. `MyGame_v1.onnx`).
 
-Restart PowerAim or click refresh on the Models tab — your new model appears in the local list. Click to load.
+Restart PowerAim or click refresh on the Models tab. Your new model appears in the local list. Click to load.
 
 ## Tips for high-quality models
 
@@ -120,5 +120,5 @@ A short walkthrough video showing the MakeSense.ai labelling → YOLOv5/8 traini
 
 ## See also
 
-- **[Using Models]({{ '/models/using-models' | relative_url }})** — switching, benchmarking, image-size override
-- **[Contributing Models]({{ '/models/contributing' | relative_url }})** — share your model with the community
+- **[Using Models]({{ '/models/using-models' | relative_url }})**: switching, benchmarking, image-size override
+- **[Contributing Models]({{ '/models/contributing' | relative_url }})**: share your model with the community

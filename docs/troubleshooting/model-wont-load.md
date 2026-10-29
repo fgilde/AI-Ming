@@ -22,7 +22,7 @@ PowerAim accepts only `.onnx`. Verify:
 - File size is reasonable (small models 5–20 MB, large 50–250 MB)
 - File isn't 0 bytes (a failed download)
 
-If you downloaded the file from a non-store source, re-download — corrupted ONNX files refuse to load.
+If you downloaded the file from a non-store source, re-download it. Corrupted ONNX files refuse to load.
 
 ### 2. Is the file in the right folder?
 
@@ -33,11 +33,11 @@ PowerAim looks in `<install dir>\bin\models\`. If the file is anywhere else, it 
 PowerAim is built around **YOLOv8** ONNX (anchor-free, NCHW input, 1×3×H×W). Other architectures may fail to load. Specifically:
 
 - YOLOv8 / YOLO11 detection heads (`[1, 4+classes, anchors]` or transposed) work
-- YOLOv5 ONNX works when the model declares its class names in its ONNX `names` metadata (current YOLOv5 exports do) — that is how PowerAim recognises the extra objectness channel
+- YOLOv5 ONNX works when the model declares its class names in its ONNX `names` metadata (current YOLOv5 exports do). That is how PowerAim recognises the extra objectness channel
 - End-to-end exports with NMS built in (YOLOv10, YOLO26, output `[1, 300, 6]`) work
 - Pose models (`kpt_shape` metadata) and segmentation models work; keypoints are read, masks are ignored
 - YOLOv7 *should* work but isn't officially tested
-- Non-YOLO ONNX (custom architectures) — likely fails
+- Non-YOLO ONNX (custom architectures) likely fails
 
 ### 4. CUDA build trying to load on a non-NVIDIA system?
 
@@ -46,7 +46,7 @@ The CUDA build expects:
 - An NVIDIA GPU
 - The CUDA 12.x runtime installed on the system
 
-If you have an AMD or Intel GPU and the CUDA build, PowerAim falls back to DirectML — but if CUDA itself crashes on load, the fallback never gets a chance. Switch to the DirectML build.
+If you have an AMD or Intel GPU and the CUDA build, PowerAim falls back to DirectML, but if CUDA itself crashes on load, the fallback never gets a chance. Switch to the DirectML build.
 
 ### 5. Test with a known-good model
 
@@ -54,7 +54,7 @@ Click any of the bundled `Universal*.onnx` files. They're known to work. If even
 
 ### 6. Read the in-app log
 
-**Logs** sidebar item. ONNX Runtime errors are written here verbatim — they usually say exactly what's wrong:
+**Logs** sidebar item. ONNX Runtime errors are written here verbatim, and they usually say exactly what's wrong:
 
 - `Unsupported operator: ...` → model uses a custom op PowerAim doesn't support
 - `Invalid input shape: ...` → input shape isn't what PowerAim expects
@@ -75,10 +75,10 @@ Both must be x64. PowerAim does **not** work with x86 variants.
 
 ## Multi-class model class list is empty
 
-If the model loads but the Target Classes dialog shows `Class 0`, `Class 1`, etc. instead of names — the model is missing the `names` custom metadata field. Either:
+If the model loads but the Target Classes dialog shows `Class 0`, `Class 1`, etc. instead of names, the model is missing the `names` custom metadata field. Either:
 
 - Re-export from Ultralytics: `model.export(format="onnx")` automatically writes `names`
-- Or live with the numeric IDs — they still work for filtering
+- Or live with the numeric IDs; they still work for filtering
 
 ## "Invalid input shape" specifically
 

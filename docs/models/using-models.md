@@ -12,14 +12,14 @@ How to load, switch, and benchmark models inside PowerAim.
 
 **Models & Configs** in the sidebar opens a two-column layout:
 
-- **Left** — local models (currently in `bin\models\`)
-- **Right** — downloadable models (fetched from the GitHub stores)
+- **Left**: local models (currently in `bin\models\`)
+- **Right**: downloadable models (fetched from the GitHub stores)
 
-A segmented switch at the top toggles between **Models** and **Configs**. Configs are saved `.cfg` presets — same store, separate folder.
+A segmented switch at the top toggles between **Models** and **Configs**. Configs are saved `.cfg` presets: same store, separate folder.
 
 ![Models tab](../images/models-tab.png)
 
-The same segmented switch flips the view to **Configs** — saved `.cfg` presets pulled from the same stores into a separate folder.
+The same segmented switch flips the view to **Configs**: saved `.cfg` presets pulled from the same stores into a separate folder.
 
 ![Configs view](../images/configs-tab.png)
 
@@ -42,8 +42,8 @@ You can bind a **Model Switch Keybind** that cycles through local models without
 
 The right column shows community models pulled from GitHub:
 
-- **fgilde/AI-Ming** (PowerAim) — `models/` directory
-- a configured **upstream community model repo** — `models/` directory
+- **fgilde/AI-Ming** (PowerAim): `models/` directory
+- a configured **upstream community model repo**: `models/` directory
 
 PowerAim merges the lists by filename and shows one row per unique name. Clicking download writes the file to your local `bin\models\` and immediately offers to load it.
 
@@ -77,10 +77,10 @@ Re-run the benchmark whenever you switch hardware, change drivers, or load a mar
 
 Use cases:
 
-- **Thermal management on laptops** — cap at 60 FPS even if your GPU could push 200
-- **Energy saving** — lower FPS = less battery
-- **Sync with the game's frame rate** — match the game's max FPS so PowerAim doesn't waste cycles
-- **Smooth performance** — if the unlimited loop is noisy, capping gives a consistent feel
+- **Thermal management on laptops**: cap at 60 FPS even if your GPU could push 200
+- **Energy saving**: lower FPS = less battery
+- **Sync with the game's frame rate**: match the game's max FPS so PowerAim doesn't waste cycles
+- **Smooth performance**: if the unlimited loop is noisy, capping gives a consistent feel
 
 ## Target Classes
 
@@ -99,13 +99,13 @@ The dialog reads class names from the model metadata. If your model has no `name
 
 ## Tips
 
-- **Start with Universal models.** They're broadly trained — good baseline before trying game-specific ones.
-- **A bigger model isn't always better.** A 640-size model on a slow GPU may run at 25 FPS, whereas a 320-size model runs at 90 FPS and feels much more responsive — the smaller model's latency dominates.
+- **Start with Universal models.** They're broadly trained, a good baseline before trying game-specific ones.
+- **A bigger model isn't always better.** A 640-size model on a slow GPU may run at 25 FPS, whereas a 320-size model runs at 90 FPS and feels much more responsive. The smaller model's latency dominates.
 - **Re-run the benchmark after model changes.** Different YOLOv8 variants have different layer counts.
 - **Class filtering reduces false fires.** Filter out teammates if your model can distinguish them.
 
 ## Troubleshooting
 
-- **"Model failed to load"** — see [Model Won't Load]({{ '/troubleshooting/model-wont-load' | relative_url }})
-- **Inference is very slow** — see [Low FPS]({{ '/troubleshooting/low-fps' | relative_url }})
-- **Wrong classes detected** — check the Target Classes dialog; you might be picking up teammates
+- **"Model failed to load"**: see [Model Won't Load]({{ '/troubleshooting/model-wont-load' | relative_url }})
+- **Inference is very slow**: see [Low FPS]({{ '/troubleshooting/low-fps' | relative_url }})
+- **Wrong classes detected**: check the Target Classes dialog; you might be picking up teammates

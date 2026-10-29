@@ -27,9 +27,9 @@ S --> T --> M
 
 Each block is an independent service with a contract:
 
-- `ICapture` — `LastCapture: Bitmap`, `CaptureArea: Rectangle`
-- `IPredictionLogic` — runs inference, exposes `ModelClasses`, raises events with detections
-- `IAction` — `Active: bool`, `Execute(...)` — implementations include `AimingAction`, `AntiRecoilAction`, `RecoilPatternPlaybackAction`, `ImageBasedAntiRecoilAction`, `AutoPlayLearningAction`
+- `ICapture`: `LastCapture: Bitmap`, `CaptureArea: Rectangle`
+- `IPredictionLogic`: runs inference, exposes `ModelClasses`, raises events with detections
+- `IAction`: `Active: bool`, `Execute(...)`. Implementations include `AimingAction`, `AntiRecoilAction`, `RecoilPatternPlaybackAction`, `ImageBasedAntiRecoilAction`, `AutoPlayLearningAction`
 
 The composition root is `AIManager`, which:
 
@@ -41,12 +41,12 @@ The composition root is `AIManager`, which:
 
 `ScreenCapture` is a façade that delegates to either:
 
-- `DxgiScreenCapture` — Vortice.Direct3D11 + DXGI Desktop Duplication. ~6× faster than GDI. Used by default when probing succeeds.
-- `GdiScreenCapture` — `BitBlt` fallback for systems where DXGI is unavailable or restricted (older Windows, headless, RDP).
+- `DxgiScreenCapture`: Vortice.Direct3D11 + DXGI Desktop Duplication. ~6× faster than GDI. Used by default when probing succeeds.
+- `GdiScreenCapture`: `BitBlt` fallback for systems where DXGI is unavailable or restricted (older Windows, headless, RDP).
 
 Both expose the same `ICapture` API. The choice is made once per `ScreenCapture` construction.
 
-The capture source is configurable in the title bar — entire monitor or a specific window. Window-mode capture uses `ProcessCapture`, which `PrintWindow`s the target window with DXGI fallback to BitBlt when the target is on a different DPI / GPU adapter.
+The capture source is configurable in the title bar: entire monitor or a specific window. Window-mode capture uses `ProcessCapture`, which `PrintWindow`s the target window with DXGI fallback to BitBlt when the target is on a different DPI / GPU adapter.
 
 ## Inference
 
@@ -57,8 +57,8 @@ The capture source is configurable in the title bar — entire monitor or a spec
 
 It also probes the input shape:
 
-- **Fixed shape** (e.g. `1×3×640×640`) — `SliderSettings.ImageSize` is snapped to the model's declared size
-- **Dynamic shape** (e.g. `1×3×?×?`) — the user picks via the Image Size Override slider
+- **Fixed shape** (e.g. `1×3×640×640`): `SliderSettings.ImageSize` is snapped to the model's declared size
+- **Dynamic shape** (e.g. `1×3×?×?`): the user picks via the Image Size Override slider
 
 Pixel-to-tensor conversion uses a **byte→float LUT** for lower GC pressure than naive `bitmap.Lock + cast`.
 
@@ -76,10 +76,10 @@ Anything that survives moves on to the sticky-aim selector.
 
 `StickyAimSelector` keeps a *target lock* between frames using a composite score:
 
-- **Distance score** — pixel distance to the screen center, weighted within `StickyAimThreshold`
-- **Confidence score** — the model's own probability
-- **Size score** — favors larger detections (closer = bigger)
-- **Lock bonus** — accumulates over time on the currently-held target, capped at `StickyAimMaxLockScore`
+- **Distance score**: pixel distance to the screen center, weighted within `StickyAimThreshold`
+- **Confidence score**: the model's own probability
+- **Size score**: favors larger detections (closer = bigger)
+- **Lock bonus**: accumulates over time on the currently-held target, capped at `StickyAimMaxLockScore`
 
 The selector switches targets only when a non-locked candidate beats the locked target by a clear margin. This eliminates the "ping-pong" effect of two overlapping detections.
 
@@ -87,9 +87,9 @@ The selector switches targets only when a non-locked candidate beats the locked 
 
 `PredictionManager` picks one of three methods:
 
-- **Kalman Filter** — custom 2D Kalman with velocity state. Lead time is fixed by default; the **Adaptive Kalman Lead** toggle adapts it to measured target velocity.
-- **Shall0e's Prediction** — velocity-based linear lead. PowerAim fixed the broken upstream implementation.
-- **wisethef0x's EMA Prediction** — EMA-weighted velocity lead.
+- **Kalman Filter**: custom 2D Kalman with velocity state. Lead time is fixed by default; the **Adaptive Kalman Lead** toggle adapts it to measured target velocity.
+- **Shall0e's Prediction**: velocity-based linear lead. PowerAim fixed the broken upstream implementation.
+- **wisethef0x's EMA Prediction**: EMA-weighted velocity lead.
 
 The chosen method produces a *predicted* target position for `N` ms in the future.
 
@@ -103,14 +103,14 @@ The chosen method produces a *predicted* target position for `N` ms in the futur
 4. Scale by `MouseSensitivity`
 5. Send via the configured `MouseMovementMethod` (SendInput / ddxoft / Razer / LGHub / MouseEvent) **or** via `GamepadManager.GamepadSender` if `UseControllerForAim` is on
 
-The trigger system runs in parallel — `TriggerEngine` evaluates each `ActionTrigger` and fires its actions when keys + intersection rules are satisfied.
+The trigger system runs in parallel. `TriggerEngine` evaluates each `ActionTrigger` and fires its actions when keys + intersection rules are satisfied.
 
 ## Anti-Recoil
 
 Three independent implementations, evaluated in precedence order:
 
-1. **`RecoilPatternPlaybackAction`** — replay a recorded delta sequence
-2. **`ImageBasedAntiRecoilAction`** — OpenCV phase-correlation + EMA baseline (BETA)
+1. **`RecoilPatternPlaybackAction`**: replay a recorded delta sequence
+2. **`ImageBasedAntiRecoilAction`**: OpenCV phase-correlation + EMA baseline (BETA)
 3. Legacy fixed X/Y compensation (built into `AntiRecoilAction`)
 
 Only the highest-precedence active mode produces output; the others self-disable.
@@ -123,15 +123,15 @@ Only the highest-precedence active mode produces output; the others self-disable
 2. Polls XInput at 1 ms via SharpDX.XInput
 3. Resolves the active profile (first enabled, `MatchProcess`-matching profile)
 4. Reads each `InputMapping`'s source state, evaluates activator + modifier, writes the target
-5. Mouse-to-stick and stick-to-mouse pumps are special — driven by sentinel mappings
+5. Mouse-to-stick and stick-to-mouse pumps are special, driven by sentinel mappings
 
-For KB→Pad writes, the engine **takes ownership** of the channels it touches on the shared `GamepadManager.GamepadSender` — otherwise the sync loop (which mirrors the physical pad onto the virtual one every 1 ms) would immediately overwrite the mapping output.
+For KB→Pad writes, the engine **takes ownership** of the channels it touches on the shared `GamepadManager.GamepadSender`. Otherwise the sync loop (which mirrors the physical pad onto the virtual one every 1 ms) would immediately overwrite the mapping output.
 
 ## AutoPlay
 
 `AutoPlayLearningAction` orchestrates:
 
-1. `OllamaClient.SelectActionAsync` — sends the captured frame + game context + action list to Ollama
+1. `OllamaClient.SelectActionAsync`: sends the captured frame + game context + action list to Ollama
 2. Receives an action name
 3. Sends the corresponding input(s) via the same dispatch as triggers
 4. Optionally records the (state, action) pair into `AutoPlayLearningModel` for bias learning
@@ -158,11 +158,11 @@ Threading: insertion is lock-protected but cheap; export runs on a thread-pool t
 
 ## Threading
 
-- **UI thread** — WPF window, every dialog, the binding hook listener
-- **Capture thread** — DXGI / GDI capture, owned by `AIManager`
-- **AI loop thread** — inference + prediction + action dispatch
-- **Mapping engine thread** — 1 ms tick polling XInput
-- **OCR timer** — DispatcherTimer on the UI thread
+- **UI thread**: WPF window, every dialog, the binding hook listener
+- **Capture thread**: DXGI / GDI capture, owned by `AIManager`
+- **AI loop thread**: inference + prediction + action dispatch
+- **Mapping engine thread**: 1 ms tick polling XInput
+- **OCR timer**: DispatcherTimer on the UI thread
 
 Cross-thread state is `INotifyPropertyChanged` with WPF dispatcher marshaling.
 

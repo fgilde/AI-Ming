@@ -22,7 +22,7 @@ PowerAim ships with 9 UI languages, generated at compile time by the **kli.Local
 | `uk-UA` | Ukrainian (Ukraine) |
 | `zh-CN` | Chinese (Simplified) |
 
-The language defaults to the system locale; users can override it via **Settings → UI Settings → Language**. Changing the language reloads every visible string immediately — no restart needed.
+The language defaults to the system locale; users can override it via **Settings → UI Settings → Language**. Changing the language reloads every visible string immediately, with no restart needed.
 
 ## How it works
 
@@ -70,7 +70,7 @@ After adding a language:
 1. Launch PowerAim
 2. **Settings → Language → pick your new culture**
 3. Walk through every sidebar page and check that all strings rendered
-4. Hover over toggles / sliders — tooltips should also be translated
+4. Hover over toggles / sliders; tooltips should also be translated
 
 Untranslated keys fall back to the English value at runtime, so missing entries are easy to spot.
 
@@ -82,4 +82,4 @@ Open a PR to `fgilde/AI-Ming` with the new `Locale_<culture>.json` file and the 
 
 - **Match key lengths roughly.** Sidebar button labels are truncated with ellipsis at ~14 characters. Don't write 30-character translations there.
 - **Watch for placeholders.** Format strings like `{0}` must appear in your translation, in the right order.
-- **The OCR + AutoPlay model names stay English.** Those are model identifiers, not UI text — don't translate `moondream` or `llava:7b`.
+- **The OCR + AutoPlay model names stay English.** Those are model identifiers, not UI text, so don't translate `moondream` or `llava:7b`.

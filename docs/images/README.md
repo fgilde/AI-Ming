@@ -1,4 +1,4 @@
-# Documentation Screenshots — Checklist
+# Documentation Screenshots: Checklist
 
 This folder holds the screenshots referenced by the docs. This file tracks what's already wired up and what's still missing.
 
@@ -6,13 +6,13 @@ Recommended capture settings:
 
 - **PNG** (no JPEG artefacts on UI text)
 - **Dark mode**, **Purple theme** (PowerAim's default) for consistency
-- Show **real data** when possible — a window with one model loaded and a couple of triggers/profiles beats an empty one
+- Show **real data** when possible. A window with one model loaded and a couple of triggers/profiles beats an empty one
 
 When you take a still-missing screenshot, drop it in this folder with the exact filename listed below and the corresponding `<!-- SCREENSHOT NEEDED (...) -->` comment in the docs can be turned back into an `![alt](../images/<file>.png)` line.
 
 ---
 
-## ✅ Done — wired into the docs
+## ✅ Done: wired into the docs
 
 | Filename | Used on |
 |:---------|:--------|
@@ -63,7 +63,7 @@ These pages currently have a `<!-- SCREENSHOT NEEDED (../images/<file>) -->` com
 
 ## Tips for taking the missing screenshots
 
-1. **Set theme to Purple (default)** — Settings → Theme → Purple — to match the existing 14.
+1. **Set theme to Purple (default)** (Settings → Theme → Purple) to match the existing 14.
 2. **Hide your username** if it appears in file paths (OCR / replay folder textbox). Use a sample like `Player`.
-3. **For the in-game shots** (`detected-player-overlay`, `crosshair-overlay`, `debug-overlay`, `fov-ring`), use a free-to-distribute environment — CS2 workshop maps, the Aim Lab demo, etc. Avoid anything that looks like active cheating in a competitive title.
+3. **For the in-game shots** (`detected-player-overlay`, `crosshair-overlay`, `debug-overlay`, `fov-ring`), use a free-to-distribute environment: CS2 workshop maps, the Aim Lab demo, etc. Avoid anything that looks like active cheating in a competitive title.
 4. **Crop tightly.** The docs render at ~800 px wide; tight crops stay crisp.

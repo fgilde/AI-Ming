@@ -21,13 +21,13 @@ Symptoms:
 
 The benchmark measures FPS / inference time / GPU% across 320 / 416 / 512 / 640 / 800 image sizes and recommends the highest size that still clears 60 FPS.
 
-Pick the recommended size. If even 320 doesn't clear 60 FPS, your hardware is below PowerAim's playable threshold for this model — try a smaller model.
+Pick the recommended size. If even 320 doesn't clear 60 FPS, your hardware is below PowerAim's playable threshold for this model. Try a smaller model.
 
 ### 2. Switch builds (DirectML ↔ CUDA)
 
 If you're on NVIDIA, the **CUDA build** is typically 10–25% faster than DirectML. Settings → UI Settings → Switch to CUDA.
 
-If you're on AMD or Intel, stick with DirectML — CUDA won't run.
+If you're on AMD or Intel, stick with DirectML; CUDA won't run.
 
 ### 3. Lower the image size
 
@@ -39,7 +39,7 @@ If you're on AMD or Intel, stick with DirectML — CUDA won't run.
 
 **Aim Tools → PredictionConfig → Max Inference FPS**.
 
-Counter-intuitively, capping at 60 or 90 can *help* — the AI loop becomes deterministic instead of running at whatever the GPU can momentarily produce. This also lets your GPU breathe between frames.
+Counter-intuitively, capping at 60 or 90 can *help*: the AI loop becomes deterministic instead of running at whatever the GPU can momentarily produce. This also lets your GPU breathe between frames.
 
 ### 5. Close background GPU consumers
 
@@ -58,9 +58,9 @@ PowerAim shares the GPU with anything that uses Direct3D. The more it has to sha
 
 ### 7. Disable expensive features temporarily
 
-- **Replay Buffer** — JPEG encoding every frame costs CPU
-- **Image-based Anti-Recoil** — phase correlation runs each frame
-- **Show Detected Player with `OverlayFormGDI`** — GDI overlay redraw is heavy
+- **Replay Buffer**: JPEG encoding every frame costs CPU
+- **Image-based Anti-Recoil**: phase correlation runs each frame
+- **Show Detected Player with `OverlayFormGDI`**: GDI overlay redraw is heavy
 
 Toggle them off one at a time and watch the FPS counter.
 
@@ -74,7 +74,7 @@ DirectML and CUDA both improve with driver updates. If you haven't updated in a 
 
 ### 10. Try a smaller model
 
-Some community models are 3× heavier than the bundled Universal models for marginal quality gains. The Models tab shows file sizes — bigger isn't always better.
+Some community models are 3× heavier than the bundled Universal models for marginal quality gains. The Models tab shows file sizes, and bigger isn't always better.
 
 ## What's a reasonable target?
 
@@ -89,6 +89,6 @@ Below 60 FPS aim *feels* laggy. Below 30 FPS triggers fire late.
 
 ## Related pages
 
-- [Models — Using Models]({{ '/models/using-models#performance-benchmark' | relative_url }})
+- [Using Models]({{ '/models/using-models#performance-benchmark' | relative_url }})
 - [Aim Assist]({{ '/features/aim-assist' | relative_url }})
 - [Settings Overview]({{ '/configuration/settings-overview' | relative_url }})

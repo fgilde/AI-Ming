@@ -6,6 +6,8 @@ nav_order: 17
 
 # Movement Methods
 
+<video controls preload="none" playsinline poster="/videos/settings.jpg" src="/videos/settings.mp4" style="width:100%;border-radius:8px;margin:4px 0 16px"></video>
+
 PowerAim supports **six different output backends** for aim / recoil motion. Pick whichever your game accepts (some anti-cheats reject the simple ones, others reject the fancy ones). Five of them target the system mouse; the sixth drives a virtual gamepad right-stick.
 
 The dropdown is **Settings → Input Settings → Movement Method**. Each entry shows a small device icon (a mouse glyph for mouse backends, a gamepad glyph for the Gamepad entry) so the difference is visible at a glance.
@@ -28,7 +30,7 @@ Routes input through **Logitech G HUB**'s LUA Lovense scripting API. Requires LG
 
 ### 4. Razer Synapse
 
-Same idea, but through **Razer Synapse**'s SDK. Requires Synapse installed and a real Razer peripheral. The detector accepts every documented Razer Synapse process name (Synapse 3 *and* Synapse 4 — `RazerAppEngine`, `Razer Synapse Service`, etc.).
+Same idea, but through **Razer Synapse**'s SDK. Requires Synapse installed and a real Razer peripheral. The detector accepts every documented Razer Synapse process name (Synapse 3 *and* Synapse 4: `RazerAppEngine`, `Razer Synapse Service`, etc.).
 
 ### 5. ddxoft Virtual Input Driver
 
@@ -38,7 +40,7 @@ A signed kernel virtual mouse driver from ddxoft. PowerAim falls back to MouseEv
 
 Drives a **ViGEm virtual Xbox right-stick** instead of synthesising mouse motion. The whole aim / recoil / AutoPlay-aim path routes through `InputSender.Move`, so picking Gamepad makes every component send stick deflection. See [Gamepad Aim]({{ '/features/gamepad-aim' | relative_url }}) for the full story.
 
-The entry stays selectable even when ViGEm isn't ready — picking it then pops a `MessageDialog` ("Gamepad not ready") that offers to navigate straight to the Gamepad settings page.
+The entry stays selectable even when ViGEm isn't ready. Picking it then pops a `MessageDialog` ("Gamepad not ready") that offers to navigate straight to the Gamepad settings page.
 
 ## How to switch
 
@@ -53,11 +55,11 @@ Three of the mouse-movement methods rely on a helper driver/DLL. When you pick o
 | Method | What it installs / checks |
 |:-------|:--------------------------|
 | **Razer Synapse** | If no Synapse process is running, offers to download and launch the Synapse installer (`rzr.to` mirror). It also auto-downloads `rzctl.dll` (from the `MarsQQ/rzctl` GitHub release) the first time, then asks you to re-select the method to load it. Finally it confirms a real Razer peripheral is present (a `Win32_PnPEntity` whose Manufacturer starts with "Razer") before enabling. |
-| **LG HUB** | Opens a downloader dialog with mirrors for the Logitech G HUB installer. The downloaded file is verified by **exact size (41,131,424 bytes) and MD5 hash** before it hands off to the OS installer. Loading also requires that **HVCI / Memory Integrity (Core Isolation) is disabled** — if it's on, PowerAim refuses and tells you to turn it off. It additionally checks that the running G HUB build is a 2021-era version. |
-| **ddxoft** | Auto-downloads `ddxoft.dll` (from a GitLab mirror) if it's missing. This driver **requires PowerAim to run as administrator** — if you're not elevated, PowerAim shows a warning and the method stays unusable until you relaunch as admin. |
+| **LG HUB** | Opens a downloader dialog with mirrors for the Logitech G HUB installer. The downloaded file is verified by **exact size (41,131,424 bytes) and MD5 hash** before it hands off to the OS installer. Loading also requires that **HVCI / Memory Integrity (Core Isolation) is disabled**. If it's on, PowerAim refuses and tells you to turn it off. It additionally checks that the running G HUB build is a 2021-era version. |
+| **ddxoft** | Auto-downloads `ddxoft.dll` (from a GitLab mirror) if it's missing. This driver **requires PowerAim to run as administrator**. If you're not elevated, PowerAim shows a warning and the method stays unusable until you relaunch as admin. |
 
 {: .warning }
-G HUB's downloader reminds you to disable "Automatic Updates" in G HUB after installing — a newer auto-updated build can break the scripting path PowerAim relies on, and the size/MD5 check is tied to that specific build.
+G HUB's downloader reminds you to disable "Automatic Updates" in G HUB after installing. A newer auto-updated build can break the scripting path PowerAim relies on, and the size/MD5 check is tied to that specific build.
 
 ## Which one should I use?
 
@@ -72,13 +74,13 @@ A rough decision tree:
 ## Tips
 
 - **Re-calibrate after switching.** Different methods send slightly different deltas. Re-run the [Calibration Wizard]({{ '/features/calibration-wizard' | relative_url }}) after changing methods.
-- **Keep LG HUB / Synapse minimized.** PowerAim talks to them via API — they don't need to be in the foreground.
-- **Anti-cheat detection is a moving target.** What works today might not tomorrow. PowerAim is designed for accessibility and training; if your game's anti-cheat blocks PowerAim, that's the anti-cheat doing its job — please respect it.
+- **Keep LG HUB / Synapse minimized.** PowerAim talks to them via API, so they don't need to be in the foreground.
+- **Anti-cheat detection is a moving target.** What works today might not tomorrow. PowerAim is designed for accessibility and training; if your game's anti-cheat blocks PowerAim, that's the anti-cheat doing its job. Please respect it.
 
 ## Troubleshooting
 
-- **"LG HUB load failed"** — make sure LG HUB is installed (not Logitech Gaming Software) and a Logitech G-series mouse is connected
-- **"Razer load failed"** — Razer Synapse must be installed AND a Razer peripheral connected
-- **"ddxoft load failed"** — the kernel driver isn't installed or is conflicting with another virtual-input driver
-- **"Gamepad not ready" dialog** — ViGEm bus driver missing or no gamepad sender configured. Click through to the Gamepad settings page.
-- **Switched method but nothing changed** — PowerAim cached the previous method. Toggle Global Active off and on again
+- **"LG HUB load failed"**: make sure LG HUB is installed (not Logitech Gaming Software) and a Logitech G-series mouse is connected
+- **"Razer load failed"**: Razer Synapse must be installed AND a Razer peripheral connected
+- **"ddxoft load failed"**: the kernel driver isn't installed or is conflicting with another virtual-input driver
+- **"Gamepad not ready" dialog**: ViGEm bus driver missing or no gamepad sender configured. Click through to the Gamepad settings page.
+- **Switched method but nothing changed**: PowerAim cached the previous method. Toggle Global Active off and on again

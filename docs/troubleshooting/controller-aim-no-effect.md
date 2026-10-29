@@ -22,8 +22,8 @@ Open **Gamepad Tester** (Gamepad sidebar or Mapping page). With Use-Controller-f
 
 If it doesn't:
 
-- Verify ViGEm is set up — see [Gamepad Not Detected]({{ '/troubleshooting/gamepad-not-detected' | relative_url }})
-- Verify the model is detecting a target — switch to ESP and look for boxes
+- Verify ViGEm is set up (see [Gamepad Not Detected]({{ '/troubleshooting/gamepad-not-detected' | relative_url }}))
+- Verify the model is detecting a target: switch to ESP and look for boxes
 
 ### 2. Game is reading the physical controller, not the virtual
 
@@ -35,13 +35,13 @@ The most common cause. Symptoms:
 
 **Fix: cloak the physical controller.** Two paths:
 
-#### Option A — HidHide
+#### Option A: HidHide
 
 1. Install HidHide if you haven't (Gamepad page → Install HidHide)
 2. Toggle **Auto Hide Controller** on
 3. PowerAim auto-cloaks your physical pad from non-whitelisted apps
 
-#### Option B — Device disable
+#### Option B: Device disable
 
 1. **Gamepad page → Hidden Controllers** (button)
 2. Find your physical controller in the list
@@ -67,7 +67,7 @@ Most console FPS games apply a 0.15–0.25 internal deadzone. PowerAim's deflect
 
 Counter:
 
-- **Profile editor → Stick Anti-Deadzone**. Set it to 0.15–0.20 — PowerAim's first non-zero deflection will snap above the game's deadzone.
+- **Profile editor → Stick Anti-Deadzone**. Set it to 0.15–0.20 so PowerAim's first non-zero deflection will snap above the game's deadzone.
 - Or just bump Mouse Sensitivity in PowerAim higher.
 
 ### 6. Aim assist is fighting in-game aim assist
@@ -86,7 +86,7 @@ Rare but possible. Some anti-cheats refuse virtual gamepads. Try:
 - **vJoy** send mode instead of ViGEm (Gamepad page → Send Mode)
 - **Internal** mode (pure managed fallback)
 
-If none work, the game's anti-cheat blocks every virtual controller — there's nothing PowerAim can do.
+If none work, the game's anti-cheat blocks every virtual controller, and there's nothing PowerAim can do.
 
 ## Related pages
 

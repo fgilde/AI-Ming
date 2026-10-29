@@ -6,7 +6,7 @@ nav_order: 9
 
 # OCR HUD Reader
 
-A periodic Tesseract-based OCR engine that reads named rectangular regions of your screen and exposes the recognized text. Use it to track health, ammo, score, or any other on-screen number — and feed the values into triggers or AutoPlay.
+A periodic Tesseract-based OCR engine that reads named rectangular regions of your screen and exposes the recognized text. Use it to track health, ammo, score, or any other on-screen number, and feed the values into triggers or AutoPlay.
 
 ![OCR Regions dialog](../images/ocr-regions-dialog.png)
 
@@ -43,9 +43,9 @@ Two ways to position a region without guessing pixel coordinates:
 
 PowerAim ships a Tesseract 5.2 LSTM engine; it only needs the `eng.traineddata` language model to run.
 
-- **Download Tesseract data** — the dialog's one-click downloader fetches `eng.traineddata` into `%LocalAppData%\PowerAim\tessdata\` (or your override folder). It's idempotent — it does nothing if the file is already there.
-- **Test engine** — forces a synchronous engine load and reports whether Tesseract is actually wired up (surfacing any missing-DLL or load error) *before* you start adding regions. As a convenience it also flips **Enable HUD OCR** on so the live preview starts feeding.
-- **Tessdata Path** — if you'd rather supply your own data, point this field on the Settings card to your folder; empty means use the default location above.
+- **Download Tesseract data**: the dialog's one-click downloader fetches `eng.traineddata` into `%LocalAppData%\PowerAim\tessdata\` (or your override folder). It's idempotent: it does nothing if the file is already there.
+- **Test engine**: forces a synchronous engine load and reports whether Tesseract is actually wired up (surfacing any missing-DLL or load error) *before* you start adding regions. As a convenience it also flips **Enable HUD OCR** on so the live preview starts feeding.
+- **Tessdata Path**: if you'd rather supply your own data, point this field on the Settings card to your folder; empty means use the default location above.
 
 ## Configuration options
 
@@ -61,10 +61,10 @@ PowerAim ships a Tesseract 5.2 LSTM engine; it only needs the `eng.traineddata` 
 
 | Setting | What it does |
 |:--------|:-------------|
-| **Name** | Free text — used by consumers to look up the value |
+| **Name** | Free text, used by consumers to look up the value |
 | **X / Y / Width / Height** | Pixel rectangle on the captured frame |
 | **Enabled** | Per-region toggle (lets you keep regions defined but inactive) |
-| **Kind** | Text / Number / Health — drives post-processing |
+| **Kind** | Text / Number / Health; drives post-processing |
 | **Invert** | Invert the binarized image (for white-on-dark HUDs) |
 | **Threshold** | Binarization cutoff (0–255). 140 default. |
 
@@ -72,36 +72,36 @@ To set the rectangle, you can type the **X / Y / Width / Height** values, use th
 
 ### Recognition tuning
 
-The dialog has an **Engine options** section with extra recognition tweaks. **All default OFF** so existing setups behave exactly as before, and each targets one specific failure mode — they can help *or* hurt depending on the HUD, so flip them one at a time and watch the live preview. They take effect immediately.
+The dialog has an **Engine options** section with extra recognition tweaks. **All default OFF** so existing setups behave exactly as before, and each targets one specific failure mode. They can help *or* hurt depending on the HUD, so flip them one at a time and watch the live preview. They take effect immediately.
 
 | Option | What it does | When to try it |
 |:-------|:-------------|:---------------|
 | **Max-channel grayscale** (`UseMaxChannelGrayscale`) | Builds the grayscale from the max of the colour channels (HSV *value*) instead of luminance-weighted Y. Saturated coloured digits (a magenta "10") keep a high value instead of collapsing to mid-grey below your threshold. For non-coloured text it's identical to the default. | A coloured-text region misreads while a neighbouring white-text one works. **Try this first.** |
 | **Substitute letters → digits** (`SubstituteLettersToDigits`) | Fixes common letter↔digit confusions before digit-only stripping: `O o Q D → 0`, `l I i \| ! ] → 1`, `Z z → 2`, `S s → 5`, `b → 6`, `B → 8`, `g q → 9`. | An ammo / health counter consistently reads as text-with-digits. Off by default because it can also "fix" real letters into wrong digits. |
 | **Strict number parsing** (`StrictNumberParsing`) | Rejects a parse with no actual digit (so a stray speckle that survived thresholding as `.` / `..` no longer parses as `0`) and trims stray leading/trailing dots. | Recommended on. Off only for strict backwards compatibility. |
-| **Otsu fallback** (`UseOtsuFallback`) | When a Number/Health region's primary (fixed-threshold) pass returns no number, retries once with Otsu's automatic threshold. | **High false-positive risk** — on noisy / saturated regions Otsu can read speckle as multi-digit numbers. Only for very stable HUDs where the fixed threshold is *just barely* off. |
+| **Otsu fallback** (`UseOtsuFallback`) | When a Number/Health region's primary (fixed-threshold) pass returns no number, retries once with Otsu's automatic threshold. | **High false-positive risk**: on noisy / saturated regions Otsu can read speckle as multi-digit numbers. Only for very stable HUDs where the fixed threshold is *just barely* off. |
 | **300-DPI hint** (`UseUserDefinedDpi`) | Tells Tesseract the input is 300 DPI (`user_defined_dpi=300`) so the LSTM engine stops auto-rescaling already-upscaled HUD patches. The pixel density doesn't have to actually match. | Engine output looks blurry or wobbly. Flipping it transparently rebuilds the engine on the next sample. |
-| **Sticky last-valid (ms)** (`StickyLastValidMs`) | For Number/Health regions, when a frame fails to parse but the previous reading succeeded and is still within this many ms, the prior value is carried forward. Stops single bad frames (motion blur, muzzle flash, partial occlusion) from flickering consumers between "value X" and "nothing". Cannot manufacture wrong values — only holds real prior ones. | Recommended 1500–2000 ms. `0` = off (default). Clamped 0–10000. |
+| **Sticky last-valid (ms)** (`StickyLastValidMs`) | For Number/Health regions, when a frame fails to parse but the previous reading succeeded and is still within this many ms, the prior value is carried forward. Stops single bad frames (motion blur, muzzle flash, partial occlusion) from flickering consumers between "value X" and "nothing". Cannot manufacture wrong values; it only holds real prior ones. | Recommended 1500–2000 ms. `0` = off (default). Clamped 0–10000. |
 
 ## Tips
 
 - **Keep regions tight.** 100×40 around the ammo number is way faster than scanning a 400×400 corner.
 - **Binarize when the font is anti-aliased.** Tesseract works best on clean black-on-white. Try the Invert toggle if the font is light on dark.
-- **500 ms is fine for health.** Don't drop the interval below 200 ms unless you really need it — OCR is CPU-bound and adds latency.
+- **500 ms is fine for health.** Don't drop the interval below 200 ms unless you really need it. OCR is CPU-bound and adds latency.
 - **Health = "75/100".** The Health kind strips spaces but preserves the slash so consumers can split it.
 
 ## Aim-disengage rules
 
-OCR can also **pause aim assist** while a HUD region matches — for example, stop aiming while you're scoped, holding a knife, or in a menu. This avoids fighting the player during moments where assist is unwanted.
+OCR can also **pause aim assist** while a HUD region matches, for example stop aiming while you're scoped, holding a knife, or in a menu. This avoids fighting the player during moments where assist is unwanted.
 
 {: .important }
-Disengage rules now live **on each aim profile, not globally.** They're carried by the active [aim profile]({{ '/features/aim-assist#aim-profiles' | relative_url }}) and evaluated only for whichever profile is currently active — so a "sniper" profile can disengage when *not* scoped while a "rifle" profile uses different rules (or none). Edit them from the profile editor, not from a global card. New profiles start with no rules; when your config was migrated, the **Default** profile inherited the old global rules.
+Disengage rules now live **on each aim profile, not globally.** They're carried by the active [aim profile]({{ '/features/aim-assist#aim-profiles' | relative_url }}) and evaluated only for whichever profile is currently active, so a "sniper" profile can disengage when *not* scoped while a "rifle" profile uses different rules (or none). Edit them from the profile editor, not from a global card. New profiles start with no rules; when your config was migrated, the **Default** profile inherited the old global rules.
 
 Each rule has:
 
 | Field | What it does |
 |:------|:-------------|
-| **Condition** | An AND/OR-able **condition tree** — same builder and operator set as [trigger OCR conditions]({{ '/features/triggers#ocr-conditions' | relative_url }}). Each leaf picks a region, a comparison and a value, so you can express compound rules like *(weapon contains `AWP` OR weapon contains `Scout`) AND state contains `scoped`*. (Configs that predate the tree migrate their single region/comparison/value into one leaf automatically.) |
+| **Condition** | An AND/OR-able **condition tree** (same builder and operator set as [trigger OCR conditions]({{ '/features/triggers#ocr-conditions' | relative_url }})). Each leaf picks a region, a comparison and a value, so you can express compound rules like *(weapon contains `AWP` OR weapon contains `Scout`) AND state contains `scoped`*. (Configs that predate the tree migrate their single region/comparison/value into one leaf automatically.) |
 | **Match Process** | Optional process pattern to scope the rule to one game |
 | **Enabled** | Per-rule toggle |
 
@@ -112,7 +112,7 @@ Like trigger conditions, aim-disengage rules are **only evaluated while the OCR 
 
 ## Profile auto-switch
 
-Beyond pausing aim, an OCR reading can **swap your whole aim profile**. Give a profile an OCR region plus a weapon-name substring and enable **Auto-switch on OCR**; the profile activates whenever that region's recognised text contains the substring — e.g. switch to a high-smoothing sniper profile the moment the HUD shows `AWP`. See [Aim profiles]({{ '/features/aim-assist#aim-profiles' | relative_url }}).
+Beyond pausing aim, an OCR reading can **swap your whole aim profile**. Give a profile an OCR region plus a weapon-name substring and enable **Auto-switch on OCR**; the profile activates whenever that region's recognised text contains the substring, e.g. switch to a high-smoothing sniper profile the moment the HUD shows `AWP`. See [Aim profiles]({{ '/features/aim-assist#aim-profiles' | relative_url }}).
 
 ## Use cases
 
@@ -124,8 +124,8 @@ Beyond pausing aim, an OCR reading can **swap your whole aim profile**. Give a p
 
 ## Troubleshooting
 
-- **OCR returns garbage** — sharper image needed: tighten the region, bump threshold, try Invert.
-- **No `tessdata` found** — verify the Tessdata Path on the Settings card points at a folder containing `eng.traineddata`.
-- **OCR seems off** — confirm the region is correct on the live preview in the dialog. The capture source must include your HUD.
-- **High CPU** — raise OCR Interval or disable the more expensive regions.
-- **Tessdata download failed** — drop `eng.traineddata` manually into `%LocalAppData%\PowerAim\tessdata\` from the [official Tesseract releases](https://github.com/tesseract-ocr/tessdata).
+- **OCR returns garbage**: sharper image needed: tighten the region, bump threshold, try Invert.
+- **No `tessdata` found**: verify the Tessdata Path on the Settings card points at a folder containing `eng.traineddata`.
+- **OCR seems off**: confirm the region is correct on the live preview in the dialog. The capture source must include your HUD.
+- **High CPU**: raise OCR Interval or disable the more expensive regions.
+- **Tessdata download failed**: drop `eng.traineddata` manually into `%LocalAppData%\PowerAim\tessdata\` from the [official Tesseract releases](https://github.com/tesseract-ocr/tessdata).

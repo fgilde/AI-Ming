@@ -11,11 +11,11 @@ When things go wrong, start here. Each page walks through diagnostics for a spec
 
 ## By symptom
 
-- **[Gamepad Not Detected]({{ '/troubleshooting/gamepad-not-detected' | relative_url }})** — virtual gamepad doesn't appear in games, ViGEm/HidHide issues
-- **[Model Won't Load]({{ '/troubleshooting/model-wont-load' | relative_url }})** — ONNX errors, missing classes, "model failed to load"
-- **[Low FPS]({{ '/troubleshooting/low-fps' | relative_url }})** — AI loop running below 60 FPS, lag, input feels heavy
-- **[OCR Not Working]({{ '/troubleshooting/ocr-not-working' | relative_url }})** — Tesseract data, region setup, garbage results
-- **[Controller Aim Has No Effect]({{ '/troubleshooting/controller-aim-no-effect' | relative_url }})** — virtual right-stick doesn't move the in-game camera
+- **[Gamepad Not Detected]({{ '/troubleshooting/gamepad-not-detected' | relative_url }})**: virtual gamepad doesn't appear in games, ViGEm/HidHide issues
+- **[Model Won't Load]({{ '/troubleshooting/model-wont-load' | relative_url }})**: ONNX errors, missing classes, "model failed to load"
+- **[Low FPS]({{ '/troubleshooting/low-fps' | relative_url }})**: AI loop running below 60 FPS, lag, input feels heavy
+- **[OCR Not Working]({{ '/troubleshooting/ocr-not-working' | relative_url }})**: Tesseract data, region setup, garbage results
+- **[Controller Aim Has No Effect]({{ '/troubleshooting/controller-aim-no-effect' | relative_url }})**: virtual right-stick doesn't move the in-game camera
 
 ## General first-aid
 
@@ -28,7 +28,7 @@ Before diving into a specific page, try these:
 5. **Check the in-app log.** Sidebar → Logs. PowerAim writes diagnostic output there.
 6. **Run the Performance Benchmark.** Models tab → Run Benchmark. Confirms inference path is healthy.
 
-If none of those help, find the relevant troubleshooting page below — most include checklists you can walk through.
+If none of those help, find the relevant troubleshooting page below. Most include checklists you can walk through.
 
 ## Reporting bugs
 

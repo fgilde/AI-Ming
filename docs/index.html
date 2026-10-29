@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PowerAim — AI aim alignment for Windows</title>
+<title>PowerAim: AI aim help for Windows</title>
 <meta name="description" content="PowerAim is a free, source-available AI aim-alignment tool for Windows. Real-time YOLOv8 detection, smart target tracking, gamepad support, OCR triggers and an LLM AutoPlay system. 100% local." />
 <meta name="theme-color" content="#07050d" />
 <link rel="icon" type="image/png" href="images/PowerAim-icon-256.png" />
-<meta property="og:title" content="PowerAim — AI aim alignment for Windows" />
+<meta property="og:title" content="PowerAim: AI aim help for Windows" />
 <meta property="og:description" content="Real-time detection, smart tracking, gamepad + OCR, LLM AutoPlay. Free, source-available, 100% local." />
 <meta property="og:image" content="images/main.png" />
 <meta property="og:type" content="website" />
@@ -98,29 +98,37 @@
   .trust span{display:flex;align-items:center;gap:8px;font-size:13.5px}
   .trust svg{width:15px;height:15px;color:var(--cyan)}
 
-  /* hero visual: framed screenshot with HUD reticle */
-  .scope{position:relative;aspect-ratio:16/11;border-radius:16px;overflow:hidden;
-    border:1px solid var(--line-strong);background:#0a0717;
-    box-shadow:0 40px 90px -30px rgba(0,0,0,.8),0 0 0 1px rgba(142,90,224,.12) inset;
-    transform:perspective(1400px) rotateY(-9deg) rotateX(3deg);transition:transform .5s ease}
-  .scope:hover{transform:perspective(1400px) rotateY(-3deg) rotateX(1deg)}
-  .scope img{width:100%;height:100%;object-fit:cover;object-position:top left;display:block;opacity:.96}
-  .scope .scan{position:absolute;left:0;right:0;height:42%;top:-42%;
-    background:linear-gradient(180deg,transparent,rgba(96,205,255,.10),transparent);animation:scan 5.5s linear infinite;pointer-events:none}
-  @keyframes scan{0%{top:-42%}100%{top:100%}}
-  .reticle{position:absolute;width:108px;height:108px;left:53%;top:44%;transform:translate(-50%,-50%);pointer-events:none}
-  .reticle .ring{position:absolute;inset:0;border:1.5px solid rgba(96,205,255,.7);border-radius:50%;
-    border-right-color:transparent;border-bottom-color:transparent;animation:spin 7s linear infinite}
-  .reticle .ring.r2{inset:18px;border-color:rgba(142,90,224,.6);border-left-color:transparent;border-top-color:transparent;animation-duration:5s;animation-direction:reverse}
-  .reticle .cx,.reticle .cy{position:absolute;background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
-  .reticle .cx{left:50%;top:0;bottom:0;width:1.5px;transform:translateX(-50%)}
-  .reticle .cy{top:50%;left:0;right:0;height:1.5px;transform:translateY(-50%)}
-  .reticle .gap{position:absolute;left:50%;top:50%;width:26px;height:26px;transform:translate(-50%,-50%);background:#0a0717;border-radius:50%}
+  /* hero visual: live simulation in a frame with a rotating gradient edge */
+  .sim-wrap{position:relative}
+  .sim-wrap::before{content:"";position:absolute;inset:8% 6%;z-index:-1;filter:blur(60px);opacity:.55;
+    background:radial-gradient(closest-side,rgba(142,90,224,.8),rgba(96,205,255,.35),transparent)}
+  .sim-frame{position:relative;border-radius:18px;padding:1.5px;overflow:hidden;isolation:isolate;
+    box-shadow:0 40px 90px -30px rgba(0,0,0,.85)}
+  .sim-frame::before{content:"";position:absolute;inset:-60%;z-index:-1;
+    background:conic-gradient(from 0deg,transparent 0 55%,var(--cyan) 72%,var(--purple) 86%,transparent 100%);
+    animation:spin 7s linear infinite}
+  .sim-frame::after{content:"";position:absolute;inset:0;z-index:-2;background:var(--line-strong)}
+  .sim-inner{position:relative;border-radius:16.5px;overflow:hidden;background:#0a0717;aspect-ratio:16/11}
+  #sim{display:block;width:100%;height:100%;cursor:none;touch-action:pan-y}
+  .sim-hud{position:absolute;left:12px;top:12px;display:flex;flex-wrap:wrap;gap:6px;pointer-events:none;
+    font-size:10.5px;letter-spacing:.12em}
+  .sim-hud span{background:rgba(7,5,13,.66);border:1px solid var(--line);border-radius:7px;padding:4px 8px;color:var(--muted);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .sim-hud b{color:var(--ink);font-weight:600}
+  .sim-hud .st{color:var(--cyan)}
+  .sim-hud .live{display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff5577;margin-right:7px;
+    box-shadow:0 0 8px #ff5577;animation:pulse 1.6s infinite;vertical-align:1px}
+  .sim-ctl{position:absolute;right:12px;bottom:12px;display:flex;gap:6px}
+  .sim-ctl button{font:600 11.5px var(--display);color:var(--muted);background:rgba(7,5,13,.7);border:1px solid var(--line-strong);
+    border-radius:8px;padding:6px 10px;cursor:pointer;transition:color .2s,border-color .2s,background .2s}
+  .sim-ctl button[aria-pressed="true"]{color:#0a0614;background:var(--grad);border-color:transparent}
+  .sim-ctl button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+  .sim-hint{margin-top:14px;color:var(--muted-2);text-align:center;font-size:11px;letter-spacing:.14em}
+  @media(hover:none){.sim-hint{display:none}}
+  /* spotlight that follows the pointer across the hero */
+  .hero::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(420px circle at var(--mx,70%) var(--my,40%),rgba(96,205,255,.07),transparent 70%)}
   @keyframes spin{to{transform:rotate(360deg)}}
-  /* detection box label on the scope */
-  .tag-box{position:absolute;left:36%;top:30%;width:30%;height:36%;border:1.5px solid rgba(96,205,255,.55);border-radius:3px}
-  .tag-box::before{content:"target · 0.98";position:absolute;top:-22px;left:-1px;font-family:var(--mono);
-    font-size:10.5px;letter-spacing:.1em;color:#0a0614;background:var(--cyan);padding:2px 7px;border-radius:3px}
 
   /* corner brackets utility */
   .brackets{position:relative}
@@ -129,7 +137,39 @@
   .brackets::after{right:-1px;bottom:-1px;border-left:0;border-top:0}
   .brackets:hover::before,.brackets:hover::after{opacity:1;border-color:var(--cyan)}
 
-  @media(max-width:880px){.hero-grid{grid-template-columns:1fr;gap:40px}.scope{transform:none}.scope:hover{transform:none}}
+  @media(max-width:880px){.hero-grid{grid-template-columns:1fr;gap:40px}}
+
+  /* ---- video tutorials: player + playlist ---- */
+  .learn{display:grid;grid-template-columns:1.7fr 1fr;gap:18px;align-items:start}
+  .player{background:#000;border:1px solid var(--line-strong);border-radius:14px;overflow:hidden;
+    box-shadow:0 30px 70px -30px rgba(0,0,0,.8),0 0 0 1px rgba(142,90,224,.12) inset}
+  .player video{display:block;width:100%;aspect-ratio:1280/990;background:#000}
+  .player .now{display:flex;align-items:baseline;gap:12px;padding:14px 18px;border-top:1px solid var(--line);background:var(--bg-2)}
+  .player .now b{font-family:var(--display);font-size:17px;font-weight:600}
+  .player .now span{color:var(--muted);font-size:13.5px}
+  .playlist{list-style:none;display:flex;flex-direction:column;gap:7px}
+  .playlist button{width:100%;display:grid;grid-template-columns:30px 1fr auto;gap:12px;align-items:center;text-align:left;
+    font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;cursor:pointer;
+    transition:border-color .2s,background .2s,transform .15s}
+  .playlist button:hover{border-color:var(--line-strong);background:var(--panel-2);transform:translateX(3px)}
+  .playlist button[aria-current="true"]{border-color:rgba(142,90,224,.6);background:linear-gradient(90deg,rgba(142,90,224,.16),var(--panel))}
+  .playlist .no{font-family:var(--mono);font-size:11px;color:var(--muted-2);letter-spacing:.1em}
+  .playlist button[aria-current="true"] .no{color:var(--cyan)}
+  .playlist b{display:block;font-family:var(--display);font-weight:600;font-size:15px}
+  .playlist small{display:block;color:var(--muted);font-size:12.5px;line-height:1.4;margin-top:2px}
+  .playlist .dur{font-family:var(--mono);font-size:11.5px;color:var(--muted-2)}
+  @media(max-width:880px){.learn{grid-template-columns:1fr}}
+
+  /* big call to action under the feature tiles */
+  .more-cta{margin-top:34px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;
+    padding:24px 28px;border:1px solid rgba(142,90,224,.45);border-radius:16px;
+    background:linear-gradient(100deg,rgba(142,90,224,.16),rgba(96,205,255,.07));box-shadow:0 20px 60px -30px rgba(142,90,224,.6)}
+  .more-cta b{display:block;font-family:var(--display);font-size:21px;font-weight:700;letter-spacing:-.01em}
+  .more-cta span{color:var(--muted);font-size:15px}
+  .btn-lg{font-size:17px;padding:15px 28px;border-radius:13px}
+  .btn-lg svg{width:19px;height:19px;transition:transform .2s}
+  .btn-lg:hover svg{transform:translateX(4px)}
+  @media(max-width:640px){.more-cta .btn{width:100%;justify-content:center}}
 
   /* ---- section frame ---- */
   section{padding:74px 0;position:relative}
@@ -263,6 +303,7 @@
     <a class="brand" href="#top"><img src="images/PowerAim-icon-256.png" alt="" /><span>Power<b class="accent-text">Aim</b></span></a>
     <nav class="nav-links">
       <a href="#features">Features</a>
+      <a href="#learn">Tutorials</a>
       <a href="#keybinds">Keybinds</a>
       <a href="#download">Download</a>
       <a href="#changelog">Changelog</a>
@@ -283,32 +324,44 @@
 <section class="hero">
   <div class="wrap hero-grid">
     <div>
-      <span class="eyebrow mono"><span class="dot"></span> AI aim alignment · .NET 10 · 100% local</span>
+      <span class="eyebrow mono"><span class="dot"></span> New · V2 aim engine · video tutorials</span>
       <h1 class="title"><span>Lock on.</span><span class="accent-text">Stay smooth.</span></h1>
-      <p class="lede">PowerAim runs a real-time <b>YOLOv8</b> model on your screen and nudges the aim toward the target — with persistent <b>multi-target tracking</b>, adaptive smoothing, gamepad output, OCR triggers and an <b>LLM-driven AutoPlay</b>. Free, source-available, no key system.</p>
+      <p class="lede">PowerAim runs a real-time <b>YOLOv8</b> model on your screen and moves your aim onto the target. It follows several enemies at once, works with mouse or controller, can fire for you, reads your HUD and can even play by itself with a local AI model. Free, no key system.</p>
       <div class="hero-cta">
         <a class="btn btn-primary" href="#download">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 21h16"/></svg>
           Download
         </a>
+        <a class="btn btn-ghost" href="#learn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg>
+          Watch tutorials
+        </a>
         <a class="btn btn-ghost" href="getting-started/">Read the docs</a>
       </div>
       <div class="trust">
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> 100% local — no telemetry</span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Runs offline, no telemetry</span>
         <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Source-available</span>
         <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> 9 languages</span>
       </div>
     </div>
-    <div class="reveal">
-      <div class="scope">
-        <img src="images/main.png" alt="PowerAim main window" loading="eager" />
-        <div class="tag-box"></div>
-        <div class="reticle">
-          <div class="ring"></div><div class="ring r2"></div>
-          <div class="cx"></div><div class="cy"></div><div class="gap"></div>
+    <div class="reveal sim-wrap">
+      <div class="sim-frame">
+        <div class="sim-inner">
+          <canvas id="sim" role="img" aria-label="Live demo: detection boxes, field of view, aim point and trigger"></canvas>
+          <div class="sim-hud mono">
+            <span><i class="live"></i>live · <b id="sim-fps">…</b> fps</span>
+            <span>inference <b id="sim-inf">…</b> ms</span>
+            <span>hits <b id="sim-hits">0</b></span>
+            <span class="st" id="sim-state">demo</span>
+          </div>
+          <div class="sim-ctl">
+            <button type="button" data-sim="assist" aria-pressed="true">Aim assist</button>
+            <button type="button" data-sim="aimpoint" aria-pressed="true">Aim point</button>
+            <button type="button" data-sim="esp" aria-pressed="true">ESP</button>
+          </div>
         </div>
-        <div class="scan"></div>
       </div>
+      <p class="sim-hint mono">Hover to take the crosshair · hold click = aim key</p>
     </div>
   </div>
 </section>
@@ -317,20 +370,40 @@
 <section style="padding-top:0">
   <div class="wrap">
     <div class="stats reveal" id="stats">
-      <div class="stat"><div class="n" data-count id="st-total">—</div><div class="l">Total downloads</div></div>
-      <div class="stat"><div class="n" id="st-latest">—</div><div class="l">Latest version</div></div>
-      <div class="stat"><div class="n" data-count id="st-releases">—</div><div class="l">Releases shipped</div></div>
+      <div class="stat"><div class="n" data-count id="st-total">…</div><div class="l">Total downloads</div></div>
+      <div class="stat"><div class="n" id="st-latest">…</div><div class="l">Latest version</div></div>
+      <div class="stat"><div class="n" data-count id="st-releases">…</div><div class="l">Releases shipped</div></div>
       <div class="stat"><div class="n accent-text">Free</div><div class="l">Forever · no paywall</div></div>
     </div>
   </div>
 </section>
+
+<!-- ===================== VIDEO TUTORIALS ===================== -->
+<section id="learn">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-kicker mono">// Video tutorials</div>
+      <h2 class="sec-title">See how it <span class="accent-text">works</span>.</h2>
+      <p class="sec-sub">Short videos recorded in the app. Each one goes through a page and says what the options do and when you would change them.</p>
+    </div>
+    <div class="learn reveal">
+      <div class="player">
+        <video id="learn-video" controls preload="metadata" playsinline></video>
+        <div class="now"><b id="learn-title"></b><span id="learn-desc"></span></div>
+      </div>
+      <ol class="playlist" id="learn-list"></ol>
+    </div>
+  </div>
+</section>
+
+<div class="wrap"><div class="divider"></div></div>
 
 <!-- ===================== FEATURES ===================== -->
 <section id="features">
   <div class="wrap">
     <div class="anygame reveal">
       <div class="sec-kicker mono">// Works with any game</div>
-      <p class="line">It reads the screen, not the game — so it isn't tied to a single title. The same setup works in <b>Call of Duty, Battlefield, Apex, Fortnite</b> and just about anything else.</p>
+      <p class="line">PowerAim looks at the screen, not into the game. That's why it works in <b>Call of Duty, Battlefield, Apex, Fortnite</b> and pretty much any other shooter.</p>
       <div class="chips">
         <span class="chip">Call of Duty</span>
         <span class="chip">Battlefield</span>
@@ -345,49 +418,50 @@
     </div>
     <div class="sec-head reveal">
       <div class="sec-kicker mono">// Capabilities</div>
-      <h2 class="sec-title">Built like a tool, not a toy.</h2>
-      <p class="sec-sub">A decoupled service architecture, a real Fluent UI, and a capture → inference → control pipeline that you can tune end to end.</p>
+      <h2 class="sec-title">What it can do</h2>
+      <p class="sec-sub">Capture, detection and output can all be adjusted, so you can set it up the way your game and your hands need it.</p>
     </div>
     <div class="feat-grid">
       <div class="feat brackets reveal">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><circle cx="12" cy="12" r="2.4"/></svg>
         <div class="ix">01</div><h3>Profile-based aim</h3>
-        <p>Every aim setting lives on a profile — run several at once, each on its own key, calibrated to your real sensitivity so it feels the same in any game.</p>
+        <p>All aim settings belong to a profile. Use several at once, each on its own key, say one for the head and one for the body. Calibrate once and it feels the same in every game.</p>
       </div>
       <div class="feat brackets reveal">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg>
         <div class="ix">02</div><h3>Adaptive smoothing</h3>
-        <p>Per profile: None, EMA, or an adaptive 1€ filter — steady when slow, responsive on flicks — with optional SORT-style tracking and prediction.</p>
+        <p>Choose per profile how smooth the aim should be. The adaptive filter stays calm on small corrections and still keeps up with fast flicks.</p>
       </div>
       <div class="feat brackets reveal">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="7" width="20" height="10" rx="5"/><circle cx="8" cy="12" r="1.6"/><path d="M15 11v2M17 12h-4"/></svg>
         <div class="ix">03</div><h3>Gamepad in & out</h3>
-        <p>Aim on a virtual Xbox stick via ViGEm, or map controller ↔ keyboard both ways with per-profile hotkeys and presets.</p>
+        <p>Aim with a virtual Xbox stick, or use a controller in a mouse-and-keyboard game and the other way round. Presets included.</p>
       </div>
       <div class="feat brackets reveal">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h4M7 13h6M15 8v8"/></svg>
         <div class="ix">04</div><h3>OCR HUD reader</h3>
-        <p>Read ammo, health or weapon names off the HUD and gate triggers or auto-switch profiles on AND/OR condition trees.</p>
+        <p>Reads ammo, health or the weapon name from the screen. Triggers and profiles can react to it, for example switch profile when you pick up a sniper.</p>
       </div>
       <div class="feat brackets reveal">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3a4 4 0 0 1 4 4c2 .5 3 2 3 4a4 4 0 0 1-1 7H6a4 4 0 0 1-1-7c0-2 1-3.5 3-4a4 4 0 0 1 4-4Z"/><path d="M9 13l2 2 4-4"/></svg>
         <div class="ix">05</div><h3>LLM AutoPlay</h3>
-        <p>Feed detections + OCR context to a local Ollama model and let it drive scripted actions with cooldowns and a learning mode.</p>
+        <p>Let the AI play by itself. It goes by what it sees on screen, runs on your own PC with Ollama and can learn from how you play.</p>
       </div>
       <div class="feat brackets reveal">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h10"/><circle cx="19" cy="18" r="2"/></svg>
         <div class="ix">06</div><h3>Anti-recoil profiles</h3>
-        <p>Record real recoil patterns and replay them, or use image-based compensation — all per-profile with hotkey & OCR activation.</p>
+        <p>Record the recoil of a weapon once and PowerAim pulls against it while you shoot. Switch profiles by key or by the weapon name on screen.</p>
       </div>
       <div class="feat brackets reveal">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4l-6 6 2.9 2.9 6-6a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-2.4 2.5-2.5Z"/></svg>
         <div class="ix">07</div><h3>Dynamic tools</h3>
-        <p>Build your own tools from move / click / send-key / run-exe / delay steps with option variables — each on a start key, next to the Magnifier and HWID spoofer.</p>
+        <p>Build your own little tools from steps like move, click, press a key, start a program or wait, and start them with one key. Magnifier and HWID spoofer are built in.</p>
       </div>
     </div>
-    <div class="reveal" style="margin-top:28px">
-      <a class="btn btn-ghost" href="features.html">Explore all features
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    <div class="more-cta reveal">
+      <div><b>That's only the start.</b><span>Triggers, overlays, masks, configs per game and a lot more.</span></div>
+      <a class="btn btn-primary btn-lg" href="features.html">Explore all features
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </a>
     </div>
   </div>
@@ -400,24 +474,24 @@
   <div class="wrap">
     <div class="sec-head reveal">
       <div class="sec-kicker mono">// The control layer</div>
-      <h2 class="sec-title">One keybind system that ties it all together.</h2>
-      <p class="sec-sub">The quiet superpower. Any binding can be a <b style="color:var(--ink)">chord across keyboard, mouse and gamepad at once</b> — even something like <span style="font-family:var(--mono);background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:2px 7px;font-size:12.5px;color:var(--ink);white-space:nowrap">Ctrl + Q + Gamepad LT</span> — and you can bind almost anything: a toggle, an aim / trigger / mapping profile, a custom tool, or a whole config. Combine them and a single key builds complex, game-specific workflows.</p>
+      <h2 class="sec-title">Put anything on a key.</h2>
+      <p class="sec-sub">A key can also be a <b style="color:var(--ink)">combination of keyboard, mouse and controller buttons</b>, for example <span style="font-family:var(--mono);background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:2px 7px;font-size:12.5px;color:var(--ink);white-space:nowrap">Ctrl + Q + Gamepad LT</span>. You can bind almost anything to it: a switch, an aim, trigger or mapping profile, a custom tool or a whole config.</p>
     </div>
     <div class="feat-grid">
       <div class="feat brackets reveal">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg>
         <div class="ix">Chords</div><h3>Mix every device</h3>
-        <p>Hold the combination, release to record. <span class="mono" style="text-transform:none;letter-spacing:0">Ctrl+Shift+X</span>, <span class="mono" style="text-transform:none;letter-spacing:0">Ctrl+Left-Click</span>, <span class="mono" style="text-transform:none;letter-spacing:0">X+B</span> on a pad, or cross-device like <span class="mono" style="text-transform:none;letter-spacing:0">Ctrl+Q+LT</span> — it fires only while every part is held.</p>
+        <p>Hold the combination, release to record. <span class="mono" style="text-transform:none;letter-spacing:0">Ctrl+Shift+X</span>, <span class="mono" style="text-transform:none;letter-spacing:0">Ctrl+Left-Click</span>, <span class="mono" style="text-transform:none;letter-spacing:0">X+B</span> on a pad, or cross-device like <span class="mono" style="text-transform:none;letter-spacing:0">Ctrl+Q+LT</span>. It only fires while all parts are held down.</p>
       </div>
       <div class="feat brackets reveal">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="8" width="20" height="8" rx="4"/><circle cx="16" cy="12" r="2.5" fill="currentColor" stroke="none"/></svg>
         <div class="ix">Toggles</div><h3>Switch anything by key</h3>
-        <p>Every toggle, profile and tool has its own hotkey chip — click it, record a key or chord, done. Flip Aim Assist, arm a trigger, enable a mapping or start a tool mid-game without alt-tabbing.</p>
+        <p>Every switch, profile and tool has its own key field. Click it and press the key. Then you can turn things on and off in the game without tabbing out.</p>
       </div>
       <div class="feat brackets reveal">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="12" r="2"/><path d="M7 6h6a4 4 0 0 1 4 4M7 18h6a4 4 0 0 0 4-4"/></svg>
         <div class="ix">Workflows</div><h3>Build complex flows</h3>
-        <p>Chain it: one chord loads a config that brings its own tools, triggers and profiles; another toggles a weapon setup; a third runs a multi-step tool. Keys + configs + tools + triggers = almost anything.</p>
+        <p>One key can load a whole config with its own tools, triggers and profiles. Another switches your weapon setup, a third starts a tool. Put together, that covers a lot.</p>
       </div>
     </div>
     <div class="reveal" style="margin-top:28px">
@@ -435,24 +509,24 @@
   <div class="wrap">
     <div class="sec-head reveal">
       <div class="sec-kicker mono">// External by design</div>
-      <h2 class="sec-title">It never touches the game.</h2>
-      <p class="sec-sub">PowerAim works entirely from the outside — it watches the screen and moves your input devices. It does <b style="color:var(--ink)">not</b> read or write game memory, inject code, or load a kernel driver, and <b style="color:var(--ink)">everything it draws</b> — every window and overlay — stays out of screen recordings.</p>
+      <h2 class="sec-title">It stays outside the game.</h2>
+      <p class="sec-sub">PowerAim only looks at the screen and sends normal input. It does <b style="color:var(--ink)">not</b> read or write game memory, inject code, or load a kernel driver. Its own windows and overlays do not show up in screen recordings.</p>
     </div>
     <div class="feat-grid">
       <div class="feat brackets reveal">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
         <div class="ix">No injection</div><h3>No hooks, no driver</h3>
-        <p>It reads the screen through the OS desktop-duplication API — the same one OBS uses — and never attaches to, hooks, or reads the memory of the game process. Nothing is injected.</p>
+        <p>The screen is read the same way OBS reads it. PowerAim never attaches to the game, never reads its memory and injects nothing.</p>
       </div>
       <div class="feat brackets reveal">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="6" width="20" height="9" rx="3"/><path d="M6 19h12M9 11h.01M13 10h4"/></svg>
         <div class="ix">Real input only</div><h3>Just your devices</h3>
-        <p>Output is ordinary mouse, keyboard and virtual-controller input — the same kind your real hardware sends. It can even route moves through your Razer, Logitech or ddxoft mouse driver.</p>
+        <p>What comes out is normal mouse, keyboard and controller input, like from your own hardware. If you want, it goes through your Razer, Logitech or ddxoft driver.</p>
       </div>
       <div class="feat brackets reveal">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><path d="m4 4 16 16"/></svg>
         <div class="ix">Hidden from capture</div><h3>Invisible to recorders</h3>
-        <p>Everything PowerAim draws — the main window, every dialog and the crosshair / FOV / ESP overlays — is excluded from screen capture (<span class="mono" style="font-size:11px">WDA_EXCLUDEFROMCAPTURE</span>), so OBS, Discord screen-share, recorders and capture-based tools see nothing of it. On by default.</p>
+        <p>The PowerAim windows and overlays are hidden from screen capture, so OBS, Discord screen share and other recorders do not see them. This is on by default and can be switched off in the settings.</p>
       </div>
     </div>
   </div>
@@ -465,19 +539,19 @@
   <div class="wrap">
     <div class="sec-head reveal">
       <div class="sec-kicker mono">// Free, not freemium</div>
-      <h2 class="sec-title">Don't rent your aim.</h2>
-      <p class="sec-sub">You can pay a recurring subscription for a single-purpose aim tool — or use PowerAim, which does far more, for free.</p>
+      <h2 class="sec-title">Free, and it stays free.</h2>
+      <p class="sec-sub">Other aim tools cost a monthly fee. PowerAim does more and costs nothing.</p>
     </div>
     <div class="feat-grid" style="grid-template-columns:1fr 1fr">
       <div class="feat brackets reveal">
         <div class="kind mono" style="color:var(--muted,#9c95b8);margin-bottom:10px">Paid aim tools · e.g. NobleAim</div>
         <h3>A subscription, for aim alone</h3>
-        <p>Single-purpose tools like <a href="#" target="_blank" rel="noopener" style="color:var(--cyan,#60cdff)">NobleAim</a> charge a recurring fee — mostly for aim and a trigger, closed-source, with the meter always running.</p>
+        <p>Single-purpose tools like <a href="#" target="_blank" rel="noopener" style="color:var(--cyan,#60cdff)">NobleAim</a> charge a recurring fee, mostly for aim and a trigger, closed-source, with the meter always running.</p>
       </div>
       <div class="feat brackets reveal">
         <div class="kind mono" style="color:var(--purple-bright,#a87bf0);margin-bottom:10px">PowerAim · free</div>
         <h3>Get far more, for nothing</h3>
-        <p>Aim profiles, triggers, anti-recoil, OCR, gamepad in &amp; out, LLM AutoPlay, custom tools and the overlays — <b style="color:var(--ink,#ece9f7)">free</b> and source-available, 100% local, no key system, no paywall, no ads.</p>
+        <p>Aim profiles, triggers, anti-recoil, OCR, gamepad in &amp; out, LLM AutoPlay, custom tools and the overlays. All of it <b style="color:var(--ink,#ece9f7)">free</b>, without a key system or ads, and it runs on your own PC.</p>
       </div>
     </div>
   </div>
@@ -491,14 +565,14 @@
     <div class="sec-head reveal">
       <div class="sec-kicker mono">// Get PowerAim · <span id="dl-version">latest</span></div>
       <h2 class="sec-title">Three ways to run it.</h2>
-      <p class="sec-sub">Not sure? Grab the <b style="color:var(--ink)">Installer</b> — it sets everything up. Pick a zip if you prefer a portable build.</p>
+      <p class="sec-sub">Not sure which one? Take the <b style="color:var(--ink)">Installer</b>, it sets everything up. The zips are portable builds.</p>
     </div>
     <div class="dl-grid" id="dl-cards">
       <div class="loading" style="grid-column:1/-1">Fetching the latest release…</div>
     </div>
     <p class="dl-note reveal">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
-      <span><b style="color:var(--ink)">DirectML</b> runs on virtually any GPU (AMD, Intel, NVIDIA) and is the safe default. <b style="color:var(--ink)">CUDA</b> is fastest but needs an NVIDIA card with the CUDA runtime. Both are the same app — only the inference backend differs.</span>
+      <span><b style="color:var(--ink)">DirectML</b> runs on virtually any GPU (AMD, Intel, NVIDIA) and is the safe default. <b style="color:var(--ink)">CUDA</b> is fastest but needs an NVIDIA card with the CUDA runtime. Both are the same app, only the inference backend differs.</span>
     </p>
   </div>
 </section>
@@ -510,8 +584,8 @@
   <div class="wrap">
     <div class="sec-head reveal">
       <div class="sec-kicker mono">// Releases &amp; download stats</div>
-      <h2 class="sec-title">Every version, every change.</h2>
-      <p class="sec-sub">Live from GitHub — what shipped, when, and how many times each build was downloaded.</p>
+      <h2 class="sec-title">Releases</h2>
+      <p class="sec-sub">Straight from GitHub: what changed in each version and how often it was downloaded.</p>
     </div>
 
     <div class="feat brackets reveal" style="margin-bottom:34px;padding:26px 26px 28px">
@@ -533,7 +607,7 @@
     <div class="sec-head reveal">
       <div class="sec-kicker mono">// Keep it going</div>
       <h2 class="sec-title">Support the <span class="accent-text">project</span></h2>
-      <p class="sec-sub">PowerAim is free, source-available, and has no key system, no paywall and no ads &mdash; and it stays that way. Supporting it is entirely optional; it pays for the things the project cannot do for free.</p>
+      <p class="sec-sub">PowerAim is free and will stay free. If you want to help, you can support it here. That is completely optional.</p>
     </div>
     <div class="connect-inline reveal">
       <gilde-support project="fgilde/AI-Ming" widget="support" inline theme="dark" accent="#8e5ae0" language="auto" title="Support PowerAim" width="560" radius="18" padding="28" show-logo="true" show-description="false" show-homepage="false" show-preview-notice="false" show-footer="false" show-support-hint="false" support-layout="rows" show-support-icons="true" show-support-qr="true">Support PowerAim</gilde-support>
@@ -550,12 +624,12 @@
     <div class="ms-grid">
       <a class="feat ms-card" href="https://fgilde.github.io/PowerClean/" target="_blank" rel="noopener">
         <div class="ms-name"><span class="dot" style="background:var(--cyan)"></span>PowerClean</div>
-        <p>A clean, ad-free way to keep your PC tidy — safely clears temp files, caches and clutter across Windows, browsers and dev tools, with a visual disk-usage treemap, a registry cleaner (with automatic backups) and autostart / process managers. No ads, no upsells, no nagging.</p>
+        <p>A clean, ad-free way to keep your PC tidy. It safely clears temp files, caches and clutter across Windows, browsers and dev tools, with a visual disk-usage treemap, a registry cleaner (with automatic backups) and autostart / process managers. No ads, no upsells, no nagging.</p>
         <span class="ms-link">Visit PowerClean →</span>
       </a>
       <a class="feat ms-card" href="https://audiola.de/" target="_blank" rel="noopener">
         <div class="ms-name"><span class="dot" style="background:var(--purple-bright)"></span>Audiola</div>
-        <p>A complete audio workstation — arrange multi-track projects, split songs into stems (vocals, drums, bass…), master to broadcast-standard loudness, and use on-device AI to swap or clone voices, synthesize speech and transcribe, plus immersive 3D spatial mixing.</p>
+        <p>A complete audio workstation: arrange multi-track projects, split songs into stems (vocals, drums, bass…), master to broadcast-standard loudness, and use on-device AI to swap or clone voices, synthesize speech and transcribe, plus immersive 3D spatial mixing.</p>
         <span class="ms-link">Visit Audiola →</span>
       </a>
     </div>
@@ -567,7 +641,7 @@
     <div class="foot-grid">
       <div class="foot-brand">
         <a class="brand" href="#top"><img src="images/PowerAim-icon-256.png" alt="" /><span>Power<b class="accent-text">Aim</b></span></a>
-        <p>AI-powered aim alignment for accessibility, training and fun — a decoupled architecture, Fluent UI, gamepad, OCR, AutoPlay and a fast capture &amp; inference pipeline.</p>
+        <p>AI aim help for Windows. For accessibility, practice and fun.</p>
         <div class="foot-contact">
           <gilde-contact project="fgilde/AI-Ming" widget="contact" data-btn="ghost" theme="dark" accent="#8e5ae0" language="auto" title="Contact PowerAim" width="560" radius="18" padding="28" show-logo="true" show-description="true" show-homepage="false" show-preview-notice="false" show-footer="false">Contact PowerAim</gilde-contact>
         </div>
@@ -594,7 +668,7 @@
       </div>
     </div>
     <div class="foot-bottom">
-      <span>© <span id="year"></span> <a href="https://www.gilde.org" target="_blank" rel="noopener">Florian Gilde | gilde.org</a> · Source-available under PolyForm Noncommercial — commercial use prohibited.</span>
+      <span>© <span id="year"></span> <a href="https://www.gilde.org" target="_blank" rel="noopener">Florian Gilde | gilde.org</a> · Source-available under PolyForm Noncommercial. Commercial use prohibited.</span>
       <span>Use responsibly &amp; only where permitted.</span>
     </div>
   </div>
@@ -619,7 +693,7 @@
       "- Two new ESP drawing methods: `MediaDrawingContext` and `GDI Context`" },
     { tag_name:"1.0.0.5", published_at:"2024-10-08", archived:true, body:
       "- Full **CUDA** support with automatic CPU fallback\n"+
-      "- Multi-trigger system — several independently configurable triggers\n"+
+      "- Multi-trigger system: several independently configurable triggers\n"+
       "- Sequential key sending with configurable delays\n"+
       "- Trigger cooldown / break-time\n"+
       "- Multiple aim keys" },
@@ -721,7 +795,7 @@
 
     // stats
     countTo(document.getElementById("st-total"), totalAll);
-    document.getElementById("st-latest").textContent = latest.tag_name || "—";
+    document.getElementById("st-latest").textContent = latest.tag_name || "…";
     countTo(document.getElementById("st-releases"), all.length);
     document.getElementById("dl-version").textContent = latest.tag_name || "latest";
 
@@ -729,9 +803,9 @@
     var p = pick(latest.assets);
     var cards = "";
     cards += dlCard({rec:true, kind:"// 01 · setup.exe", title:"Installer", tag:latest.tag_name,
-      desc:"The easy path — installs PowerAim and everything it needs. Best if you just want it running.", asset:p.installer});
+      desc:"The easy path. Installs PowerAim and everything it needs. Best if you just want it running.", asset:p.installer});
     cards += dlCard({kind:"// 02 · portable zip", title:"DirectML build", tag:latest.tag_name,
-      desc:"Portable. Runs on any modern GPU — AMD, Intel or NVIDIA. The safe default.", asset:p.directml});
+      desc:"Portable. Runs on any modern GPU: AMD, Intel or NVIDIA. The safe default.", asset:p.directml});
     cards += dlCard({kind:"// 03 · portable zip", title:"CUDA build", tag:latest.tag_name,
       desc:"Portable. Fastest inference on NVIDIA GPUs with the CUDA runtime installed.", asset:p.cuda});
     document.getElementById("dl-cards").innerHTML = cards;
@@ -766,7 +840,7 @@
         ? '<span class="rdc" style="opacity:.65">archived</span>'
         : '<span class="rdc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 21h16"/></svg>'+fmt(relDownloads(r))+'</span>';
       var body = md(r.body) + (r.archived
-        ? '<p style="margin-top:16px;color:var(--muted-2);font-size:13px">Archived release — downloads for this version are no longer hosted.</p>'
+        ? '<p style="margin-top:16px;color:var(--muted-2);font-size:13px">Archived release. Downloads for this version are no longer hosted.</p>'
         : '');
       return '<details class="rel reveal"'+(i===0?" open":"")+'>'+
         '<summary>'+
@@ -786,7 +860,7 @@
   function countTo(el, target){
     if(!el) return;
     // If the tab is hidden, requestAnimationFrame is throttled/paused — just set the final value
-    // so a background-tab load still shows the right number instead of the "—" placeholder.
+    // so a background-tab load still shows the right number instead of the "…" placeholder.
     if(document.hidden){ el.textContent = fmt(target); return; }
     var start=0, dur=1100, t0=null;
     function step(ts){ if(!t0)t0=ts; var p=Math.min((ts-t0)/dur,1);
@@ -885,6 +959,57 @@
     });
   }
   applyQr();
+})();
+</script>
+<script src="js/hero-sim.js" defer></script>
+<script>
+(function(){
+  "use strict";
+  // Hero spotlight follows the pointer.
+  var hero = document.querySelector(".hero");
+  hero.addEventListener("pointermove", function (e) {
+    var r = hero.getBoundingClientRect();
+    hero.style.setProperty("--mx", (e.clientX - r.left) + "px");
+    hero.style.setProperty("--my", (e.clientY - r.top) + "px");
+  });
+
+  // Video tutorials: one player, a playlist beside it; the next video starts when one ends.
+  var VIDEOS = [
+    { id:"tour",      title:"First steps",               desc:"Capture source, master switch, models and configs" },
+    { id:"gamepad",   title:"Controller setup",          desc:"The right order so games read the virtual pad" },
+    { id:"aim",       title:"Aim profiles",              desc:"Aim keys, feel, Classic vs. V2 engine, live tuning" },
+    { id:"triggers",  title:"Triggers",                  desc:"Actions, trigger keys, OCR conditions, timing" },
+    { id:"detection", title:"Detection, FOV & overlays", desc:"Field of view, classes, masks, aim point, anti-recoil" },
+    { id:"settings",  title:"Settings: what & why",     desc:"Confidence, focus rules, movement methods, OCR, replay" },
+    { id:"mapping",   title:"Controller ↔ keyboard",     desc:"Mapping profiles, presets and press styles" },
+    { id:"autoplay",  title:"AutoPlay",                  desc:"Decision layers, local models, learning" },
+    { id:"tools",     title:"Tools",                     desc:"Magnifier, crosshair, anti-AFK and custom tools" }
+  ];
+  var DUR = { tour:"1:48", gamepad:"1:36", aim:"2:56", triggers:"1:57", detection:"1:37", settings:"2:14", mapping:"1:40", autoplay:"1:34", tools:"0:47" };
+  var video = document.getElementById("learn-video");
+  var list = document.getElementById("learn-list");
+  var title = document.getElementById("learn-title"), desc = document.getElementById("learn-desc");
+  var current = 0;
+  VIDEOS.forEach(function (v, i) {
+    var li = document.createElement("li");
+    li.innerHTML = '<button type="button"><span class="no">' + String(i + 1).padStart(2, "0") + '</span>' +
+      '<span><b></b><small></small></span><span class="dur">' + (DUR[v.id] || "") + '</span></button>';
+    li.querySelector("b").textContent = v.title;
+    li.querySelector("small").textContent = v.desc;
+    li.firstChild.addEventListener("click", function () { load(i, true); });
+    list.appendChild(li);
+  });
+  function load(i, play) {
+    current = i;
+    var v = VIDEOS[i];
+    video.poster = "videos/" + v.id + ".jpg";
+    video.src = "videos/" + v.id + ".mp4";
+    title.textContent = v.title; desc.textContent = v.desc;
+    list.querySelectorAll("button").forEach(function (b, k) { b.setAttribute("aria-current", String(k === i)); });
+    if (play) video.play().catch(function () {});
+  }
+  video.addEventListener("ended", function () { if (current + 1 < VIDEOS.length) load(current + 1, true); });
+  load(0, false);
 })();
 </script>
 </body>

@@ -19,7 +19,7 @@ something to you, there is a way to say so.
 
 ## Get in touch
 
-For anything reproducible — a crash, a detection that misbehaves, a game that needs a profile —
+For anything reproducible (a crash, a detection that misbehaves, a game that needs a profile),
 an [issue on GitHub](https://github.com/fgilde/AI-Ming/issues) is the better place: it is public,
 searchable, and other users benefit from the answer. Everything else fits here.
 
@@ -27,7 +27,7 @@ searchable, and other users benefit from the answer. Everything else fits here.
 
 ## Support the project
 
-PowerAim is free, source-available and has no key system, no paywall and no ads — and it stays
+PowerAim is free, source-available and has no key system, no paywall and no ads, and it stays
 that way. Supporting it is entirely optional; it pays for the things the project cannot do for
 free, such as a code signing certificate.
 

@@ -6,7 +6,7 @@ nav_order: 4
 
 # Setup Best Practices
 
-A practical guide for getting PowerAim into a *good* state — not just a *working* state. Read after [Your First Aim]({{ '/getting-started/first-aim' | relative_url }}); each section assumes you can already see PowerAim move the mouse.
+A practical guide for getting PowerAim into a *good* state, not just a *working* state. Read after [Your First Aim]({{ '/getting-started/first-aim' | relative_url }}); each section assumes you can already see PowerAim move the mouse.
 
 ## Recommended setup order
 
@@ -15,7 +15,7 @@ Setting things up in this order avoids re-tuning later, because every step build
 1. **Pick a capture source.** Title bar → capture selector. Pick the monitor the game runs on, or capture the game's window directly. The crosshair, debug overlay and detection pipeline all follow this choice live, so getting it right first saves alt-tabbing.
 2. **Load a model.** Models & Configs → pick a model for your game (game-specific beats Universal). Watch the model name appear in the bottom status bar.
 3. **Pick a GPU for inference.** Title bar → GPU pill. On multi-GPU systems, choose the card *not* running the game. See [Performance](#performance) below.
-4. **Calibrate sensitivity.** Aim Tools → [Calibration Wizard]({{ '/features/calibration-wizard' | relative_url }}). Run it once *per game* and *per Movement Method* — the values aren't portable.
+4. **Calibrate sensitivity.** Aim Tools → [Calibration Wizard]({{ '/features/calibration-wizard' | relative_url }}). Run it once *per game* and *per Movement Method*; the values aren't portable.
 5. **Set up triggers.** Add at least a Primary Fire trigger with `NeedsDetection = true` so PowerAim never fires into empty air.
 6. **Record recoil patterns** for the weapons you use most ([Recoil Patterns]({{ '/features/recoil-patterns' | relative_url }})).
 7. **Create Anti-Recoil profiles** that reference those patterns ([Anti-Recoil]({{ '/features/anti-recoil' | relative_url }})). Bind each one to a free hotkey *and* wire up the OCR weapon switch so they self-activate.
@@ -47,7 +47,7 @@ The title-bar GPU pill writes `AISettings.InferenceGpuDeviceId`. Rule of thumb:
 - **Dual dedicated GPUs:** put inference on the secondary card.
 - **Single dGPU only:** leave it at `0`. Drop image size before changing devices.
 
-The diagnostic log at `%TEMP%\PowerAim_GpuEnum.log` shows every adapter PowerAim sees with VRAM + Vendor/Device IDs — useful when an expected GPU is missing from the picker.
+The diagnostic log at `%TEMP%\PowerAim_GpuEnum.log` shows every adapter PowerAim sees with VRAM + Vendor/Device IDs. This is useful when an expected GPU is missing from the picker.
 
 ### Picking a model size
 
@@ -55,7 +55,7 @@ Bigger models = better detections, more inference time. Watch the Debug Overlay'
 
 | Inference time | Verdict |
 |:---------------|:--------|
-| < 8 ms | Plenty of headroom — try a bigger model for better recall. |
+| < 8 ms | Plenty of headroom. Try a bigger model for better recall. |
 | 8–16 ms | Sweet spot for 60+ FPS games. |
 | > 16 ms | You're below 60 FPS of *AI processing*. Drop model size or image size. |
 
@@ -71,9 +71,9 @@ PowerAim is built for accessibility and training; it does not try to defeat anti
 
 AutoPlay-specific knobs (per profile):
 
-- **`MouseJitterPx = 1–4`** — subtle, "human-ish" wobble on AutoPlay aim. Bump it higher for noticeably noisy aim. `0` keeps determinism.
-- **`KeyDelayJitterMs = 5–15`** — keys don't all land on perfectly even tick boundaries.
-- **`MouseSensScale`** — tune per-game: high-sens game → `0.7`, low-sens game → `1.4`. Lets one profile cover several games without re-recording actions.
+- **`MouseJitterPx = 1–4`**: subtle, "human-ish" wobble on AutoPlay aim. Bump it higher for noticeably noisy aim. `0` keeps determinism.
+- **`KeyDelayJitterMs = 5–15`**: keys don't all land on perfectly even tick boundaries.
+- **`MouseSensScale`**: tune per-game: high-sens game → `0.7`, low-sens game → `1.4`. Lets one profile cover several games without re-recording actions.
 
 For the main aim path, EMA smoothening + a non-linear movement path (Cubic Bezier / Exponential) already give the assist a natural-feeling acceleration curve. Don't crank EMA past `0.4` or aim becomes laggy.
 
@@ -88,7 +88,7 @@ Each AutoPlay profile has a `UseOllama` toggle. Pick by use-case:
   - Best for: pure FPS reflex play, low-end machines, the moment you alt-tab and don't want LLM traffic.
 
 - **Ollama enabled (default)**
-  - Adds a "strategic intent" layer (every 0.5–2 s) that biases the heuristic — *explore / engage / retreat / hold / tactical*.
+  - Adds a "strategic intent" layer (every 0.5–2 s) that biases the heuristic: *explore / engage / retreat / hold / tactical*.
   - Helpful when you want context-aware behaviour: retreat on low health, reposition between fights, vary between modes.
   - Best for: games where positioning matters more than reaction time.
 
@@ -96,7 +96,7 @@ Toggle is honoured live. You can leave Ollama disabled for a sprint and re-enabl
 
 ## Multi-monitor and windowed games
 
-- **Pick the monitor PowerAim captures from the title bar selector.** It's a per-config setting, not a per-game one — change it when you change which monitor the game lives on.
+- **Pick the monitor PowerAim captures from the title bar selector.** It's a per-config setting, not a per-game one. Change it when you change which monitor the game lives on.
 - **Crosshair + Debug Overlay follow the capture source live.** No need to restart PowerAim when you move the game to a different monitor.
 - **Windowed games:** capture the window directly (process selector in the title bar) rather than the whole monitor. The capture area, crosshair, FOV ring and overlays all snap to the window's client rect.
 - **Borderless fullscreen** behaves like a normal monitor capture from PowerAim's perspective.
@@ -104,13 +104,13 @@ Toggle is honoured live. You can leave Ollama disabled for a sprint and re-enabl
 
 ## Common pitfalls
 
-- **Tuning sensitivity in MouseEvent, then switching to SendInput** — re-run the [Calibration Wizard]({{ '/features/calibration-wizard' | relative_url }}). Different backends emit slightly different deltas.
-- **Master Anti-Recoil toggle on, but no profile selected** — nothing fires. Open the profile list, pick one (its row toggle goes on).
-- **Per-profile hotkey "doesn't work"** — confirm the binding chip on the *row* shows the key, not just a global hotkey on the master toggle. They're different bindings.
-- **OCR weapon auto-switch never triggers** — the region needs to *actually contain text*. Open the on-screen OCR overlay, watch what the recognised value looks like, and use a substring you actually see (not what the HUD says — what OCR reads).
-- **Inference time spikes whenever you alt-tab** — expected; DXGI capture pauses during foreground transitions.
-- **AutoPlay locks W on forever** — a Continuous action got stuck because the model never picked anything else. Disable AutoPlay → keys release. Lower `DecisionInterval`, raise Temperature, or refine the GameContext prompt.
-- **Crosshair off-centre after picking a non-primary monitor** — that's fixed now (overlays follow `ICapture.CaptureArea` live). If you still see it, confirm the title bar capture selector matches the game's monitor.
+- **Tuning sensitivity in MouseEvent, then switching to SendInput**: re-run the [Calibration Wizard]({{ '/features/calibration-wizard' | relative_url }}). Different backends emit slightly different deltas.
+- **Master Anti-Recoil toggle on, but no profile selected**: nothing fires. Open the profile list, pick one (its row toggle goes on).
+- **Per-profile hotkey "doesn't work"**: confirm the binding chip on the *row* shows the key, not just a global hotkey on the master toggle. They're different bindings.
+- **OCR weapon auto-switch never triggers**: the region needs to *actually contain text*. Open the on-screen OCR overlay, watch what the recognised value looks like, and use a substring you actually see (what OCR reads, not what the HUD says).
+- **Inference time spikes whenever you alt-tab**: expected; DXGI capture pauses during foreground transitions.
+- **AutoPlay locks W on forever**: a Continuous action got stuck because the model never picked anything else. Disable AutoPlay → keys release. Lower `DecisionInterval`, raise Temperature, or refine the GameContext prompt.
+- **Crosshair off-centre after picking a non-primary monitor**: that's fixed now (overlays follow `ICapture.CaptureArea` live). If you still see it, confirm the title bar capture selector matches the game's monitor.
 
 ## Pre-flight checklist before a game session
 
