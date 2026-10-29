@@ -61,6 +61,8 @@ public partial class MainWindow
         var aimProfileList = new global::PowerAim.UI.UILibrary.AimProfileList { Margin = new Thickness(4) };
         aimProfileList.BindTo(() => AppConfig.Current.AimSettings.Profiles);
         AimAssist.Children.Add(aimProfileList);
+        AimAssist.AddButton(Locale.LiveTuning, b => b.ToolTip = Locale.LiveTuningDescription).Reader.Click += (_, _) =>
+            PowerAim.UI.Visuality.LiveTuningWindow.Open(this);
 
         AimAssist.AddSeparator();
         AimAssist.Visibility = GetVisibilityFor(nameof(AimAssist));

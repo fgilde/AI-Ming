@@ -1355,5 +1355,8 @@
   "CaptureDevice": "Capture card",
   "SelectCaptureDevice": "Capture from a video input (capture card)",
   "CaptureDeviceFlip": "Flip vertically",
-  "NoCaptureDevices": "No video input devices found."
+  "NoCaptureDevices": "No video input devices found.",
+  "LiveTuning": "Live tuning…",
+  "LiveTuningDescription": "A small window that stays on top with the response sliders of the aim profile in use and of the gamepad output — tune while the game runs.",
+  "ResetResponseDefaults": "Reset response defaults"
 }

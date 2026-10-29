@@ -1355,5 +1355,8 @@
   "CaptureDevice": "Capture-Karte",
   "SelectCaptureDevice": "Von einem Videoeingang aufnehmen (Capture-Karte)",
   "CaptureDeviceFlip": "Vertikal spiegeln",
-  "NoCaptureDevices": "Keine Videoeingänge gefunden."
+  "NoCaptureDevices": "Keine Videoeingänge gefunden.",
+  "LiveTuning": "Live-Tuning…",
+  "LiveTuningDescription": "Ein kleines Fenster, das im Vordergrund bleibt, mit den Reaktions-Reglern des aktiven Aim-Profils und der Gamepad-Ausgabe – zum Einstellen während das Spiel läuft.",
+  "ResetResponseDefaults": "Reaktions-Standardwerte wiederherstellen"
 }
