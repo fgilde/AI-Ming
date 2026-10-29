@@ -239,6 +239,16 @@ public class AimProfile : EditableNotificationObject
     } = new();
 
     /// <summary>
+    ///     Off-gate: while any of these is held the profile does NOT aim, even with its aim key held
+    ///     (hipfire, melee, vehicles, ladders). Read directly by the resolver like <see cref="AimKeyBindings"/>.
+    /// </summary>
+    public ObservableCollection<StoredInputBinding> OffGateBindings
+    {
+        get;
+        set => SetProperty(ref field, value ?? new());
+    } = new();
+
+    /// <summary>
     ///     Whether this profile participates at all. Replaces the old single-active radio: every
     ///     enabled profile is "live" and engages independently whenever its own <see cref="AimKeyBindings"/>
     ///     is held (and its OCR condition, if any, is met). Lets the user keep a profile configured but

@@ -1306,5 +1306,7 @@
   "StickAntiStrafe": "Anti-strafe",
   "StickAntiStrafeTooltip": "Counters the crosshair drift from strafing with the left stick, only in the direction of the target. 10–30 light, 50 strong. 0 = off.",
   "StickInvertAiY": "Invert aim Y",
-  "StickInvertAiYTooltip": "Invert only the aim's vertical output, for games with inverted look. Your own stick is not affected."
+  "StickInvertAiYTooltip": "Invert only the aim's vertical output, for games with inverted look. Your own stick is not affected.",
+  "AimProfileOffGate": "Off-gate (suppresses aim)",
+  "AimProfileOffGateHelp": "While one of these is held this profile does not aim, even with its aim key held — e.g. hipfire, melee, vehicle or ladder buttons. The off-gate wins."
 }

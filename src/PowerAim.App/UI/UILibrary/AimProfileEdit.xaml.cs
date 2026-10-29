@@ -142,6 +142,8 @@ namespace PowerAim.UI.UILibrary
                 AimKeyPanel.AddMultiKeyChanger(Locale.AimProfileAimKey, Locale.AimProfileAimKeyHelp)
                     .BindTo(() => Profile!.AimKeyBindings)
                     .Changed += (_, _) => UpdateAimKeyWarning();
+                AimKeyPanel.AddMultiKeyChanger(Locale.AimProfileOffGate, Locale.AimProfileOffGateHelp)
+                    .BindTo(() => Profile!.OffGateBindings);
                 UpdateAimKeyWarning();
             }
             catch (Exception ex)

@@ -114,28 +114,11 @@ public class AimSettings : BaseSettings
     {
         try
         {
-            AimProfile? best = null;
-            int bestSpecificity = 0;
             // Snapshot both levels: the UI thread may add/remove profiles OR edit a profile's aim-keys
             // (via MultiKeyChanger) while the aim thread enumerates here.
-            foreach (var p in Profiles.ToArray())
-            {
-                if (!p.Enabled || !p.OcrConditionMet) continue;
-                if (!PowerAim.Class.ProcessMatcher.FocusedProcessMatches(p.MatchProcess)) continue;
-                var keys = p.AimKeyBindings;
-                if (keys == null) continue;
-                int held = 0;
-                foreach (var k in keys.ToArray())
-                {
-                    if (k is not { IsValid: true }) continue;
-                    if (!InputBindingManager.IsHoldingBindingFor(k, TimeSpan.FromSeconds(k.MinTime))) continue;
-                    int spec = k.IsCombo ? k.Components!.Count : 1;
-                    if (spec > held) held = spec;
-                }
-                // First profile with the highest specificity wins (strict >), so list order is the tiebreak.
-                if (held > bestSpecificity) { bestSpecificity = held; best = p; }
-            }
-            return best;
+            return Resolve(Profiles.ToArray(),
+                k => InputBindingManager.IsHoldingBindingFor(k, TimeSpan.FromSeconds(k.MinTime)),
+                p => PowerAim.Class.ProcessMatcher.FocusedProcessMatches(p.MatchProcess));
         }
         catch
         {
@@ -143,6 +126,38 @@ public class AimSettings : BaseSettings
             // aim loop — nothing engaged this frame; next frame resolves cleanly.
             return null;
         }
+    }
+
+    /// <summary>
+    ///     The resolver's rule with the input state and game filter passed in: a profile is a candidate when
+    ///     it is enabled, its OCR condition is met, it is for the focused game, one of its aim keys is held
+    ///     and none of its off-gate keys is held (the off-gate wins).
+    /// </summary>
+    internal static AimProfile? Resolve(IEnumerable<AimProfile> profiles, Func<StoredInputBinding, bool> isHeld,
+        Func<AimProfile, bool> isForFocusedGame)
+    {
+        AimProfile? best = null;
+        int bestSpecificity = 0;
+        foreach (var p in profiles)
+        {
+            if (!p.Enabled || !p.OcrConditionMet) continue;
+            if (!isForFocusedGame(p)) continue;
+            var keys = p.AimKeyBindings;
+            if (keys == null) continue;
+            int held = 0;
+            foreach (var k in keys.ToArray())
+            {
+                if (k is not { IsValid: true }) continue;
+                if (!isHeld(k)) continue;
+                int spec = k.IsCombo ? k.Components!.Count : 1;
+                if (spec > held) held = spec;
+            }
+            if (held == 0) continue;
+            if (p.OffGateBindings?.ToArray().Any(k => k is { IsValid: true } && isHeld(k)) == true) continue;
+            // First profile with the highest specificity wins (strict >), so list order is the tiebreak.
+            if (held > bestSpecificity) { bestSpecificity = held; best = p; }
+        }
+        return best;
     }
 
     /// <summary>Snap <see cref="ActiveProfileId"/> to a real profile when it's empty or dangling.</summary>
