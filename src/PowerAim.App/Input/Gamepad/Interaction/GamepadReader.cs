@@ -36,14 +36,53 @@ public class GamepadReader : IXInputGamepadReader, IGamepadStateSource
     // otherwise scan all four. Never returns null so Controller is always assigned.
     private Controller ConnectController()
     {
-        var preferred = new Controller(_userIndex);
-        if (preferred.IsConnected) return preferred;
-        for (var i = UserIndex.One; i <= UserIndex.Four; i++)
+        _userIndex = ChooseSlot(_userIndex, s => new Controller(s).IsConnected, ExcludedSlot);
+        return new Controller(_userIndex);
+    }
+
+    /// <summary>
+    ///     XInput slot of our own virtual pad. Never read as input: the sender would mirror its own output
+    ///     back into itself (a feedback loop that keeps the stick deflected).
+    /// </summary>
+    public UserIndex? ExcludedSlot
+    {
+        get;
+        set
         {
-            var candidate = new Controller(i);
-            if (candidate.IsConnected) { _userIndex = i; return candidate; }
+            field = value;
+            if (value == _userIndex) UseSlot(ChooseSlot(_userIndex, s => new Controller(s).IsConnected, value));
         }
-        return preferred; // none connected yet — keep retrying the preferred slot
+    }
+
+    /// <summary>
+    ///     The preferred slot when it is connected and not excluded, else the first connected non-excluded slot,
+    ///     else a non-excluded slot to keep retrying.
+    /// </summary>
+    internal static UserIndex ChooseSlot(UserIndex preferred, Func<UserIndex, bool> isConnected, UserIndex? excluded)
+    {
+        if (preferred != excluded && isConnected(preferred)) return preferred;
+        for (var i = UserIndex.One; i <= UserIndex.Four; i++)
+            if (i != excluded && isConnected(i)) return i;
+        if (preferred != excluded) return preferred; // none connected yet — keep retrying the preferred slot
+        for (var i = UserIndex.One; i <= UserIndex.Four; i++)
+            if (i != excluded) return i;
+        return preferred;
+    }
+
+    /// <summary>The single slot connected in <paramref name="after"/> but not in <paramref name="before"/>; null if not exactly one.</summary>
+    internal static UserIndex? NewSlot(IReadOnlyCollection<UserIndex> before, IReadOnlyCollection<UserIndex> after)
+    {
+        var added = after.Except(before).ToList();
+        return added.Count == 1 ? added[0] : null;
+    }
+
+    /// <summary>XInput slots with a pad right now.</summary>
+    internal static List<UserIndex> ConnectedSlots()
+    {
+        var slots = new List<UserIndex>();
+        for (var i = UserIndex.One; i <= UserIndex.Four; i++)
+            if (new Controller(i).IsConnected) slots.Add(i);
+        return slots;
     }
 
     /// <summary>The XInput slot currently being read as the sync source.</summary>

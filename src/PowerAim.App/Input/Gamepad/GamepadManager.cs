@@ -58,7 +58,9 @@ public static class GamepadManager
 
         try
         {
+            var slotsBefore = Gamepad.Interaction.GamepadReader.ConnectedSlots();
             RawSender = CreateSender();
+            ExcludeOwnVirtualSlot(slotsBefore);
             // Wrap so the debug input visualizer observes every send, for any send mode.
             GamepadSender = RawSender == null ? null : new ReportingGamepadSender(RawSender);
             // Pass the physical controller along, but the sender now tolerates a missing one —
@@ -84,6 +86,26 @@ public static class GamepadManager
         {
             CanRead = true;
         }
+    }
+
+    /// <summary>XInput slot taken by our own virtual X360 pad, when it could be identified.</summary>
+    public static UserIndex? VirtualSlot { get; private set; }
+
+    /// <summary>
+    ///     A ViGEm X360 pad appears as a new XInput slot shortly after it connects. Find it and keep the XInput
+    ///     reader off it, so the physical sync source can never be our own output.
+    /// </summary>
+    private static void ExcludeOwnVirtualSlot(List<UserIndex> slotsBefore)
+    {
+        VirtualSlot = null;
+        if (RawSender is not GamepadSenderViGEm { CanWork: true }) return;
+        for (int i = 0; i < 15 && VirtualSlot == null; i++)
+        {
+            Thread.Sleep(20);
+            VirtualSlot = Gamepad.Interaction.GamepadReader.NewSlot(slotsBefore, Gamepad.Interaction.GamepadReader.ConnectedSlots());
+        }
+        if (GamepadReader is Gamepad.Interaction.GamepadReader xinput) xinput.ExcludedSlot = VirtualSlot;
+        if (VirtualSlot != null) PowerAim.Other.AppDebugLog.Info("Gamepad", $"Own virtual pad on XInput slot {VirtualSlot}; excluded from input.");
     }
 
     /// <summary>Install a reader, re-pointing the <see cref="ButtonEvent"/> facade at it (detaching the old).</summary>
