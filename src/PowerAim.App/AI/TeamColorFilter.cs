@@ -40,7 +40,8 @@ public static class TeamColorFilter
         int match = 0, total = 0;
         foreach (var region in SampleRegions(box, o, width, height))
             Count(bgra, stride, region, o.Range, ref match, ref total);
-        bool matching = total > 0 && match * 100.0 / total >= o.MatchPct;
+        if (total == 0) return false; // nothing to judge by (strips outside the frame) → keep
+        bool matching = match * 100.0 / total >= o.MatchPct;
         return o.Mode == TeamColorMode.SuppressMatching ? matching : !matching;
     }
 

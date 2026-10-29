@@ -71,4 +71,12 @@ public class TeamColorFilterTests
 
         Assert.False(TeamColorFilter.ShouldDrop(Frame(BarAbove, 30, 90, 230), Stride, W, H, topBox, o));
     }
+
+    [Fact]
+    public void Enemy_mode_keeps_a_box_it_cannot_sample()
+    {
+        var topBox = new RectangleF(40, 0, 20, 30); // nothing above it to look at
+
+        Assert.False(TeamColorFilter.ShouldDrop(Frame(BarAbove, 230, 30, 30), Stride, W, H, topBox, Options(TeamColorMode.KeepMatching)));
+    }
 }

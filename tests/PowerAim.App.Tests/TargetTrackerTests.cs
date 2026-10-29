@@ -61,7 +61,19 @@ public class TargetTrackerTests
         {
             Assert.Empty(tracker.Update([Box(300, 280)], 1.0 / 60));
             Assert.Empty(tracker.Update([], 1.0 / 60));
+            Assert.Empty(tracker.Update([], 1.0 / 60));
         }
+    }
+
+    [Fact]
+    public void A_single_dropped_frame_does_not_restart_the_confirmation()
+    {
+        // As before the confirmation gate: seen, one frame missed, seen again → aimable.
+        var tracker = new TargetTracker { MinHits = 2 };
+        tracker.Update([Box(300, 280)], 1.0 / 60);
+        tracker.Update([], 1.0 / 60);
+
+        Assert.Single(tracker.Update([Box(300, 280)], 1.0 / 60));
     }
 
     [Fact]

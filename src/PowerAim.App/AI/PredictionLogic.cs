@@ -258,7 +258,7 @@ public class PredictionLogic : IPredictionLogic, IDisposable
 
         var outputs = _onnxModel.OutputMetadata.Values.Select(m => m.Dimensions).ToList();
         var main = outputs.FirstOrDefault();
-        if (main != null && IsEndToEnd(main))
+        if (main != null && IsEndToEnd(main, _numDetections))
         {
             _numDetections = Math.Max(1, main[1]);
             _outputTransposed = true;
@@ -285,8 +285,9 @@ public class PredictionLogic : IPredictionLogic, IDisposable
     ///     True for an NMS-fused export: rows of <c>x1 y1 x2 y2 score class</c>, <c>[1, N, 6]</c> with
     ///     at most a few hundred rows (YOLOv10 / YOLO26 end-to-end heads).
     /// </summary>
-    internal static bool IsEndToEnd(int[] d)
-        => d.Length == 3 && d[0] <= 1 && d[2] == 6 && d[1] > 0 && d[1] < MinAnchorRows;
+    internal static bool IsEndToEnd(int[] d, int expectedAnchors = 0)
+        => d.Length == 3 && d[0] <= 1 && d[2] == 6 && d[1] > 0 && d[1] < MinAnchorRows
+           && d[1] != expectedAnchors; // a small-input two-class head has exactly the anchor count
 
     /// <summary>
     ///     Tell the raw head variants apart. <paramref name="channels"/> = C of the main output,
@@ -310,7 +311,10 @@ public class PredictionLogic : IPredictionLogic, IDisposable
         return new OutputFormat(ModelOutputKind.YoloV8Raw, Math.Max(1, channels - 4), 0, 0);
     }
 
-    /// <summary>Number of class names declared by the model's <c>names</c> metadata or a labels file; 0 if none.</summary>
+    /// <summary>
+    ///     Number of class names the model itself declares (<c>names</c> metadata); 0 if none. Deliberately not
+    ///     the labels file: that one is app-wide and may not match the model, which would mis-detect a head.
+    /// </summary>
     private int ReadLabelCount()
     {
         try
@@ -322,9 +326,6 @@ public class PredictionLogic : IPredictionLogic, IDisposable
                 if (value.StartsWith('{')) return JObject.Parse(value).Count;
                 if (value.StartsWith('[')) return JArray.Parse(value).Count;
             }
-            var labels = LabelsFileCandidates().FirstOrDefault(File.Exists);
-            if (labels != null)
-                return File.ReadAllLines(labels).Count(l => l.Trim().Length > 0 && !l.TrimStart().StartsWith('#'));
         }
         catch
         {

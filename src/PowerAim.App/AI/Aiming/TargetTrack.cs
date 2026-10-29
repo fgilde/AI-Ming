@@ -24,7 +24,7 @@ public sealed class TargetTrack
 
     public int Hits { get; private set; }
 
-    /// <summary>Hits in a row without a missed frame; resets after a dropout.</summary>
+    /// <summary>Hits in a row, tolerating a single dropped frame; resets after a longer dropout.</summary>
     public int ConsecutiveHits { get; private set; }
 
     /// <summary>Seconds since the last matched detection (0 while seen).</summary>
@@ -112,8 +112,9 @@ public sealed class TargetTrack
         ClassId = det.ClassId;
         ClassName = det.ClassName ?? ClassName;
         Hits++;
-        // Predict already counted this frame as missed: 1 = seen last frame too.
-        ConsecutiveHits = MissedFrames <= 1 ? ConsecutiveHits + 1 : 1;
+        // Predict already counted this frame as missed: 1 = seen last frame too, 2 = one frame dropped,
+        // which still continues the streak (a single dropout must not delay or block the lock).
+        ConsecutiveHits = MissedFrames <= 2 ? ConsecutiveHits + 1 : 1;
         MissedFrames = 0;
         MissedSeconds = 0;
         if (ConsecutiveHits >= minHits) Confirmed = true;

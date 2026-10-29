@@ -106,6 +106,7 @@ public class AutoTriggerAction : BaseAction
                 if (!_triggerKeyStates.TryGetValue(trigger, out var currentState) || currentState != keyState.Value || keyState.Value == KeyPressState.DownAndUp)
                 {
                     await Task.Delay(delay, cancellationToken); // Delay for this specific trigger
+                    if (trigger.HoldWhileTrue && !IsArmed(trigger)) return; // the target left during the delay
                     await SendActionsAsync(trigger, keyState.Value, true, cancellationToken: cancellationToken);
 
                     // Update the state to the current one
@@ -305,6 +306,14 @@ public class AutoTriggerAction : BaseAction
     {
         CancelAllTriggers();
         return base.OnPause();
+    }
+
+    /// <summary>A model switch or fatal error disposes the action: release any key still held (charge / hold).</summary>
+    public override void Dispose()
+    {
+        if (AppConfig.Current?.ToggleState is { } toggles) toggles.PropertyChanged -= CheckChange;
+        CancelAllTriggers();
+        base.Dispose();
     }
 
     private bool TriggerIsOnCooldown(ActionTrigger trigger)

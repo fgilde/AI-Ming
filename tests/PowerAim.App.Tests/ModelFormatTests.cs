@@ -13,6 +13,11 @@ public class ModelFormatTests
         PredictionFilter.CreatePredictions(tensor, new Rectangle(0, 0, 640, 640), 640, 0, numClasses, Names,
             minConf, null, 0, 640, 0, 640, outputTransposed: transposed, kind: kind, keypointCount: keypoints);
 
+    [Fact]
+    public void A_small_input_two_class_head_is_not_taken_for_end_to_end()
+        // 160 px input → 525 anchors; channels-last two-class head [1, 525, 6].
+        => Assert.False(PredictionLogic.IsEndToEnd([1, 525, 6], MathUtil.CalculateNumDetections(160)));
+
     [Theory]
     [InlineData(new[] { 1, 300, 6 }, true)]
     [InlineData(new[] { -1, 300, 6 }, true)]

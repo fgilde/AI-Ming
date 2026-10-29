@@ -171,11 +171,15 @@ namespace PowerAim.Input
                 {
                     try
                     {
+                        // Also after the movement method left "Gamepad": the stick still has to go back to neutral.
                         var sender = GamepadManager.GamepadSender;
-                        if (sender is { CanWork: true } && GamepadAimActive) PushStick(sender, StickOptions());
+                        if (sender is { CanWork: true }) PushStick(sender, StickOptions());
                     }
                     catch { /* ignored */ }
-                    System.Threading.Thread.Sleep(2);
+                    // Fast while an aim vector is live or the physical stick is passed through, slow when idle.
+                    bool busy = _stickMixer.IsFresh(_stickClock.Elapsed.TotalMilliseconds)
+                                || AppConfig.Current?.ControllerSettings?.ManualOverridePct > 0;
+                    System.Threading.Thread.Sleep(busy ? 2 : 15);
                 }
             })
             {
