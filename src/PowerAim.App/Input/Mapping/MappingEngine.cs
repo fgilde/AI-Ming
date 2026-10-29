@@ -96,39 +96,58 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
     }
 
     /// <summary>
-    ///     Pause every virtual-pad channel that <paramref name="profile"/> writes to. Once paused,
-    ///     the shared sender's <c>SyncLoop</c> no longer mirrors the physical pad onto that
-    ///     channel — meaning our <c>SetButton/Slider/Axis</c> writes survive instead of being
-    ///     instantly overwritten.
+    ///     Every virtual-pad channel <paramref name="profile"/> takes over: the targets it writes to and — for a
+    ///     pad-to-pad remap (A → B) — the pad source too, or the physical A would still pass through next to B.
+    ///     Items are <see cref="GamepadButton"/>, <see cref="GamepadSlider"/> or <see cref="GamepadAxis"/>.
     /// </summary>
-    private static void PauseOwnedChannels(ControllerMappingProfile profile)
+    internal static List<object> OwnedChannels(ControllerMappingProfile profile)
     {
-        if (!VirtualReady) return;
-        var sender = GamepadManager.GamepadSender!;
+        var channels = new List<object>();
+        void Add(MappingInputKind kind, int code)
+        {
+            object? channel = kind switch
+            {
+                MappingInputKind.GamepadButton => ((XboxButtonId)code).ToGamepadButton(),
+                MappingInputKind.GamepadTrigger => code == 0 ? GamepadSlider.LeftTrigger : GamepadSlider.RightTrigger,
+                MappingInputKind.GamepadStickDirection => AxisForStickDirection((GamepadStickDirection)code).Axis,
+                _ => null,
+            };
+            if (channel != null && !channels.Contains(channel)) channels.Add(channel);
+        }
         foreach (var m in profile.Mappings)
         {
             if (!m.Enabled) continue;
-            switch (m.TargetKind)
-            {
-                case MappingInputKind.GamepadButton:
-                    sender.PauseSync(((XboxButtonId)m.TargetCode).ToGamepadButton());
-                    break;
-                case MappingInputKind.GamepadTrigger:
-                    sender.PauseSync(m.TargetCode == 0 ? GamepadSlider.LeftTrigger : GamepadSlider.RightTrigger);
-                    break;
-                case MappingInputKind.GamepadStickDirection:
-                    var (ax, _) = AxisForStickDirection((GamepadStickDirection)m.TargetCode);
-                    sender.PauseSync(ax);
-                    break;
-            }
+            Add(m.TargetKind, m.TargetCode);
+            if (IsGamepadKind(m.SourceKind) && IsGamepadKind(m.TargetKind)) Add(m.SourceKind, m.SourceCode);
         }
         // Mouse-to-stick sentinel takes RightThumb X+Y regardless of source.
         if (profile.Mappings.Any(m => m.Enabled
                                        && m.SourceKind == MappingInputKind.MouseButton
                                        && m.SourceCode == MouseMotionSentinel))
         {
-            sender.PauseSync(GamepadAxis.RightThumbX);
-            sender.PauseSync(GamepadAxis.RightThumbY);
+            if (!channels.Contains(GamepadAxis.RightThumbX)) channels.Add(GamepadAxis.RightThumbX);
+            if (!channels.Contains(GamepadAxis.RightThumbY)) channels.Add(GamepadAxis.RightThumbY);
+        }
+        return channels;
+    }
+
+    /// <summary>
+    ///     Pause every virtual-pad channel that <paramref name="profile"/> owns. Once paused, the shared
+    ///     sender's <c>SyncLoop</c> no longer mirrors the physical pad onto that channel — meaning our
+    ///     <c>SetButton/Slider/Axis</c> writes survive instead of being instantly overwritten.
+    /// </summary>
+    private static void PauseOwnedChannels(ControllerMappingProfile profile)
+    {
+        if (!VirtualReady) return;
+        var sender = GamepadManager.GamepadSender!;
+        foreach (var channel in OwnedChannels(profile))
+        {
+            switch (channel)
+            {
+                case GamepadButton b: sender.PauseSync(b); break;
+                case GamepadSlider sl: sender.PauseSync(sl); break;
+                case GamepadAxis ax: sender.PauseSync(ax); break;
+            }
         }
     }
 
@@ -136,33 +155,17 @@ public sealed class MappingEngine : INotifyPropertyChanged, IDisposable
     {
         if (!VirtualReady) return;
         var sender = GamepadManager.GamepadSender!;
-        foreach (var m in profile.Mappings)
+        foreach (var channel in OwnedChannels(profile))
         {
-            if (!m.Enabled) continue;
-            switch (m.TargetKind)
+            switch (channel)
             {
-                case MappingInputKind.GamepadButton:
-                    sender.ResumeSync(((XboxButtonId)m.TargetCode).ToGamepadButton());
-                    break;
-                case MappingInputKind.GamepadTrigger:
-                    sender.ResumeSync(m.TargetCode == 0 ? GamepadSlider.LeftTrigger : GamepadSlider.RightTrigger);
-                    break;
-                case MappingInputKind.GamepadStickDirection:
-                    var (ax, _) = AxisForStickDirection((GamepadStickDirection)m.TargetCode);
-                    sender.ResumeSync(ax);
-                    break;
+                case GamepadButton b: sender.ResumeSync(b); break;
+                case GamepadSlider sl: sender.ResumeSync(sl); break;
+                case GamepadAxis ax: sender.ResumeSync(ax); break;
             }
-        }
-        if (profile.Mappings.Any(m => m.Enabled
-                                       && m.SourceKind == MappingInputKind.MouseButton
-                                       && m.SourceCode == MouseMotionSentinel))
-        {
-            sender.ResumeSync(GamepadAxis.RightThumbX);
-            sender.ResumeSync(GamepadAxis.RightThumbY);
         }
     }
 
-    /// <summary>Helper — what axis/sign a stick direction maps onto.</summary>
     private static (GamepadAxis Axis, short PositiveDir) AxisForStickDirection(GamepadStickDirection d) => d switch
     {
         GamepadStickDirection.LeftStickUp     => (GamepadAxis.LeftThumbY, +1),
