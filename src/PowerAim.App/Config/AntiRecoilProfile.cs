@@ -90,6 +90,15 @@ public class AntiRecoilProfile : EditableNotificationObject
     /// <summary>Stable identifier for the radio activation. Lives in <see cref="AntiRecoilSettings.ActiveProfileId"/>.</summary>
     public string Id { get; set; }
 
+    /// <summary>Independent copy for trying variants: new id, name + copy suffix, inactive (a new id is never the active one).</summary>
+    public AntiRecoilProfile Duplicate()
+    {
+        var copy = ConfigCopy.Clone(this);
+        copy.Id = Guid.NewGuid().ToFormattedId();
+        copy.Name = Name + Locale.CopySuffix;
+        return copy;
+    }
+
     /// <summary>Free-text label for the picker / notification ("AK-47", "Vandal", "Sniper").</summary>
     public string Name
     {

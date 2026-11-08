@@ -72,6 +72,13 @@ namespace PowerAim.UI.UILibrary
             });
         }
 
+        /// <summary>Copy below the original, to try a variant without touching it.</summary>
+        private void DuplicateProfile_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as FrameworkElement)?.Tag is not AimProfile source) return;
+            Profiles.Insert(Profiles.IndexOf(source) + 1, source.Duplicate());
+        }
+
         private void DeleteProfile_Click(object sender, RoutedEventArgs e)
         {
             if ((sender as FrameworkElement)?.Tag is not AimProfile profile) return;

@@ -54,6 +54,16 @@ public class AimProfile : EditableNotificationObject
 
     public string Id { get; set; }
 
+    /// <summary>Independent copy for trying variants: new id, name + copy suffix, disabled.</summary>
+    public AimProfile Duplicate()
+    {
+        var copy = ConfigCopy.Clone(this);
+        copy.Id = Guid.NewGuid().ToFormattedId();
+        copy.Name = Name + Locale.CopySuffix;
+        copy.Enabled = false; // same keys as the original: it must not fire next to it
+        return copy;
+    }
+
     public string Name
     {
         get;

@@ -60,6 +60,16 @@
                                     Width="50" />
 
                                 <Button Style="{StaticResource FluentIconButton}"
+                                    ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='Duplicate'}"
+                                    Tag="{Binding}"
+                                    MouseDown="UIElement_OnMouseDown"
+                                    Click="DuplicateTrigger_Click"
+                                    Foreground="{DynamicResource FluentTextPrimary}"
+                                    Content="&#xE8C8;"
+                                    Padding="0,0,0,0"
+                                    FontSize="20"
+                                    Width="50" />
+                                <Button Style="{StaticResource FluentIconButton}"
                                     ToolTip="{Binding Converter={StaticResource localeConverter}, ConverterParameter='DeleteTrigger'}"
                                     Tag="{Binding}"
                                     MouseDown="UIElement_OnMouseDown"

@@ -61,6 +61,13 @@ namespace PowerAim.UI.UILibrary
             });
         }
 
+        /// <summary>Copy below the original, to try a variant without touching it.</summary>
+        private void DuplicateTrigger_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as FrameworkElement)?.Tag is not ActionTrigger source) return;
+            Triggers.Insert(Triggers.IndexOf(source) + 1, source.Duplicate());
+        }
+
         private void DeleteTrigger_Click(object sender, RoutedEventArgs e)
         {
             if ((sender as FrameworkElement)?.Tag is ActionTrigger trigger
