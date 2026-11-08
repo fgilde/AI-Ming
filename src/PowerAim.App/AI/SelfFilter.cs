@@ -73,6 +73,8 @@ public sealed class SelfFilter
             if (!track.IsSelf && reachesOut && box.Height > MinHeightShare * size && track.StillMs >= LearnMs)
                 track.IsSelf = true;
             // Where "I" was a moment ago: a new box reaching out of the bottom there is me in another pose.
+            // (Not the mirrored place after a shoulder swap: on a real recording that took a person walking
+            // past on the other side for me. The swapped side is learned like the first one, in LearnMs.)
             if (!track.IsSelf && reachesOut && _memory.Any(m => IoU(box, m.Box) > 0.3f))
                 track.IsSelf = true;
             tracks.Add(track);

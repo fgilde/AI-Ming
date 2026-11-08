@@ -88,6 +88,45 @@ public class SelfFilterTests
         Assert.Contains(Enemy, kept.Select(p => p.Rectangle));
     }
 
+    private static RectangleF Mirror(RectangleF r) => new(Size - r.Right, r.Y, r.Width, r.Height);
+
+    [Fact]
+    public void Works_the_same_with_the_character_on_the_right()
+    {
+        var f = new SelfFilter();
+        var enemyLeft = Mirror(Enemy);
+        List<Prediction> kept = [];
+        for (int i = 0; i <= 30; i++) kept = Frame(f, i * 16.7, Jitter(Mirror(Me), i), Jitter(Mirror(MyHead), i), enemyLeft);
+
+        Assert.Equal([enemyLeft], kept.Select(p => p.Rectangle));
+    }
+
+    [Fact]
+    public void After_switching_shoulders_I_am_learned_again_on_the_other_side()
+    {
+        var f = new SelfFilter();
+        for (int i = 0; i <= 30; i++) Frame(f, i * 16.7, Me);
+
+        // Shoulder swap: the character jumps to the right. Not taken for me before it stayed put there
+        // (the mirrored place is not trusted: a person walking past there would be lost)...
+        double t0 = 31 * 16.7;
+        Assert.Single(Frame(f, t0, Mirror(Me)));
+        // ...and dropped once it did.
+        List<Prediction> kept = [];
+        for (int i = 1; i <= 30; i++) kept = Frame(f, t0 + i * 16.7, Mirror(Me), Enemy);
+        Assert.Equal([Enemy], kept.Select(p => p.Rectangle));
+    }
+
+    [Fact]
+    public void An_enemy_where_I_stood_before_the_shoulder_swap_is_kept_if_it_does_not_reach_out_of_the_bottom()
+    {
+        var f = new SelfFilter();
+        for (int i = 0; i <= 30; i++) Frame(f, i * 16.7, Me);
+        var standing = new RectangleF(60, 200, 120, 300);   // a whole enemy in that area, feet inside the capture
+
+        Assert.Equal(2, Frame(f, 600, Mirror(Me), standing).Count);
+    }
+
     [Fact]
     public void The_remembered_place_expires()
     {
