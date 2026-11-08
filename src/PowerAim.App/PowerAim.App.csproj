@@ -45,7 +45,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <IsCuda>true</IsCuda>
+    <IsCuda>false</IsCuda>
     <UseWinAnonymizer>false</UseWinAnonymizer>
   </PropertyGroup>
 

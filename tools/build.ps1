@@ -147,6 +147,7 @@ function Build-ProjectWithCuda {
         '-p:PublishSingleFile=true',
         '--self-contained', 'false',
         '-p:DebugType=None',
+        '-p:UseWinAnonymizer=true',
         "-p:IsCuda=$isCudaValue",
         '-o', $publishDir
     )
