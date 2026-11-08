@@ -277,9 +277,8 @@ namespace PowerAim.Input
                         if (sender is { CanWork: true }) PushStick(sender, StickOptions());
                     }
                     catch { /* ignored */ }
-                    // Fast while an aim vector is live or the physical stick is passed through, slow when idle.
-                    bool busy = _stickMixer.IsFresh(_stickClock.Elapsed.TotalMilliseconds)
-                                || AppConfig.Current?.ControllerSettings?.ManualOverridePct > 0;
+                    // Fast while an aim vector is live or the stick is still ours, slow once it is back with the pad.
+                    bool busy = _stickMixer.IsFresh(_stickClock.Elapsed.TotalMilliseconds) || _claimedBy != null;
                     System.Threading.Thread.Sleep(busy ? 2 : 15);
                 }
             })

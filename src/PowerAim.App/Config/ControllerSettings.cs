@@ -61,6 +61,20 @@ public class ControllerSettings : BaseSettings
     {
         get;
         set => SetField(ref field, Math.Clamp(value, 0, 100));
+    } = 100;
+
+    /// <summary>1 = the manual override default moved from 0 to 100 (<see cref="MigrateManualOverrideDefault"/>).</summary>
+    public int SchemaVersion { get; set; }
+
+    /// <summary>
+    ///     Configs saved before carry the old default 0 (aim only): the user couldn't steer against the aim.
+    ///     Raise it once; a 0 chosen afterwards stays.
+    /// </summary>
+    internal void MigrateManualOverrideDefault()
+    {
+        if (SchemaVersion >= 1) return;
+        if (ManualOverridePct == 0) ManualOverridePct = 100;
+        SchemaVersion = 1;
     }
 
     /// <summary>0–50: counter the crosshair drift from strafing with the left stick, toward the target only.</summary>

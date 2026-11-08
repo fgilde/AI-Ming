@@ -145,7 +145,6 @@ public class StickOutputIntegrationTests
         try
         {
             cfg.DropdownState.MouseMovementMethod = MouseMovementMethod.Gamepad;
-            Assert.Equal(0, cfg.ControllerSettings.ManualOverridePct); // default: no blending while aiming
             InputSender.Move(10, 0);
             Assert.Contains(nameof(GamepadAxis.RightThumbX), pad.Paused); // aiming owns the stick
 

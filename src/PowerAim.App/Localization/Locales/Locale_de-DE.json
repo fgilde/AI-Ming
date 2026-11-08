@@ -1301,7 +1301,7 @@
   "StickResponseCurve": "Ansprechkurve des Spiels",
   "StickResponseCurveTooltip": "Wie das Spiel Stick-Ausschlag in Drehgeschwindigkeit umsetzt. Der Aim lenkt mit der Umkehrung aus, damit Korrekturen proportional bleiben. Im Zweifel Linear.",
   "StickManualOverride": "Manuelle Übernahme",
-  "StickManualOverrideTooltip": "Wie stark dein physischer rechter Stick übernimmt, während der Aim aktiv ist: Anteil = dieser % × dein Stick-Ausschlag. Gibt dir den rechten Stick außerdem zwischen Aim-Korrekturen zurück. 0 = nur Aim.",
+  "StickManualOverrideTooltip": "Wie stark dein physischer rechter Stick übernimmt, während der Aim aktiv ist, damit du gegenlenken kannst: Anteil = dieser % × dein Stick-Ausschlag. 0 = nur Aim. Ohne Ziel gehört der Stick immer dir.",
   "StickAntiStrafe": "Anti-Strafe",
   "StickAntiStrafeTooltip": "Gleicht die Fadenkreuz-Drift beim Strafen mit dem linken Stick aus, nur in Richtung Ziel. 10–30 leicht, 50 stark. 0 = aus.",
   "StickInvertAiY": "Aim-Y invertieren",

@@ -358,6 +358,7 @@ public class AppConfig : BaseSettings
         // config doesn't double-seed anything.
         Current.AntiRecoilSettings?.MigrateLegacyIfNeeded();
         Current.MigrateSmartNeuralSwitch();
+        Current.ControllerSettings?.MigrateManualOverrideDefault();
         // Seed a Default aim profile from the live aim settings on first load under the profile
         // schema, and repair a dangling/empty active id. Idempotent.
         Current.AimSettings?.MigrateLegacyIfNeeded();
