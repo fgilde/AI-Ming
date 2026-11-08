@@ -155,6 +155,17 @@ public sealed class StickMixer
         lock (_gate) return nowMs - _aiAtMs < ReleaseAfterMs;
     }
 
+    /// <summary>
+    ///     True once the aim let go and neutral has been out for <see cref="PassThroughDelayMs"/>: the stick can go
+    ///     back to the virtual pad's own sync, which mirrors the physical stick.
+    /// </summary>
+    public bool CanHandBack(double nowMs)
+    {
+        lock (_gate)
+            return nowMs - _aiAtMs >= ReleaseAfterMs
+                   && !double.IsNegativeInfinity(_releasedAtMs) && nowMs - _releasedAtMs >= PassThroughDelayMs;
+    }
+
     public (double X, double Y) Next(double nowMs, double userX, double userY, double leftX, StickShapeOptions o)
     {
         lock (_gate)

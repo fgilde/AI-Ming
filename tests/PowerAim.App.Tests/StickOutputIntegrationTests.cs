@@ -135,6 +135,39 @@ public class StickOutputIntegrationTests
     }
 
     [Fact]
+    public async Task The_aim_stick_goes_back_to_the_physical_pad_once_the_aim_lets_go()
+    {
+        TestConfig.Ensure();
+        var cfg = AppConfig.Current;
+        var method = cfg.DropdownState.MouseMovementMethod;
+        var pad = new RecordingSender();
+        UseSender(pad);
+        try
+        {
+            cfg.DropdownState.MouseMovementMethod = MouseMovementMethod.Gamepad;
+            Assert.Equal(0, cfg.ControllerSettings.ManualOverridePct); // default: no blending while aiming
+            InputSender.Move(10, 0);
+            Assert.Contains(nameof(GamepadAxis.RightThumbX), pad.Paused); // aiming owns the stick
+
+            for (int waited = 0; pad.Paused.Contains(nameof(GamepadAxis.RightThumbX)) && waited < 1000; waited += 10) await Task.Delay(10);
+
+            // Without a target the pad's own sync mirrors the user's right stick again.
+            Assert.DoesNotContain(nameof(GamepadAxis.RightThumbX), pad.Paused);
+            Assert.DoesNotContain(nameof(GamepadAxis.RightThumbY), pad.Paused);
+            Assert.Equal(0, pad.Last(GamepadAxis.RightThumbX)); // neutral was sent before handing back
+
+            InputSender.Move(10, 0); // the next correction takes it over again
+            Assert.Contains(nameof(GamepadAxis.RightThumbX), pad.Paused);
+            Assert.Equal(2000, pad.Last(GamepadAxis.RightThumbX));
+        }
+        finally
+        {
+            cfg.DropdownState.MouseMovementMethod = method;
+            UseSender(null);
+        }
+    }
+
+    [Fact]
     public async Task Southpaw_aims_with_the_left_stick()
     {
         TestConfig.Ensure();

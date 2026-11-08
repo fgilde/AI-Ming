@@ -113,9 +113,9 @@ namespace PowerAim.Input
         private static void ClaimAimStick(IGamepadSender sender)
         {
             bool left = AppConfig.Current?.ControllerSettings?.AimStickLeft == true;
-            if (ReferenceEquals(sender, _claimedBy) && left == _claimedLeft) return;
-            lock (_stickSendGate)
+            lock (_stickSendGate) // also against HandBackAimStick on the mixer thread
             {
+                if (ReferenceEquals(sender, _claimedBy) && left == _claimedLeft) return;
                 if (ReferenceEquals(sender, _claimedBy))
                 {
                     var (oldX, oldY) = AimAxes(_claimedLeft);
@@ -140,8 +140,8 @@ namespace PowerAim.Input
             // CRITICAL: take ownership of the right-stick axes ONCE — otherwise the sender's
             // SyncLoop (mirror physical→virtual every 1 ms) overwrites our values back to the
             // physical pad's state (0 if nothing is plugged in) immediately after we write them.
-            // Same root cause that broke the mapping engine.
-            ClaimAimStick(sender);
+            // Same root cause that broke the mapping engine. Set the fresh vector first, so the mixer
+            // thread doesn't hand the stick back in between.
             // ±150 px clipping → roughly full deflection.
             const double scale = 200.0;
             double ax = Math.Clamp(dx * scale, -short.MaxValue, short.MaxValue) / short.MaxValue;
@@ -149,6 +149,7 @@ namespace PowerAim.Input
             var options = StickOptions();
             var (sx, sy) = PowerAim.Input.Gamepad.StickOutputShaper.ShapeAi(ax, ay, options);
             _stickMixer.SetAi(sx, sy, _stickClock.Elapsed.TotalMilliseconds);
+            ClaimAimStick(sender);
             PushStick(sender, options); // send now; the mixer thread only keeps it up to date
             EnsureStickThread();
         }
@@ -163,6 +164,7 @@ namespace PowerAim.Input
         {
             var sender = GamepadManager.GamepadSender;
             if (sender == null || !sender.CanWork) return false;
+            _stickMixer.SetAi(0, 0, _stickClock.Elapsed.TotalMilliseconds);
             ClaimAimStick(sender);
             sender.PauseSync(GamepadButton.RightShoulder);
             var started = System.Diagnostics.Stopwatch.StartNew();
@@ -196,10 +198,10 @@ namespace PowerAim.Input
         {
             var sender = GamepadManager.GamepadSender;
             if (sender == null || !sender.CanWork) return false;
-            ClaimAimStick(sender);
             var options = StickOptions();
             var (sx, sy) = PowerAim.Input.Gamepad.StickOutputShaper.ShapeAi(speedX, -speedY, options); // stick Y is up
             _stickMixer.SetAi(sx, sy, _stickClock.Elapsed.TotalMilliseconds);
+            ClaimAimStick(sender);
             PushStick(sender, options);
             EnsureStickThread();
             return true;
@@ -229,14 +231,25 @@ namespace PowerAim.Input
                 userY = (southpaw ? pad.LeftThumbY : pad.RightThumbY) / (double)short.MaxValue;
                 leftX = (southpaw ? pad.RightThumbX : pad.LeftThumbX) / (double)short.MaxValue;
             }
-            var (x, y) = _stickMixer.Next(_stickClock.Elapsed.TotalMilliseconds, userX, userY, leftX, options);
+            double now = _stickClock.Elapsed.TotalMilliseconds;
+            var (x, y) = _stickMixer.Next(now, userX, userY, leftX, options);
             short sx = (short)Math.Round(Math.Clamp(x, -1, 1) * short.MaxValue);
             short sy = (short)Math.Round(Math.Clamp(y, -1, 1) * short.MaxValue);
             lock (_stickSendGate)
             {
                 if (!ReferenceEquals(sender, _claimedBy)) return; // not ours (yet): its sync loop owns the sticks
-                if (_sentValid && sx == _sentStickX && sy == _sentStickY) return;
                 var (axisX, axisY) = AimAxes(_claimedLeft);
+                if (_sentValid && _sentStickX == 0 && _sentStickY == 0 && _stickMixer.CanHandBack(now))
+                {
+                    // No target any more and neutral is out: the pad's sync mirrors the user's stick again,
+                    // whatever the manual override is set to. The next aim vector claims it back.
+                    sender.ResumeSync(axisX);
+                    sender.ResumeSync(axisY);
+                    _claimedBy = null;
+                    _sentValid = false;
+                    return;
+                }
+                if (_sentValid && sx == _sentStickX && sy == _sentStickY) return;
                 sender.SetAxisValue(axisX, sx);
                 sender.SetAxisValue(axisY, sy);
                 _sentStickX = sx;
