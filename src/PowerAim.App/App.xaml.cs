@@ -15,6 +15,12 @@ public partial class App : System.Windows.Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        Console.Write("Starting...");
+#if UseWinAnonymizer
+        WinAnonymizer.Anonymizer.Set(new WinAnonymizer.DefaultAnonymizer());
+        Console.Write("Enable Anonymization...");
+#endif
+
         ThemeManager.Initialize();
         // Before anything creates the virtual pad: the controller order decides which pad games read.
         ShutdownMode = ShutdownMode.OnExplicitShutdown; // the hint is the only window yet — closing it must not end the app
