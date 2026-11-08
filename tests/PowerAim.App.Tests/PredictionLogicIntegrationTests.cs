@@ -21,6 +21,44 @@ public class PredictionLogicIntegrationTests
         throw new FileNotFoundException("default.onnx not found above the test output.");
     }
 
+    private static IEnumerable<string> OwnModels()
+    {
+        for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir != null; dir = dir.Parent)
+        {
+            var models = Path.Combine(dir.FullName, "models");
+            if (Directory.Exists(models) && File.Exists(Path.Combine(dir.FullName, "PowerAim.sln")))
+                return Directory.GetFiles(models, "* by PowerAim.onnx");
+        }
+        return [];
+    }
+
+    [Fact]
+    public void The_models_trained_for_the_store_load_as_single_class_enemy_detectors()
+    {
+        TestConfig.Ensure();
+        var ai = AppConfig.Current!.AISettings;
+        var (provider, precision) = (ai.PreferredExecutionProvider, ai.Precision);
+        ai.PreferredExecutionProvider = ExecutionProviderPreference.Cpu;
+        ai.Precision = ModelPrecision.Fp32;
+        try
+        {
+            var models = OwnModels().ToList();
+            Assert.NotEmpty(models);
+            foreach (var path in models)
+            {
+                using var logic = new PredictionLogic(path);
+                Assert.True(logic.IsLoaded, $"{Path.GetFileName(path)}: {logic.LoadError}");
+                var format = (OutputFormat)typeof(PredictionLogic).GetField("_outputFormat", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(logic)!;
+                Assert.Equal((ModelOutputKind.YoloV8Raw, 1, 640), (format.Kind, logic.NumClasses, logic.ImageSize));
+            }
+        }
+        finally
+        {
+            ai.PreferredExecutionProvider = provider;
+            ai.Precision = precision;
+        }
+    }
+
     [Fact]
     public void Default_model_runs_through_the_whole_parse_path()
     {

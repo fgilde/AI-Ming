@@ -29,6 +29,7 @@ This section covers:
 
 - **Bundled**: `bin\models\` ships several Universal models out of the box
 - **In-app Store**: Models tab → Downloadable Models. Merges PowerAim's `models/` folder with a configured upstream community model repo
+- **Trained for PowerAim**: models for newer games (Modern Warfare 4, Battlefield 6 and more), see [PowerAim Models]({{ '/models/trained-models' | relative_url }})
 - **Trained yourself**: see [Training Your Own]({{ '/models/training-your-own' | relative_url }})
 - **Manually placed**: drop any `.onnx` into `bin\models\` and click refresh
 
