@@ -64,11 +64,9 @@ public class SmartNeuralAntiRecoilAction : BaseAction
         {
             if (!base.Active) return false;
             if (!AppConfig.Current.ToggleState.AntiRecoil) return false;
-            if (!AppConfig.Current.ToggleState.SmartNeuralAntiRecoil) return false;
 
-            var profile = AppConfig.Current.AntiRecoilSettings?.EffectiveProfile;
-            if (profile == null) return true;
-            return profile.Mode == AntiRecoilMode.SmartNeural;
+            // Like the other engines: runs for the effective (active, game-matching) Smart Neural profile only.
+            return AppConfig.Current.AntiRecoilSettings?.EffectiveProfile?.Mode == AntiRecoilMode.SmartNeural;
         }
     }
 

@@ -1195,7 +1195,6 @@
   "CudaSetupDownloadingUnknown": "TensorRT wird geladen…  {0} MB",
   "CudaSetupExtracting": "TensorRT-Runtime wird entpackt…",
   "CudaSetupDone": "Fertig.",
-  "SmartNeuralAntiRecoil": "Smart-Neural-Anti-Rückstoß",
   "AntiRecoilModeSmartNeural": "Smart Neural (nur Bildschirm)",
   "SmartNeuralStrengthHelp": "Kompensationsstärke für den rein neuronalen / bildbasierten Anti-Rückstoß. Höher = stärkere Gegenbewegung.",
   "SmartNeuralConfidence": "Neuronale Konfidenzschwelle",

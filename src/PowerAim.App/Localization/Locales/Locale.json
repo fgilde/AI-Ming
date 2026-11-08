@@ -939,7 +939,6 @@
   "DetectionFlashColor": "Flash color",
   "DetectionFlashDuration": "Flash duration",
   "DetectionFlashHelp": "Briefly tints the crosshair when an enemy is detected, so you get a quiet visual cue without checking the debug overlay.",
-  "SmartNeuralAntiRecoil": "Smart Neural Anti-Recoil",
   "AntiRecoilModeSmartNeural": "Smart Neural (screen-only)",
   "SmartNeuralStrengthHelp": "Compensation strength for the pure neural / vision anti-recoil path. Higher = stronger counter-movement.",
   "SmartNeuralConfidence": "Neural confidence threshold",

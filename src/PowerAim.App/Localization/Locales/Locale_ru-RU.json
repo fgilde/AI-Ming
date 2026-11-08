@@ -955,7 +955,6 @@
   "DetectionFlashColor": "Цвет вспышки",
   "DetectionFlashDuration": "Длительность вспышки",
   "DetectionFlashHelp": "Кратко подсвечивает прицел при обнаружении противника — тихий визуальный сигнал без необходимости открывать отладочный оверлей.",
-  "SmartNeuralAntiRecoil": "Анти-отдача Smart Neural",
   "AntiRecoilModeSmartNeural": "Smart Neural (только экран)",
   "SmartNeuralStrengthHelp": "Сила компенсации для чисто нейронной / визуальной анти-отдачи. Выше = сильнее встречное движение.",
   "SmartNeuralConfidence": "Порог нейронной уверенности",

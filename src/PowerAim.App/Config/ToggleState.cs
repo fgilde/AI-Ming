@@ -173,15 +173,13 @@ public class ToggleState : BaseSettings
     }
 
     /// <summary>
-    ///     Master switch for pure neural-network (screen-only) anti-recoil.
-    ///     Independent of profile mode; when on, SmartNeuralAntiRecoilAction runs if a
-    ///     SmartNeural profile is active OR when this toggle alone is used as a global override.
+    ///     The removed global "Smart Neural Anti-Recoil" switch, read from older configs only: Smart Neural is an
+    ///     anti-recoil profile engine. <see cref="AppConfig.MigrateSmartNeuralSwitch"/> turns it into a profile
+    ///     and clears it, and it is not written back while false.
     /// </summary>
-    public bool SmartNeuralAntiRecoil
-    {
-        get;
-        set => SetField(ref field, value);
-    }
+    [System.Text.Json.Serialization.JsonPropertyName("SmartNeuralAntiRecoil")]
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool LegacySmartNeuralAntiRecoil { get; set; }
 
     public bool FOV
     {

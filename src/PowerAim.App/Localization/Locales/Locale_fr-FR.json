@@ -955,7 +955,6 @@
   "DetectionFlashColor": "Couleur du flash",
   "DetectionFlashDuration": "Durée du flash",
   "DetectionFlashHelp": "Teinte brièvement le réticule quand un ennemi est détecté, pour un signal visuel discret sans avoir à ouvrir le overlay de débogage.",
-  "SmartNeuralAntiRecoil": "Anti-recul Smart Neural",
   "AntiRecoilModeSmartNeural": "Smart Neural (écran uniquement)",
   "SmartNeuralStrengthHelp": "Force de compensation de l'anti-recul purement neuronal / visuel. Plus élevé = contre-mouvement plus fort.",
   "SmartNeuralConfidence": "Seuil de confiance neuronal",

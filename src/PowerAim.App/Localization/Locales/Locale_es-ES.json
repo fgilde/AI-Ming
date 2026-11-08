@@ -955,7 +955,6 @@
   "DetectionFlashColor": "Color del destello",
   "DetectionFlashDuration": "Duración del destello",
   "DetectionFlashHelp": "Tiñe brevemente el punto de mira cuando se detecta un enemigo, dándote un aviso visual discreto sin tener que abrir el overlay de depuración.",
-  "SmartNeuralAntiRecoil": "Anti retroceso Smart Neural",
   "AntiRecoilModeSmartNeural": "Smart Neural (solo pantalla)",
   "SmartNeuralStrengthHelp": "Intensidad de compensación del anti retroceso puramente neuronal / visual. Más alto = contramovimiento más fuerte.",
   "SmartNeuralConfidence": "Umbral de confianza neuronal",

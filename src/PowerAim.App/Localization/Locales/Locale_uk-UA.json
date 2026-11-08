@@ -955,7 +955,6 @@
   "DetectionFlashColor": "Колір спалаху",
   "DetectionFlashDuration": "Тривалість спалаху",
   "DetectionFlashHelp": "Коротко підсвічує приціл, коли виявлено ворога — тихий візуальний сигнал без необхідності відкривати відлагоджувальний оверлей.",
-  "SmartNeuralAntiRecoil": "Антивіддача Smart Neural",
   "AntiRecoilModeSmartNeural": "Smart Neural (лише екран)",
   "SmartNeuralStrengthHelp": "Сила компенсації для суто нейронної / візуальної антивіддачі. Вище = сильніший зустрічний рух.",
   "SmartNeuralConfidence": "Поріг нейронної впевненості",

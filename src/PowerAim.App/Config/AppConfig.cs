@@ -357,6 +357,7 @@ public class AppConfig : BaseSettings
         // method is idempotent (gated by its own schema-version field) so re-loading the same
         // config doesn't double-seed anything.
         Current.AntiRecoilSettings?.MigrateLegacyIfNeeded();
+        Current.MigrateSmartNeuralSwitch();
         // Seed a Default aim profile from the live aim settings on first load under the profile
         // schema, and repair a dangling/empty active id. Idempotent.
         Current.AimSettings?.MigrateLegacyIfNeeded();
@@ -390,6 +391,27 @@ public class AppConfig : BaseSettings
         ConfigLoaded?.Invoke(null, new EventArgs<AppConfig>(Current));
         Current.RaiseAllPropertiesChanged();
         return Current;
+    }
+
+    /// <summary>
+    ///     The global "Smart Neural Anti-Recoil" switch is gone; Smart Neural is a profile engine. On its own (no
+    ///     profile at all) the switch compensated with Smart Neural, so that config gets an active Smart Neural
+    ///     profile. Next to profiles it changed nothing beyond requiring itself for a Smart Neural profile, which
+    ///     now works alone. Idempotent: the switch is cleared and not written back.
+    /// </summary>
+    internal void MigrateSmartNeuralSwitch()
+    {
+        if (ToggleState is not { LegacySmartNeuralAntiRecoil: true } toggles) return;
+        toggles.LegacySmartNeuralAntiRecoil = false;
+        if (AntiRecoilSettings is not { Profiles.Count: 0 } antiRecoil) return;
+        var profile = new AntiRecoilProfile
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            Name = "Smart Neural",
+            Mode = AntiRecoilMode.SmartNeural,
+        };
+        antiRecoil.Profiles.Add(profile);
+        antiRecoil.ActiveProfileId = profile.Id;
     }
 
     /// <summary>

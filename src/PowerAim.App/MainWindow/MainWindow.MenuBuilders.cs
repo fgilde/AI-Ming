@@ -223,9 +223,6 @@ public partial class MainWindow
         AntiRecoil.AddToggleWithKeyBind(Locale.AntiRecoil, nameof(Locale.AntiRecoil), BindingManager)
             .BindTo(() => AppConfig.Current.ToggleState.AntiRecoil)
             .BindActiveStateColor(AntiRecoil);
-        AntiRecoil.AddToggleWithKeyBind(Locale.SmartNeuralAntiRecoil, nameof(Locale.SmartNeuralAntiRecoil), BindingManager)
-            .BindTo(() => AppConfig.Current.ToggleState.SmartNeuralAntiRecoil)
-            .BindActiveStateColor(AntiRecoil);
         AntiRecoil.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.AntiRecoilKeybind), () => keybind.AntiRecoilKeybind, BindingManager);
         AntiRecoil.AddKeyChanger(nameof(AppConfig.Current.BindingSettings.DisableAntiRecoilKeybind), () => keybind.DisableAntiRecoilKeybind, BindingManager);
 

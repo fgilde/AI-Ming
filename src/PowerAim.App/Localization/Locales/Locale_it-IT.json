@@ -955,7 +955,6 @@
   "DetectionFlashColor": "Colore del lampo",
   "DetectionFlashDuration": "Durata del lampo",
   "DetectionFlashHelp": "Tinge brevemente il mirino quando viene rilevato un nemico, per un segnale visivo discreto senza dover aprire l'overlay di debug.",
-  "SmartNeuralAntiRecoil": "Antirinculo Smart Neural",
   "AntiRecoilModeSmartNeural": "Smart Neural (solo schermo)",
   "SmartNeuralStrengthHelp": "Intensità di compensazione dell'antirinculo puramente neurale / visivo. Più alto = contromovimento più forte.",
   "SmartNeuralConfidence": "Soglia di confidenza neurale",
