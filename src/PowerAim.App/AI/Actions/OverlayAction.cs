@@ -25,15 +25,71 @@ public class OverlayAction : BaseAction
     private static readonly TimeSpan EmptyHold = TimeSpan.FromMilliseconds(150);
     /// <summary>
     ///     The WPF overlay window is shown and opaque. It carries the ESP boxes and the captured-area border,
-    ///     so it is shown while either is on — toggled only on change, never per frame.
+    ///     so it is shown while either is on — toggled only on change, never per frame. Null until the first
+    ///     check: the window starts visible, so the first state is always applied.
     /// </summary>
-    private bool _overlayShown;
+    private bool? _overlayShown;
     /// <summary>ESP boxes may still be on the overlay and must be cleared when ESP turns off.</summary>
     private bool _espDrawn;
     private bool _aimPointLayer;
+    /// <summary>The AI loop is processing frames (not paused by Global Active or auto-pause).</summary>
+    private volatile bool _running;
+    private readonly object _overlayGate = new();
+    private ToggleState? _watchedToggles;
+
     public OverlayAction()
     {
         EnsureFormOverlay();
+        // The captured-area border must follow its switches while the loop is paused (auto-pause holds the
+        // loop whenever PowerAim itself has focus), when no frame comes to update it.
+        WatchToggles(AppConfig.Current?.ToggleState);
+        AppConfig.ConfigLoaded += OnConfigLoaded;
+    }
+
+    /// <summary>
+    ///     The overlay window carries the ESP boxes and the captured-area border. The border is a setup aid and
+    ///     shows whenever Global Active is on, also while the loop is auto-paused; ESP boxes only with frames.
+    /// </summary>
+    internal static bool OverlayShouldShow(bool globalActive, bool running, bool esp, bool capturedArea)
+        => globalActive && (capturedArea || (running && esp));
+
+    private void OnConfigLoaded(object? sender, PowerAim.Types.EventArgs<AppConfig> e)
+    {
+        WatchToggles(e.Value?.ToggleState);
+        UpdateOverlay();
+    }
+
+    private void WatchToggles(ToggleState? toggles)
+    {
+        if (_watchedToggles != null) _watchedToggles.PropertyChanged -= OnToggleChanged;
+        _watchedToggles = toggles;
+        if (toggles != null) toggles.PropertyChanged += OnToggleChanged;
+    }
+
+    private void OnToggleChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(ToggleState.GlobalActive) or nameof(ToggleState.ShowCapturedArea) or nameof(ToggleState.ShowDetectedPlayer))
+            Task.Run(UpdateOverlay);
+    }
+
+    /// <summary>Show or hide the overlay window on change only: each call is a blocking UI-thread round trip.</summary>
+    private void UpdateOverlay()
+    {
+        lock (_overlayGate)
+        {
+            bool wanted = AppConfig.Current?.ToggleState is { } t
+                          && OverlayShouldShow(t.GlobalActive, _running, t.ShowDetectedPlayer, t.ShowCapturedArea);
+            if (wanted == _overlayShown) return;
+            try
+            {
+                if (wanted) ShowPlayerOverlay();
+                else HidePlayerOverlay();
+            }
+            catch (Exception)
+            {
+                // UI not ready or shutting down: the next frame or switch tries again.
+            }
+        }
     }
 
     // Drawing (GDI / DesktopDC / form invoke) is real synchronous work per frame — keep it off the
@@ -44,12 +100,8 @@ public class OverlayAction : BaseAction
     {
         var formActive = _useForm;
         _useForm = false;
-        // Show/hide only on change: each call is a blocking UI-thread round trip.
-        if (OverlayWanted != _overlayShown)
-        {
-            if (OverlayWanted) ShowPlayerOverlay();
-            else HidePlayerOverlay();
-        }
+        _running = true;
+        UpdateOverlay();
 
         if (Active && _playerOverlay is { } overlay)
         {
@@ -205,19 +257,35 @@ public class OverlayAction : BaseAction
 
     public override Task OnResume()
     {
-        // The overlay itself is shown by the next frame (ExecuteAsync) when ESP or the captured-area border is on.
         _lastDrawn = Array.Empty<Prediction>();
+        _running = true;
+        UpdateOverlay();
         return base.OnResume();
     }
 
     public override Task OnPause()
     {
-        HidePlayerOverlay();
+        _running = false;
+        // No frames while paused: clear the boxes; the window stays for the captured-area border if wanted.
+        if (_espDrawn)
+        {
+            _espDrawn = false;
+            _lastDrawn = Array.Empty<Prediction>();
+            try
+            {
+                _playerOverlay?.DrawPredictions(Array.Empty<Prediction>(), System.Windows.Rect.Empty);
+                _playerOverlay?.DrawPredictionCanvas(null);
+            }
+            catch (Exception) { /* window closing */ }
+        }
+        UpdateOverlay();
         return base.OnPause();
     }
 
     public override void Dispose()
     {
+        AppConfig.ConfigLoaded -= OnConfigLoaded;
+        WatchToggles(null);
         if (_playerOverlay != null)
         {
             _playerOverlay.Dispatcher.Invoke(() =>
@@ -240,8 +308,6 @@ public class OverlayAction : BaseAction
     }
 
     public override bool Active => base.Active && AppConfig.Current.ToggleState.ShowDetectedPlayer;
-
-    private bool OverlayWanted => base.Active && AppConfig.Current.ToggleState is { } t && (t.ShowDetectedPlayer || t.ShowCapturedArea);
 
 
     private void SetOverlayEnabled(bool enabled)
