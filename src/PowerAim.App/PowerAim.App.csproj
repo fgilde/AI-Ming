@@ -33,7 +33,7 @@
     <Title>
     </Title>
     <AssemblyName>Targetron</AssemblyName>
-    <Version>2.2.0.4</Version>
+    <Version>3.0.0.1</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>False</SignAssembly>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
@@ -118,8 +118,8 @@
     <PackageReference Include="Vortice.DXGI" Version="3.8.3" />
     <PackageReference Include="Accord.Statistics" Version="3.8.0" />
     <PackageReference Include="AntWpf" Version="1.0.5" />
-    <PackageReference Include="Nextended.Core" Version="10.1.48-local.1" />
-    <PackageReference Include="Nextended.UI" Version="10.1.48-local.1" />
+    <PackageReference Include="Nextended.Core" Version="10.1.52" />
+    <PackageReference Include="Nextended.UI" Version="10.1.52" />
     <PackageReference Include="MaterialDesignThemes" Version="4.9.0" />
     <PackageReference Include="WPF-UI" Version="3.0.5" />
     <PackageReference Include="MouseKeyHook" Version="5.7.1" />

@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="Nextended.Core" Version="10.1.48-local.1" />
+    <PackageReference Include="Nextended.Core" Version="10.1.52" />
   </ItemGroup>
 
 </Project>
