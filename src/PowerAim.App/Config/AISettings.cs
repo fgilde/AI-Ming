@@ -99,6 +99,13 @@ public class AISettings : BaseSettings
         set => SetField(ref field, value);
     }
 
+    /// <summary>Third-person game: the player's own character is recognised and ignored (see <see cref="PowerAim.AI.SelfFilter"/>).</summary>
+    public bool ThirdPerson
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
     /// <summary>
     ///     A detection whose centre is inside an ignore region is always dropped. Above 0 a detection is
     ///     also dropped when at least this share (%) of its box overlaps a region. 0 = centre only.

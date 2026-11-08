@@ -195,6 +195,8 @@ public partial class MainWindow
             .BindTo(() => AppConfig.Current.AISettings.IgnoreMinOverlapPct);
         PredictionConfig.AddToggle(Locale.CircularFov, t => t.ToolTip = Locale.CircularFovTooltip)
             .BindTo(() => AppConfig.Current.AISettings.CircularFov);
+        PredictionConfig.AddToggle(Locale.ThirdPerson, t => t.ToolTip = Locale.ThirdPersonTooltip)
+            .BindTo(() => AppConfig.Current.AISettings.ThirdPerson);
         PredictionConfig.AddSeparator();
         PredictionConfig.Visibility = GetVisibilityFor(nameof(PredictionConfig));
 

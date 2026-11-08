@@ -75,6 +75,7 @@ public class PredictionLogic : IPredictionLogic, IDisposable
 
     /// <inheritdoc />
     public int ImageSize => _imageSize;
+    private readonly SelfFilter _selfFilter = new();
 
     /// <inheritdoc />
     public int NumClasses => _numClasses;
@@ -742,6 +743,11 @@ public class PredictionLogic : IPredictionLogic, IDisposable
                 circularFov: AppConfig.Current?.AISettings?.CircularFov == true);
 
             filtered = ApplyTeamColorFilter(modelFrame, filtered);
+            // Third person: the own character stands next to the crosshair and is detected like an enemy.
+            if (AppConfig.Current?.AISettings?.ThirdPerson == true)
+                filtered = _selfFilter.Apply(filtered, _imageSize, System.Diagnostics.Stopwatch.GetTimestamp() * 1000.0 / System.Diagnostics.Stopwatch.Frequency);
+            else
+                _selfFilter.Reset();
             if (filtered.Count == 0)
             {
                 return [];

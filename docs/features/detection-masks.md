@@ -37,6 +37,17 @@ The Masking master toggle on the Aim Assist card (or via hotkey) enables or disa
 - **Ammo / weapon panel**: bright icons and numbers
 - **Crosshair art**: if the in-game crosshair somehow matches a class in your model
 
+## Third-person games
+
+In over-the-shoulder games (The Division, Fortnite, GTA and the like) your own character stands next to the
+crosshair, and a person model detects it like an enemy. A mask doesn't help here, because the character moves
+with every pose. Switch on **Third-person game** under Prediction Config instead.
+
+PowerAim then recognises your character on its own. It is a large box that reaches out of the bottom of the
+captured area and stays in the same place while the view turns. Your character is ignored for aiming, triggers
+and ESP, and so is your head inside it. It takes about half a second of standing still to learn. After that,
+cover and aiming poses in the same place are recognised at once.
+
 ## Tips
 
 - **Start with the killfeed.** It's by far the most common false-positive source.
