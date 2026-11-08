@@ -61,3 +61,11 @@
 #*.PDF   diff=astextplain
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
+
+###############################################################################
+# Model weights are binary. Without this, text=auto takes a weights file whose first
+# 8000 bytes hold no NUL for text and rewrites its line endings, which breaks the model.
+###############################################################################
+*.onnx   binary
+*.pt     binary
+*.engine binary
