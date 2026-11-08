@@ -12,13 +12,21 @@ namespace PowerAim;
 /// </summary>
 public partial class App : System.Windows.Application
 {
+    internal static Stack<string> Logs = new();
+
+    private void Log(string s)
+    {
+        Logs.Push(s);
+    }
+    
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        Console.Write("Starting...");
+        Log("Starting...");
+        
 #if UseWinAnonymizer
         WinAnonymizer.Anonymizer.Set(new WinAnonymizer.DefaultAnonymizer());
-        Console.Write("Enable Anonymization...");
+        Log("Enable Anonymization...");
 #endif
 
         ThemeManager.Initialize();

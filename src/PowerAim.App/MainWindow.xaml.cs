@@ -75,8 +75,15 @@ public partial class MainWindow
             GlobalSearchResults, GlobalSearchHint, () => CurrentMenu, (menu, animate) => NavigateTo(menu, animate));
         CommandBindings.Add(new System.Windows.Input.CommandBinding(OpenSearchCommand, (_, _) => _search.Open()));
 
+        while (App.Logs.Any())
+        {
+            OutputTextBox.Text += Environment.NewLine+App.Logs.Pop()+Environment.NewLine;
+        }
+
+        OutputTextBox.Text += Environment.NewLine;
         var writer = new TextBoxStreamWriter(OutputTextBox);
         Console.SetOut(writer);
+        
         // Same as original: ConfigLoaded rebuilds UI. LoadConfig sets _configLoadInProgress
         // so nested selection-changed loads cannot re-enter while CreateUI runs.
         AppConfig.ConfigLoaded += (s, e) => CreateUI();
