@@ -305,6 +305,7 @@ public partial class MainWindow
             // Active" gate is on — otherwise there'd be no way to switch it back on by hotkey.
             changer.IgnoreGlobalActiveGate = true;
         });
+        TopCenterGrid.Children.Add(new PowerAim.UI.UILibrary.MovementMethodPicker(PickMovementMethodAsync));
         TopCenterGrid.Children.Add(BuildAutoPausedChip());
     }
 

@@ -230,18 +230,15 @@ public static class PowerAimUIExtensions
         {
             cfg?.Invoke(dropdown);
         });
+        // The combo box selects index 0 by itself when the first item arrives: only picks after the build count,
+        // otherwise building writes the first entry into the config.
+        bool built = false;
         foreach (var v in items)
         {
-            res.AddDropdownItem(toStringFn(v), item =>
-            {
-                if (v.Equals(value))
-                {
-                    res.DropdownBox.SelectedItem = item;
-                }
-
-                item.Selected += (s, e) => { onSelect(v); };
-            });
+            var item = res.AddDropdownItem(toStringFn(v), item => item.Selected += (s, e) => { if (built) onSelect(v); });
+            if (v.Equals(value)) res.DropdownBox.SelectedItem = item;
         }
+        built = true;
 
         return res;
     }
@@ -252,17 +249,13 @@ public static class PowerAimUIExtensions
         {
             cfg?.Invoke(dropdown);
         });
-        Enum<TEnum>.GetValues().Apply(v => res.AddDropdownItem(v.ToDescriptionString(), item =>
+        bool built = false; // see the other overload: no pick while the items are added
+        foreach (var v in Enum<TEnum>.GetValues())
         {
-            if (v.Equals(value))
-            {
-                res.DropdownBox.SelectedItem = item;
-            }
-            item.Selected += (s, e) =>
-            {
-                onSelect(v);
-            };
-        }));
+            var item = res.AddDropdownItem(v.ToDescriptionString(), item => item.Selected += (s, e) => { if (built) onSelect(v); });
+            if (v.Equals(value)) res.DropdownBox.SelectedItem = item;
+        }
+        built = true;
 
         return res;
     }

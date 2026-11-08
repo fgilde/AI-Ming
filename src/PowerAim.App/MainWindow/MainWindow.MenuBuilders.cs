@@ -1148,75 +1148,11 @@ public partial class MainWindow
         var movementDropdown = new global::PowerAim.UI.UILibrary.ADropdown(Locale.MouseMovementMethod);
         InputSettings.Add(movementDropdown);
 
-        // Built right after the dropdown loop; invoked on every selection change so the gamepad
-        // hint (send mode + shortcut to the Gamepad page) appears/updates when "Gamepad" is picked.
+        // Same list as the title-bar picker; both follow the config. Filling must not pick anything (the
+        // combo box selects its first entry by itself), or the saved method is lost on every start.
         Action? refreshGamepadHint = null;
-
-        foreach (var v in Enum.GetValues<MouseMovementMethod>())
-        {
-            // Glyphs match the key changer's device icons: mouse = U+F8AF, gamepad = U+E7FC.
-            string glyph = v == MouseMovementMethod.Gamepad ? "" : "";
-            string label = v.ToDescriptionString();
-            bool isGamepad = v == MouseMovementMethod.Gamepad;
-
-            var item = new System.Windows.Controls.ComboBoxItem();
-            var stack = new System.Windows.Controls.StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
-            stack.Children.Add(new System.Windows.Controls.TextBlock
-            {
-                Text = glyph,
-                FontFamily = new System.Windows.Media.FontFamily("Segoe Fluent Icons,Segoe MDL2 Assets"),
-                FontSize = 13,
-                Width = 20,
-                VerticalAlignment = VerticalAlignment.Center,
-                Opacity = 0.85,
-            });
-            stack.Children.Add(new System.Windows.Controls.TextBlock
-            {
-                Text = label,
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(6, 0, 0, 0),
-            });
-            item.Content = stack;
-            if (isGamepad)
-                item.ToolTip = Locale.UseControllerForAimTooltip;
-
-            // Capture by closure — we copy `v` into a local so the inner lambda binds correctly.
-            var local = v;
-            item.Selected += async (_, _) =>
-            {
-                // Gamepad pick + nothing connected → warn the user and offer to navigate to the
-                // Gamepad page so they can wire it up. We DO commit the selection either way so
-                // their intent survives the navigation; once a sender comes online,
-                // InputSender.GamepadAimActive flips true automatically.
-                if (local == MouseMovementMethod.Gamepad
-                    && !PowerAim.Input.InputSender.GamepadAimAvailable)
-                {
-                    var res = MessageDialog.Show(
-                        Locale.GamepadNotReadyMessage,
-                        Locale.GamepadNotReady,
-                        MessageDialog.DialogButtons.YesNo,
-                        MessageDialog.DialogIcon.Warning,
-                        owner: this,
-                        defaultResult: MessageDialog.DialogResult.Yes);
-                    if (res == MessageDialog.DialogResult.Yes)
-                        _ = NavigateTo(nameof(GamepadSettings));
-                }
-
-                AppConfig.Current.DropdownState.MouseMovementMethod = local;
-                if ((local == MouseMovementMethod.LGHUB && !new LGHubMain().Load())
-                    || (local == MouseMovementMethod.RazerSynapse && !await RZMouse.Load())
-                    || (local == MouseMovementMethod.ddxoft && !await DdxoftMain.Load()))
-                {
-                    AppConfig.Current.DropdownState.MouseMovementMethod = MouseMovementMethod.MouseEvent;
-                }
-
-                refreshGamepadHint?.Invoke();
-            };
-
-            movementDropdown.DropdownBox.Items.Add(item);
-            if (v == AppConfig.Current.DropdownState.MouseMovementMethod)
-                movementDropdown.DropdownBox.SelectedItem = item;
-        }
+        PowerAim.UI.UILibrary.MovementMethodPicker.Fill(movementDropdown.DropdownBox, PickMovementMethodAsync);
+        movementDropdown.DropdownBox.SelectionChanged += (_, _) => refreshGamepadHint?.Invoke();
 
         // Gamepad hint: only shown while Movement Method = Gamepad. Tells the user which send mode
         // is currently active (ViGEm / DualShock4 / Titan Two / …) and offers a one-click shortcut to
@@ -1252,6 +1188,40 @@ public partial class MainWindow
         InputSettings.AddSlider(Locale.FireMaxDelay, Locale.Seconds, 0.01, 0.1, 0.00, 2).BindTo(() => AppConfig.Current.SliderSettings.FirePressDelay);
         InputSettings.AddSeparator();
 
+    }
+
+
+    /// <summary>
+    ///     Set the movement method from the settings dropdown or the title-bar picker. A controller pick without a
+    ///     ready virtual pad warns first; a driver-based method that doesn't load falls back to Mouse Event.
+    /// </summary>
+    internal async Task PickMovementMethodAsync(MouseMovementMethod method)
+    {
+        // Gamepad pick + nothing connected → warn the user and offer to navigate to the
+        // Gamepad page so they can wire it up. We DO commit the selection either way so
+        // their intent survives the navigation; once a sender comes online,
+        // InputSender.GamepadAimActive flips true automatically.
+        if (method == MouseMovementMethod.Gamepad
+            && !PowerAim.Input.InputSender.GamepadAimAvailable)
+        {
+            var res = MessageDialog.Show(
+                Locale.GamepadNotReadyMessage,
+                Locale.GamepadNotReady,
+                MessageDialog.DialogButtons.YesNo,
+                MessageDialog.DialogIcon.Warning,
+                owner: this,
+                defaultResult: MessageDialog.DialogResult.Yes);
+            if (res == MessageDialog.DialogResult.Yes)
+                _ = NavigateTo(nameof(GamepadSettings));
+        }
+
+        AppConfig.Current.DropdownState.MouseMovementMethod = method;
+        if ((method == MouseMovementMethod.LGHUB && !new LGHubMain().Load())
+            || (method == MouseMovementMethod.RazerSynapse && !await RZMouse.Load())
+            || (method == MouseMovementMethod.ddxoft && !await DdxoftMain.Load()))
+        {
+            AppConfig.Current.DropdownState.MouseMovementMethod = MouseMovementMethod.MouseEvent;
+        }
     }
 
 
