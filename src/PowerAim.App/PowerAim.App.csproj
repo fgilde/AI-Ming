@@ -32,7 +32,7 @@
     </Product>
     <Title>
     </Title>
-    <AssemblyName>Targetron</AssemblyName>
+    <AssemblyName>PowerAim</AssemblyName>
     <Version>3.0.0.1</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>False</SignAssembly>
