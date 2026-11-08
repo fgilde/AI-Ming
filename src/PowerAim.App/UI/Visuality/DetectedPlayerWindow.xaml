@@ -74,5 +74,23 @@
                 </Line.Stroke>
             </Line>
         </Canvas>
+        <!-- Auto-pause holds the loop: say so at the top of the captured area. -->
+        <Border x:Name="PausedLabel"
+                Visibility="Collapsed"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Top"
+                Margin="0,14,0,0"
+                Padding="12,5,12,5"
+                CornerRadius="8"
+                Background="#B3101014"
+                BorderBrush="{Binding ColorState.ActiveCapturedAreaBorderBrush}"
+                BorderThickness="1">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="&#xE769;" FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" FontSize="13"
+                           Foreground="#FFFFC860" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <TextBlock x:Name="PausedText" FontFamily="Segoe UI Variable Text" FontSize="13" FontWeight="SemiBold"
+                           Foreground="#FFFFC860" VerticalAlignment="Center" />
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>

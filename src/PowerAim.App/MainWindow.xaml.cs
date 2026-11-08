@@ -298,6 +298,44 @@ public partial class MainWindow
             // Active" gate is on — otherwise there'd be no way to switch it back on by hotkey.
             changer.IgnoreGlobalActiveGate = true;
         });
+        TopCenterGrid.Children.Add(BuildAutoPausedChip());
+    }
+
+    private EventHandler? _autoPauseChipHandler;
+
+    /// <summary>Next to Global Active: says that auto-pause holds the loop while PowerAim (or another non-game) has focus.</summary>
+    private Border BuildAutoPausedChip()
+    {
+        var amber = System.Windows.Media.Color.FromRgb(0xFF, 0xC8, 0x60);
+        var text = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
+        text.Children.Add(new TextBlock
+        {
+            Text = "", FontFamily = new System.Windows.Media.FontFamily("Segoe Fluent Icons,Segoe MDL2 Assets"), FontSize = 11,
+            Foreground = new System.Windows.Media.SolidColorBrush(amber), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0)
+        });
+        text.Children.Add(new TextBlock
+        {
+            Text = Locale.AutoPausedHint, FontFamily = new System.Windows.Media.FontFamily("Segoe UI Variable Small"), FontSize = 11,
+            Foreground = new System.Windows.Media.SolidColorBrush(amber), VerticalAlignment = VerticalAlignment.Center
+        });
+        var chip = new Border
+        {
+            Child = text,
+            CornerRadius = new CornerRadius(8),
+            Padding = new Thickness(8, 3, 9, 3),
+            Margin = new Thickness(8, 0, 4, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(0x26, amber.R, amber.G, amber.B)),
+            BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(0x80, amber.R, amber.G, amber.B)),
+            BorderThickness = new Thickness(1),
+            ToolTip = Locale.AutoPausedTooltip,
+            Visibility = AutoPauseManager.IsAutoPaused ? Visibility.Visible : Visibility.Collapsed,
+        };
+        if (_autoPauseChipHandler != null) AutoPauseManager.StateChanged -= _autoPauseChipHandler;
+        _autoPauseChipHandler = (_, _) => Dispatcher.BeginInvoke(() =>
+            chip.Visibility = AutoPauseManager.IsAutoPaused ? Visibility.Visible : Visibility.Collapsed);
+        AutoPauseManager.StateChanged += _autoPauseChipHandler;
+        return chip;
     }
 
     public void SetActive(bool active)

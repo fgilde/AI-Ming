@@ -71,6 +71,23 @@ public static class AutoPauseManager
         return true;
     }
 
+    /// <summary>
+    ///     Global Active is on but auto-pause holds the loop (another window has focus). Reported by the AI loop
+    ///     so the UI can say why nothing happens: a hint in the app, a faded border and a label on the overlay.
+    /// </summary>
+    public static bool IsAutoPaused { get; private set; }
+
+    /// <summary>Raised when <see cref="IsAutoPaused"/> changes, on the thread that reported it.</summary>
+    public static event EventHandler? StateChanged;
+
+    public static void Report(bool autoPaused)
+    {
+        if (IsAutoPaused == autoPaused) return;
+        IsAutoPaused = autoPaused;
+        AppConfig.Current?.ColorState?.OnPropertyChanged(nameof(ColorState.ActiveCapturedAreaBorderBrush));
+        StateChanged?.Invoke(null, EventArgs.Empty);
+    }
+
     private static bool IsOwnApp(string processName)
     {
         try

@@ -140,7 +140,10 @@ public class AIManager : IDisposable
                 await Task.Delay(50, _loopCts?.Token ?? CancellationToken.None);
                 continue;
             }
-            if (cfg.ToggleState.GlobalActive && PowerAim.Class.AutoPauseManager.ShouldBeActive())
+            bool focusOk = PowerAim.Class.AutoPauseManager.ShouldBeActive();
+            // Tell the UI when auto-pause (not the user) holds the loop, so it can show why nothing happens.
+            PowerAim.Class.AutoPauseManager.Report(cfg.ToggleState.GlobalActive && !focusOk);
+            if (cfg.ToggleState.GlobalActive && focusOk)
             {
                 if (_pausedNotified)
                 {
@@ -302,6 +305,7 @@ public class AIManager : IDisposable
     public void Dispose()
     {
         AppDebugLog.Info("AIManager", "Dispose begin");
+        PowerAim.Class.AutoPauseManager.Report(false);
         IsModelLoaded = false;
         _isAiLoopRunning = false;
         try { _loopCts?.Cancel(); } catch { /* ignore */ }

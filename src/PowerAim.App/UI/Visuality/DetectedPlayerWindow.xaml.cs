@@ -33,7 +33,14 @@ namespace PowerAim.UI.Visuality
             AppConfig.BindToDataContext(this);
             Loaded += OnLoaded;
             Title = "";
+            PausedText.Text = Locale.AutoPausedHint;
+            PowerAim.Class.AutoPauseManager.StateChanged += OnAutoPauseChanged;
+            Closed += (_, _) => PowerAim.Class.AutoPauseManager.StateChanged -= OnAutoPauseChanged;
+            OnAutoPauseChanged(null, EventArgs.Empty);
         }
+
+        private void OnAutoPauseChanged(object? sender, EventArgs e) => Dispatcher.BeginInvoke(() =>
+            PausedLabel.Visibility = PowerAim.Class.AutoPauseManager.IsAutoPaused ? Visibility.Visible : Visibility.Collapsed);
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {

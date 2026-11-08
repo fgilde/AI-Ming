@@ -22,5 +22,10 @@ public class ColorState : BaseSettings<Color>
 
     [Newtonsoft.Json.JsonIgnore]
     [JsonIgnore]
-    public Brush ActiveCapturedAreaBorderBrush => AppConfig.Current.ToggleState.ShowCapturedArea ? new SolidColorBrush(CapturedAreaBorderColor) : Brushes.Transparent;
+    public Brush ActiveCapturedAreaBorderBrush => !AppConfig.Current.ToggleState.ShowCapturedArea
+        ? Brushes.Transparent
+        // Faded while auto-pause holds the loop: still shows the area, but reads as "not running".
+        : new SolidColorBrush(PowerAim.Class.AutoPauseManager.IsAutoPaused
+            ? Color.FromArgb((byte)(CapturedAreaBorderColor.A * 0.35), CapturedAreaBorderColor.R, CapturedAreaBorderColor.G, CapturedAreaBorderColor.B)
+            : CapturedAreaBorderColor);
 }
