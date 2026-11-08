@@ -148,7 +148,7 @@ namespace PowerAim.Core
         {
             string apiUrl = $"https://api.github.com/repos/{owner}/{repo}/releases/latest";
 
-            var content = await httpClient.GetAsync(apiUrl);
+            var content = await httpClient.GetAsync(apiUrl, preferFresh: true); // never hide a new release behind the cache
 
             var data = JsonSerializer.Deserialize<Dictionary<string, object>>(content);
 

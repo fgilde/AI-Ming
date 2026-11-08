@@ -11,14 +11,14 @@ public class CachingHttpClient : IDisposable
 
     public HttpRequestHeaders DefaultRequestHeaders => _httpClient.DefaultRequestHeaders;
 
-    public CachingHttpClient(TimeSpan? cacheDuration = null, string cacheDirectory = "")
+    public CachingHttpClient(TimeSpan? cacheDuration = null, string cacheDirectory = "", HttpMessageHandler? handler = null)
     {
         if (string.IsNullOrEmpty(cacheDirectory))
             cacheDirectory = Path.Combine(Path.GetTempPath(), "CachingHttpClient");
         
         cacheDuration ??= TimeSpan.FromMinutes(10);
 
-        _httpClient = new HttpClient();
+        _httpClient = handler == null ? new HttpClient() : new HttpClient(handler);
         _cacheDirectory = cacheDirectory;
         _cacheDuration = cacheDuration.Value;
 
@@ -28,13 +28,17 @@ public class CachingHttpClient : IDisposable
         }
     }
 
-    public async Task<string> GetAsync(string url)
+    /// <param name="preferFresh">
+    ///     Ask the server even inside the cache window and use the cache only when that fails. For answers that
+    ///     must not lag behind, like the update check: a cached "latest release" hid a new release for an hour.
+    /// </param>
+    public async Task<string> GetAsync(string url, bool preferFresh = false)
     {
         string cacheFile = GetCacheFilePath(url);
         bool haveCache = File.Exists(cacheFile);
 
         // Fresh cache → serve it without touching the network.
-        if (haveCache && DateTime.Now - File.GetLastWriteTime(cacheFile) < _cacheDuration)
+        if (!preferFresh && haveCache && DateTime.Now - File.GetLastWriteTime(cacheFile) < _cacheDuration)
         {
             return await File.ReadAllTextAsync(cacheFile);
         }
