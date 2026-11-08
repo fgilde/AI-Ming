@@ -175,7 +175,7 @@ public class GamepadReader : IXInputGamepadReader, IGamepadStateSource
                     await Task.Delay(1000, token);
                     Controller = ConnectController(); // re-scan all slots — the pad may be on a different one
                 }
-                await Task.Delay(10, token); // Reduce CPU usage
+                await Task.Delay(4, token); // 250 Hz: the aim key (often LT) must register within a frame
             }
         }, token);
     }

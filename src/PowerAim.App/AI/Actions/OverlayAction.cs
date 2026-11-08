@@ -92,9 +92,44 @@ public class OverlayAction : BaseAction
         }
     }
 
-    // Drawing (GDI / DesktopDC / form invoke) is real synchronous work per frame — keep it off the
-    // AI-loop thread so it runs alongside the other actions instead of adding to the frame time.
-    public override Task Execute(Prediction[] predictions) => Task.Run(() => ExecuteAsync(predictions.ToArray()));
+    // Drawing (GDI / DesktopDC / UI-thread invokes) is real synchronous work per frame. It runs beside the
+    // AI loop and the loop does NOT wait for it: a slow UI round trip only skips overlay frames (the newest
+    // predictions win) instead of delaying the next capture, inference and aim move.
+    private readonly object _drawGate = new();
+    private Prediction[]? _pendingFrame;
+    private bool _drawRunning, _acceptFrames = true;
+    private Task _drawing = Task.CompletedTask;
+
+    public override Task Execute(Prediction[] predictions)
+    {
+        lock (_drawGate)
+        {
+            if (!_acceptFrames) return Task.CompletedTask;
+            _pendingFrame = predictions.ToArray();
+            if (!_drawRunning)
+            {
+                _drawRunning = true;
+                _drawing = Task.Run(DrawPendingAsync);
+            }
+        }
+        return Task.CompletedTask;
+    }
+
+    private async Task DrawPendingAsync()
+    {
+        while (true)
+        {
+            Prediction[] frame;
+            lock (_drawGate)
+            {
+                if (_pendingFrame == null) { _drawRunning = false; return; }
+                frame = _pendingFrame;
+                _pendingFrame = null;
+            }
+            try { await ExecuteAsync(frame); }
+            catch (Exception e) { AppDebugLog.Exception("Overlay", e, "draw"); }
+        }
+    }
 
     public override Task ExecuteAsync(Prediction[] predictions)
     {
@@ -257,14 +292,23 @@ public class OverlayAction : BaseAction
 
     public override Task OnResume()
     {
+        lock (_drawGate) _acceptFrames = true;
         _lastDrawn = Array.Empty<Prediction>();
         _running = true;
         UpdateOverlay();
         return base.OnResume();
     }
 
-    public override Task OnPause()
+    public override async Task OnPause()
     {
+        Task drawing;
+        lock (_drawGate)
+        {
+            _acceptFrames = false;
+            _pendingFrame = null;
+            drawing = _drawing;
+        }
+        await drawing; // a frame still drawing must not paint over the cleared overlay
         _running = false;
         // No frames while paused: clear the boxes; the window stays for the captured-area border if wanted.
         if (_espDrawn)
@@ -279,7 +323,7 @@ public class OverlayAction : BaseAction
             catch (Exception) { /* window closing */ }
         }
         UpdateOverlay();
-        return base.OnPause();
+        await base.OnPause();
     }
 
     public override void Dispose()

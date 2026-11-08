@@ -33,6 +33,7 @@ namespace PowerAim.UI.UILibrary
             Changer.DeviceNameProvider = binding => Locale.GetString(binding.DeviceName);
             Changer.DeleteBindingText = Locale.DeleteBinding;
             Changer.MinTimeText = $"{Locale.MinTimeTriggerKey} ({Locale.Seconds})";
+            Changer.RangeText = Locale.TriggerPressRange;
 
             Changer.BindingPressed += OnBindingPressed;
             Changer.KeyBindChanging += (_, e) => KeyBindChanging?.Invoke(this, e);

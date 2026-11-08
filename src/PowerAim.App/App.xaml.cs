@@ -23,6 +23,7 @@ public partial class App : System.Windows.Application
     {
         base.OnStartup(e);
         Log("Starting...");
+        PowerAim.Class.Native.TimerResolution.Raise();
         
 #if UseWinAnonymizer
         WinAnonymizer.Anonymizer.Set(new WinAnonymizer.DefaultAnonymizer());

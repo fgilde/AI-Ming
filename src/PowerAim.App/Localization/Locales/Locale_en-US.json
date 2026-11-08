@@ -506,6 +506,7 @@
   "MillisecondsShort": "ms",
   "MinConfidenceWarning": "The minimum confidence you have set for PowerAim may be too low can cause false positives.",
   "MinTimeTriggerKey": "Min Time Trigger Key",
+  "TriggerPressRange": "Trigger press range (min / max)",
   "MinTimeTriggerKeyTooltip": "The minimum time the trigger key must be held down before the trigger is executed",
   "MinimizingWindowMessage": "Minimizing Window",
   "ModelDeleted": "Model deleted",

@@ -118,8 +118,8 @@
     <PackageReference Include="Vortice.DXGI" Version="3.8.3" />
     <PackageReference Include="Accord.Statistics" Version="3.8.0" />
     <PackageReference Include="AntWpf" Version="1.0.5" />
-    <PackageReference Include="Nextended.Core" Version="10.1.52" />
-    <PackageReference Include="Nextended.UI" Version="10.1.52" />
+    <PackageReference Include="Nextended.Core" Version="10.1.53" />
+    <PackageReference Include="Nextended.UI" Version="10.1.53" />
     <PackageReference Include="MaterialDesignThemes" Version="4.9.0" />
     <PackageReference Include="WPF-UI" Version="3.0.5" />
     <PackageReference Include="MouseKeyHook" Version="5.7.1" />

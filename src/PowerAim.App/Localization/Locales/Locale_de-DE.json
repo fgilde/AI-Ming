@@ -506,6 +506,7 @@
   "MillisecondsShort": "ms",
   "MinConfidenceWarning": "Das minimale Vertrauen, das Sie für PowerAim festgelegt haben, ist zu niedrig und kann zu Fehlalarmen führen.",
   "MinTimeTriggerKey": "Minimale Zeit für Auslösertaste",
+  "TriggerPressRange": "Trigger-Druckbereich (min / max)",
   "MinTimeTriggerKeyTooltip": "Die minimale Zeit, die die Auslösetaste gedrückt werden muss, bevor der Auslöser aktiviert wird",
   "MinimizingWindowMessage": "Fenster minimieren",
   "ModelDeleted": "Modell gelöscht",

@@ -213,7 +213,7 @@ public class DirectInputGamepadReader : IGamepadReader, IGamepadStateSource
                     try { Poll(); }
                     catch { _acquired = false; /* device lost — re-acquire on the next tick */ }
                 }
-                await Task.Delay(10, token);
+                await Task.Delay(4, token); // 250 Hz, like the XInput reader
             }
         }, token);
     }
